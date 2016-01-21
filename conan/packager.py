@@ -1,6 +1,7 @@
 import os
 import json
 import pipes
+import collections
 
 
 class ConanMultiPackager(object):
@@ -19,6 +20,8 @@ class ConanMultiPackager(object):
 
     def pack(self, curpage=1, total_pages=1):
         '''Excutes the package generation in current machine'''
+        curpage = int(curpage)
+        total_pages = int(total_pages)
         self.runner('conan export %s/%s' % (self.username, self.channel))
         for index, build in enumerate(self._builds):
             if curpage is None or total_pages is None or (index % total_pages) + 1 == curpage:
@@ -87,8 +90,9 @@ class ConanMultiPackager(object):
         self._execute_test(command, settings, options)
 
     def _execute_test(self, precommand, settings, options):
-        settings = " ".join(["-s %s=%s" % (key, value) for key, value in settings.iteritems()])
-        options = " ".join(["-o %s=%s" % (key, value) for key, value in options.iteritems()])
+        settings = collections.OrderedDict(sorted(settings.items()))
+        settings = " ".join(['-s %s="%s"' % (key, value) for key, value in settings.iteritems()])
+        options = " ".join(['-o %s="%s"' % (key, value) for key, value in options.iteritems()])
         command = "conan test . %s %s %s" % (settings, options, self.args)
         if precommand:
             command = '%s && %s' % (precommand, command)
