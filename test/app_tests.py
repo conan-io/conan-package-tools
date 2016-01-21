@@ -18,8 +18,8 @@ class MockRunner(object):
         """Check if executor has ran the builds that are expected.
         numbers are integers"""
         def line_for_number(number):
-            return "conan test . -s os=os%(number)d "\
-                "-s compiler=os%(number)d -o option%(number)d=value%(number)d" % {"number": number}
+            return "conan test . -s compiler=\"os%(number)d\" -s os=\"os%(number)d\" "\
+                "-o option%(number)d=\"value%(number)d\"" % {"number": number}
 
         found_numbers = []
         for call in self.calls:
