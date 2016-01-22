@@ -1,6 +1,6 @@
 # Conan Package Tools
 
-This package makes easy the generation of multiple packages using [conan dependency manager](http://conan.io).
+This package makes easy the generation of multiple packages using [conan package manager](http://conan.io).
 
 Also ease the integration with  [TravisCI](https://travis-ci.org/) and [Appveyor](http://www.appveyor.com/) and allows to automate the package creation in CI servers and the upload to [conan](http://conan.io).
 
@@ -307,3 +307,10 @@ test_script:
   - python build.py
   
 ```
+
+
+# Full example
+
+You can see the full zlib example [here](https://github.com/lasote/conan-zlib)
+
+
