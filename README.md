@@ -42,12 +42,13 @@ In your **test/conanfile.py** you need to make a small adjustement, the require 
 
 ```
 
-Instance a **ConanMultiPackager** and add builds:
+Now create a **build.py** file in the root of your project and instance a **ConanMultiPackager**:
 
 ```python
     from conan.packager import ConanMultiPackager
 
-    builder = ConanMultiPackager(args, username, channel)
+    args = " ".join(sys.argv[1:]) # Pass additional parameters to "conan test" command, maybe "--build missing"
+    builder = ConanMultiPackager(args, username="myuser", channel="testing")
 
 ```
 
@@ -57,8 +58,7 @@ Add some package's configuration to builder (settings and options):
     builder.add({"arch": "x86", "build_type": "Release"}, {"mypackage:option1": "ON"})
     builder.add({"arch": "x86_64", "build_type": "Release"}, {"mypackage:option1": "ON"})
     builder.add({"arch": "x86", "build_type": "Debug"}, {"mypackage:option2": "OFF", "mypackage:shared": True})
-    
-    
+
 ```
 
 Call *pack* or *docker_pack*:
@@ -70,7 +70,14 @@ Call *pack* or *docker_pack*:
 
 ```
 
-When the builder detect a "Visual Studio" compiler and its version, will automatically configure the execution environment of the "conan test" command with the **vcvarsall.bat** script (provided by all Microsoft Visual Studio versions).
+Call your script:
+
+```bash
+    python build.py # Append the parameters that you want to pass to each "conan test" command, like maybe --build all
+
+```
+
+When the builder detects a "Visual Studio" compiler and its version, will automatically configure the execution environment of the "conan test" command with the **vcvarsall.bat** script (provided by all Microsoft Visual Studio versions).
 So you can compile your project with the right compiler automatically, even without CMake.
 
 ## Pagination
@@ -217,8 +224,10 @@ if __name__ == "__main__":
 ```
 
 - The above script uses **add_common_builds** method, that method adds the most common build configurations for windows and linux/osx. There is an optional parameter **shared_option_name** if you have an option to control the static/shared library.
+ 
+  Added builds:
 
-    Linux/OSx:
+    **Linux/OSx:**
     ```
     [{'arch': 'x86', 'build_type': 'Debug'}, {'zlib:shared': True}], 
     [{'arch': 'x86', 'build_type': 'Release'}, {'zlib:shared': True}], 
@@ -230,7 +239,7 @@ if __name__ == "__main__":
     [{'arch': 'x86_64', 'build_type': 'Release'}, {'zlib:shared': False}]]
     ```
     
-    Windows (for each visual studio specified):
+    **Windows (for each visual studio specified):**
     ```
     [{'compiler.version': 10, 'arch': 'x86', 'build_type': 'Release', 'compiler.runtime': 'MT', 'compiler': 'Visual Studio'}, {'zlib:shared': False}],
     [{'compiler.version': 10, 'arch': 'x86', 'build_type': 'Debug', 'compiler.runtime': 'MTd', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
@@ -250,7 +259,7 @@ if __name__ == "__main__":
   This method is just a helper, you can add, delete or modify the values or, like we saw previously, add the configurations with **builder.add** method.
   Just access to **builder.builds** variable and alter what you want.
   
-  **Example**, use the default builds **adding a new option** and **removing** the builds with **arch x86**:
+  **Example**: Use the default builds **adding a new option** and **removing** the builds with **arch x86**.
   
   ```python
   
@@ -308,9 +317,9 @@ test_script:
   
 ```
 
+- Remember to set **CONAN_PASSWORD** variable in appveyor build backoffice!
+
 
 # Full example
 
 You can see the full zlib example [here](https://github.com/lasote/conan-zlib)
-
-
