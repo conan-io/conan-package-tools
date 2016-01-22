@@ -91,3 +91,6 @@ cacert.pem
 
 #Pyinstaller generated binaries
 /pyinstaller
+
+# tmp eclipse markdown viewer
+/.README*
