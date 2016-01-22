@@ -160,44 +160,15 @@ Its a real example of *.travis.yml* file:
 Travis will launch 2 jobs per gcc version, so 10 jobs will be launched in the same build (10 different virtual machines).
 
 Travis will launch a **build.py** python script like the below, you can use almost the same for your project, just adjust the defaults, option name and the configurations that are added to the builder object.
-It seems more complicated that it really is, it just prepare the visual studio builds in case of being executed in windows and other for linux or macos.
 
 
 ```python
-
 
 import os
 from conan.packager import ConanMultiPackager
 import sys
 import platform
 from copy import copy
-
-def add_visual_builds(builder, visual_version, arch):
-
-    base_set = {"compiler": "Visual Studio", 
-                "compiler.version": visual_version, 
-                "arch": arch}
-    sets = []
-    
-    # We don't want all the combinations, MT runtime with shared library is commonly problematic
-    sets.append([{"build_type": "Release", "compiler.runtime": "MT"}, {"zlib:shared":False}])
-    sets.append([{"build_type": "Debug", "compiler.runtime": "MTd"}, {"zlib:shared":False}])
-    sets.append([{"build_type": "Debug", "compiler.runtime": "MDd"}, {"zlib:shared":False}])
-    sets.append([{"build_type": "Release", "compiler.runtime": "MD"}, {"zlib:shared":False}])
-    sets.append([{"build_type": "Debug", "compiler.runtime": "MDd"}, {"zlib:shared":True}])
-    sets.append([{"build_type": "Release", "compiler.runtime": "MD"}, {"zlib:shared":True}])
-
-    for setting, options in sets:
-       tmp = copy(base_set)
-       tmp.update(setting)
-       builder.add(tmp, options)
-
-def add_other_builds(builder):
-    # Not specified compiler or compiler version, will use the auto detected     
-    for arch in ["x86", "x86_64"]:
-        for shared in [True, False]:
-            for build_type in ["Debug", "Release"]:
-                builder.add({"arch":arch, "build_type": build_type}, {"zlib:shared": shared})
 
 
 if __name__ == "__main__":
@@ -232,12 +203,8 @@ if __name__ == "__main__":
     
     args = " ".join(sys.argv[1:])
     builder = ConanMultiPackager(args, username, channel)
-    if platform.system() == "Windows":
-        for visual_version in [10, 12, 14]:
-            for arch in ["x86", "x86_64"]:
-                add_visual_builds(builder, visual_version, arch)
-    else:
-        add_other_builds(builder)
+    builder.add_common_builds(shared_option_name="zlib:shared")
+    print(builder.builds)
     
     if use_docker:  
         builder.docker_pack(current_page, total_pages, gcc_versions)
@@ -247,10 +214,60 @@ if __name__ == "__main__":
     if upload and reference and password:
         builder.upload_packages(reference, password)
 
-
 ```
 
+- The above script uses **add_common_builds** method, that method adds the most common build configurations for windows and linux/osx. There is an optional parameter **shared_option_name** if you have an option to control the static/shared library.
 
+    Linux/OSx:
+    ```
+    [{'arch': 'x86', 'build_type': 'Debug'}, {'zlib:shared': True}], 
+    [{'arch': 'x86', 'build_type': 'Release'}, {'zlib:shared': True}], 
+    [{'arch': 'x86', 'build_type': 'Debug'}, {'zlib:shared': False}], 
+    [{'arch': 'x86', 'build_type': 'Release'}, {'zlib:shared': False}], 
+    [{'arch': 'x86_64', 'build_type': 'Debug'}, {'zlib:shared': True}], 
+    [{'arch': 'x86_64', 'build_type': 'Release'}, {'zlib:shared': True}], 
+    [{'arch': 'x86_64', 'build_type': 'Debug'}, {'zlib:shared': False}], 
+    [{'arch': 'x86_64', 'build_type': 'Release'}, {'zlib:shared': False}]]
+    ```
+    
+    Windows (for each visual studio specified):
+    ```
+    [{'compiler.version': 10, 'arch': 'x86', 'build_type': 'Release', 'compiler.runtime': 'MT', 'compiler': 'Visual Studio'}, {'zlib:shared': False}],
+    [{'compiler.version': 10, 'arch': 'x86', 'build_type': 'Debug', 'compiler.runtime': 'MTd', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
+    [{'compiler.version': 10, 'arch': 'x86', 'build_type': 'Debug', 'compiler.runtime': 'MDd', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
+    [{'compiler.version': 10, 'arch': 'x86', 'build_type': 'Release', 'compiler.runtime': 'MD', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
+    [{'compiler.version': 10, 'arch': 'x86', 'build_type': 'Debug', 'compiler.runtime': 'MDd', 'compiler': 'Visual Studio'}, {'zlib:shared': True}], 
+    [{'compiler.version': 10, 'arch': 'x86', 'build_type': 'Release', 'compiler.runtime': 'MD', 'compiler': 'Visual Studio'}, {'zlib:shared': True}], 
+    [{'compiler.version': 10, 'arch': 'x86_64', 'build_type': 'Release', 'compiler.runtime': 'MT', 'compiler': 'Visual Studio'}, {'zlib:shared': False}],
+    [{'compiler.version': 10, 'arch': 'x86_64', 'build_type': 'Debug', 'compiler.runtime': 'MTd', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
+    [{'compiler.version': 10, 'arch': 'x86_64', 'build_type': 'Debug', 'compiler.runtime': 'MDd', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
+    [{'compiler.version': 10, 'arch': 'x86_64', 'build_type': 'Release', 'compiler.runtime': 'MD', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
+    [{'compiler.version': 10, 'arch': 'x86_64', 'build_type': 'Debug', 'compiler.runtime': 'MDd', 'compiler': 'Visual Studio'}, {'zlib:shared': True}], 
+    [{'compiler.version': 10, 'arch': 'x86_64', 'build_type': 'Release', 'compiler.runtime': 'MD', 'compiler': 'Visual Studio'}, {'zlib:shared': True}]
+    ```
+    
+
+  This method is just a helper, you can add, delete or modify the values or, like we saw previously, add the configurations with **builder.add** method.
+  Just access to **builder.builds** variable and alter what you want.
+  
+  **Example**, use the default builds **adding a new option** and **removing** the builds with **arch x86**:
+  
+  ```python
+  
+    builder = ConanMultiPackager(args, username, channel)
+    builder.add_common_builds(package_name="zlib", shared_option_name="shared")
+  
+    new_builds = []
+    for build in builder.builds:
+        new_build = copy(build)
+        settings, options = new_build
+        options["new_option"] = True
+        if settings["arch"] != "x86":
+            new_builds.append(new_build)
+      
+    builder.builds = new_builds
+  ```
+  
 - The **CONAN_PASSWORD** variable is setted in Travis CI backoffice as a hidden environment variable to protect our conan.io account password. The password is used to upload the packages.
 
 - The channel of uploaded packages will be "stable" if we are pushing out project to master branch and the default for another branch.
@@ -259,7 +276,7 @@ So we can work with a common **git flow** in out project, opening release branch
 
 ## Appveyor integration
 
-Its very similar to Travis CI, with the same build.py script we have the following **appveyor.yml** file:
+Its very similar to Travis CI, with the same **build.py** script we have the following **appveyor.yml** file:
 
 ```python
 

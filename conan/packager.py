@@ -2,28 +2,74 @@ import os
 import json
 import pipes
 import collections
+import platform
+import copy
 
 
 class ConanMultiPackager(object):
 
     def __init__(self, args, username, channel, runner=None):
-        self._builds = []
+        self.builds = []
         self.args = args
         self.username = username
         self.channel = channel
         self.runner = runner or os.system
 
+    def add_common_builds(self, shared_option_name=None, visual_versions=None):
+
+        visual_versions = visual_versions or [10, 12, 14]
+        if platform.system() == "Windows":
+            for visual_version in visual_versions:
+                for arch in ["x86", "x86_64"]:
+                    self.add_visual_builds(visual_version, arch, shared_option_name)
+        else:
+            self.add_other_builds(shared_option_name)
+
+    def add_visual_builds(self, visual_version, arch, shared_option_name):
+
+        base_set = {"compiler": "Visual Studio",
+                    "compiler.version": visual_version,
+                    "arch": arch}
+        sets = []
+
+        if shared_option_name:
+            sets.append([{"build_type": "Release", "compiler.runtime": "MT"}, {shared_option_name: False}])
+            sets.append([{"build_type": "Debug", "compiler.runtime": "MTd"}, {shared_option_name: False}])
+            sets.append([{"build_type": "Debug", "compiler.runtime": "MDd"}, {shared_option_name: False}])
+            sets.append([{"build_type": "Release", "compiler.runtime": "MD"}, {shared_option_name: False}])
+            sets.append([{"build_type": "Debug", "compiler.runtime": "MDd"}, {shared_option_name: True}])
+            sets.append([{"build_type": "Release", "compiler.runtime": "MD"}, {shared_option_name: True}])
+        else:
+            sets.append([{"build_type": "Release", "compiler.runtime": "MT"}, {}])
+            sets.append([{"build_type": "Debug", "compiler.runtime": "MTd"}, {}])
+            sets.append([{"build_type": "Debug", "compiler.runtime": "MDd"}, {}])
+            sets.append([{"build_type": "Release", "compiler.runtime": "MD"}, {}])
+
+        for setting, options in sets:
+            tmp = copy.copy(base_set)
+            tmp.update(setting)
+            self.add(tmp, options)
+
+    def add_other_builds(self, shared_option_name):
+        # Not specified compiler or compiler version, will use the auto detected
+        for arch in ["x86", "x86_64"]:
+            for shared in [True, False]:
+                for build_type in ["Debug", "Release"]:
+                    self.add({"arch": arch, "build_type": build_type}, 
+                             {shared_option_name: shared})
+
     def add(self, settings=None, options=None):
+        # FIXME, could be boilerplate
         settings = settings or {}
         options = options or {}
-        self._builds.append([settings, options])
+        self.builds.append([settings, options])
 
     def pack(self, curpage=1, total_pages=1):
         '''Excutes the package generation in current machine'''
         curpage = int(curpage)
         total_pages = int(total_pages)
         self.runner('conan export %s/%s' % (self.username, self.channel))
-        for index, build in enumerate(self._builds):
+        for index, build in enumerate(self.builds):
             if curpage is None or total_pages is None or (index % total_pages) + 1 == curpage:
                 self._execute_build(build)
 
@@ -62,7 +108,7 @@ class ConanMultiPackager(object):
         doc = {"args": self.args,
                "username": self.username,
                "channel": self.channel,
-               "builds": self._builds}
+               "builds": self.builds}
         return json.dumps(doc)
 
     @staticmethod
