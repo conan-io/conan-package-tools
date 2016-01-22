@@ -118,7 +118,7 @@ class ConanMultiPackager(object):
         ret.args = the_json["args"]
         ret.username = the_json["username"]
         ret.channel = the_json["channel"]
-        ret._builds = the_json["builds"]
+        ret.builds = the_json["builds"]
         return ret
 
     def _execute_build(self, build):
