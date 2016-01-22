@@ -4,7 +4,7 @@ This package makes easy the generation of multiple packages using [conan package
 
 Also ease the integration with  [TravisCI](https://travis-ci.org/) and [Appveyor](http://www.appveyor.com/) and allows to automate the package creation in CI servers and the upload to [conan](http://conan.io).
 
-**Features**:
+## Features:
 
 - Easy definition of packages that will be created.
 - Paginate the packages creation, you can split the build in some different tasks (ideal for CI).
