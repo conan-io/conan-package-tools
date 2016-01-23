@@ -124,7 +124,7 @@ class ConanMultiPackager(object):
     def _execute_build(self, build):
         settings, options = build
         if settings.get("compiler", None) == "Visual Studio" and "compiler.version" in settings:
-            self._execute_visual_studio_build(build)
+            self._execute_visual_studio_build(settings, options)
         else:
             self._execute_test(None, settings, options)
 
