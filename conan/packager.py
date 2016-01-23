@@ -21,7 +21,9 @@ class ConanMultiPackager(object):
         if platform.system() == "Windows":
             for visual_version in visual_versions:
                 for arch in ["x86", "x86_64"]:
-                    self.add_visual_builds(visual_version, arch, shared_option_name)
+                    if arch=="x86_64" and visual_version == 10: # Not available even in Appveyor 
+                        continue
+		    self.add_visual_builds(visual_version, arch, shared_option_name)
         else:
             self.add_other_builds(shared_option_name)
 

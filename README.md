@@ -239,20 +239,20 @@ if __name__ == "__main__":
     [{'arch': 'x86_64', 'build_type': 'Release'}, {'zlib:shared': False}]]
     ```
     
-    **Windows (for each visual studio specified):**
+    **Windows (for each visual studio specified, except for Visual Studio 10, where x86_64 build is disabled):**
     ```
-    [{'compiler.version': 10, 'arch': 'x86', 'build_type': 'Release', 'compiler.runtime': 'MT', 'compiler': 'Visual Studio'}, {'zlib:shared': False}],
-    [{'compiler.version': 10, 'arch': 'x86', 'build_type': 'Debug', 'compiler.runtime': 'MTd', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
-    [{'compiler.version': 10, 'arch': 'x86', 'build_type': 'Debug', 'compiler.runtime': 'MDd', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
-    [{'compiler.version': 10, 'arch': 'x86', 'build_type': 'Release', 'compiler.runtime': 'MD', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
-    [{'compiler.version': 10, 'arch': 'x86', 'build_type': 'Debug', 'compiler.runtime': 'MDd', 'compiler': 'Visual Studio'}, {'zlib:shared': True}], 
-    [{'compiler.version': 10, 'arch': 'x86', 'build_type': 'Release', 'compiler.runtime': 'MD', 'compiler': 'Visual Studio'}, {'zlib:shared': True}], 
-    [{'compiler.version': 10, 'arch': 'x86_64', 'build_type': 'Release', 'compiler.runtime': 'MT', 'compiler': 'Visual Studio'}, {'zlib:shared': False}],
-    [{'compiler.version': 10, 'arch': 'x86_64', 'build_type': 'Debug', 'compiler.runtime': 'MTd', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
-    [{'compiler.version': 10, 'arch': 'x86_64', 'build_type': 'Debug', 'compiler.runtime': 'MDd', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
-    [{'compiler.version': 10, 'arch': 'x86_64', 'build_type': 'Release', 'compiler.runtime': 'MD', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
-    [{'compiler.version': 10, 'arch': 'x86_64', 'build_type': 'Debug', 'compiler.runtime': 'MDd', 'compiler': 'Visual Studio'}, {'zlib:shared': True}], 
-    [{'compiler.version': 10, 'arch': 'x86_64', 'build_type': 'Release', 'compiler.runtime': 'MD', 'compiler': 'Visual Studio'}, {'zlib:shared': True}]
+    [{'compiler.version': 12, 'arch': 'x86', 'build_type': 'Release', 'compiler.runtime': 'MT', 'compiler': 'Visual Studio'}, {'zlib:shared': False}],
+    [{'compiler.version': 12, 'arch': 'x86', 'build_type': 'Debug', 'compiler.runtime': 'MTd', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
+    [{'compiler.version': 12, 'arch': 'x86', 'build_type': 'Debug', 'compiler.runtime': 'MDd', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
+    [{'compiler.version': 12, 'arch': 'x86', 'build_type': 'Release', 'compiler.runtime': 'MD', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
+    [{'compiler.version': 12, 'arch': 'x86', 'build_type': 'Debug', 'compiler.runtime': 'MDd', 'compiler': 'Visual Studio'}, {'zlib:shared': True}], 
+    [{'compiler.version': 12, 'arch': 'x86', 'build_type': 'Release', 'compiler.runtime': 'MD', 'compiler': 'Visual Studio'}, {'zlib:shared': True}], 
+    [{'compiler.version': 12, 'arch': 'x86_64', 'build_type': 'Release', 'compiler.runtime': 'MT', 'compiler': 'Visual Studio'}, {'zlib:shared': False}],
+    [{'compiler.version': 12, 'arch': 'x86_64', 'build_type': 'Debug', 'compiler.runtime': 'MTd', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
+    [{'compiler.version': 12, 'arch': 'x86_64', 'build_type': 'Debug', 'compiler.runtime': 'MDd', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
+    [{'compiler.version': 12, 'arch': 'x86_64', 'build_type': 'Release', 'compiler.runtime': 'MD', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
+    [{'compiler.version': 12, 'arch': 'x86_64', 'build_type': 'Debug', 'compiler.runtime': 'MDd', 'compiler': 'Visual Studio'}, {'zlib:shared': True}], 
+    [{'compiler.version': 12, 'arch': 'x86_64', 'build_type': 'Release', 'compiler.runtime': 'MD', 'compiler': 'Visual Studio'}, {'zlib:shared': True}]
     ```
     
 
