@@ -123,14 +123,14 @@ class ConanMultiPackager(object):
 
     def _execute_build(self, build):
         settings, options = build
-        if settings.get("compiler", None) == "Visual Studio" and "compiler_version" in settings:
+        if settings.get("compiler", None) == "Visual Studio" and "compiler.version" in settings:
             self._execute_visual_studio_build(build)
         else:
             self._execute_test(None, settings, options)
 
     def _execute_visual_studio_build(self, settings, options):
         '''Sets the VisualStudio environment with vcvarsall for the specified version'''
-        vcvars = 'call "%vs' + str(settings["compiler_version"]) + '0comntools%../../VC/vcvarsall.bat"'
+        vcvars = 'call "%vs' + str(settings["compiler.version"]) + '0comntools%../../VC/vcvarsall.bat"'
         param = "x86" if settings.get("arch", None) == "x86" else "amd64"
         command = '%s %s' % (vcvars, param)
         self._execute_test(command, settings, options)
