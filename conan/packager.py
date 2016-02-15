@@ -21,9 +21,9 @@ class ConanMultiPackager(object):
         if platform.system() == "Windows":
             for visual_version in visual_versions:
                 for arch in ["x86", "x86_64"]:
-                    if arch=="x86_64" and visual_version == 10: # Not available even in Appveyor 
+                    if arch == "x86_64" and visual_version == 10:  # Not available even in Appveyor
                         continue
-		    self.add_visual_builds(visual_version, arch, shared_option_name)
+            self.add_visual_builds(visual_version, arch, shared_option_name)
         else:
             self.add_other_builds(shared_option_name)
 
@@ -57,7 +57,7 @@ class ConanMultiPackager(object):
         for arch in ["x86", "x86_64"]:
             for shared in [True, False]:
                 for build_type in ["Debug", "Release"]:
-                    self.add({"arch": arch, "build_type": build_type}, 
+                    self.add({"arch": arch, "build_type": build_type},
                              {shared_option_name: shared})
 
     def add(self, settings=None, options=None):
@@ -101,8 +101,15 @@ class ConanMultiPackager(object):
                 raise Exception("Error building: %s" % command)
 
     def upload_packages(self, reference, password):
-        self.runner("conan user %s -p %s" % (self.username, password))
-        ret = self.runner("conan upload %s/%s/%s --all --force" % (reference, self.username, self.channel))
+        """
+        :param password: If it has double quotes, they must not be escaped, this function
+        does escaping of double quotes automatically. It is suppposed that this password
+        comes from travis or appveyor, in which you will not consider such issue.
+        """
+        password = password.replace('"', '\\"')
+        self.runner('conan user %s -p="%s"' % (self.username, password))
+        ret = self.runner("conan upload %s/%s/%s --all --force"
+                          % (reference, self.username, self.channel))
         if ret != 0:
             raise Exception("Error uploading")
 
