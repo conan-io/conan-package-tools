@@ -55,10 +55,14 @@ class ConanMultiPackager(object):
     def add_other_builds(self, shared_option_name):
         # Not specified compiler or compiler version, will use the auto detected
         for arch in ["x86", "x86_64"]:
-            for shared in [True, False]:
+            if shared_option_name:
+                for shared in [True, False]:
+                    for build_type in ["Debug", "Release"]:
+                        self.add({"arch": arch, "build_type": build_type},
+                                 {shared_option_name: shared})
+            else:
                 for build_type in ["Debug", "Release"]:
-                    self.add({"arch": arch, "build_type": build_type},
-                             {shared_option_name: shared})
+                    self.add({"arch": arch, "build_type": build_type}, {})
 
     def add(self, settings=None, options=None):
         # FIXME, could be boilerplate
