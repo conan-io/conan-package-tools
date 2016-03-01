@@ -104,7 +104,7 @@ class ConanMultiPackager(object):
             if ret != 0:
                 raise Exception("Error building: %s" % command)
 
-    def upload_packages(self, reference, password):
+    def upload_packages(self, reference, password, remote=None):
         """
         :param password: If it has double quotes, they must not be escaped, this function
         does escaping of double quotes automatically. It is suppposed that this password
@@ -112,8 +112,10 @@ class ConanMultiPackager(object):
         """
         password = password.replace('"', '\\"')
         self.runner('conan user %s -p="%s"' % (self.username, password))
-        ret = self.runner("conan upload %s/%s/%s --all --force"
-                          % (reference, self.username, self.channel))
+        command = "conan upload %s/%s/%s --all --force" % (reference, self.username, self.channel)
+        if remote:
+            command += " -r %s" % remote
+        ret = self.runner(command)
         if ret != 0:
             raise Exception("Error uploading")
 
