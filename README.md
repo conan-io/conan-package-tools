@@ -141,6 +141,7 @@ You specify another remote name with parameter **remote**.
 - **args**: List with the parameters that will be passed to "conan test" command. e.j: args=['--build', 'all']. Default sys.argv[1:]
 - **username**: Your conan's username
 - **gcc_versions**: List with a subset of gcc_versions. Default ["4.6", "4.8", "4.9", "5.2", "5.3"]
+- **apple_clang_versions**: List with a subset of apple-clang versions. Default ["5.0", "5.1", "6.0", "6.1", "7.0"]
 - **visual_versions**: List with a subset of visual studio versions. Default [10, 12, 14]
 - **use_docker**: Use docker for package creation in Linux systems.
 - **curpage**: Current page of packages to create
@@ -168,6 +169,7 @@ It's specially useful for CI integration.
 - **CONAN_REMOTE**:  Alternative remote name. Default "default"
 - **CONAN_UPLOAD**: If defined will upload the generated packages
 - **CONAN_GCC_VERSIONS**: Gcc versions comma separated, EX: "4.6,4.8,5.2"
+- **CONAN_APPLE_CLANG_VERSIONS**: Apple clang versions comma separated, EX: "5.0,5.1"
 - **CONAN_VISUAL_VERSIONS**: Visual versions, comma separated, EX: "12,14"
 - **CONAN_USE_DOCKER**: If defined will use docker
 - **CONAN_CURRENT_PAGE**:  Current page of packages to create
@@ -182,76 +184,76 @@ Travis CI can generate a build with multiple jobs defining a matrix with environ
 We can configure the builds to be executed in the jobs defining some environment variables.
 
 Its a real example of *.travis.yml* file that will generate packages for **Linux (gcc 4.6-5.2) and OSx for xcode6.2, xcode6.4 and xcode7.1**
+It uses 2 different jobs for each compiler version
 
 You can copy the files from this [conan-zlib repository](https://github.com/lasote/conan-zlib). Just copy the **".travis"** folder and the **".travis.yml"** file to your project and edit the latter adjusting CONAN_REFERENCE, CONAN_USERNAME and maybe the travis matrix to run more or less packages per job: 
 
 
 **.travis.yml**
 
-	env:
-	 global:
-	   - CONAN_UPLOAD: 1
-	   - CONAN_REFERENCE: "libxml2/2.9.3"
-	   - CONAN_USERNAME: "lasote"
-	   - CONAN_CHANNEL: "ci"
-	   - CONAN_TOTAL_PAGES: 1
-	   - CONAN_CURRENT_PAGE: 1
-	matrix:
-	   include:
-	       - os: linux
-		 env:
-		   - CONAN_GCC_VERSIONS: 4.6 
-		   - CONAN_USE_DOCKER: 1
-		 services:
-		   - docker
-		 sudo: required
-		 language: python
-	       - os: linux
-		 env:
-		   - CONAN_GCC_VERSIONS: 4.8 
-		   - CONAN_USE_DOCKER: 1
-		 services:
-		   - docker
-		 sudo: required
-		 language: python
-	       - os: linux
-		 env:
-		   - CONAN_GCC_VERSIONS: 4.9 
-		   - CONAN_USE_DOCKER: 1
-		 services:
-		   - docker
-		 sudo: required
-		 language: python
-	       - os: linux
-		 env:
-		   - CONAN_GCC_VERSIONS: 5.2 
-		   - CONAN_USE_DOCKER: 1
-		 services:
-		   - docker
-		 sudo: required
-		 language: python
-	       - os: linux
-		 env:
-		   - CONAN_GCC_VERSIONS: 5.3 
-		   - CONAN_USE_DOCKER: 1
-		 services:
-		   - docker
-		 sudo: required
-		 language: python
-	       - os: osx 
-		 osx_image: xcode7.1 # apple-clang 7.0
-		 language: generic
-	       - os: osx
-		 osx_image: xcode6.4 # apple-clang 6.1
-		 language: generic
-	       - os: osx 
-		 osx_image: xcode6.2 # apple-clang 6.0
-		 language: generic
 
-	install:
-	  - ./.travis/install.sh
-	script:
-	  - ./.travis/run.sh
+    os: linux
+    services:
+       - docker
+    sudo: required
+    language: python
+    env:
+      global:
+        - CONAN_UPLOAD=1
+        - CONAN_REFERENCE="bzip2/1.0.6"
+        - CONAN_USERNAME="lasote"
+        - CONAN_CHANNEL="ci"
+        - CONAN_TOTAL_PAGES=2
+
+      matrix:
+        - CONAN_GCC_VERSIONS=4.6 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
+        - CONAN_GCC_VERSIONS=4.6 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
+    
+        - CONAN_GCC_VERSIONS=4.8 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
+        - CONAN_GCC_VERSIONS=4.8 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
+    
+        - CONAN_GCC_VERSIONS=4.9 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
+        - CONAN_GCC_VERSIONS=4.9 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
+    
+        - CONAN_GCC_VERSIONS=5.2 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
+        - CONAN_GCC_VERSIONS=5.2 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
+    
+        - CONAN_GCC_VERSIONS=5.3 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
+        - CONAN_GCC_VERSIONS=5.3 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
+
+    matrix:
+       include:
+           - os: osx 
+	         osx_image: xcode7.1 # apple-clang 7.0
+	         language: generic
+	         env: CONAN_CURRENT_PAGE=1
+           - os: osx 
+	         osx_image: xcode7.1 # apple-clang 7.0
+	         language: generic
+	         env: CONAN_CURRENT_PAGE=2
+     
+           - os: osx
+	         osx_image: xcode6.4 # apple-clang 6.1
+	         language: generic
+	         env: CONAN_CURRENT_PAGE=1
+           - os: osx
+	         osx_image: xcode6.4 # apple-clang 6.1
+	         language: generic
+	         env: CONAN_CURRENT_PAGE=2
+	   
+           - os: osx 
+	         osx_image: xcode6.2 # apple-clang 6.0
+	         language: generic
+	         env: CONAN_CURRENT_PAGE=1
+           - os: osx 
+	         osx_image: xcode6.2 # apple-clang 6.0
+	         language: generic
+	         env: CONAN_CURRENT_PAGE=2
+
+    install:
+      - ./.travis/install.sh
+    script:
+      - ./.travis/run.sh
 
 
 **.travis/install.sh**

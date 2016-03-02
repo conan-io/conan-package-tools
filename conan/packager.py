@@ -14,9 +14,10 @@ class ConanMultiPackager(object):
     and run conan test command in docker containers"""
     default_gcc_versions = ["4.6", "4.8", "4.9", "5.2", "5.3"]
     default_visual_versions = [10, 12, 14]
+    default_apple_clang_versions = ["5.0", "5.1", "6.0", "6.1", "7.0"]
 
     def __init__(self, args=None, username=None, channel=None, runner=None,
-                 gcc_versions=None, visual_versions=None,
+                 gcc_versions=None, visual_versions=None, apple_clang_versions=None,
                  use_docker=None, curpage=None, total_pages=None,
                  reference=None, password=None, remote=None,
                  upload=None, stable_branch_pattern=None):
@@ -43,6 +44,9 @@ class ConanMultiPackager(object):
         self.visual_versions = visual_versions or \
             filter(None, os.getenv("CONAN_VISUAL_VERSIONS", "").split(",")) or \
             self.default_visual_versions
+        self.apple_clang_versions = apple_clang_versions or \
+            filter(None, os.getenv("CONAN_APPLE_CLANG_VERSIONS", "").split(",")) or \
+            self.default_apple_clang_versions
 
         self.use_docker = use_docker or os.getenv("CONAN_USE_DOCKER", False)
         self.curpage = curpage or os.getenv("CONAN_CURRENT_PAGE", 1)
@@ -86,8 +90,10 @@ class ConanMultiPackager(object):
                     if arch == "x86_64" and visual_version == 10:  # Not available even in Appveyor
                         continue
                     self._add_visual_builds(visual_version, arch, shared_option_name)
-        else:
-            self._add_other_builds(shared_option_name, pure_c)
+        elif platform.system() == "Linux":
+            self._add_linux_gcc_builds(shared_option_name, pure_c)
+        elif platform.system() == "Darwin":
+            self._add_osx_apple_clang_builds(shared_option_name, pure_c)
 
     def _add_visual_builds(self, visual_version, arch, shared_option_name):
 
@@ -120,7 +126,41 @@ class ConanMultiPackager(object):
             tmp.update(setting)
             self.add(tmp, options)
 
-    def _add_other_builds(self, shared_option_name, pure_c):
+    def _add_osx_apple_clang_builds(self, shared_option_name, pure_c):
+        # Not specified compiler or compiler version, will use the auto detected
+        for compiler_version in self.apple_clang_versions:
+            for arch in ["x86", "x86_64"]:
+                if shared_option_name:
+                    for shared in [True, False]:
+                        for build_type in ["Debug", "Release"]:
+                            if not pure_c:
+                                self.add({"arch": arch,
+                                          "build_type": build_type,
+                                          "compiler": "apple-clang",
+                                          "compiler.version": compiler_version,
+                                          "compiler.libcxx": "libc++"},
+                                         {shared_option_name: shared})
+                            else:
+                                self.add({"arch": arch,
+                                          "build_type": build_type,
+                                          "compiler": "apple-clang",
+                                          "compiler.version": compiler_version},
+                                         {shared_option_name: shared})
+                else:
+                    for build_type in ["Debug", "Release"]:
+                        if not pure_c:
+                            self.add({"arch": arch,
+                                      "build_type": build_type,
+                                      "compiler": "apple-clang",
+                                      "compiler.version": compiler_version,
+                                      "compiler.libcxx": "libc++"}, {})
+                        else:
+                            self.add({"arch": arch,
+                                      "build_type": build_type,
+                                      "compiler": "apple-clang",
+                                      "compiler.version": compiler_version}, {})
+
+    def _add_linux_gcc_builds(self, shared_option_name, pure_c):
         # Not specified compiler or compiler version, will use the auto detected
         for gcc_version in self.gcc_versions:
             for arch in ["x86", "x86_64"]:
@@ -225,7 +265,7 @@ class ConanMultiPackager(object):
                                                 self.username, self.channel)
             command = "sudo docker run --rm -v %s:/home/conan/project -v " \
                       "~/.conan/data:/home/conan/.conan/data -it %s %s /bin/sh -c \"" \
-                      "cd project && sudo pip install conan_package_tools && " \
+                      "cd project && sudo pip install conan_package_tools && sudo pip install conan==0.0.1rc7 && " \
                       "conan_json_packager\"" % (curdir, env_vars, image_name)
             ret = self.runner(command)
             if ret != 0:
