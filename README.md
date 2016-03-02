@@ -22,16 +22,15 @@ Also ease the integration with  [TravisCI](https://travis-ci.org/) and [Appveyor
 Or you can [clone this repository](http://github.com/conan-io/conan-package-tools) and store its location to PYTHONPATH.
 
 
-## Basic Usage
+## Quick start
 
 First is assumes that you are creating a conan's package. 
-You must have a **conanfile.txt** file and a **test** folder in your current directory and **conan test** command must work.
+You must have a **conanfile.py** file and a **test** folder in your current directory and **conan test** command must work.
 If you don't have it ready, take a look to [Automatically creating and testing packages](http://docs.conan.io/en/latest/packaging/testing.html)
 
 In your **test/conanfile.py** you need to make a small adjustement, the require (current library) needs to be configurable with environment variables:
 
 
-```
     channel = os.getenv("CONAN_CHANNEL", "testing")
     username = os.getenv("CONAN_USERNAME", "myuser")
     
@@ -40,44 +39,67 @@ In your **test/conanfile.py** you need to make a small adjustement, the require 
         requires = "zlib/1.2.8@%s/%s" % (username, channel)
         ...
 
-```
 
 Now create a **build.py** file in the root of your project and instance a **ConanMultiPackager**:
 
-```python
+
+
+	from conan.packager import ConanMultiPackager
+	
+	if __name__ == "__main__":
+	    builder = ConanMultiPackager(username="myuser")
+	    builder.add_common_builds()
+	    builder.run()
+
+Generate the packages:
+
+	$> python build.py
+
+
+If your project is C++, pass the **pure\_c=False** parameter to **add_common_builds**,  and will be generated packages with the setting *compiler.libcxx*.
+
+If your conanfile.py have an option to specify **shared**/**static** packages you can also pass it to **add_common_builds** and it will generate the package configurations corresponding to shared and static packages:
+
     from conan.packager import ConanMultiPackager
 
-    args = " ".join(sys.argv[1:]) # Pass additional parameters to "conan test" command, maybe "--build missing"
-    builder = ConanMultiPackager(args, username="myuser", channel="testing")
+    if __name__ == "__main__":
+        builder = ConanMultiPackager()
+        builder.add_common_builds(shared_option_name="bzip2:shared", pure_c=True)
+        builder.run()
 
-```
 
-Add some package's configuration to builder (settings and options):
+## Select the packages to be generated
 
-```python
-    builder.add({"arch": "x86", "build_type": "Release"}, {"mypackage:option1": "ON"})
-    builder.add({"arch": "x86_64", "build_type": "Release"}, {"mypackage:option1": "ON"})
-    builder.add({"arch": "x86", "build_type": "Debug"}, {"mypackage:option2": "OFF", "mypackage:shared": True})
+You can use **builder.add\_common\_builds** method and remove some configurations. EX: just keep the compiler 4.6 packages:
 
-```
+    from conan.packager import ConanMultiPackager
 
-Call *pack* or *docker_pack*:
+    if __name__ == "__main__":
+        builder = ConanMultiPackager(username="myuser")
+        builder.add_common_builds()
+        filtered_builds = []
+        for settings, options in builder.builds:
+            if settings["compiler.version"] == "4.6":
+                 filtered_builds.append([settings, options])
+        builder.builds = filtered_builds
+        builder.run()
 
-```python
-    builder.pack() # Builds in current machine
-    # Or
-    builder.docker_pack() # Builds by default in "virtual machines" with gcc 4.6, 4.8, 4.9, 5.2 and 5.3 
 
-```
+Or add package's configurations without these method (settings and options):
 
-Call your script:
+	from conan.packager import ConanMultiPackager
+	
+	if __name__ == "__main__":
+	    builder = ConanMultiPackager(username="myuser")
+	    builder.add({"arch": "x86", "build_type": "Release"}, {"mypackage:option1": "ON"})
+        builder.add({"arch": "x86_64", "build_type": "Release"}, {"mypackage:option1": "ON"})
+        builder.add({"arch": "x86", "build_type": "Debug"}, {"mypackage:option2": "OFF", "mypackage:shared": True})
+	    builder.run()
 
-```bash
-    python build.py # Append the parameters that you want to pass to each "conan test" command, like maybe --build all
 
-```
+## Visual Studio auto-configuration
 
-When the builder detects a "Visual Studio" compiler and its version, will automatically configure the execution environment of the "conan test" command with the **vcvarsall.bat** script (provided by all Microsoft Visual Studio versions).
+When the builder detects a "Visual Studio" compiler and it's version, it will automatically configure the execution environment for the "conan test" command with the **vcvarsall.bat** script (provided by all Microsoft Visual Studio versions).
 So you can compile your project with the right compiler automatically, even without CMake.
 
 ## Pagination
@@ -85,237 +107,231 @@ So you can compile your project with the right compiler automatically, even with
 You can launch partial builds passing two pagination parameters, **curpage** and **total_pages**.
 It's very useful with CI servers like Travis, because you can split the builds in pages just passing some parameters:
 
-```python
-    builder.pack(curpage=1, total_pages=10)
+    from conan.packager import ConanMultiPackager
 
-```
+    if __name__ == "__main__":
+        builder = ConanMultiPackager(curpage=1, total_pages=2)
+        builder.add_common_builds(shared_option_name="bzip2:shared", pure_c=True)
+        builder.run()
 
-If you added 10 package's to the builder, each page will execute 1 package generation.
+If you added 10 package's to the builder, each page will execute 1 package generation, so in the example above will create the first 5 packages.
 
 
 ## Docker pack
 
-Docker pack will launch N containers with a virtualized versions of Ubuntu. We have available different images, for gcc versions 4.6, 4.8, 4.9, 5.2 and 5.3
+If you instance ConanMultiPackager with the parameter **use_docker=True**, 
+it will launch N containers with a virtualized versions of Ubuntu. 
+
+We have available different images at **dockerhub**, for gcc versions 4.6, 4.8, 4.9, 5.2 and 5.3.
+
 The containers will share the conan storage directory, so the packages will be generated in your conan's directory.
-You can specify a subset of gcc versions and the pagination is also available:
 
-```python
-    builder.docker_pack(curpage=1, total_pages=10, gcc_versions=["4.8", "5.3"])
-
-```
-
-**Note**:  The package builds that will be executed in Docker should not specify the setting "compiler" nor the "compiler.version", conan will detect the available in the current system.
+You can also specify a subset of **gcc versions** with the parameter **gcc_versions** and the pagination is also available with the parameters **curpage** and **total_pages**.
    
 ## Upload packages
+    
+Instance ConanMultiPackager with the **upload** parameter and it will automatically upload the generated packages to a remote.
+    
+You need also to pass the parameters **reference** (ex: "bzip2/1.0.2"), **password** and **username**.
 
-```python
+You specify another remote name with parameter **remote**.
 
-    builder.upload_packages("mypackage/1.2.3@user/testing", "myconanserverpassword")
+## Complete ConanMultiPackager parameters reference
 
-```
+- **args**: List with the parameters that will be passed to "conan test" command. e.j: args=['--build', 'all']. Default sys.argv[1:]
+- **username**: Your conan's username
+- **gcc_versions**: List with a subset of gcc_versions. Default ["4.6", "4.8", "4.9", "5.2", "5.3"]
+- **visual_versions**: List with a subset of visual studio versions. Default [10, 12, 14]
+- **use_docker**: Use docker for package creation in Linux systems.
+- **curpage**: Current page of packages to create
+- **total_pages**: Total of pages
 
-You can pass another remote name with parameter **remote**. By default it uses default remote:
+Upload related parameters:
+
+- **upload**: True or False. Default False
+- **reference**: Reference of the package to upload. Ex: "zlib/1.2.8"
+- **password**. Conan Password
+- **remote**: Alternative remote name. Default "default"
+- **stable_branch_pattern**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *stable* channel Default "master"
+- **channel**: Channel where your packages will be uploaded if previous parameter doesn't match
 
 
-```python
+## Environment configuration
 
-    builder.upload_packages("mypackage/1.2.3@user/testing", "myconanserverpassword", remote="mycustomserver")
+You can also use environment variables to change the behavior of ConanMultiPackager, so you can pass no parameters in ConanMultiPackager constructor.
 
-```
+It's specially useful for CI integration.
+
+- **CONAN_USERNAME**:  Your conan's username
+- **CONAN_REFERENCE**: Reference of the package to upload. Ex: "zlib/1.2.8"
+- **CONAN_PASSWORD**:  Conan Password
+- **CONAN_REMOTE**:  Alternative remote name. Default "default"
+- **CONAN_UPLOAD**: If defined will upload the generated packages
+- **CONAN_GCC_VERSIONS**: Gcc versions comma separated, EX: "4.6,4.8,5.2"
+- **CONAN_VISUAL_VERSIONS**: Visual versions, comma separated, EX: "12,14"
+- **CONAN_USE_DOCKER**: If defined will use docker
+- **CONAN_CURRENT_PAGE**:  Current page of packages to create
+- **CONAN_TOTAL_PAGES**: Total of pages
+- **CONAN_STABLE_BRANCH_PATTERN**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *stable* channel Default "master"
+- **CONAN_CHANNEL**: Channel where your packages will be uploaded if previous parameter doesn't match
 
 
 ## Travis integration
 
 Travis CI can generate a build with multiple jobs defining a matrix with environment variables.
-We can configure the buils to be executed in the jobs defining some environment variables.
-Its a real example of *.travis.yml* file:
+We can configure the builds to be executed in the jobs defining some environment variables.
 
-```yml
-    language: python
-    sudo: required
-    services:
-      - docker
-    env:
-     global:
-       - CONAN_UPLOAD: 1
-       - CONAN_REFERENCE: "zlib/1.2.8"
-       - CONAN_USERNAME: "lasote"
-       - CONAN_CHANNEL: "ci"
-       - CONAN_TOTAL_PAGES: 2
-       - CONAN_USE_DOCKER: 1
-     matrix:
-       - CONAN_GCC_VERSIONS: 4.6 CONAN_CURRENT_PAGE: 1
-       - CONAN_GCC_VERSIONS: 4.6 CONAN_CURRENT_PAGE: 2
-       - CONAN_GCC_VERSIONS: 4.8 CONAN_CURRENT_PAGE: 1
-       - CONAN_GCC_VERSIONS: 4.8 CONAN_CURRENT_PAGE: 2
-       - CONAN_GCC_VERSIONS: 4.9 CONAN_CURRENT_PAGE: 1
-       - CONAN_GCC_VERSIONS: 4.9 CONAN_CURRENT_PAGE: 2
-       - CONAN_GCC_VERSIONS: 5.2 CONAN_CURRENT_PAGE: 1
-       - CONAN_GCC_VERSIONS: 5.2 CONAN_CURRENT_PAGE: 2
-       - CONAN_GCC_VERSIONS: 5.3 CONAN_CURRENT_PAGE: 1
-       - CONAN_GCC_VERSIONS: 5.3 CONAN_CURRENT_PAGE: 2
+Its a real example of *.travis.yml* file that will generate packages for **Linux (gcc 4.6-5.2) and OSx for xcode6.2, xcode6.4 and xcode7.1**
 
-    install:
-      - pip install conan_package_tools # It install conan too
-      - conan user # It creates the conan data directory
-    script:
-      - python build.py
+You can copy the files from this [conan-zlib repository](https://github.com/lasote/conan-zlib). Just copy the **".travis"** folder and the **".travis.yml"** file to your project and edit the latter adjusting CONAN_REFERENCE, CONAN_USERNAME and maybe the travis matrix to run more or less packages per job: 
 
 
-```
+**.travis.yml**
 
-Travis will launch 2 jobs per gcc version, so 10 jobs will be launched in the same build (10 different virtual machines).
+	env:
+	 global:
+	   - CONAN_UPLOAD: 1
+	   - CONAN_REFERENCE: "libxml2/2.9.3"
+	   - CONAN_USERNAME: "lasote"
+	   - CONAN_CHANNEL: "ci"
+	   - CONAN_TOTAL_PAGES: 1
+	   - CONAN_CURRENT_PAGE: 1
+	matrix:
+	   include:
+	       - os: linux
+		 env:
+		   - CONAN_GCC_VERSIONS: 4.6 
+		   - CONAN_USE_DOCKER: 1
+		 services:
+		   - docker
+		 sudo: required
+		 language: python
+	       - os: linux
+		 env:
+		   - CONAN_GCC_VERSIONS: 4.8 
+		   - CONAN_USE_DOCKER: 1
+		 services:
+		   - docker
+		 sudo: required
+		 language: python
+	       - os: linux
+		 env:
+		   - CONAN_GCC_VERSIONS: 4.9 
+		   - CONAN_USE_DOCKER: 1
+		 services:
+		   - docker
+		 sudo: required
+		 language: python
+	       - os: linux
+		 env:
+		   - CONAN_GCC_VERSIONS: 5.2 
+		   - CONAN_USE_DOCKER: 1
+		 services:
+		   - docker
+		 sudo: required
+		 language: python
+	       - os: linux
+		 env:
+		   - CONAN_GCC_VERSIONS: 5.3 
+		   - CONAN_USE_DOCKER: 1
+		 services:
+		   - docker
+		 sudo: required
+		 language: python
+	       - os: osx 
+		 osx_image: xcode7.1 # apple-clang 7.0
+		 language: generic
+	       - os: osx
+		 osx_image: xcode6.4 # apple-clang 6.1
+		 language: generic
+	       - os: osx 
+		 osx_image: xcode6.2 # apple-clang 6.0
+		 language: generic
 
-Travis will launch a **build.py** python script like the below, you can use almost the same for your project, just adjust the defaults, option name and the configurations that are added to the builder object.
+	install:
+	  - ./.travis/install.sh
+	script:
+	  - ./.travis/run.sh
 
 
-```python
-
-import os
-from conan.packager import ConanMultiPackager
-import sys
-import platform
-from copy import copy
-
-
-if __name__ == "__main__":
-    channel = os.getenv("CONAN_CHANNEL", "testing")
-    username = os.getenv("CONAN_USERNAME", "lasote")
-    current_page = os.getenv("CONAN_CURRENT_PAGE", "1")
-    total_pages = os.getenv("CONAN_TOTAL_PAGES", "1")
-    gcc_versions = os.getenv("CONAN_GCC_VERSIONS", None)
-    gcc_versions = gcc_versions.split(",") if gcc_versions else None
-    use_docker = os.getenv("CONAN_USE_DOCKER", False)
-    upload = os.getenv("CONAN_UPLOAD", False)
-    reference = os.getenv("CONAN_REFERENCE")
-    password = os.getenv("CONAN_PASSWORD")
-    travis = os.getenv("TRAVIS", False)
-    travis_branch = os.getenv("TRAVIS_BRANCH", None)
-    appveyor = os.getenv("APPVEYOR", False)
-    appveyor_branch = os.getenv("APPVEYOR_REPO_BRANCH", None)
-    
-    if travis:
-        if travis_branch=="master":
-            channel = "stable"
-        else:
-            channel = channel
-        os.environ["CONAN_CHANNEL"] = channel
+**.travis/install.sh**
         
-    if appveyor:
-        if appveyor_branch=="master" and not os.getenv("APPVEYOR_PULL_REQUEST_NUMBER"):
-            channel = "stable"
-        else:
-            channel = channel
-        os.environ["CONAN_CHANNEL"] = channel
-    
-    args = " ".join(sys.argv[1:])
-    builder = ConanMultiPackager(args, username, channel)
-    builder.add_common_builds(shared_option_name="zlib:shared", visual_versions=[10, 12, 14])
-    print(builder.builds)
-    
-    if use_docker:  
-        builder.docker_pack(current_page, total_pages, gcc_versions)
-    else:
-        builder.pack(current_page, total_pages)
-    
-    if upload and reference and password:
-        builder.upload_packages(reference, password)
+    #!/bin/bash
 
-```
+	set -e
+	set -x
 
-- The above script uses **add_common_builds** method, that method adds the most common build configurations for windows and linux/osx. There is an optional parameter **shared_option_name** if you have an option to control the static/shared library.
- 
-  Added builds:
+	if [[ "$(uname -s)" == 'Darwin' ]]; then
+	    brew update || brew update
+	    brew outdated pyenv || brew upgrade pyenv
+	    brew install pyenv-virtualenv
 
-    **Linux/OSx:**
-    ```
-    [{'arch': 'x86', 'build_type': 'Debug'}, {'zlib:shared': True}], 
-    [{'arch': 'x86', 'build_type': 'Release'}, {'zlib:shared': True}], 
-    [{'arch': 'x86', 'build_type': 'Debug'}, {'zlib:shared': False}], 
-    [{'arch': 'x86', 'build_type': 'Release'}, {'zlib:shared': False}], 
-    [{'arch': 'x86_64', 'build_type': 'Debug'}, {'zlib:shared': True}], 
-    [{'arch': 'x86_64', 'build_type': 'Release'}, {'zlib:shared': True}], 
-    [{'arch': 'x86_64', 'build_type': 'Debug'}, {'zlib:shared': False}], 
-    [{'arch': 'x86_64', 'build_type': 'Release'}, {'zlib:shared': False}]]
-    ```
-    
-    **Windows (for each visual studio specified, except for Visual Studio 10, where x86_64 build is disabled):**
-    ```
-    [{'compiler.version': 12, 'arch': 'x86', 'build_type': 'Release', 'compiler.runtime': 'MT', 'compiler': 'Visual Studio'}, {'zlib:shared': False}],
-    [{'compiler.version': 12, 'arch': 'x86', 'build_type': 'Debug', 'compiler.runtime': 'MTd', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
-    [{'compiler.version': 12, 'arch': 'x86', 'build_type': 'Debug', 'compiler.runtime': 'MDd', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
-    [{'compiler.version': 12, 'arch': 'x86', 'build_type': 'Release', 'compiler.runtime': 'MD', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
-    [{'compiler.version': 12, 'arch': 'x86', 'build_type': 'Debug', 'compiler.runtime': 'MDd', 'compiler': 'Visual Studio'}, {'zlib:shared': True}], 
-    [{'compiler.version': 12, 'arch': 'x86', 'build_type': 'Release', 'compiler.runtime': 'MD', 'compiler': 'Visual Studio'}, {'zlib:shared': True}], 
-    [{'compiler.version': 12, 'arch': 'x86_64', 'build_type': 'Release', 'compiler.runtime': 'MT', 'compiler': 'Visual Studio'}, {'zlib:shared': False}],
-    [{'compiler.version': 12, 'arch': 'x86_64', 'build_type': 'Debug', 'compiler.runtime': 'MTd', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
-    [{'compiler.version': 12, 'arch': 'x86_64', 'build_type': 'Debug', 'compiler.runtime': 'MDd', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
-    [{'compiler.version': 12, 'arch': 'x86_64', 'build_type': 'Release', 'compiler.runtime': 'MD', 'compiler': 'Visual Studio'}, {'zlib:shared': False}], 
-    [{'compiler.version': 12, 'arch': 'x86_64', 'build_type': 'Debug', 'compiler.runtime': 'MDd', 'compiler': 'Visual Studio'}, {'zlib:shared': True}], 
-    [{'compiler.version': 12, 'arch': 'x86_64', 'build_type': 'Release', 'compiler.runtime': 'MD', 'compiler': 'Visual Studio'}, {'zlib:shared': True}]
-    ```
-    
+	    if which pyenv > /dev/null; then
+		eval "$(pyenv init -)"
+	    fi
 
-  This method is just a helper, you can add, delete or modify the values or, like we saw previously, add the configurations with **builder.add** method.
-  Just access to **builder.builds** variable and alter what you want.
-  
-  **Example**: Use the default builds **adding a new option** and **removing** the builds with **arch x86**.
-  
-  ```python
-  
-    builder = ConanMultiPackager(args, username, channel)
-    builder.add_common_builds(package_name="zlib", shared_option_name="shared")
-  
-    new_builds = []
-    for build in builder.builds:
-        new_build = copy(build)
-        settings, options = new_build
-        options["new_option"] = True
-        if settings["arch"] != "x86":
-            new_builds.append(new_build)
-      
-    builder.builds = new_builds
-  ```
-  
-- The **CONAN_PASSWORD** variable is setted in Travis CI backoffice as a hidden environment variable to protect our conan.io account password. The password is used to upload the packages.
+	    pyenv install 2.7.10
+	    pyenv virtualenv 2.7.10 conan
+	    pyenv rehash
+	    pyenv activate conan
+	fi
 
-- The channel of uploaded packages will be "stable" if we are pushing out project to master branch and the default for another branch.
-So we can work with a common **git flow** in out project, opening release branches and see if packaging is working, then when we push to master the packages will automatically be published to conan.io
+	pip install conan_package_tools # It install conan too
+	conan user
+
+
+
+**.travis/run.sh**
+
+
+    #!/bin/bash
+
+	set -e
+	set -x
+
+	if [[ "$(uname -s)" == 'Darwin' ]]; then
+	    if which pyenv > /dev/null; then
+		eval "$(pyenv init -)"
+	    fi
+	    pyenv activate conan
+	fi
+
+	python build.py
+
+
+Remember to set CONAN_PASSWORD variable in travis build backoffice!
 
 
 ## Appveyor integration
 
 Its very similar to Travis CI, with the same **build.py** script we have the following **appveyor.yml** file:
 
-```python
-
-build: false
-environment:
-    PYTHON: "C:\\Python27"
-    PYTHON_VERSION: "2.7.8"
-    PYTHON_ARCH: "32"
+    build: false
+    environment:
+        PYTHON: "C:\\Python27"
+        PYTHON_VERSION: "2.7.8"
+        PYTHON_ARCH: "32"
     
-    CONAN_UPLOAD: 1
-    CONAN_REFERENCE: "zlib/1.2.8"
-    CONAN_USERNAME: "lasote"
-    CONAN_CHANNEL: "ci"
-    CONAN_TOTAL_PAGES: 4
+        CONAN_UPLOAD: 1
+        CONAN_REFERENCE: "bzip2/1.0.6"
+        CONAN_USERNAME: "lasote"
+        CONAN_CHANNEL: "ci"
+        CONAN_TOTAL_PAGES: 4
+    
+        matrix:
+            - CONAN_CURRENT_PAGE: 1
+            - CONAN_CURRENT_PAGE: 2  
+            - CONAN_CURRENT_PAGE: 3
+            - CONAN_CURRENT_PAGE: 4
+    install:
+      - set PATH=%PATH%;%PYTHON%/Scripts/
+      - pip.exe install conan_package_tools # It install conan too
+      - conan user # It creates the conan data directory
 
-    matrix:
-        - CONAN_CURRENT_PAGE: 1
-        - CONAN_CURRENT_PAGE: 2  
-        - CONAN_CURRENT_PAGE: 3
-        - CONAN_CURRENT_PAGE: 4
+    test_script:
+      - python build.py
 
-install:
-  - set PATH=%PATH%;%PYTHON%/Scripts/
-  - pip.exe install conan_package_tools # It install conan too
-  - conan user # It creates the conan data directory
-
-test_script:
-  - python build.py
   
-```
 
 - Remember to set **CONAN_PASSWORD** variable in appveyor build backoffice!
 
