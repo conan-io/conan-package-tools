@@ -285,12 +285,16 @@ class ConanMultiPackager(object):
     def _upload_packages(self):
         """
         :param password: If it has double quotes, they must not be escaped, this function
-        does escaping of double quotes automatically. It is suppposed that this password
+        does escaping of double quotes automatically. It is supposed that this password
         comes from travis or appveyor, in which you will not consider such issue.
         """
+        if not self.upload:
+            return;
         if not self.reference or not self.password or not self.channel or not self.username:
+            self.logger.info("Skipped upload, some parameter (reference, password or channel)"
+                             " is missing!")
             return
-        command = "conan upload %s/%s/%s --all --force" % (self.reference,
+        command = "conan upload %s@%s/%s --all --force" % (self.reference,
                                                            self.username,
                                                            self.channel)
         self.logger.info("******** RUNNING UPLOAD COMMAND ********** \n%s" % command)
