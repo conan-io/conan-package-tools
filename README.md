@@ -256,6 +256,53 @@ You can copy the files from this [conan-zlib repository](https://github.com/laso
       - ./.travis/run.sh
 
 
+In case you need just one job per compiler to compile all the packages:
+
+
+**.travis.yml**
+
+
+    os: linux
+    services:
+       - docker
+    sudo: required
+    language: python
+    env:
+      global:
+        - CONAN_UPLOAD=1
+        - CONAN_REFERENCE="bzip2/1.0.6"
+        - CONAN_USERNAME="lasote"
+        - CONAN_CHANNEL="ci"
+        - CONAN_TOTAL_PAGES=1
+        - CONAN_CURRENT_PAGE=1
+
+      matrix:
+        - CONAN_GCC_VERSIONS=4.6 
+        - CONAN_GCC_VERSIONS=4.8 
+        - CONAN_GCC_VERSIONS=4.9 
+        - CONAN_GCC_VERSIONS=5.2 
+        - CONAN_GCC_VERSIONS=5.3
+    matrix:
+       include:
+           - os: osx 
+	         osx_image: xcode7.1 # apple-clang 7.0
+	         language: generic
+     
+           - os: osx
+	         osx_image: xcode6.4 # apple-clang 6.1
+	         language: generic
+	         
+           - os: osx 
+	         osx_image: xcode6.2 # apple-clang 6.0
+	         language: generic
+
+    install:
+      - ./.travis/install.sh
+    script:
+      - ./.travis/run.sh
+
+
+
 **.travis/install.sh**
         
     #!/bin/bash
