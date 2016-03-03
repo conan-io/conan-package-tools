@@ -265,7 +265,7 @@ class ConanMultiPackager(object):
                                                 self.username, self.channel)
             command = "sudo docker run --rm -v %s:/home/conan/project -v " \
                       "~/.conan/data:/home/conan/.conan/data -it %s %s /bin/sh -c \"" \
-                      "cd project && sudo pip install conan_package_tools && sudo pip install conan==0.0.1rc7 && " \
+                      "cd project && sudo pip install conan_package_tools && " \
                       "conan_json_packager\"" % (curdir, env_vars, image_name)
             ret = self.runner(command)
             if ret != 0:

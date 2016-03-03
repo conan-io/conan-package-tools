@@ -277,11 +277,11 @@ In case you need just one job per compiler to compile all the packages:
         - CONAN_CURRENT_PAGE=1
 
       matrix:
-        - CONAN_GCC_VERSIONS=4.6 
-        - CONAN_GCC_VERSIONS=4.8 
-        - CONAN_GCC_VERSIONS=4.9 
-        - CONAN_GCC_VERSIONS=5.2 
-        - CONAN_GCC_VERSIONS=5.3
+        - CONAN_GCC_VERSIONS=4.6 CONAN_USE_DOCKER=1
+        - CONAN_GCC_VERSIONS=4.8 CONAN_USE_DOCKER=1
+        - CONAN_GCC_VERSIONS=4.9 CONAN_USE_DOCKER=1
+        - CONAN_GCC_VERSIONS=5.2 CONAN_USE_DOCKER=1
+        - CONAN_GCC_VERSIONS=5.3 CONAN_USE_DOCKER=1
     matrix:
        include:
            - os: osx 
