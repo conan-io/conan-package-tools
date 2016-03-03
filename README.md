@@ -287,15 +287,15 @@ In case you need just one job per compiler to compile all the packages:
            - os: osx 
 	         osx_image: xcode7.1 # apple-clang 7.0
 	         language: generic
-     
+     		 env:
            - os: osx
 	         osx_image: xcode6.4 # apple-clang 6.1
 	         language: generic
-	         
+	         env:
            - os: osx 
 	         osx_image: xcode6.2 # apple-clang 6.0
 	         language: generic
-
+			 env:
     install:
       - ./.travis/install.sh
     script:
