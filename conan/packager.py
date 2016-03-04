@@ -37,6 +37,7 @@ class ConanMultiPackager(object):
         self.upload = upload or os.getenv("CONAN_UPLOAD", None)
         self.stable_branch_pattern = stable_branch_pattern or os.getenv("CONAN_STABLE_BRANCH_PATTERN", None)
         self.channel = self._get_channel(channel)
+        os.environ["CONAN_CHANNEL"] = self.channel
 
         self.gcc_versions = gcc_versions or \
             filter(None, os.getenv("CONAN_GCC_VERSIONS", "").split(",")) or \
@@ -367,4 +368,9 @@ class ConanMultiPackager(object):
         channel = "stable" if appveyor and prog.match(appveyor_branch) and \
             not os.getenv("APPVEYOR_PULL_REQUEST_NUMBER") else channel
 
-        return channel or default_channel or os.getenv("CONAN_CHANNEL", "testing")
+        ret = channel or default_channel or os.getenv("CONAN_CHANNEL", "testing")
+        if ret != default_channel:
+            self.logger.warning("Redefined channel by CI branch matching with '%s', "
+                                "setting CONAN_CHANNEL to '%s'" % (pattern, ret))
+
+        return ret

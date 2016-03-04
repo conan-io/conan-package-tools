@@ -19,8 +19,11 @@ class MultiLineFormatter(logging.Formatter):
             header, _ = tmp
         else:
             header = tmp
-        str_ = str_.replace('\n', '\n' + ' ' * len(header))
+#        num = len(header)
+        num = 0
+        str_ = str_.replace('\n', '\n' + ' ' * num)
         return str_
+
 
 logger = logging.getLogger('conans')
 if CONAN_LOGGING_FILE is not None:
@@ -28,8 +31,8 @@ if CONAN_LOGGING_FILE is not None:
 else:
     hdlr = StreamHandler(sys.stderr)
 
-formatter = MultiLineFormatter('%(levelname)s: '
-                               '%(message)s')
+formatter = MultiLineFormatter('\n############## CONAN PACKAGE TOOLS ######################\n\n%(levelname)s: '
+                               '%(message)s \n\n#########################################################\n')
 hdlr.setFormatter(formatter)
 logger.addHandler(hdlr)
 logger.setLevel(CONAN_LOGGING_LEVEL)
