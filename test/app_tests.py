@@ -51,9 +51,17 @@ class AppTest(unittest.TestCase):
                           {"option1": "value1", "option2": "value2"})
 
         serial = self.packager.serialize()
-        self.assertEquals(serial, '{"username": "lasote", "args": "--build missing -r conan.io", '\
+        self.assertEquals(serial, '{"username": "lasote", "conan_pip_package": null, "args": "--build missing -r conan.io", '\
                           '"builds": [[{"os": "Windows", "compiler": "Visual Studio"}, '\
                           '{"option2": "value2", "option1": "value1"}]], "channel": "mychannel"}')
+
+        mp = ConanMultiPackager.deserialize(serial, username="lasote")
+        self.assertEqual(mp.conan_pip_package, None)
+
+        self.packager.conan_pip_package = "conan==0.0.1rc7"
+        serial = self.packager.serialize()
+        mp = ConanMultiPackager.deserialize(serial, username="lasote")
+        self.assertEqual(mp.conan_pip_package, "conan==0.0.1rc7")
 
     def _add_build(self, number):
         self.packager.add({"os": "os%d" % number, "compiler": "os%d" % number},

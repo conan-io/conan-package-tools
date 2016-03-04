@@ -4,7 +4,7 @@ import sys
 import os
 
 # #### LOGGER, MOVED FROM CONF BECAUSE OF MULTIPLE PROBLEM WITH CIRCULAR INCLUDES #####
-CONAN_LOGGING_LEVEL = os.getenv('CONAN_LOGGING_LEVEL', logging.DEBUG)
+CONAN_LOGGING_LEVEL = int(os.getenv('CONAN_LOGGING_LEVEL', logging.DEBUG))
 CONAN_LOGGING_FILE = os.getenv('CONAN_LOGGING_FILE', None)  # None is stdout
 
 

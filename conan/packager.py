@@ -55,6 +55,8 @@ class ConanMultiPackager(object):
         if self.password:
             self.password = self.password.replace('"', '\\"')
 
+        self.conan_pip_package = os.getenv("CONAN_PIP_PACKAGE", None)
+
     def _execute_test(self, precommand, settings, options):
         settings = collections.OrderedDict(sorted(settings.items()))
 
@@ -217,14 +219,15 @@ class ConanMultiPackager(object):
         self._upload_packages()
 
     def pack(self, curpage=1, total_pages=1):
-        self.logger.warn("Method pack is deprecated and will be removed soon. Please"
-                         " instance ConanMultiPackager and call run().")
         self.curpage = int(curpage)
         self.total_pages = total_pages
         self._pack()
 
     def _pack(self):
         '''Excutes the package generation in currenConanMultiPackagert machine'''
+        if self.conan_pip_package:
+            sudo = "sudo" if platform.system() != "Windows" else ""
+            self.runner('%s pip install %s' % (sudo, self.conan_pip_package))
         if not self.use_docker:
             curpage = int(self.curpage)
             total_pages = int(self.total_pages)
@@ -263,10 +266,13 @@ class ConanMultiPackager(object):
                        "-e CONAN_BUILDER_ENCODED=%s -e CONAN_USERNAME=%s " \
                        "-e CONAN_CHANNEL=%s" % (curpage, total_pages, serial,
                                                 self.username, self.channel)
+            specific_conan_package = ""
+            if self.conan_pip_package:
+                specific_conan_package = "&& sudo pip install %s" % self.conan_pip_package
             command = "sudo docker run --rm -v %s:/home/conan/project -v " \
                       "~/.conan/data:/home/conan/.conan/data -it %s %s /bin/sh -c \"" \
-                      "cd project && sudo pip install conan_package_tools && " \
-                      "conan_json_packager\"" % (curdir, env_vars, image_name)
+                      "cd project && sudo pip install conan_package_tools %s && " \
+                      "conan_json_packager\"" % (curdir, env_vars, image_name, specific_conan_package)
             ret = self.runner(command)
             if ret != 0:
                 raise Exception("Error building: %s" % command)
@@ -309,17 +315,19 @@ class ConanMultiPackager(object):
         doc = {"args": self.args,
                "username": self.username,
                "channel": self.channel,
-               "builds": self.builds}
+               "builds": self.builds,
+               "conan_pip_package": self.conan_pip_package}
         return json.dumps(doc)
 
     @staticmethod
-    def deserialize(data):
+    def deserialize(data, username=None):
         the_json = json.loads(data)
-        ret = ConanMultiPackager(None, None, None)
+        ret = ConanMultiPackager(username=username)
         ret.args = the_json["args"]
         ret.username = the_json["username"]
         ret.channel = the_json["channel"]
         ret.builds = the_json["builds"]
+        ret.conan_pip_package = the_json["conan_pip_package"]
         return ret
 
     def _execute_build(self, build):
