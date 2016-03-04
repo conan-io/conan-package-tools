@@ -176,6 +176,7 @@ It's specially useful for CI integration.
 - **CONAN_TOTAL_PAGES**: Total of pages
 - **CONAN_STABLE_BRANCH_PATTERN**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *stable* channel Default "master"
 - **CONAN_CHANNEL**: Channel where your packages will be uploaded if previous parameter doesn't match
+- **CONAN_PIP_PACKAGE**: Specify a conan package to install (default installs the latest) e.j conan==0.0.1rc7
 
 
 ## Travis integration
