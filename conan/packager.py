@@ -14,10 +14,12 @@ class ConanMultiPackager(object):
     and run conan test command in docker containers"""
     default_gcc_versions = ["4.6", "4.8", "4.9", "5.2", "5.3"]
     default_visual_versions = [10, 12, 14]
+    default_visual_runtimes = ["MT", "MD"]
     default_apple_clang_versions = ["5.0", "5.1", "6.0", "6.1", "7.0"]
 
     def __init__(self, args=None, username=None, channel=None, runner=None,
-                 gcc_versions=None, visual_versions=None, apple_clang_versions=None,
+                 gcc_versions=None, visual_versions=None, visual_runtimes=None,
+                 apple_clang_versions=None,
                  use_docker=None, curpage=None, total_pages=None,
                  reference=None, password=None, remote=None,
                  upload=None, stable_branch_pattern=None):
@@ -45,6 +47,10 @@ class ConanMultiPackager(object):
         self.visual_versions = visual_versions or \
             filter(None, os.getenv("CONAN_VISUAL_VERSIONS", "").split(",")) or \
             self.default_visual_versions
+        self.visual_runtimes = visual_runtimes or \
+            filter(None, os.getenv("CONAN_VISUAL_RUNTIMES", "").split(",")) or \
+            self.default_visual_runtimes
+
         self.apple_clang_versions = apple_clang_versions or \
             filter(None, os.getenv("CONAN_APPLE_CLANG_VERSIONS", "").split(",")) or \
             self.default_apple_clang_versions
@@ -106,23 +112,27 @@ class ConanMultiPackager(object):
         sets = []
 
         if shared_option_name:
-            sets.append([{"build_type": "Release", "compiler.runtime": "MT"},
-                         {shared_option_name: False}])
-            sets.append([{"build_type": "Debug", "compiler.runtime": "MTd"},
-                         {shared_option_name: False}])
-            sets.append([{"build_type": "Debug", "compiler.runtime": "MDd"},
-                         {shared_option_name: False}])
-            sets.append([{"build_type": "Release", "compiler.runtime": "MD"},
-                         {shared_option_name: False}])
-            sets.append([{"build_type": "Debug", "compiler.runtime": "MDd"},
-                         {shared_option_name: True}])
-            sets.append([{"build_type": "Release", "compiler.runtime": "MD"},
-                         {shared_option_name: True}])
+            if "MT" in self.visual_runtimes:
+                sets.append([{"build_type": "Release", "compiler.runtime": "MT"},
+                             {shared_option_name: False}])
+                sets.append([{"build_type": "Debug", "compiler.runtime": "MTd"},
+                             {shared_option_name: False}])
+            if "MD" in self.visual_runtimes:
+                sets.append([{"build_type": "Debug", "compiler.runtime": "MDd"},
+                             {shared_option_name: False}])
+                sets.append([{"build_type": "Release", "compiler.runtime": "MD"},
+                             {shared_option_name: False}])
+                sets.append([{"build_type": "Debug", "compiler.runtime": "MDd"},
+                             {shared_option_name: True}])
+                sets.append([{"build_type": "Release", "compiler.runtime": "MD"},
+                             {shared_option_name: True}])
         else:
-            sets.append([{"build_type": "Release", "compiler.runtime": "MT"}, {}])
-            sets.append([{"build_type": "Debug", "compiler.runtime": "MTd"}, {}])
-            sets.append([{"build_type": "Debug", "compiler.runtime": "MDd"}, {}])
-            sets.append([{"build_type": "Release", "compiler.runtime": "MD"}, {}])
+            if "MT" in self.visual_runtimes:
+                sets.append([{"build_type": "Release", "compiler.runtime": "MT"}, {}])
+                sets.append([{"build_type": "Debug", "compiler.runtime": "MTd"}, {}])
+            if "MD" in self.visual_runtimes:
+              sets.append([{"build_type": "Debug", "compiler.runtime": "MDd"}, {}])
+              sets.append([{"build_type": "Release", "compiler.runtime": "MD"}, {}])
 
         for setting, options in sets:
             tmp = copy.copy(base_set)
