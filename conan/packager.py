@@ -20,7 +20,8 @@ class ConanMultiPackager(object):
                  gcc_versions=None, visual_versions=None, apple_clang_versions=None,
                  use_docker=None, curpage=None, total_pages=None,
                  reference=None, password=None, remote=None,
-                 upload=None, stable_branch_pattern=None):
+                 upload=None, stable_branch_pattern=None,
+                 appveyor=True):
         self.builds = []
         self.runner = runner or os.system
         self.logger = logger
@@ -57,6 +58,7 @@ class ConanMultiPackager(object):
             self.password = self.password.replace('"', '\\"')
 
         self.conan_pip_package = os.getenv("CONAN_PIP_PACKAGE", None)
+        self.appveyor = appveyor
 
     def _execute_test(self, precommand, settings, options):
         settings = collections.OrderedDict(sorted(settings.items()))
@@ -90,7 +92,7 @@ class ConanMultiPackager(object):
         if platform.system() == "Windows":
             for visual_version in self.visual_versions:
                 for arch in ["x86", "x86_64"]:
-                    if arch == "x86_64" and visual_version == 10:  # Not available even in Appveyor
+                    if self.appveyor and arch == "x86_64" and visual_version == 10:  # Not available even in Appveyor
                         continue
                     self._add_visual_builds(visual_version, arch, shared_option_name)
         elif platform.system() == "Linux":
