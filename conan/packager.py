@@ -306,10 +306,18 @@ class ConanMultiPackager(object):
         command = "conan upload %s@%s/%s --all --force" % (self.reference,
                                                            self.username,
                                                            self.channel)
+        user_command = 'conan user %s -p="%s"' % (self.username, self.password)
+
         self.logger.info("******** RUNNING UPLOAD COMMAND ********** \n%s" % command)
-        self.runner('conan user %s -p="%s"' % (self.username, self.password))
+        
         if self.remote:
             command += " -r %s" % self.remote
+            user_command += " -r %s" % self.remote
+            
+        ret = self.runner(user_command)
+        if ret != 0:
+            raise Exception("Error with user credentials")
+
         ret = self.runner(command)
         if ret != 0:
             raise Exception("Error uploading")
