@@ -146,6 +146,7 @@ You specify another remote name with parameter **remote**.
 - **use_docker**: Use docker for package creation in Linux systems.
 - **curpage**: Current page of packages to create
 - **total_pages**: Total of pages
+- **appveyor**: Flag to tell that we are using an AppVeyor or Travis CI engine that cannot build for VS10 64bits. Default [True]
 
 Upload related parameters:
 
