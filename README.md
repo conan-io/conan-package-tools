@@ -385,6 +385,12 @@ Its very similar to Travis CI, with the same **build.py** script we have the fol
 
 - Remember to set **CONAN_PASSWORD** variable in appveyor build backoffice!
 
+## Bamboo CI integration
+
+[Bamboo](https://www.atlassian.com/software/bamboo) is a commercial CI tool developed by Atlassian.
+When building from bamboo several environement variables get set during builds.
+ 
+If the env var **bamboo_buildNumber** is set and the branch name (**bamboo_planRepository_branch** env var) matches **stable_branch_pattern** then the channel name gets set to ```stable```.
 
 # Full example
 
