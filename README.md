@@ -143,7 +143,7 @@ You specify another remote name with parameter **remote**.
 - **gcc_versions**: List with a subset of gcc_versions. Default ["4.6", "4.8", "4.9", "5.2", "5.3"]
 - **apple_clang_versions**: List with a subset of apple-clang versions. Default ["5.0", "5.1", "6.0", "6.1", "7.0"]
 - **visual_versions**: List with a subset of visual studio versions. Default [10, 12, 14]
-- **visual_runtimes**: List containing visual studio runtimes to use in builds. Default ["MT, "MD]
+- **visual_runtimes**: List containing visual studio runtimes to use in builds. Default ["MT", "MD", "MTd", "MDd"]
 - **use_docker**: Use docker for package creation in Linux systems.
 - **curpage**: Current page of packages to create
 - **total_pages**: Total of pages

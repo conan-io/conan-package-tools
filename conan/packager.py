@@ -14,7 +14,7 @@ class ConanMultiPackager(object):
     and run conan test command in docker containers"""
     default_gcc_versions = ["4.6", "4.8", "4.9", "5.2", "5.3"]
     default_visual_versions = [10, 12, 14]
-    default_visual_runtimes = ["MT", "MD"]
+    default_visual_runtimes = ["MT", "MD", "MTd", "MDd"]
     default_apple_clang_versions = ["5.0", "5.1", "6.0", "6.1", "7.0"]
 
     def __init__(self, args=None, username=None, channel=None, runner=None,
@@ -115,23 +115,28 @@ class ConanMultiPackager(object):
             if "MT" in self.visual_runtimes:
                 sets.append([{"build_type": "Release", "compiler.runtime": "MT"},
                              {shared_option_name: False}])
+            if "MTd" in self.visual_runtimes:
                 sets.append([{"build_type": "Debug", "compiler.runtime": "MTd"},
                              {shared_option_name: False}])
             if "MD" in self.visual_runtimes:
-                sets.append([{"build_type": "Debug", "compiler.runtime": "MDd"},
+                sets.append([{"build_type": "Release", "compiler.runtime": "MD"},
                              {shared_option_name: False}])
                 sets.append([{"build_type": "Release", "compiler.runtime": "MD"},
+                             {shared_option_name: True}])
+            if "MDd" in self.visual_runtimes:
+                sets.append([{"build_type": "Debug", "compiler.runtime": "MDd"},
                              {shared_option_name: False}])
                 sets.append([{"build_type": "Debug", "compiler.runtime": "MDd"},
                              {shared_option_name: True}])
-                sets.append([{"build_type": "Release", "compiler.runtime": "MD"},
-                             {shared_option_name: True}])
+
         else:
             if "MT" in self.visual_runtimes:
                 sets.append([{"build_type": "Release", "compiler.runtime": "MT"}, {}])
+            if "MTd" in self.visual_runtimes:
                 sets.append([{"build_type": "Debug", "compiler.runtime": "MTd"}, {}])
-            if "MD" in self.visual_runtimes:
+            if "MDd" in self.visual_runtimes:
               sets.append([{"build_type": "Debug", "compiler.runtime": "MDd"}, {}])
+            if "MD" in self.visual_runtimes:
               sets.append([{"build_type": "Release", "compiler.runtime": "MD"}, {}])
 
         for setting, options in sets:
