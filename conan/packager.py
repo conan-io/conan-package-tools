@@ -368,7 +368,7 @@ class ConanMultiPackager(object):
 
         channel = "stable" if travis and prog.match(travis_branch) else None
         channel = "stable" if appveyor and prog.match(appveyor_branch) and \
-            not os.getenv("APPVEYOR_PULL_REQUEST_NUMBER") else channel
+            not os.getenv("APPVEYOR_PULL_REQUEST_NUMBER") else None
         channel = "stable" if bamboo and prog.match(bamboo_branch) else channel
 
 
