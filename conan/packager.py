@@ -14,13 +14,16 @@ class ConanMultiPackager(object):
     and run conan test command in docker containers"""
     default_gcc_versions = ["4.6", "4.8", "4.9", "5.2", "5.3"]
     default_visual_versions = [10, 12, 14]
+    default_visual_runtimes = ["MT", "MD", "MTd", "MDd"]
     default_apple_clang_versions = ["5.0", "5.1", "6.0", "6.1", "7.0"]
 
     def __init__(self, args=None, username=None, channel=None, runner=None,
-                 gcc_versions=None, visual_versions=None, apple_clang_versions=None,
+                 gcc_versions=None, visual_versions=None, visual_runtimes=None,
+                 apple_clang_versions=None,
                  use_docker=None, curpage=None, total_pages=None,
                  reference=None, password=None, remote=None,
-                 upload=None, stable_branch_pattern=None):
+                 upload=None, stable_branch_pattern=None,
+                 vs10_x86_64_enabled=False):
         self.builds = []
         self.runner = runner or os.system
         self.logger = logger
@@ -45,6 +48,10 @@ class ConanMultiPackager(object):
         self.visual_versions = visual_versions or \
             filter(None, os.getenv("CONAN_VISUAL_VERSIONS", "").split(",")) or \
             self.default_visual_versions
+        self.visual_runtimes = visual_runtimes or \
+            filter(None, os.getenv("CONAN_VISUAL_RUNTIMES", "").split(",")) or \
+            self.default_visual_runtimes
+
         self.apple_clang_versions = apple_clang_versions or \
             filter(None, os.getenv("CONAN_APPLE_CLANG_VERSIONS", "").split(",")) or \
             self.default_apple_clang_versions
@@ -57,6 +64,7 @@ class ConanMultiPackager(object):
             self.password = self.password.replace('"', '\\"')
 
         self.conan_pip_package = os.getenv("CONAN_PIP_PACKAGE", None)
+        self.vs10_x86_64_enabled = vs10_x86_64_enabled
 
     def _execute_test(self, precommand, settings, options):
         settings = collections.OrderedDict(sorted(settings.items()))
@@ -90,7 +98,7 @@ class ConanMultiPackager(object):
         if platform.system() == "Windows":
             for visual_version in self.visual_versions:
                 for arch in ["x86", "x86_64"]:
-                    if arch == "x86_64" and visual_version == 10:  # Not available even in Appveyor
+                    if not self.vs10_x86_64_enabled and arch == "x86_64" and visual_version == 10:
                         continue
                     self._add_visual_builds(visual_version, arch, shared_option_name)
         elif platform.system() == "Linux":
@@ -106,23 +114,32 @@ class ConanMultiPackager(object):
         sets = []
 
         if shared_option_name:
-            sets.append([{"build_type": "Release", "compiler.runtime": "MT"},
-                         {shared_option_name: False}])
-            sets.append([{"build_type": "Debug", "compiler.runtime": "MTd"},
-                         {shared_option_name: False}])
-            sets.append([{"build_type": "Debug", "compiler.runtime": "MDd"},
-                         {shared_option_name: False}])
-            sets.append([{"build_type": "Release", "compiler.runtime": "MD"},
-                         {shared_option_name: False}])
-            sets.append([{"build_type": "Debug", "compiler.runtime": "MDd"},
-                         {shared_option_name: True}])
-            sets.append([{"build_type": "Release", "compiler.runtime": "MD"},
-                         {shared_option_name: True}])
+            if "MT" in self.visual_runtimes:
+                sets.append([{"build_type": "Release", "compiler.runtime": "MT"},
+                             {shared_option_name: False}])
+            if "MTd" in self.visual_runtimes:
+                sets.append([{"build_type": "Debug", "compiler.runtime": "MTd"},
+                             {shared_option_name: False}])
+            if "MD" in self.visual_runtimes:
+                sets.append([{"build_type": "Release", "compiler.runtime": "MD"},
+                             {shared_option_name: False}])
+                sets.append([{"build_type": "Release", "compiler.runtime": "MD"},
+                             {shared_option_name: True}])
+            if "MDd" in self.visual_runtimes:
+                sets.append([{"build_type": "Debug", "compiler.runtime": "MDd"},
+                             {shared_option_name: False}])
+                sets.append([{"build_type": "Debug", "compiler.runtime": "MDd"},
+                             {shared_option_name: True}])
+
         else:
-            sets.append([{"build_type": "Release", "compiler.runtime": "MT"}, {}])
-            sets.append([{"build_type": "Debug", "compiler.runtime": "MTd"}, {}])
-            sets.append([{"build_type": "Debug", "compiler.runtime": "MDd"}, {}])
-            sets.append([{"build_type": "Release", "compiler.runtime": "MD"}, {}])
+            if "MT" in self.visual_runtimes:
+                sets.append([{"build_type": "Release", "compiler.runtime": "MT"}, {}])
+            if "MTd" in self.visual_runtimes:
+                sets.append([{"build_type": "Debug", "compiler.runtime": "MTd"}, {}])
+            if "MDd" in self.visual_runtimes:
+              sets.append([{"build_type": "Debug", "compiler.runtime": "MDd"}, {}])
+            if "MD" in self.visual_runtimes:
+              sets.append([{"build_type": "Release", "compiler.runtime": "MD"}, {}])
 
         for setting, options in sets:
             tmp = copy.copy(base_set)
@@ -304,10 +321,18 @@ class ConanMultiPackager(object):
         command = "conan upload %s@%s/%s --all --force" % (self.reference,
                                                            self.username,
                                                            self.channel)
+        user_command = 'conan user %s -p="%s"' % (self.username, self.password)
+
         self.logger.info("******** RUNNING UPLOAD COMMAND ********** \n%s" % command)
-        self.runner('conan user %s -p="%s"' % (self.username, self.password))
+        
         if self.remote:
             command += " -r %s" % self.remote
+            user_command += " -r %s" % self.remote
+            
+        ret = self.runner(user_command)
+        if ret != 0:
+            raise Exception("Error with user credentials")
+
         ret = self.runner(command)
         if ret != 0:
             raise Exception("Error uploading")
@@ -363,10 +388,14 @@ class ConanMultiPackager(object):
         travis_branch = os.getenv("TRAVIS_BRANCH", None)
         appveyor = os.getenv("APPVEYOR", False)
         appveyor_branch = os.getenv("APPVEYOR_REPO_BRANCH", None)
+        bamboo = os.getenv("bamboo_buildNumber", False)
+        bamboo_branch = os.getenv("bamboo_planRepository_branch", None)
 
         channel = "stable" if travis and prog.match(travis_branch) else None
         channel = "stable" if appveyor and prog.match(appveyor_branch) and \
-            not os.getenv("APPVEYOR_PULL_REQUEST_NUMBER") else channel
+            not os.getenv("APPVEYOR_PULL_REQUEST_NUMBER") else None
+        channel = "stable" if bamboo and prog.match(bamboo_branch) else channel
+
 
         ret = channel or default_channel or os.getenv("CONAN_CHANNEL", "testing")
         if ret != default_channel:
