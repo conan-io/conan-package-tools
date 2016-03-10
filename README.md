@@ -147,6 +147,7 @@ You specify another remote name with parameter **remote**.
 - **use_docker**: Use docker for package creation in Linux systems.
 - **curpage**: Current page of packages to create
 - **total_pages**: Total of pages
+- **vs10_x86_64_enabled**: Flag to tell that wether to build for VS10 64bits. Default [False]
 
 Upload related parameters:
 
