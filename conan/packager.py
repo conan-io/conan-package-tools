@@ -285,12 +285,14 @@ class ConanMultiPackager(object):
                        "-e CONAN_BUILDER_ENCODED=%s -e CONAN_USERNAME=%s " \
                        "-e CONAN_CHANNEL=%s" % (curpage, total_pages, serial,
                                                 self.username, self.channel)
-            specific_conan_package = ""
             if self.conan_pip_package:
                 specific_conan_package = "&& sudo pip install %s" % self.conan_pip_package
+            else:
+                specific_conan_package = "&& sudo pip install conan --upgrade"
+
             command = "sudo docker run --rm -v %s:/home/conan/project -v " \
                       "~/.conan/data:/home/conan/.conan/data -it %s %s /bin/sh -c \"" \
-                      "cd project && sudo pip install conan_package_tools %s && " \
+                      "cd project && sudo pip install conan_package_tools --upgrade %s && " \
                       "conan_json_packager\"" % (curdir, env_vars, image_name, specific_conan_package)
             ret = self.runner(command)
             if ret != 0:
