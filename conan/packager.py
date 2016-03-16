@@ -396,12 +396,11 @@ class ConanMultiPackager(object):
 
         channel = "stable" if travis and prog.match(travis_branch) else None
         channel = "stable" if appveyor and prog.match(appveyor_branch) and \
-            not os.getenv("APPVEYOR_PULL_REQUEST_NUMBER") else None
+            not os.getenv("APPVEYOR_PULL_REQUEST_NUMBER") else channel
         channel = "stable" if bamboo and prog.match(bamboo_branch) else channel
 
-
         ret = channel or default_channel or os.getenv("CONAN_CHANNEL", "testing")
-        if ret != default_channel:
+        if ret != os.getenv("CONAN_CHANNEL", "testing"):
             self.logger.warning("Redefined channel by CI branch matching with '%s', "
                                 "setting CONAN_CHANNEL to '%s'" % (pattern, ret))
 
