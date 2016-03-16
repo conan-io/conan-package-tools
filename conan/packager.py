@@ -13,7 +13,7 @@ class ConanMultiPackager(object):
     """ Help to generate common builds (setting's combinations), adjust the environment,
     and run conan test command in docker containers"""
     default_gcc_versions = ["4.6", "4.8", "4.9", "5.2", "5.3"]
-    default_visual_versions = [10, 12, 14]
+    default_visual_versions = ["10", "12", "14"]
     default_visual_runtimes = ["MT", "MD", "MTd", "MDd"]
     default_apple_clang_versions = ["5.0", "5.1", "6.0", "6.1", "7.0"]
 
@@ -97,8 +97,9 @@ class ConanMultiPackager(object):
             self.visual_versions = visual_versions
         if platform.system() == "Windows":
             for visual_version in self.visual_versions:
+                visual_version = str(visual_version)
                 for arch in ["x86", "x86_64"]:
-                    if not self.vs10_x86_64_enabled and arch == "x86_64" and visual_version == 10:
+                    if not self.vs10_x86_64_enabled and arch == "x86_64" and visual_version == "10":
                         continue
                     self._add_visual_builds(visual_version, arch, shared_option_name)
         elif platform.system() == "Linux":
