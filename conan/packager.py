@@ -21,7 +21,7 @@ class ConanMultiPackager(object):
                  gcc_versions=None, visual_versions=None, visual_runtimes=None,
                  apple_clang_versions=None,
                  use_docker=None, curpage=None, total_pages=None,
-                 reference=None, password=None, remote=None,
+                 docker_image=None, reference=None, password=None, remote=None,
                  upload=None, stable_branch_pattern=None,
                  vs10_x86_64_enabled=False):
         self.builds = []
@@ -59,6 +59,7 @@ class ConanMultiPackager(object):
         self.use_docker = use_docker or os.getenv("CONAN_USE_DOCKER", False)
         self.curpage = curpage or os.getenv("CONAN_CURRENT_PAGE", 1)
         self.total_pages = total_pages or os.getenv("CONAN_TOTAL_PAGES", 1)
+        self.docker_image = docker_image or os.getenv("CONAN_DOCKER_IMAGE", None)
 
         if self.password:
             self.password = self.password.replace('"', '\\"')
@@ -259,7 +260,7 @@ class ConanMultiPackager(object):
                 if curpage is None or total_pages is None or (index % total_pages) + 1 == curpage:
                     self._execute_build(build)
         else:
-            self._docker_pack(self.curpage, self.total_pages)
+            self._docker_pack(self.curpage, self.total_pages, self.docker_image)
 
     def docker_pack(self, curpage=1, total_pages=1, gcc_versions=None):
         self.logger.warn("Docker pack is deprecated and will be removed soon.\n Please"
@@ -269,12 +270,12 @@ class ConanMultiPackager(object):
         self.use_docker = True
         self.pack(curpage, total_pages)
 
-    def _docker_pack(self, curpage=1, total_pages=1):
+    def _docker_pack(self, curpage=1, total_pages=1, docker_image=None):
         """Launch the package generator in docker containers, one per gcc version specified"""
         for gcc_version in self.gcc_versions:
             # Do not change this "lasote" name is the dockerhub image, its a generic image
             # for build c/c++ with docker and gcc
-            image_name = "lasote/conangcc%s" % gcc_version.replace(".", "")
+            image_name = docker_image or "lasote/conangcc%s" % gcc_version.replace(".", "")
             # FIXME: adjust for invoke from windows or mac (AND REMOVE SUDO)
             if not os.path.exists(os.path.expanduser("~/.conan/data")):  # Maybe for travis
                 self.runner("mkdir ~/.conan/data && chmod -R 777 ~/.conan/data")
@@ -345,6 +346,7 @@ class ConanMultiPackager(object):
                "username": self.username,
                "channel": self.channel,
                "builds": self.builds,
+               "docker_image": self.docker_image,
                "conan_pip_package": self.conan_pip_package}
         return json.dumps(doc)
 
@@ -356,6 +358,7 @@ class ConanMultiPackager(object):
         ret.username = the_json["username"]
         ret.channel = the_json["channel"]
         ret.builds = the_json["builds"]
+        ret.docker_image = the_json["docker_image"]
         ret.conan_pip_package = the_json["conan_pip_package"]
         return ret
 
