@@ -139,9 +139,9 @@ class ConanMultiPackager(object):
             if "MTd" in self.visual_runtimes:
                 sets.append([{"build_type": "Debug", "compiler.runtime": "MTd"}, {}])
             if "MDd" in self.visual_runtimes:
-              sets.append([{"build_type": "Debug", "compiler.runtime": "MDd"}, {}])
+                sets.append([{"build_type": "Debug", "compiler.runtime": "MDd"}, {}])
             if "MD" in self.visual_runtimes:
-              sets.append([{"build_type": "Release", "compiler.runtime": "MD"}, {}])
+                sets.append([{"build_type": "Release", "compiler.runtime": "MD"}, {}])
 
         for setting, options in sets:
             tmp = copy.copy(base_set)
@@ -328,11 +328,11 @@ class ConanMultiPackager(object):
         user_command = 'conan user %s -p="%s"' % (self.username, self.password)
 
         self.logger.info("******** RUNNING UPLOAD COMMAND ********** \n%s" % command)
-        
+
         if self.remote:
             command += " -r %s" % self.remote
             user_command += " -r %s" % self.remote
-            
+
         ret = self.runner(user_command)
         if ret != 0:
             raise Exception("Error with user credentials")
