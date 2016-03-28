@@ -177,6 +177,7 @@ It's specially useful for CI integration.
 - **CONAN_USE_DOCKER**: If defined will use docker
 - **CONAN_CURRENT_PAGE**:  Current page of packages to create
 - **CONAN_TOTAL_PAGES**: Total of pages
+- **CONAN_DOCKER_IMAGE**: If defined and docker is being used, it will use this dockerimage instead of the default images
 - **CONAN_STABLE_BRANCH_PATTERN**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *stable* channel Default "master"
 - **CONAN_CHANNEL**: Channel where your packages will be uploaded if previous parameter doesn't match
 - **CONAN_PIP_PACKAGE**: Specify a conan package to install (default installs the latest) e.j conan==0.0.1rc7
