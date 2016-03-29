@@ -16,10 +16,11 @@ class ConanMultiPackager(object):
     default_visual_versions = ["10", "12", "14"]
     default_visual_runtimes = ["MT", "MD", "MTd", "MDd"]
     default_apple_clang_versions = ["5.0", "5.1", "6.0", "6.1", "7.0", "7.3"]
+    default_archs = ["x86", "x86_64"]
 
     def __init__(self, args=None, username=None, channel=None, runner=None,
                  gcc_versions=None, visual_versions=None, visual_runtimes=None,
-                 apple_clang_versions=None,
+                 apple_clang_versions=None, archs=None,
                  use_docker=None, curpage=None, total_pages=None,
                  docker_image=None, reference=None, password=None, remote=None,
                  upload=None, stable_branch_pattern=None,
@@ -55,6 +56,10 @@ class ConanMultiPackager(object):
         self.apple_clang_versions = apple_clang_versions or \
             filter(None, os.getenv("CONAN_APPLE_CLANG_VERSIONS", "").split(",")) or \
             self.default_apple_clang_versions
+
+        self.archs = archs or \
+            filter(None, os.getenv("CONAN_ARCHS", "").split(",")) or \
+            self.default_archs
 
         self.use_docker = use_docker or os.getenv("CONAN_USE_DOCKER", False)
         self.curpage = curpage or os.getenv("CONAN_CURRENT_PAGE", 1)
@@ -99,7 +104,7 @@ class ConanMultiPackager(object):
         if platform.system() == "Windows":
             for visual_version in self.visual_versions:
                 visual_version = str(visual_version)
-                for arch in ["x86", "x86_64"]:
+                for arch in self.archs:
                     if not self.vs10_x86_64_enabled and arch == "x86_64" and visual_version == "10":
                         continue
                     self._add_visual_builds(visual_version, arch, shared_option_name)
@@ -151,7 +156,7 @@ class ConanMultiPackager(object):
     def _add_osx_apple_clang_builds(self, shared_option_name, pure_c):
         # Not specified compiler or compiler version, will use the auto detected
         for compiler_version in self.apple_clang_versions:
-            for arch in ["x86", "x86_64"]:
+            for arch in self.archs:
                 if shared_option_name:
                     for shared in [True, False]:
                         for build_type in ["Debug", "Release"]:
@@ -185,7 +190,7 @@ class ConanMultiPackager(object):
     def _add_linux_gcc_builds(self, shared_option_name, pure_c):
         # Not specified compiler or compiler version, will use the auto detected
         for gcc_version in self.gcc_versions:
-            for arch in ["x86", "x86_64"]:
+            for arch in self.archs:
                 if shared_option_name:
                     for shared in [True, False]:
                         for build_type in ["Debug", "Release"]:
