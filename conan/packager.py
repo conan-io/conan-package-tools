@@ -401,11 +401,14 @@ class ConanMultiPackager(object):
         appveyor_branch = os.getenv("APPVEYOR_REPO_BRANCH", None)
         bamboo = os.getenv("bamboo_buildNumber", False)
         bamboo_branch = os.getenv("bamboo_planRepository_branch", None)
+        jenkins = os.getenv("JENKINS_URL", False)
+        jenkins_branch = os.getenv("BRANCH_NAME", None)
 
         channel = "stable" if travis and prog.match(travis_branch) else None
         channel = "stable" if appveyor and prog.match(appveyor_branch) and \
             not os.getenv("APPVEYOR_PULL_REQUEST_NUMBER") else channel
         channel = "stable" if bamboo and prog.match(bamboo_branch) else channel
+        channel = "stable" if jenkins and prog.match(jenkins_branch) else channel
 
         ret = channel or default_channel or os.getenv("CONAN_CHANNEL", "testing")
         if ret != os.getenv("CONAN_CHANNEL", "testing"):
