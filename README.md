@@ -398,6 +398,15 @@ When building from bamboo several environement variables get set during builds.
  
 If the env var **bamboo_buildNumber** is set and the branch name (**bamboo_planRepository_branch** env var) matches **stable_branch_pattern** then the channel name gets set to ```stable```.
 
+## Jenkins CI integration
+
+[Jenkins](https://jenkins.io/) is an open source CI tool that was originally forked from hudson.
+When building from jenkins several environement variables get set during builds.
+ 
+If the env var **JENKINS_URL** is set and the branch name (**BRANCH_NAME** env var) matches **stable_branch_pattern** then the channel name gets set to ```stable```.
+
+Currently only the pipeline builds set the **BRANCH_NAME** env var automatically.
+
 # Full example
 
 You can see the full zlib example [here](https://github.com/lasote/conan-zlib)
