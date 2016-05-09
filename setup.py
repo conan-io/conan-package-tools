@@ -30,7 +30,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version="0.2.13",
+    version="0.2.14",
 
     description='Packaging tools for Conan C/C++ package manager',
     # long_description="An open source, decentralized package manager, to automate building and sharing of packages",
