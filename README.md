@@ -24,7 +24,7 @@ Or you can [clone this repository](http://github.com/conan-io/conan-package-tool
 
 ## Quick start
 
-First is assumes that you are creating a conan's package. 
+First is assumes that you are creating a conan's package.
 You must have a **conanfile.py** file and a **test** folder in your current directory and **conan test** command must work.
 If you don't have it ready, take a look to [Automatically creating and testing packages](http://docs.conan.io/en/latest/packaging/testing.html)
 
@@ -33,7 +33,7 @@ In your **test/conanfile.py** you need to make a small adjustement, the require 
 
     channel = os.getenv("CONAN_CHANNEL", "testing")
     username = os.getenv("CONAN_USERNAME", "myuser")
-    
+
     class DefaultNameConan(ConanFile):
         ...
         requires = "zlib/1.2.8@%s/%s" % (username, channel)
@@ -45,7 +45,7 @@ Now create a **build.py** file in the root of your project and instance a **Cona
 
 
 	from conan.packager import ConanMultiPackager
-	
+
 	if __name__ == "__main__":
 	    builder = ConanMultiPackager(username="myuser")
 	    builder.add_common_builds()
@@ -88,7 +88,7 @@ You can use **builder.add\_common\_builds** method and remove some configuration
 Or add package's configurations without these method (settings and options):
 
 	from conan.packager import ConanMultiPackager
-	
+
 	if __name__ == "__main__":
 	    builder = ConanMultiPackager(username="myuser")
 	    builder.add({"arch": "x86", "build_type": "Release"}, {"mypackage:option1": "ON"})
@@ -119,19 +119,19 @@ If you added 10 package's to the builder, each page will execute 1 package gener
 
 ## Docker pack
 
-If you instance ConanMultiPackager with the parameter **use_docker=True**, 
-it will launch N containers with a virtualized versions of Ubuntu. 
+If you instance ConanMultiPackager with the parameter **use_docker=True**,
+it will launch N containers with a virtualized versions of Ubuntu.
 
 We have available different images at **dockerhub**, for gcc versions 4.6, 4.8, 4.9, 5.2 and 5.3.
 
 The containers will share the conan storage directory, so the packages will be generated in your conan's directory.
 
 You can also specify a subset of **gcc versions** with the parameter **gcc_versions** and the pagination is also available with the parameters **curpage** and **total_pages**.
-   
+
 ## Upload packages
-    
+
 Instance ConanMultiPackager with the **upload** parameter and it will automatically upload the generated packages to a remote.
-    
+
 You need also to pass the parameters **reference** (ex: "bzip2/1.0.2"), **password** and **username**.
 
 You specify another remote name with parameter **remote**.
@@ -193,7 +193,7 @@ We can configure the builds to be executed in the jobs defining some environment
 Its a real example of *.travis.yml* file that will generate packages for **Linux (gcc 4.6-5.2) and OSx for xcode6.2, xcode6.4 and xcode7.1**
 It uses 2 different jobs for each compiler version
 
-You can copy the files from this [conan-zlib repository](https://github.com/lasote/conan-zlib). Just copy the **".travis"** folder and the **".travis.yml"** file to your project and edit the latter adjusting CONAN_REFERENCE, CONAN_USERNAME and maybe the travis matrix to run more or less packages per job: 
+You can copy the files from this [conan-zlib repository](https://github.com/lasote/conan-zlib). Just copy the **".travis"** folder and the **".travis.yml"** file to your project and edit the latter adjusting CONAN_REFERENCE, CONAN_USERNAME and maybe the travis matrix to run more or less packages per job:
 
 
 **.travis.yml**
@@ -215,30 +215,30 @@ You can copy the files from this [conan-zlib repository](https://github.com/laso
       matrix:
         - CONAN_GCC_VERSIONS=4.6 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
         - CONAN_GCC_VERSIONS=4.6 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
-    
+
         - CONAN_GCC_VERSIONS=4.8 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
         - CONAN_GCC_VERSIONS=4.8 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
-    
+
         - CONAN_GCC_VERSIONS=4.9 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
         - CONAN_GCC_VERSIONS=4.9 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
-    
+
         - CONAN_GCC_VERSIONS=5.2 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
         - CONAN_GCC_VERSIONS=5.2 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
-    
+
         - CONAN_GCC_VERSIONS=5.3 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
         - CONAN_GCC_VERSIONS=5.3 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
 
     matrix:
        include:
-           - os: osx 
+           - os: osx
 	         osx_image: xcode7.1 # apple-clang 7.0
 	         language: generic
 	         env: CONAN_CURRENT_PAGE=1
-           - os: osx 
+           - os: osx
 	         osx_image: xcode7.1 # apple-clang 7.0
 	         language: generic
 	         env: CONAN_CURRENT_PAGE=2
-     
+
            - os: osx
 	         osx_image: xcode6.4 # apple-clang 6.1
 	         language: generic
@@ -247,12 +247,12 @@ You can copy the files from this [conan-zlib repository](https://github.com/laso
 	         osx_image: xcode6.4 # apple-clang 6.1
 	         language: generic
 	         env: CONAN_CURRENT_PAGE=2
-	   
-           - os: osx 
+
+           - os: osx
 	         osx_image: xcode6.2 # apple-clang 6.0
 	         language: generic
 	         env: CONAN_CURRENT_PAGE=1
-           - os: osx 
+           - os: osx
 	         osx_image: xcode6.2 # apple-clang 6.0
 	         language: generic
 	         env: CONAN_CURRENT_PAGE=2
@@ -291,7 +291,7 @@ In case you need just one job per compiler to compile all the packages:
         - CONAN_GCC_VERSIONS=5.3 CONAN_USE_DOCKER=1
     matrix:
        include:
-           - os: osx 
+           - os: osx
 	         osx_image: xcode7.1 # apple-clang 7.0
 	         language: generic
      		 env:
@@ -299,7 +299,7 @@ In case you need just one job per compiler to compile all the packages:
 	         osx_image: xcode6.4 # apple-clang 6.1
 	         language: generic
 	         env:
-           - os: osx 
+           - os: osx
 	         osx_image: xcode6.2 # apple-clang 6.0
 	         language: generic
 			 env:
@@ -311,7 +311,7 @@ In case you need just one job per compiler to compile all the packages:
 
 
 **.travis/install.sh**
-        
+
     #!/bin/bash
 
 	set -e
@@ -364,16 +364,16 @@ Its very similar to Travis CI, with the same **build.py** script we have the fol
 
     build: false
     environment:
-        PYTHON: "C:\\Python27"
-        PYTHON_VERSION: "2.7.8"
-        PYTHON_ARCH: "32"
-    
+        PYTHON: "C:\\Python27-x64"
+        PYTHON_VERSION: "2.7.11"
+        PYTHON_ARCH: "64"
+
         CONAN_UPLOAD: 1
         CONAN_REFERENCE: "bzip2/1.0.6"
         CONAN_USERNAME: "lasote"
         CONAN_CHANNEL: "ci"
         CONAN_TOTAL_PAGES: 4
-    
+
         matrix:
             - CONAN_CURRENT_PAGE: 1
             - CONAN_CURRENT_PAGE: 2  
@@ -385,9 +385,9 @@ Its very similar to Travis CI, with the same **build.py** script we have the fol
       - conan user # It creates the conan data directory
 
     test_script:
-      - python build.py
+      - C:\Python27-x64\python build.py
 
-  
+
 
 - Remember to set **CONAN_PASSWORD** variable in appveyor build backoffice!
 
@@ -395,7 +395,7 @@ Its very similar to Travis CI, with the same **build.py** script we have the fol
 
 [Bamboo](https://www.atlassian.com/software/bamboo) is a commercial CI tool developed by Atlassian.
 When building from bamboo several environement variables get set during builds.
- 
+
 If the env var **bamboo_buildNumber** is set and the branch name (**bamboo_planRepository_branch** env var) matches **stable_branch_pattern** then the channel name gets set to ```stable```.
 
 ## Jenkins CI integration
