@@ -11,9 +11,6 @@ from codecs import open
 import sys
 from distutils.errors import DistutilsError
 
-if sys.version_info.major > 2:
-    raise DistutilsError("This package requires Python 2.7")
-
 
 def get_requires(filename):
     requirements = []
