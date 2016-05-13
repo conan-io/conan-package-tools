@@ -7,6 +7,7 @@ import copy
 import re
 from conan.log import logger
 import sys
+from six import iteritems
 
 
 class ConanMultiPackager(object):
@@ -44,21 +45,21 @@ class ConanMultiPackager(object):
         os.environ["CONAN_CHANNEL"] = self.channel
 
         self.gcc_versions = gcc_versions or \
-            filter(None, os.getenv("CONAN_GCC_VERSIONS", "").split(",")) or \
+            list(filter(None, os.getenv("CONAN_GCC_VERSIONS", "").split(","))) or \
             self.default_gcc_versions
         self.visual_versions = visual_versions or \
-            filter(None, os.getenv("CONAN_VISUAL_VERSIONS", "").split(",")) or \
+            list(filter(None, os.getenv("CONAN_VISUAL_VERSIONS", "").split(","))) or \
             self.default_visual_versions
         self.visual_runtimes = visual_runtimes or \
-            filter(None, os.getenv("CONAN_VISUAL_RUNTIMES", "").split(",")) or \
+            list(filter(None, os.getenv("CONAN_VISUAL_RUNTIMES", "").split(","))) or \
             self.default_visual_runtimes
 
         self.apple_clang_versions = apple_clang_versions or \
-            filter(None, os.getenv("CONAN_APPLE_CLANG_VERSIONS", "").split(",")) or \
+            list(filter(None, os.getenv("CONAN_APPLE_CLANG_VERSIONS", "").split(","))) or \
             self.default_apple_clang_versions
 
         self.archs = archs or \
-            filter(None, os.getenv("CONAN_ARCHS", "").split(",")) or \
+            list(filter(None, os.getenv("CONAN_ARCHS", "").split(","))) or \
             self.default_archs
 
         self.use_docker = use_docker or os.getenv("CONAN_USE_DOCKER", False)
@@ -83,8 +84,8 @@ class ConanMultiPackager(object):
                     self.logger.debug("- Skipped build, compiler mismatch: %s" % str(dict(settings)))
                     return  # Skip this build, it's not for this machine
 
-        settings = " ".join(['-s %s="%s"' % (key, value) for key, value in settings.iteritems()])
-        options = " ".join(['-o %s="%s"' % (key, value) for key, value in options.iteritems()])
+        settings = " ".join(['-s %s="%s"' % (key, value) for key, value in iteritems(settings)])
+        options = " ".join(['-o %s="%s"' % (key, value) for key, value in iteritems(options)])
         command = "conan test . %s %s %s" % (settings, options, self.args)
         if precommand:
             command = '%s && %s' % (precommand, command)
