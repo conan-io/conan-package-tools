@@ -385,8 +385,8 @@ class ConanMultiPackager(object):
 
     def conan_compiler_info(self):
         """return the compiler and its version readed in conan.conf"""
-        from ConfigParser import ConfigParser
-        parser = ConfigParser()
+        from six.moves import configparser
+        parser = configparser.ConfigParser()
         parser.read(os.path.expanduser("~/.conan/conan.conf"))
         items = dict(parser.items("settings_defaults"))
         return items["compiler"], items["compiler.version"]
@@ -417,3 +417,8 @@ class ConanMultiPackager(object):
                                 "setting CONAN_CHANNEL to '%s'" % (pattern, ret))
 
         return ret
+
+
+if __name__ == "__main__":
+    mp = ConanMultiPackager()
+    print(mp.conan_compiler_info())
