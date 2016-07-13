@@ -42,7 +42,7 @@ class MinGWHelper(object):
 
         arch => ["x86", "x86_64"]
         exception => ["dwarf2", "sjlj", "seh"]
-        thread => ["posix", "win"]
+        thread => ["posix", "win32"]
         '''
         if platform.system() != "Windows":
             raise "Only for windows!"
@@ -85,6 +85,7 @@ class MinGWHelper(object):
     def package_name(arch, exception, thread):
         arch_name = {"x86": "i686", "i686": "i686"}.get(arch, "x86_64")
         exception = {"dwarf2": "dw2"}.get(exception, exception)
+        thread = {"win32": "win"}.get(thread, thread)
         name = "mingw-w64-%s-%s-%s" % (arch_name, exception, thread)
         return name
 
