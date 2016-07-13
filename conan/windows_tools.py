@@ -40,7 +40,7 @@ class MinGWHelper(object):
         [(version, arch, exception, thread), (version, arch, exception, thread)]
 
         arch => ["x86", "x86_64"]
-        exception => ["dw2", "sjlj", "seh"]
+        exception => ["dwarf2", "sjlj", "seh"]
         thread => ["posix", "win"]
         '''
         if platform.system() != "Windows":
@@ -63,13 +63,13 @@ class MinGWHelper(object):
         for config in self.configurations:
             version, arch, exception, thread = config
             if (arch == "x86" and exception == "seh") or \
-               (arch == "x86_64" and exception == "dw2"):
+               (arch == "x86_64" and exception == "dwarf2"):
                 self.logger.error("Skipped invalid configuration: %s" % config)
                 return
             if thread not in ["posix", "win32"]:
                 self.logger.error("Invalid thread setting: %s" % thread)
                 return
-            if exception not in ["seh", "sjlj", "dw2"]:
+            if exception not in ["seh", "sjlj", "dwarf2"]:
                 self.logger.error("Invalid thread setting: %s" % exception)
                 return
             if version[0:3] not in ["4.8", "4.9"]:
@@ -83,6 +83,7 @@ class MinGWHelper(object):
     @staticmethod
     def package_name(arch, exception, thread):
         arch_name = {"x86": "i686", "i686": "i686"}.get(arch, "x86_64")
+        exception = {"dwarf2": "dw2"}.get(exception, exception)
         name = "mingw-w64-%s-%s-%s" % (arch_name, exception, thread)
         return name
 
@@ -132,7 +133,7 @@ if __name__ == "__main__":
     mingw = MinGWHelper(configurations=[("4.9", "x86_64", "seh", "posix"),
                                         ("4.9", "x86_64", "sjlj", "posix"),
                                         ("4.9", "x86", "sjlj", "posix"),
-                                        ("4.9", "x86", "dw2", "posix")],
+                                        ("4.9", "x86", "dwarf2", "posix")],
                         pure_c=True)
     builder = ConanMultiPackager(username="lasote")
     builder.builds.extend(mingw.generate_builds())
