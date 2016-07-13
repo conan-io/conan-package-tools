@@ -8,6 +8,7 @@ import re
 from conan.log import logger
 import sys
 from six import iteritems
+from conan.windows_tools import MinGWHelper
 
 
 class ConanMultiPackager(object):
@@ -75,8 +76,7 @@ class ConanMultiPackager(object):
 
     def _execute_test(self, precommand, settings, options):
         settings = collections.OrderedDict(sorted(settings.items()))
-
-        if settings.get("compiler") != "Visual Studio":  # Pending until issue #186 is done
+        if platform.system() != "Windows":
             if settings.get("compiler", None) and settings.get("compiler.version", None):
                 conan_compiler, conan_compiler_version = self.conan_compiler_info()
                 if conan_compiler != settings.get("compiler") or \
@@ -372,16 +372,31 @@ class ConanMultiPackager(object):
         settings, options = build
         if settings.get("compiler", None) == "Visual Studio" and "compiler.version" in settings:
             self._execute_visual_studio_build(settings, options)
+        elif settings.get("compiler", None) == "gcc" and platform.system() == "Windows":
+            self._execute_mingw_build(settings, options)
         else:
             self._execute_test(None, settings, options)
+
+    def _execute_mingw_build(self, settings, options):
+        helper = MinGWHelper()
+        path = helper.install(settings["compiler.version"],
+                              settings["arch"],
+                              settings["compiler.exception"],
+                              settings["compiler.threads"])
+        pre_command = "set PATH=" + os.path.join(path, "bin") + ";%PATH%"
+        gcc = os.path.join(path, "bin", "gcc.exe")
+        gcpp = os.path.join(path, "bin", "g++.exe")
+        pre_command += ' && set CXX=%s && set CC=%s' % (gcpp, gcc)
+        print(pre_command)
+        self._execute_test(pre_command, settings, options)
 
     def _execute_visual_studio_build(self, settings, options):
         '''Sets the VisualStudio environment with vcvarsall for the specified version'''
         compiler_version = settings["compiler.version"]
         vcvars = 'call "%vs' + str(compiler_version) + '0comntools%../../VC/vcvarsall.bat"'
         param = "x86" if settings.get("arch", None) == "x86" else "amd64"
-        command = '%s %s' % (vcvars, param)
-        self._execute_test(command, settings, options)
+        pre_command = '%s %s' % (vcvars, param)
+        self._execute_test(pre_command, settings, options)
 
     def conan_compiler_info(self):
         """return the compiler and its version readed in conan.conf"""
@@ -417,8 +432,3 @@ class ConanMultiPackager(object):
                                 "setting CONAN_CHANNEL to '%s'" % (pattern, ret))
 
         return ret
-
-
-if __name__ == "__main__":
-    mp = ConanMultiPackager()
-    print(mp.conan_compiler_info())
