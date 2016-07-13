@@ -1,6 +1,7 @@
 import os
 import platform
 from conan.log import logger
+from copy import copy
 
 DEFAULT_NPAKCD_INSTALLER = "http://bit.ly/npackdcl-1_21_6"
 DEFAULT_NPACKD_INSTALL_PREFIX = "C:\\Program Files (x86)\\NpackdCL"
@@ -121,8 +122,9 @@ class MinGWHelper(object):
                 settings.update({"compiler.libcxx": "libstdc++"})
             settings.update({"build_type": "Release"})
             builds.append((settings, {}))
-            settings.update({"build_type": "Debug"})
-            builds.append((settings, {}))
+            s2 = copy(settings)
+            s2.update({"build_type": "Debug"})
+            builds.append((s2, {}))
         return builds
 
 
