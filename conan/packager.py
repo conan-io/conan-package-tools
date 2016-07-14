@@ -8,7 +8,6 @@ import re
 from conan.log import logger
 import sys
 from six import iteritems
-from conan.windows_tools import MinGWHelper
 
 
 class ConanMultiPackager(object):
@@ -26,7 +25,8 @@ class ConanMultiPackager(object):
                  use_docker=None, curpage=None, total_pages=None,
                  docker_image=None, reference=None, password=None, remote=None,
                  upload=None, stable_branch_pattern=None,
-                 vs10_x86_64_enabled=False):
+                 vs10_x86_64_enabled=False,
+                 mingw_configurations=None):
         self.builds = []
         self.runner = runner or os.system
         self.logger = logger
@@ -59,6 +59,8 @@ class ConanMultiPackager(object):
             list(filter(None, os.getenv("CONAN_APPLE_CLANG_VERSIONS", "").split(","))) or \
             self.default_apple_clang_versions
 
+        self.mingw_configurations = mingw_configurations or self._get_mingw_config_from_env()
+
         self.archs = archs or \
             list(filter(None, os.getenv("CONAN_ARCHS", "").split(","))) or \
             self.default_archs
@@ -73,6 +75,16 @@ class ConanMultiPackager(object):
 
         self.conan_pip_package = os.getenv("CONAN_PIP_PACKAGE", None)
         self.vs10_x86_64_enabled = vs10_x86_64_enabled
+
+    def _get_mingw_config_from_env(self):
+        tmp = os.getenv("MINGW_CONFIGURATIONS", "")
+        # 4.9@x86_64@seh@posix",4.9@x86_64@seh@win32"
+        ret = []
+        confs = tmp.split(",")
+        for conf in confs:
+            conf = conf.strip()
+            ret.append(conf.split("@"))
+        return ret
 
     def _execute_test(self, precommand, settings, options):
         settings = collections.OrderedDict(sorted(settings.items()))
@@ -95,7 +107,25 @@ class ConanMultiPackager(object):
         if retcode != 0:
             exit("Error while executing:\n\t %s" % command)
 
-    def add_common_builds(self, shared_option_name=None, pure_c=True, visual_versions=None):
+    def mingw_builds(self, pure_c):
+        builds = []
+        for config in self.mingw_configurations:
+            version, arch, exception, thread = config
+            settings = {"arch": arch, "compiler": "gcc",
+                        "compiler.version": version[0:3],
+                        "compiler.threads": thread,
+                        "compiler.exception": exception}
+            if pure_c:
+                settings.update({"compiler.libcxx": "libstdc++"})
+            settings.update({"build_type": "Release"})
+            builds.append((settings, {}))
+            s2 = copy.copy(settings)
+            s2.update({"build_type": "Debug"})
+            builds.append((s2, {}))
+        return builds
+
+    def add_common_builds(self, shared_option_name=None, 
+                          pure_c=True, visual_versions=None):
 
         if visual_versions:
             self.logger.warn("Parameter 'visual_versions' for 'add_common_builds' method are"
@@ -109,6 +139,8 @@ class ConanMultiPackager(object):
                     if not self.vs10_x86_64_enabled and arch == "x86_64" and visual_version == "10":
                         continue
                     self._add_visual_builds(visual_version, arch, shared_option_name)
+            if self.mingw_builds(pure_c):
+                self.builds.extend(self.mingw_builds(pure_c))
         elif platform.system() == "Linux":
             self._add_linux_gcc_builds(shared_option_name, pure_c)
         elif platform.system() == "Darwin":
@@ -378,16 +410,8 @@ class ConanMultiPackager(object):
             self._execute_test(None, settings, options)
 
     def _execute_mingw_build(self, settings, options):
-        helper = MinGWHelper()
-        path = helper.install(settings["compiler.version"],
-                              settings["arch"],
-                              settings["compiler.exception"],
-                              settings["compiler.threads"])
-        pre_command = "set PATH=" + os.path.join(path, "bin") + ";%PATH%"
-        gcc = os.path.join(path, "bin", "gcc.exe")
-        gcpp = os.path.join(path, "bin", "g++.exe")
-        pre_command += ' && set CXX=%s && set CC=%s' % (gcpp, gcc)
-        print(pre_command)
+        pre_command = ""
+        # HACER UN TXT CON EL MINGW EN UN TEMPORAL Y PASARLE LA RUTA ENTERA?
         self._execute_test(pre_command, settings, options)
 
     def _execute_visual_studio_build(self, settings, options):
@@ -432,3 +456,14 @@ class ConanMultiPackager(object):
                                 "setting CONAN_CHANNEL to '%s'" % (pattern, ret))
 
         return ret
+
+
+if __name__ == "__main__":
+    os.environ["MINGW_CONFIGURATIONS"] = '4.9@x86_64@seh@posix, 4.9@x86_64@seh@win32'
+#     mingw_configurations = [("4.9", "x86_64", "seh", "posix"),
+#                             ("4.9", "x86_64", "sjlj", "posix"),
+#                             ("4.9", "x86", "sjlj", "posix"),
+#                             ("4.9", "x86", "dwarf2", "posix")]
+    builder = ConanMultiPackager(username="lasote", mingw_configurations=None)
+    builder.add_common_builds(pure_c=False)
+    builder.run()
