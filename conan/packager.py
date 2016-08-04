@@ -355,7 +355,7 @@ class ConanMultiPackager(object):
         comes from travis or appveyor, in which you will not consider such issue.
         """
         if not self.upload:
-            return;
+            return
         if not self.reference or not self.password or not self.channel or not self.username:
             self.logger.info("Skipped upload, some parameter (reference, password or channel)"
                              " is missing!")
@@ -366,6 +366,9 @@ class ConanMultiPackager(object):
         user_command = 'conan user %s -p="%s"' % (self.username, self.password)
 
         self.logger.info("******** RUNNING UPLOAD COMMAND ********** \n%s" % command)
+        if platform.system() == "Linux" and self.use_docker:
+            self.runner("sudo chmod -R 777 ~/.conan/data")
+            # self.runner("ls -la ~/.conan")
 
         if self.remote:
             command += " -r %s" % self.remote
