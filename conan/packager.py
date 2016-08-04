@@ -48,9 +48,11 @@ class ConanMultiPackager(object):
         self.gcc_versions = gcc_versions or \
             list(filter(None, os.getenv("CONAN_GCC_VERSIONS", "").split(","))) or \
             self.default_gcc_versions
-        self.visual_versions = visual_versions or \
-            list(filter(None, os.getenv("CONAN_VISUAL_VERSIONS", "").split(","))) or \
-            self.default_visual_versions
+        if visual_versions is not None:
+            self.visual_versions = visual_versions
+        else:
+            env_visual_versions = list(filter(None, os.getenv("CONAN_VISUAL_VERSIONS", "").split(",")))
+            self.visual_versions = env_visual_versions or self.default_visual_versions
         self.visual_runtimes = visual_runtimes or \
             list(filter(None, os.getenv("CONAN_VISUAL_RUNTIMES", "").split(","))) or \
             self.default_visual_runtimes
@@ -60,6 +62,7 @@ class ConanMultiPackager(object):
             self.default_apple_clang_versions
 
         self.mingw_configurations = mingw_configurations or self._get_mingw_config_from_env()
+        self.mingw_installer_reference = os.getenv("CONAN_MINGW_INSTALLER_REFERENCE") or "mingw_installer/0.1@lasote/testing"
 
         self.archs = archs or \
             list(filter(None, os.getenv("CONAN_ARCHS", "").split(","))) or \
@@ -85,27 +88,6 @@ class ConanMultiPackager(object):
             conf = conf.strip()
             ret.append(conf.split("@"))
         return ret
-
-    def _execute_test(self, precommand, settings, options):
-        settings = collections.OrderedDict(sorted(settings.items()))
-        if platform.system() != "Windows":
-            if settings.get("compiler", None) and settings.get("compiler.version", None):
-                conan_compiler, conan_compiler_version = self.conan_compiler_info()
-                if conan_compiler != settings.get("compiler") or \
-                   conan_compiler_version != settings.get("compiler.version"):
-                    self.logger.debug("- Skipped build, compiler mismatch: %s" % str(dict(settings)))
-                    return  # Skip this build, it's not for this machine
-
-        settings = " ".join(['-s %s="%s"' % (key, value) for key, value in iteritems(settings)])
-        options = " ".join(['-o %s="%s"' % (key, value) for key, value in iteritems(options)])
-        command = "conan test . %s %s %s" % (settings, options, self.args)
-        if precommand:
-            command = '%s && %s' % (precommand, command)
-
-        self.logger.info("******** RUNNING BUILD ********** \n%s" % command)
-        retcode = self.runner(command)
-        if retcode != 0:
-            exit("Error while executing:\n\t %s" % command)
 
     def mingw_builds(self, pure_c):
         builds = []
@@ -409,10 +391,43 @@ class ConanMultiPackager(object):
         else:
             self._execute_test(None, settings, options)
 
+    def _execute_test(self, precommand, settings, options):
+        settings = collections.OrderedDict(sorted(settings.items()))
+        if platform.system() != "Windows":
+            if settings.get("compiler", None) and settings.get("compiler.version", None):
+                conan_compiler, conan_compiler_version = self.conan_compiler_info()
+                if conan_compiler != settings.get("compiler") or \
+                   conan_compiler_version != settings.get("compiler.version"):
+                    self.logger.debug("- Skipped build, compiler mismatch: %s" % str(dict(settings)))
+                    return  # Skip this build, it's not for this machine
+
+        settings = " ".join(['-s %s="%s"' % (key, value) for key, value in iteritems(settings)])
+        options = " ".join(['-o %s="%s"' % (key, value) for key, value in iteritems(options)])
+        command = "conan test . %s %s %s" % (settings, options, self.args)
+        if precommand:
+            command = '%s && %s' % (precommand, command)
+
+        self.logger.info("******** RUNNING BUILD ********** \n%s" % command)
+        retcode = self.runner(command)
+        if retcode != 0:
+            exit("Error while executing:\n\t %s" % command)
+
     def _execute_mingw_build(self, settings, options):
-        pre_command = ""
-        # HACER UN TXT CON EL MINGW EN UN TEMPORAL Y PASARLE LA RUTA ENTERA?
-        self._execute_test(pre_command, settings, options)
+        installer_options = []
+        if "compiler.threads" in settings:
+            installer_options.append(("threads", settings["compiler.threads"]))
+        if "compiler.exception" in settings:
+            installer_options.append(("exception", settings["compiler.exception"]))
+        if "compiler.version" in settings:
+            installer_options.append(("version", settings["compiler.version"]))
+        if "arch" in settings:
+            installer_options.append(("arch", settings["arch"]))
+
+        installer_options = " ".join(["-o %s=%s" % (v[0], v[1]) for v in installer_options ])
+        install = "conan install %s -g virtualenv %s" % (self.mingw_installer_reference, installer_options)
+        print(install)
+        self.runner(install)
+        self._execute_test("activate.bat", settings, options)
 
     def _execute_visual_studio_build(self, settings, options):
         '''Sets the VisualStudio environment with vcvarsall for the specified version'''
