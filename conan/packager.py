@@ -82,6 +82,8 @@ class ConanMultiPackager(object):
     def _get_mingw_config_from_env(self):
         tmp = os.getenv("MINGW_CONFIGURATIONS", "")
         # 4.9@x86_64@seh@posix",4.9@x86_64@seh@win32"
+        if not tmp:
+            return []
         ret = []
         confs = tmp.split(",")
         for conf in confs:
