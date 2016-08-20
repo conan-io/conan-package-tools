@@ -102,6 +102,36 @@ Or add package's configurations without these method (settings and options):
 When the builder detects a "Visual Studio" compiler and it's version, it will automatically configure the execution environment for the "conan test" command with the **vcvarsall.bat** script (provided by all Microsoft Visual Studio versions).
 So you can compile your project with the right compiler automatically, even without CMake.
 
+## MinGW builds
+
+MinGW compiler builds are also supported. You can use this feature with Appveyor.
+
+You can choose different MinGW compiler configurations:
+
+- **Version**: 4.8 and 4.9 are supported
+- **Architecture**: x86 and x86_64 are supported
+- **Exceptions**: seh and sjlj are supported
+- **Threads**: posix and win32 are supported
+
+
+Using **MINGW_CONFIGURATIONS** env variable:
+
+    os.environ["MINGW_CONFIGURATIONS"] = '4.9@x86_64@seh@posix, 4.9@x86_64@seh@win32'
+
+
+Or passing a list to ConanMultiPackager constructor:
+
+    mingw_configurations = [("4.9", "x86_64", "seh", "posix"),
+                            ("4.9", "x86_64", "sjlj", "posix"),
+                            ("4.9", "x86", "sjlj", "posix"),
+                            ("4.9", "x86", "dwarf2", "posix")]
+    builder = ConanMultiPackager(username="lasote", mingw_configurations=mingw_configurations)
+    builder.add_common_builds(pure_c=False)
+    builder.run()
+    
+TODO: Handle shared option and control debug/release builds.
+
+
 ## Pagination
 
 You can launch partial builds passing two pagination parameters, **curpage** and **total_pages**.
