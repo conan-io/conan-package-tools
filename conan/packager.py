@@ -40,7 +40,7 @@ class ConanMultiPackager(object):
         self.reference = reference or os.getenv("CONAN_REFERENCE", None)
         self.password = password or os.getenv("CONAN_PASSWORD", None)
         self.remote = remote or os.getenv("CONAN_REMOTE", None)
-        self.upload = upload or os.getenv("CONAN_UPLOAD", None)
+        self.upload = upload or (os.getenv("CONAN_UPLOAD", None) in ["True", "true", "1"])
         self.stable_branch_pattern = stable_branch_pattern or os.getenv("CONAN_STABLE_BRANCH_PATTERN", None)
         self.channel = self._get_channel(channel)
         os.environ["CONAN_CHANNEL"] = self.channel
