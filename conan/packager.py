@@ -12,7 +12,7 @@ from six import iteritems
 
 class ConanMultiPackager(object):
     """ Help to generate common builds (setting's combinations), adjust the environment,
-    and run conan test command in docker containers"""
+    and run conan test_package command in docker containers"""
     default_gcc_versions = ["4.6", "4.8", "4.9", "5.2", "5.3"]
     default_visual_versions = ["10", "12", "14"]
     default_visual_runtimes = ["MT", "MD", "MTd", "MDd"]
@@ -408,7 +408,7 @@ class ConanMultiPackager(object):
 
         settings = " ".join(['-s %s="%s"' % (key, value) for key, value in iteritems(settings)])
         options = " ".join(['-o %s="%s"' % (key, value) for key, value in iteritems(options)])
-        command = "conan test . %s %s %s" % (settings, options, self.args)
+        command = "conan test_package . %s %s %s" % (settings, options, self.args)
         if precommand:
             command = '%s && %s' % (precommand, command)
 
