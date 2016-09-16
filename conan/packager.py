@@ -12,7 +12,7 @@ from six import iteritems
 
 class ConanMultiPackager(object):
     """ Help to generate common builds (setting's combinations), adjust the environment,
-    and run conan test command in docker containers"""
+    and run conan test_package command in docker containers"""
     default_gcc_versions = ["4.6", "4.8", "4.9", "5.2", "5.3"]
     default_visual_versions = ["10", "12", "14"]
     default_visual_runtimes = ["MT", "MD", "MTd", "MDd"]
@@ -40,7 +40,7 @@ class ConanMultiPackager(object):
         self.reference = reference or os.getenv("CONAN_REFERENCE", None)
         self.password = password or os.getenv("CONAN_PASSWORD", None)
         self.remote = remote or os.getenv("CONAN_REMOTE", None)
-        self.upload = upload or os.getenv("CONAN_UPLOAD", None)
+        self.upload = upload or (os.getenv("CONAN_UPLOAD", None) in ["True", "true", "1"])
         self.stable_branch_pattern = stable_branch_pattern or os.getenv("CONAN_STABLE_BRANCH_PATTERN", None)
         self.channel = self._get_channel(channel)
         os.environ["CONAN_CHANNEL"] = self.channel
@@ -408,7 +408,7 @@ class ConanMultiPackager(object):
 
         settings = " ".join(['-s %s="%s"' % (key, value) for key, value in iteritems(settings)])
         options = " ".join(['-o %s="%s"' % (key, value) for key, value in iteritems(options)])
-        command = "conan test . %s %s %s" % (settings, options, self.args)
+        command = "conan test_package . %s %s %s" % (settings, options, self.args)
         if precommand:
             command = '%s && %s' % (precommand, command)
 
