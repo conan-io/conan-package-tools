@@ -16,7 +16,7 @@ class ConanMultiPackager(object):
     default_gcc_versions = ["4.6", "4.8", "4.9", "5.2", "5.3"]
     default_visual_versions = ["10", "12", "14"]
     default_visual_runtimes = ["MT", "MD", "MTd", "MDd"]
-    default_apple_clang_versions = ["5.0", "5.1", "6.0", "6.1", "7.0", "7.3"]
+    default_apple_clang_versions = ["5.0", "5.1", "6.0", "6.1", "7.0", "7.3", "8,0"]
     default_archs = ["x86", "x86_64"]
 
     def __init__(self, args=None, username=None, channel=None, runner=None,
@@ -26,7 +26,8 @@ class ConanMultiPackager(object):
                  docker_image=None, reference=None, password=None, remote=None,
                  upload=None, stable_branch_pattern=None,
                  vs10_x86_64_enabled=False,
-                 mingw_configurations=None):
+                 mingw_configurations=None,
+                 stable_channel=None):
         self.builds = []
         self.runner = runner or os.system
         self.logger = logger
@@ -42,7 +43,10 @@ class ConanMultiPackager(object):
         self.remote = remote or os.getenv("CONAN_REMOTE", None)
         self.upload = upload or (os.getenv("CONAN_UPLOAD", None) in ["True", "true", "1"])
         self.stable_branch_pattern = stable_branch_pattern or os.getenv("CONAN_STABLE_BRANCH_PATTERN", None)
-        self.channel = self._get_channel(channel)
+        default_channel = channel or os.getenv("CONAN_CHANNEL", "testing")
+        stable_channel = stable_channel or os.getenv("CONAN_STABLE_CHANNEL", "stable")
+        self.channel = self._get_channel(default_channel, stable_channel)
+
         os.environ["CONAN_CHANNEL"] = self.channel
 
         self.gcc_versions = gcc_versions or \
@@ -450,7 +454,7 @@ class ConanMultiPackager(object):
         items = dict(parser.items("settings_defaults"))
         return items["compiler"], items["compiler.version"]
 
-    def _get_channel(self, default_channel):
+    def _get_channel(self, default_channel, stable_channel):
 
         pattern = self.stable_branch_pattern or "master"
         prog = re.compile(pattern)
@@ -464,16 +468,17 @@ class ConanMultiPackager(object):
         jenkins = os.getenv("JENKINS_URL", False)
         jenkins_branch = os.getenv("BRANCH_NAME", None)
 
-        channel = "stable" if travis and prog.match(travis_branch) else None
-        channel = "stable" if appveyor and prog.match(appveyor_branch) and \
+        channel = stable_channel if travis and prog.match(travis_branch) else None
+        channel = stable_channel if appveyor and prog.match(appveyor_branch) and \
             not os.getenv("APPVEYOR_PULL_REQUEST_NUMBER") else channel
-        channel = "stable" if bamboo and prog.match(bamboo_branch) else channel
-        channel = "stable" if jenkins and prog.match(jenkins_branch) else channel
+        channel = stable_channel if bamboo and prog.match(bamboo_branch) else channel
+        channel = stable_channel if jenkins and prog.match(jenkins_branch) else channel
 
-        ret = channel or default_channel or os.getenv("CONAN_CHANNEL", "testing")
-        if ret != os.getenv("CONAN_CHANNEL", "testing"):
+        if channel:
             self.logger.warning("Redefined channel by CI branch matching with '%s', "
-                                "setting CONAN_CHANNEL to '%s'" % (pattern, ret))
+                                "setting CONAN_CHANNEL to '%s'" % (pattern, channel))
+
+        ret = channel or default_channel
 
         return ret
 
