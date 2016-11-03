@@ -95,7 +95,7 @@ class ConanMultiPackager(object):
             ret.append(conf.split("@"))
         return ret
 
-    def mingw_builds(self, pure_c):
+    def mingw_builds(self):
         builds = []
         for config in self.mingw_configurations:
             version, arch, exception, thread = config
@@ -103,8 +103,8 @@ class ConanMultiPackager(object):
                         "compiler.version": version[0:3],
                         "compiler.threads": thread,
                         "compiler.exception": exception}
-            if pure_c:
-                settings.update({"compiler.libcxx": "libstdc++"})
+            # Fixme? It really applies to mingw?
+            settings.update({"compiler.libcxx": "libstdc++"})
             settings.update({"build_type": "Release"})
             builds.append((settings, {}))
             s2 = copy.copy(settings)
@@ -127,8 +127,8 @@ class ConanMultiPackager(object):
                     if not self.vs10_x86_64_enabled and arch == "x86_64" and visual_version == "10":
                         continue
                     self._add_visual_builds(visual_version, arch, shared_option_name)
-            if self.mingw_builds(pure_c):
-                self.builds.extend(self.mingw_builds(pure_c))
+            if self.mingw_builds():
+                self.builds.extend(self.mingw_builds())
         elif platform.system() == "Linux":
             self._add_linux_gcc_builds(shared_option_name, pure_c)
         elif platform.system() == "Darwin":
