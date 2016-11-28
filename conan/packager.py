@@ -129,7 +129,7 @@ class ConanMultiPackager(object):
                     self._add_visual_builds(visual_version, arch, shared_option_name)
             if self.mingw_builds():
                 self.builds.extend(self.mingw_builds())
-        elif platform.system() == "Linux":
+        elif platform.system() == "Linux" or self.use_docker == True:
             self._add_linux_gcc_builds(shared_option_name, pure_c)
         elif platform.system() == "Darwin":
             self._add_osx_apple_clang_builds(shared_option_name, pure_c)
