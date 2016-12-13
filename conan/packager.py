@@ -450,8 +450,9 @@ class ConanMultiPackager(object):
         """return the compiler and its version readed in conan.conf"""
         from six.moves import configparser
         parser = configparser.ConfigParser()
-        home = os.environ.get("CONAN_USER_HOME", "~/.conan")
-        parser.read(os.path.expanduser("%s/conan.conf" % home))
+        home = os.environ.get("CONAN_USER_HOME", "~/")
+        conf_path = os.path.expanduser("%s/.conan/conan.conf" % home)
+        parser.read(conf_path)
         items = dict(parser.items("settings_defaults"))
         return items["compiler"], items["compiler.version"]
 
