@@ -474,7 +474,7 @@ class ConanMultiPackager(object):
         channel = stable_channel if appveyor and prog.match(appveyor_branch) and \
             not os.getenv("APPVEYOR_PULL_REQUEST_NUMBER") else channel
         channel = stable_channel if bamboo and prog.match(bamboo_branch) else channel
-        channel = stable_channel if jenkins and prog.match(jenkins_branch) else channel
+        channel = stable_channel if jenkins and jenkins_branch and prog.match(jenkins_branch) else channel
 
         if channel:
             self.logger.warning("Redefined channel by CI branch matching with '%s', "
