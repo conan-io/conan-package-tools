@@ -8,8 +8,6 @@ https://github.com/pypa/sampleproject
 from setuptools import setup, find_packages
 # To use a consistent encoding
 from codecs import open
-import sys
-from distutils.errors import DistutilsError
 
 
 def get_requires(filename):
@@ -27,18 +25,16 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version="0.2.29",
+    version="0.2.30-dev6",
 
     description='Packaging tools for Conan C/C++ package manager',
-    # long_description="An open source, decentralized package manager, to automate building and sharing of packages",
-    # long_description=generate_long_description_file(),
 
     # The project's main homepage.
-    url='https://conan.io',
+    url='https://github.com/conan-io/conan-package-tools',
 
     # Author details
-    author='Luis Martinez de Bartolome',
-    author_email='lasote@gmail.com',
+    author='JFrog LTD. Luis Martinez de Bartolome',
+    author_email='luism@jfrog.com',
 
     # Choose your license
     license='MIT',
@@ -51,6 +47,7 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
     ],
 
     # What does your project relate to?
@@ -97,6 +94,7 @@ setup(
     entry_points={
         'console_scripts': [
             'conan_json_packager=conan.conan_json_packager:run',
+            'conan_build_info=conan.build_info.command:run',
         ],
     },
 )
