@@ -28,6 +28,7 @@ class ConanMultiPackager(object):
                  vs10_x86_64_enabled=False,
                  mingw_configurations=None,
                  stable_channel=None):
+
         self.builds = []
         self.runner = runner or os.system
         self.logger = logger
@@ -112,8 +113,9 @@ class ConanMultiPackager(object):
             builds.append((s2, {}))
         return builds
 
-    def add_common_builds(self, shared_option_name=None, 
-                          pure_c=True, visual_versions=None):
+    def add_common_builds(self, shared_option_name=None,
+                          pure_c=True, visual_versions=None,
+                          dll_with_static_runtime=False):
 
         if visual_versions:
             self.logger.warn("Parameter 'visual_versions' for 'add_common_builds' method are"
@@ -126,7 +128,7 @@ class ConanMultiPackager(object):
                 for arch in self.archs:
                     if not self.vs10_x86_64_enabled and arch == "x86_64" and visual_version == "10":
                         continue
-                    self._add_visual_builds(visual_version, arch, shared_option_name)
+                    self._add_visual_builds(visual_version, arch, shared_option_name, dll_with_static_runtime)
             if self.mingw_builds():
                 self.builds.extend(self.mingw_builds())
         elif platform.system() == "Linux" or self.use_docker == True:
@@ -134,7 +136,7 @@ class ConanMultiPackager(object):
         elif platform.system() == "Darwin":
             self._add_osx_apple_clang_builds(shared_option_name, pure_c)
 
-    def _add_visual_builds(self, visual_version, arch, shared_option_name):
+    def _add_visual_builds(self, visual_version, arch, shared_option_name, dll_with_static_runtime):
 
         base_set = {"compiler": "Visual Studio",
                     "compiler.version": visual_version,
@@ -145,9 +147,15 @@ class ConanMultiPackager(object):
             if "MT" in self.visual_runtimes:
                 sets.append([{"build_type": "Release", "compiler.runtime": "MT"},
                              {shared_option_name: False}])
+                if dll_with_static_runtime:
+                    sets.append([{"build_type": "Release", "compiler.runtime": "MT"},
+                                 {shared_option_name: True}])
             if "MTd" in self.visual_runtimes:
                 sets.append([{"build_type": "Debug", "compiler.runtime": "MTd"},
                              {shared_option_name: False}])
+                if dll_with_static_runtime:
+                    sets.append([{"build_type": "Debug", "compiler.runtime": "MTd"},
+                                 {shared_option_name: True}])
             if "MD" in self.visual_runtimes:
                 sets.append([{"build_type": "Release", "compiler.runtime": "MD"},
                              {shared_option_name: False}])
@@ -441,7 +449,10 @@ class ConanMultiPackager(object):
     def _execute_visual_studio_build(self, settings, options):
         '''Sets the VisualStudio environment with vcvarsall for the specified version'''
         compiler_version = settings["compiler.version"]
-        vcvars = 'call "%vs' + str(compiler_version) + '0comntools%../../VC/vcvarsall.bat"'
+        if int(compiler_version) >= 15:
+            vcvars = 'call "%vs' + str(compiler_version) + '0comntools%../../VC/Auxiliary/Build/vcvarsall.bat"'
+        else:
+            vcvars = 'call "%vs' + str(compiler_version) + '0comntools%../../VC/vcvarsall.bat"'
         param = "x86" if settings.get("arch", None) == "x86" else "amd64"
         pre_command = '%s %s' % (vcvars, param)
         self._execute_test(pre_command, settings, options)

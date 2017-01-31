@@ -18,7 +18,7 @@ class MockRunner(object):
         """Check if executor has ran the builds that are expected.
         numbers are integers"""
         def line_for_number(number):
-            return "conan test . -s compiler=\"os%(number)d\" -s os=\"os%(number)d\" "\
+            return "conan test_package . -s compiler=\"os%(number)d\" -s os=\"os%(number)d\" "\
                 "-o option%(number)d=\"value%(number)d\"" % {"number": number}
 
         found_numbers = []
@@ -51,10 +51,7 @@ class AppTest(unittest.TestCase):
                           {"option1": "value1", "option2": "value2"})
 
         serial = self.packager.serialize()
-        self.assertEquals(serial, '{"username": "lasote", "conan_pip_package": null, "args": "--build missing -r conan.io", '\
-                          '"builds": [[{"os": "Windows", "compiler": "Visual Studio"}, '\
-                          '{"option2": "value2", "option1": "value1"}]], "channel": "mychannel"}')
-
+        self.assertEquals(serial, '{"username": "lasote", "builds": [[{"os": "Windows", "compiler": "Visual Studio"}, {"option2": "value2", "option1": "value1"}]], "args": "--build missing -r conan.io", "conan_pip_package": null, "channel": "mychannel", "docker_image": null}')
         mp = ConanMultiPackager.deserialize(serial, username="lasote")
         self.assertEqual(mp.conan_pip_package, None)
 
