@@ -67,6 +67,8 @@ If your conanfile.py have an option to specify **shared**/**static** packages yo
         builder.add_common_builds(shared_option_name="bzip2:shared", pure_c=True)
         builder.run()
 
+If you are using Visual Studio and you want build shared libraries with static runtime (MT, MTd) you can pass **dll_with_static_runtime** parameter to True in **add_common_builds**.
+
 
 ## Select the packages to be generated
 
@@ -179,6 +181,7 @@ You can specify another remote name with parameter **remote**.
 - **curpage**: Current page of packages to create
 - **total_pages**: Total number of pages
 - **vs10_x86_64_enabled**: Flag indicating whether or not to build for VS10 64bits. Default [False]
+
 
 Upload related parameters:
 
