@@ -145,9 +145,13 @@ class ConanMultiPackager(object):
             if "MT" in self.visual_runtimes:
                 sets.append([{"build_type": "Release", "compiler.runtime": "MT"},
                              {shared_option_name: False}])
+                sets.append([{"build_type": "Release", "compiler.runtime": "MT"},
+                             {shared_option_name: True}])
             if "MTd" in self.visual_runtimes:
                 sets.append([{"build_type": "Debug", "compiler.runtime": "MTd"},
                              {shared_option_name: False}])
+                sets.append([{"build_type": "Debug", "compiler.runtime": "MTd"},
+                             {shared_option_name: True}])
             if "MD" in self.visual_runtimes:
                 sets.append([{"build_type": "Release", "compiler.runtime": "MD"},
                              {shared_option_name: False}])
