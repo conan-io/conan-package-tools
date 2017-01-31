@@ -147,8 +147,3 @@ class BuildInfoManager(object):
                     for a_file in doc["files"].values():
                         modules[doc["_id"]].append(a_file)
         return modules
-
-
-
-if __name__ == "__main__":
-    run()

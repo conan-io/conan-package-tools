@@ -52,10 +52,6 @@ def run():
         print("Error, conan trace log not found! '%s'" % args.trace_path)
         exit(1)
 
-    print("asasd")
-    print(args.env)
-    exit(1)
-
     manager = BuildInfoManager()
     info = manager.build(args.trace_path, args.build_name, args.build_number, args.env)
     manager.send(info, args.artifactory_url, args.repo_name, args.user, args.password)
