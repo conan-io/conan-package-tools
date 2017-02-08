@@ -225,7 +225,7 @@ This is especially useful for CI integration.
 Travis CI can generate a build with multiple jobs defining a matrix with environment variables.
 We can configure the builds to be executed in the jobs by defining some environment variables.
 
-The following is a real example of a *.travis.yml* file that will generate packages for **Linux (gcc 4.6-5.2) and OSx for xcode6.2, xcode6.4 and xcode7.1**
+The following is a real example of a *.travis.yml* file that will generate packages for **Linux (gcc 4.6-5.2) and OSx for xcode6.4 and xcode7.3 and xcode8.2**
 It uses 2 different jobs for each compiler version.
 
 You can copy the files from this [conan-zlib repository](https://github.com/lasote/conan-zlib). Just copy the **".travis"** folder and the **".travis.yml"** file to your project and edit the latter, adjusting CONAN_REFERENCE, CONAN_USERNAME and maybe the travis matrix to run more or fewer packages per job:
