@@ -173,7 +173,7 @@ You can specify another remote name with parameter **remote**.
 - **args**: List with the parameters that will be passed to "conan test" command. e.j: args=['--build', 'all']. Default sys.argv[1:]
 - **username**: Your conan username
 - **gcc_versions**: List with a subset of gcc_versions. Default ["4.6", "4.8", "4.9", "5.2", "5.3"]
-- **apple_clang_versions**: List with a subset of apple-clang versions. Default ["5.0", "5.1", "6.0", "6.1", "7.0"]
+- **apple_clang_versions**: List with a subset of apple-clang versions. Default ["6.1", "7.3", "8.0"]
 - **visual_versions**: List with a subset of Visual Studio versions. Default [10, 12, 14]
 - **visual_runtimes**: List containing Visual Studio runtimes to use in builds. Default ["MT", "MD", "MTd", "MDd"]
 - **archs**: List containing specific architectures to build for. Default ["x86", "x86_64"]
@@ -205,7 +205,7 @@ This is especially useful for CI integration.
 - **CONAN_REMOTE**:  Alternative remote name. Default "default"
 - **CONAN_UPLOAD**: If defined, it will upload the generated packages
 - **CONAN_GCC_VERSIONS**: Gcc versions, comma separated, e.g. "4.6,4.8,5.2"
-- **CONAN_APPLE_CLANG_VERSIONS**: Apple clang versions, comma separated, e.g. "5.0,5.1"
+- **CONAN_APPLE_CLANG_VERSIONS**: Apple clang versions, comma separated, e.g. "6.1,8.0"
 - **CONAN_ARCHS**: Architectures to build for, comma separated, e.g. "x86,x86_64"
 - **CONAN_VISUAL_VERSIONS**: Visual versions, comma separated, e.g. "12,14"
 - **CONAN_VISUAL_RUNTIMES**: Visual runtimes, comma separated, e.g. "MT,MD"
@@ -266,11 +266,20 @@ You can copy the files from this [conan-zlib repository](https://github.com/laso
     matrix:
        include:
            - os: osx
-	         osx_image: xcode7.1 # apple-clang 7.0
+	         osx_image: xcode8.2 # apple-clang 8.0
 	         language: generic
 	         env: CONAN_CURRENT_PAGE=1
            - os: osx
-	         osx_image: xcode7.1 # apple-clang 7.0
+	         osx_image: xcode8.2 # apple-clang 8.0
+	         language: generic
+	         env: CONAN_CURRENT_PAGE=2
+
+           - os: osx
+	         osx_image: xcode7.3 # apple-clang 7.3
+	         language: generic
+	         env: CONAN_CURRENT_PAGE=1
+           - os: osx
+	         osx_image: xcode7.3 # apple-clang 7.3
 	         language: generic
 	         env: CONAN_CURRENT_PAGE=2
 
@@ -280,15 +289,6 @@ You can copy the files from this [conan-zlib repository](https://github.com/laso
 	         env: CONAN_CURRENT_PAGE=1
            - os: osx
 	         osx_image: xcode6.4 # apple-clang 6.1
-	         language: generic
-	         env: CONAN_CURRENT_PAGE=2
-
-           - os: osx
-	         osx_image: xcode6.2 # apple-clang 6.0
-	         language: generic
-	         env: CONAN_CURRENT_PAGE=1
-           - os: osx
-	         osx_image: xcode6.2 # apple-clang 6.0
 	         language: generic
 	         env: CONAN_CURRENT_PAGE=2
 
@@ -327,17 +327,17 @@ In case you need just one job per compiler to compile all the packages:
     matrix:
        include:
            - os: osx
-	         osx_image: xcode7.1 # apple-clang 7.0
-	         language: generic
-     		 env:
+             osx_image: xcode8.2 # apple-clang 8.0
+             language: generic
+             env:
            - os: osx
-	         osx_image: xcode6.4 # apple-clang 6.1
-	         language: generic
-	         env:
+             osx_image: xcode7.3 # apple-clang 7.3
+             language: generic
+             env:
            - os: osx
-	         osx_image: xcode6.2 # apple-clang 6.0
-	         language: generic
-			 env:
+             osx_image: xcode6.4 # apple-clang 6.1
+             language: generic
+             env:
     install:
       - ./.travis/install.sh
     script:
