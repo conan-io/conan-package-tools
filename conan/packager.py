@@ -16,7 +16,7 @@ class ConanMultiPackager(object):
     default_gcc_versions = ["4.6", "4.8", "4.9", "5.2", "5.3", "5.4", "6.2"]
     default_visual_versions = ["10", "12", "14"]
     default_visual_runtimes = ["MT", "MD", "MTd", "MDd"]
-    default_apple_clang_versions = ["5.0", "5.1", "6.0", "6.1", "7.0", "7.3", "8.0"]
+    default_apple_clang_versions = ["6.1", "7.3", "8.0"]
     default_archs = ["x86", "x86_64"]
 
     def __init__(self, args=None, username=None, channel=None, runner=None,
