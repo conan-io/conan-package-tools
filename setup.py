@@ -94,7 +94,6 @@ setup(
     entry_points={
         'console_scripts': [
             'conan_json_packager=conan.conan_json_packager:run',
-            'conan_build_info=conan.build_info.command:run',
         ],
     },
 )
