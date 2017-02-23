@@ -13,7 +13,7 @@ from six import iteritems
 class ConanMultiPackager(object):
     """ Help to generate common builds (setting's combinations), adjust the environment,
     and run conan test_package command in docker containers"""
-    default_gcc_versions = ["4.6", "4.8", "4.9", "5.2", "5.3", "5.4", "6.2"]
+    default_gcc_versions = ["4.6", "4.8", "4.9", "5.2", "5.3", "5.4", "6.2", "6.3"]
     default_visual_versions = ["10", "12", "14"]
     default_visual_runtimes = ["MT", "MD", "MTd", "MDd"]
     default_apple_clang_versions = ["6.1", "7.3", "8.0"]
