@@ -154,7 +154,7 @@ If you added 10 package's to the builder, each page will execute 1 package gener
 If you instance ConanMultiPackager with the parameter **use_docker=True**,
 it will launch N containers with a virtualized versions of Ubuntu.
 
-We have different images available at **dockerhub**, for gcc versions 4.6, 4.8, 4.9, 5.2 and 5.3.
+We have different images available at **dockerhub**, for gcc versions 4.6, 4.8, 4.9, 5.2, 5.3, 6.2 and 6.3.
 
 The containers will share the conan storage directory, so the packages will be generated in your conan directory.
 
@@ -172,7 +172,7 @@ You can specify another remote name with parameter **remote**.
 
 - **args**: List with the parameters that will be passed to "conan test" command. e.j: args=['--build', 'all']. Default sys.argv[1:]
 - **username**: Your conan username
-- **gcc_versions**: List with a subset of gcc_versions. Default ["4.6", "4.8", "4.9", "5.2", "5.3"]
+- **gcc_versions**: List with a subset of gcc_versions. Default ["4.6", "4.8", "4.9", "5.2", "5.3", "5.4", "6.2", "6.3"]
 - **apple_clang_versions**: List with a subset of apple-clang versions. Default ["6.1", "7.3", "8.0"]
 - **visual_versions**: List with a subset of Visual Studio versions. Default [10, 12, 14]
 - **visual_runtimes**: List containing Visual Studio runtimes to use in builds. Default ["MT", "MD", "MTd", "MDd"]
@@ -204,7 +204,7 @@ This is especially useful for CI integration.
 - **CONAN_PASSWORD**:  Conan Password
 - **CONAN_REMOTE**:  Alternative remote name. Default "default"
 - **CONAN_UPLOAD**: If defined, it will upload the generated packages
-- **CONAN_GCC_VERSIONS**: Gcc versions, comma separated, e.g. "4.6,4.8,5.2"
+- **CONAN_GCC_VERSIONS**: Gcc versions, comma separated, e.g. "4.6,4.8,5.2,6.3"
 - **CONAN_APPLE_CLANG_VERSIONS**: Apple clang versions, comma separated, e.g. "6.1,8.0"
 - **CONAN_ARCHS**: Architectures to build for, comma separated, e.g. "x86,x86_64"
 - **CONAN_VISUAL_VERSIONS**: Visual versions, comma separated, e.g. "12,14"
