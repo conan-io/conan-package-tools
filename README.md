@@ -25,10 +25,10 @@ Or you can [clone this repository](http://github.com/conan-io/conan-package-tool
 ## Quick start
 
 Suppose you are creating a conan package.
-You must have a **conanfile.py** file and a **test** folder in your current directory and the **conan test** command must work.
+You must have a **conanfile.py** file and a **test_package** folder in your current directory and the **conan test_package** command must work.
 If you don't have it ready, take a look to [Automatically creating and testing packages](http://docs.conan.io/en/latest/packaging/testing.html)
 
-In your **test/conanfile.py** you need to make a small adjustement, the require (current library) needs to be configurable with environment variables:
+In your **test_package/conanfile.py** you need to make a small adjustement, the require (current library) needs to be configurable with environment variables:
 
 
     channel = os.getenv("CONAN_CHANNEL", "testing")
