@@ -493,6 +493,8 @@ class ConanMultiPackager(object):
         if channel:
             self.logger.warning("Redefined channel by CI branch matching with '%s', "
                                 "setting CONAN_CHANNEL to '%s'" % (pattern, channel))
+            self.username = os.getenv("CONAN_STABLE_USERNAME", self.username)
+            self.password = os.getenv("CONAN_STABLE_PASSWORD", self.password)
 
         ret = channel or default_channel
 
