@@ -480,16 +480,21 @@ class ConanMultiPackager(object):
         bamboo_branch = os.getenv("bamboo_planRepository_branch", None)
         jenkins = os.getenv("JENKINS_URL", False)
         jenkins_branch = os.getenv("BRANCH_NAME", None)
+        gitlab = os.getenv("GITLAB_CI", False)  # Mark that job is executed in GitLab CI environment
+        gitlab_branch = os.getenv("CI_BUILD_REF_NAME", None)  # The branch or tag name for which project is built
 
         channel = stable_channel if travis and prog.match(travis_branch) else None
         channel = stable_channel if appveyor and prog.match(appveyor_branch) and \
             not os.getenv("APPVEYOR_PULL_REQUEST_NUMBER") else channel
         channel = stable_channel if bamboo and prog.match(bamboo_branch) else channel
         channel = stable_channel if jenkins and jenkins_branch and prog.match(jenkins_branch) else channel
+        channel = stable_channel if gitlab and gitlab_branch and prog.match(gitlab_branch) else channel
 
         if channel:
             self.logger.warning("Redefined channel by CI branch matching with '%s', "
                                 "setting CONAN_CHANNEL to '%s'" % (pattern, channel))
+            self.username = os.getenv("CONAN_STABLE_USERNAME", self.username)
+            self.password = os.getenv("CONAN_STABLE_PASSWORD", self.password)
 
         ret = channel or default_channel
 
