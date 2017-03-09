@@ -344,7 +344,7 @@ class ConanMultiPackager(object):
         self.remote = remote
         self._upload_packages()
 
-    def _upload_packages(self):
+    def _upload_packages(self, upload_all=True):
         """
         :param password: If it has double quotes, they must not be escaped, this function
         does escaping of double quotes automatically. It is supposed that this password
@@ -356,9 +356,11 @@ class ConanMultiPackager(object):
             self.logger.info("Skipped upload, some parameter (reference, password or channel)"
                              " is missing!")
             return
-        command = "conan upload %s@%s/%s --all --force" % (self.reference,
-                                                           self.username,
-                                                           self.channel)
+        command = "conan upload %s@%s/%s %s --force" % (self.reference,
+                                                        self.username,
+                                                        self.channel,
+                                                        '--all' if upload_all else ''
+                                                        )
         user_command = 'conan user %s -p="%s"' % (self.username, self.password)
 
         self.logger.info("******** RUNNING UPLOAD COMMAND ********** \n%s" % command)
