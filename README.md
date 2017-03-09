@@ -215,6 +215,8 @@ This is especially useful for CI integration.
 - **CONAN_DOCKER_IMAGE**: If defined and docker is being used, it will use this dockerimage instead of the default images
 - **CONAN_STABLE_BRANCH_PATTERN**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *CONAN_STABLE_CHANNEL* channel. Default "master". E.j: "release/*"
 - **CONAN_STABLE_CHANNEL**: Stable channel name, default "stable"
+- **CONAN_STABLE_USERNAME**: Your conan username in case the `CONAN_STABLE_BRANCH_PATTERN` matches. Optional. If not defined `CONAN_USERNAME` is used.
+- **CONAN_STABLE_PASSWORD**: Password for `CONAN_STABLE_USERNAME`. Default: `CONAN_PASSWORD`
 - **CONAN_CHANNEL**: Channel where your packages will be uploaded if the previous parameter doesn't match
 - **CONAN_PIP_PACKAGE**: Specify a conan package to install (by default, installs the latest) e.j conan==0.0.1rc7
 - **MINGW_CONFIGURATIONS**: Specify a list of MinGW builds. See MinGW builds section.
