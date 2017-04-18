@@ -174,7 +174,7 @@ You can specify another remote name with parameter **remote**.
 - **username**: Your conan username
 - **gcc_versions**: List with a subset of gcc_versions. Default ["4.6", "4.8", "4.9", "5.2", "5.3", "5.4", "6.2", "6.3"]
 - **apple_clang_versions**: List with a subset of apple-clang versions. Default ["6.1", "7.3", "8.0"]
-- **visual_versions**: List with a subset of Visual Studio versions. Default [10, 12, 14]
+- **visual_versions**: List with a subset of Visual Studio versions. Default ["10", "12", "14", "15"]
 - **visual_runtimes**: List containing Visual Studio runtimes to use in builds. Default ["MT", "MD", "MTd", "MDd"]
 - **archs**: List containing specific architectures to build for. Default ["x86", "x86_64"]
 - **use_docker**: Use docker for package creation in Linux systems.
