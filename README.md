@@ -80,9 +80,9 @@ You can use **builder.add\_common\_builds** method and remove some configuration
         builder = ConanMultiPackager(username="myuser")
         builder.add_common_builds()
         filtered_builds = []
-        for settings, options in builder.builds:
+        for settings, options, env_vars, build_requires in builder.builds:
             if settings["compiler.version"] == "4.6":
-                 filtered_builds.append([settings, options])
+                 filtered_builds.append([settings, options, env_vars, build_requires])
         builder.builds = filtered_builds
         builder.run()
 
