@@ -20,6 +20,3 @@ before_script:
 # command to run tests
 script:
   - ./.ci/travis/run.sh
-
-after_success:
-  - bash <(curl -s https://codecov.io/bash)

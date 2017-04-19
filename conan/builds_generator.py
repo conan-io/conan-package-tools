@@ -1,5 +1,4 @@
 import copy
-import os
 from collections import namedtuple
 
 BuildConf = namedtuple("BuildConf", "settings options env_vars build_requires")
