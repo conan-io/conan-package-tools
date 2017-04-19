@@ -5,7 +5,7 @@ from collections import namedtuple
 BuildConf = namedtuple("BuildConf", "settings options env_vars build_requires")
 
 
-def get_mingw_builds(mingw_configurations):
+def get_mingw_builds(mingw_configurations, mingw_installer_reference):
     builds = []
     for config in mingw_configurations:
         version, arch, exception, thread = config
@@ -13,13 +13,29 @@ def get_mingw_builds(mingw_configurations):
                     "compiler.version": version[0:3],
                     "compiler.threads": thread,
                     "compiler.exception": exception}
+        options, build_requires = _add_mingw_build_require(settings, mingw_installer_reference)
+
         settings.update({"compiler.libcxx": "libstdc++"})
         settings.update({"build_type": "Release"})
-        builds.append((settings, {}))
+        builds.append(BuildConf(settings, options, {}, build_requires))
         s2 = copy.copy(settings)
         s2.update({"build_type": "Debug"})
-        builds.append(BuildConf(s2, {}, {}, {}))
+
+        builds.append(BuildConf(s2, options, {}, build_requires))
     return builds
+
+
+def _add_mingw_build_require(settings, mingw_installer_reference):
+    """"FIXME REPLACE WITH A BUILD REQUIRE WITH OPTIONS"""
+    installer_options = {}
+    for setting in ("compiler.threads", "compiler.exception", "compiler.version", "arch"):
+        setting_value = settings.get(setting, None)
+        if setting_value:
+            short_name = setting.split(".", 1)[-1]
+            option_name = "%s:%s" % (mingw_installer_reference.name, short_name)
+            installer_options[option_name] = setting_value
+
+    return installer_options, {"*": [mingw_installer_reference]}
 
 
 def get_visual_builds(visual_versions, archs, visual_runtimes, shared_option_name,
@@ -45,43 +61,43 @@ def get_visual_builds_for_version(visual_runtimes, visual_version, arch, shared_
 
     if shared_option_name:
         if "MT" in visual_runtimes:
-            sets.append(BuildConf({"build_type": "Release", "compiler.runtime": "MT"},
-                                  {shared_option_name: False}, {}, {}))
+            sets.append(({"build_type": "Release", "compiler.runtime": "MT"},
+                         {shared_option_name: False}, {}, {}))
             if dll_with_static_runtime:
-                sets.append(BuildConf({"build_type": "Release", "compiler.runtime": "MT"},
-                                      {shared_option_name: True}, {}, {}))
+                sets.append(({"build_type": "Release", "compiler.runtime": "MT"},
+                             {shared_option_name: True}, {}, {}))
         if "MTd" in visual_runtimes:
-            sets.append(BuildConf({"build_type": "Debug", "compiler.runtime": "MTd"},
+            sets.append(({"build_type": "Debug", "compiler.runtime": "MTd"},
                                   {shared_option_name: False}, {}, {}))
             if dll_with_static_runtime:
-                sets.append(BuildConf({"build_type": "Debug", "compiler.runtime": "MTd"},
+                sets.append(({"build_type": "Debug", "compiler.runtime": "MTd"},
                                       {shared_option_name: True}, {}, {}))
         if "MD" in visual_runtimes:
-            sets.append(BuildConf({"build_type": "Release", "compiler.runtime": "MD"},
+            sets.append(({"build_type": "Release", "compiler.runtime": "MD"},
                                   {shared_option_name: False}, {}, {}))
-            sets.append(BuildConf({"build_type": "Release", "compiler.runtime": "MD"},
+            sets.append(({"build_type": "Release", "compiler.runtime": "MD"},
                                   {shared_option_name: True}, {}, {}))
         if "MDd" in visual_runtimes:
-            sets.append(BuildConf({"build_type": "Debug", "compiler.runtime": "MDd"},
+            sets.append(({"build_type": "Debug", "compiler.runtime": "MDd"},
                                   {shared_option_name: False}, {}, {}))
-            sets.append(BuildConf({"build_type": "Debug", "compiler.runtime": "MDd"},
+            sets.append(({"build_type": "Debug", "compiler.runtime": "MDd"},
                                   {shared_option_name: True}, {}, {}))
 
     else:
         if "MT" in visual_runtimes:
-            sets.append(BuildConf({"build_type": "Release", "compiler.runtime": "MT"}, {}, {}, {}))
+            sets.append(({"build_type": "Release", "compiler.runtime": "MT"}, {}, {}, {}))
         if "MTd" in visual_runtimes:
-            sets.append(BuildConf({"build_type": "Debug", "compiler.runtime": "MTd"}, {}, {}, {}))
+            sets.append(({"build_type": "Debug", "compiler.runtime": "MTd"}, {}, {}, {}))
         if "MDd" in visual_runtimes:
-            sets.append(BuildConf({"build_type": "Debug", "compiler.runtime": "MDd"}, {}, {}, {}))
+            sets.append(({"build_type": "Debug", "compiler.runtime": "MDd"}, {}, {}, {}))
         if "MD" in visual_runtimes:
-            sets.append(BuildConf({"build_type": "Release", "compiler.runtime": "MD"}, {}, {}, {}))
+            sets.append(({"build_type": "Release", "compiler.runtime": "MD"}, {}, {}, {}))
 
     ret = []
     for setting, options, env_vars, build_requires in sets:
         tmp = copy.copy(base_set)
         tmp.update(setting)
-        ret.append(tmp, options, env_vars, build_requires)
+        ret.append(BuildConf(tmp, options, env_vars, build_requires))
 
     return ret
 

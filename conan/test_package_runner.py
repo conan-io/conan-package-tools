@@ -22,9 +22,7 @@ class TestPackageRunner(object):
         self._username = username
         self._channel = channel
         self._conan_pip_package = conan_pip_package
-
         self._runner = runner or os.system
-
 
     @property
     def settings(self):
@@ -38,9 +36,6 @@ class TestPackageRunner(object):
         pre_command = None
         if self.settings.get("compiler", None) == "Visual Studio" and "compiler.version" in self.settings:
             pre_command = vcvars_command(self.settings)
-        elif self.settings.get("compiler", None) == "gcc" and platform.system() == "Windows":
-            if self._mingw_installer_reference:
-                self._add_mingw_build_require()
 
         self._run_test_package(pre_command=pre_command)
 
@@ -66,18 +61,6 @@ class TestPackageRunner(object):
         retcode = self._runner(command)
         if retcode != 0:
             exit("Error while executing:\n\t %s" % command)
-
-    def _add_mingw_build_require(self):
-        """"FIXME REPLACE WITH A BUILD REQUIRE WITH OPTIONS"""
-        installer_options = []
-        for setting in ("compiler.threads", "compiler.exception", "compiler.version", "arch"):
-            setting_value = self.settings.get(setting, None)
-            if setting_value:
-                short_name = setting.split(".", 1)[-1]
-                installer_options.append((short_name, setting_value))
-
-        self._profile.options.loads("\n".join(["%s=%s" % (v[0], v[1]) for v in installer_options]))
-        self._profile.build_requires["*"] = [self._mingw_installer_reference]
 
     def conan_compiler_info(self):
         """return the compiler and its version readed in conan.conf"""

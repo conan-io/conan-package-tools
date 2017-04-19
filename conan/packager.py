@@ -118,7 +118,8 @@ class ConanMultiPackager(object):
             elif len(values) != 4:
                 raise Exception("Invalid build configuration, has to be a tuple of "
                                 "(settings, options, env_vars, build_requires)")
-            self._builds.append(BuildConf(*values))
+            else:
+                self._builds.append(BuildConf(*values))
 
     def add_common_builds(self, shared_option_name=None, pure_c=True, dll_with_static_runtime=False):
 
@@ -186,7 +187,7 @@ class ConanMultiPackager(object):
             return
         if not self.reference or not self.password or not self.channel or not self.username:
             logger.info("Skipped upload, some parameter (reference, password or channel)"
-                             " is missing!")
+                        " is missing!")
             return
         command = "conan upload %s@%s/%s --all --force" % (self.reference,
                                                            self.username,
