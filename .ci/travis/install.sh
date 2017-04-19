@@ -46,3 +46,4 @@ else
 fi
 
 pip install -r conan/requirements.txt
+pip install -r conan/requirements_test.txt
