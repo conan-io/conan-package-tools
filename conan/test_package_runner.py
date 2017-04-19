@@ -44,7 +44,7 @@ class TestPackageRunner(object):
         if platform.system() != "Windows":
             if settings.get("compiler", None) and settings.get("compiler.version", None):
                 conan_compiler, conan_compiler_version = self.conan_compiler_info()
-                if conan_compiler != settings.get("compiler", None) or \
+                if conan_compiler is not None and conan_compiler != settings.get("compiler", None) or \
                    conan_compiler_version != settings.get("compiler.version", None):
                     logger.debug("- Skipped build, compiler mismatch: %s" % str(dict(settings)))
                     return  # Skip this build, it's not for this machine
@@ -68,10 +68,13 @@ class TestPackageRunner(object):
         parser = configparser.ConfigParser()
         home = os.environ.get("CONAN_USER_HOME", "~/")
         conf_path = os.path.expanduser("%s/.conan/conan.conf" % home)
-        if "compiler.version" not in load(conf_path):
+        if not os.path.exists(conf_path) or "compiler.version" not in load(conf_path):
             self._runner("conan user")  # Force default settings autodetection
-        parser.read(conf_path)
-        items = dict(parser.items("settings_defaults"))
+        try:
+            parser.read(conf_path)
+            items = dict(parser.items("settings_defaults"))
+        except IOError:
+            return None, None
         return items["compiler"], items["compiler.version"]
 
 
