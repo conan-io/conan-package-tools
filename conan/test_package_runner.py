@@ -90,9 +90,9 @@ class DockerTestPackageRunner(TestPackageRunner):
                                                       mingw_installer_reference=mingw_installer_reference,
                                                       runner=runner, args=args, conan_pip_package=conan_pip_package)
 
-    def run(self, install_conan=True):
+    def run(self, pull_image=True):
 
-        if install_conan:
+        if pull_image:
             self.pull_image()
             # Update the downloaded image
             command = "sudo docker run --name conan_runner %s /bin/sh -c " \
