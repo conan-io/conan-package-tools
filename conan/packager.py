@@ -2,6 +2,7 @@ import os
 import re
 import sys
 
+from collections import defaultdict
 from conans.model.ref import ConanFileReference
 
 from conan.test_package_runner import TestPackageRunner, DockerTestPackageRunner
@@ -167,17 +168,21 @@ class ConanMultiPackager(object):
                                 build.settings["compiler.version"] in self.gcc_versions:
                     needed_gcc_versions.add(build.settings["compiler.version"])
 
+        pulled_gcc_images = defaultdict(lambda: False)
         for build in builds_in_current_page:
             profile = _get_profile(build)
+            gcc_version = profile.settings.get("compiler.version")
             if self.use_docker:
                 build_runner = DockerTestPackageRunner(profile, self.username, self.channel,
                                                        self.mingw_installer_reference, self.runner, self.args,
                                                        docker_image=self.docker_image)
+
+                build_runner.run(pull_image=not pulled_gcc_images[gcc_version])
+                pulled_gcc_images[gcc_version] = True
             else:
                 build_runner = TestPackageRunner(profile, self.username, self.channel,
                                                  self.mingw_installer_reference, self.runner, self.args)
-
-            build_runner.run()
+                build_runner.run()
 
     def upload_packages(self):
 

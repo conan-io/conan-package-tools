@@ -115,11 +115,10 @@ class AppTest(unittest.TestCase):
         self.packager.run_builds(1, 2)
         self.assertIn("sudo docker pull lasote/conangcc43", self.runner.calls[1])
         self.assertIn('sudo docker run ', self.runner.calls[2])
-        self.assertIn('os=os1', self.runner.calls[2])
+        self.assertIn('os=os1', self.runner.calls[5])
 
-        self.assertIn("sudo docker pull lasote/conangcc43", self.runner.calls[3])
-        self.assertIn('sudo docker run ', self.runner.calls[4])
-        self.assertIn('os=os3', self.runner.calls[4])
+        # Next build from 4.3 is cached, not pulls are performed
+        self.assertIn('os=os3', self.runner.calls[6])
 
     def test_assign_builds_retrocompatibility(self):
         self.packager = ConanMultiPackager("--build missing -r conan.io",

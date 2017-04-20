@@ -90,21 +90,31 @@ class DockerTestPackageRunner(TestPackageRunner):
                                                       mingw_installer_reference=mingw_installer_reference,
                                                       runner=runner, args=args, conan_pip_package=conan_pip_package)
 
-    def run(self):
-        self.pull_image()
+    def run(self, install_conan=True):
+
+        if install_conan:
+            self.pull_image()
+            # Update the downloaded image
+            command = "sudo docker run --name conan_runner %s /bin/sh -c " \
+                      "\"sudo pip install conan_package_tools==0.3.0-dev12 --upgrade" % self._docker_image
+            if self._conan_pip_package:
+                command += " && sudo pip install %s\"" % self._conan_pip_package
+            else:
+                command += " && sudo pip install conan --upgrade\""
+
+            self._runner(command)
+            # Save the image with the updated installed packages and remove the intermediate container
+            self._runner("sudo docker commit conan_runner %s" % self._docker_image)
+            self._runner("sudo docker rm conan_runner")
+
+        # Run the build
         serial = pipes.quote(self.serialize())
         env_vars = "-e CONAN_RUNNER_ENCODED=%s -e CONAN_USERNAME=%s " \
                    "-e CONAN_CHANNEL=%s" % (serial, self._username, self._channel)
 
-        if self._conan_pip_package:
-            specific_conan_package = "&& sudo pip install %s" % self._conan_pip_package
-        else:
-            specific_conan_package = "&& sudo pip install conan --upgrade"
-
         command = "sudo docker run --rm -v %s:/home/conan/project -v " \
                   "~/.conan/data:/home/conan/.conan/data -it %s %s /bin/sh -c \"" \
-                  "cd project && sudo pip install conan_package_tools==0.3.0-dev12 --upgrade %s && " \
-                  "run_test_package_in_docker\"" % (os.getcwd(), env_vars, self._docker_image, specific_conan_package)
+                  "cd project && run_test_package_in_docker\"" % (os.getcwd(), env_vars, self._docker_image)
         ret = self._runner(command)
         if ret != 0:
             raise Exception("Error building: %s" % command)
