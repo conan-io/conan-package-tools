@@ -1,3 +1,4 @@
+import platform
 import unittest
 
 from conan.builds_generator import BuildConf
@@ -143,5 +144,6 @@ class AppTest(unittest.TestCase):
                      {'mingw_installer:threads': 'posix', 'mingw_installer:arch': 'x86_64', 'mingw_installer:version': '4.9', 'mingw_installer:exception': 'seh'},
                      {},
                      {'*': [ConanFileReference.loads("mingw_installer/0.1@lasote/testing")]})]
-        self.assertEquals([tuple(a) for a in builder.builds], expected)
+        if platform.system() == "Windows":
+            self.assertEquals([tuple(a) for a in builder.builds], expected)
 
