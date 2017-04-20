@@ -129,3 +129,19 @@ class AppTest(unittest.TestCase):
 
         self.packager.builds = [({"os": "Windows"}, {"option": "value"})]
         self.assertEquals(self.packager.builds, [BuildConf(settings={'os': 'Windows'}, options={'option': 'value'}, env_vars={}, build_requires={})])
+
+
+    def test_only_mingw(self):
+        mingw_configurations = [("4.9", "x86_64", "seh", "posix")]
+        builder = ConanMultiPackager(mingw_configurations=mingw_configurations, visual_versions=[], username="Pepe")
+        builder.add_common_builds(shared_option_name="zlib:shared", pure_c=True)
+        expected = [({'compiler.libcxx': 'libstdc++', 'compiler.exception': 'seh', 'compiler.threads': 'posix', 'compiler.version': '4.9', 'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'gcc'},
+                     {'mingw_installer:threads': 'posix', 'mingw_installer:arch': 'x86_64', 'mingw_installer:version': '4.9', 'mingw_installer:exception': 'seh'},
+                     {},
+                     {'*': [ConanFileReference.loads("mingw_installer/0.1@lasote/testing")]}),
+                    ({'compiler.exception': 'seh', 'arch': 'x86_64', 'compiler.threads': 'posix', 'compiler.version': '4.9', 'compiler.libcxx': 'libstdc++', 'build_type': 'Debug', 'compiler': 'gcc'},
+                     {'mingw_installer:threads': 'posix', 'mingw_installer:arch': 'x86_64', 'mingw_installer:version': '4.9', 'mingw_installer:exception': 'seh'},
+                     {},
+                     {'*': [ConanFileReference.loads("mingw_installer/0.1@lasote/testing")]})]
+        self.assertEquals([tuple(a) for a in builder.builds], expected)
+

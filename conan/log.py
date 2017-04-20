@@ -34,6 +34,8 @@ else:
 formatter = MultiLineFormatter('\n############## CONAN PACKAGE TOOLS ######################\n\n%(levelname)s: '
                                '%(message)s \n\n#########################################################\n')
 hdlr.setFormatter(formatter)
+for hand in logger.handlers:
+    logger.removeHandler(hand)
 logger.addHandler(hdlr)
 logger.setLevel(CONAN_LOGGING_LEVEL)
 

@@ -4,9 +4,9 @@ import os
 import pipes
 import platform
 import tempfile
+from collections import namedtuple
 
 from conan.log import logger
-from conans import tools
 from conans.model.profile import Profile
 from conans.tools import vcvars_command
 from conans.util.files import save, load, mkdir
@@ -36,7 +36,9 @@ class TestPackageRunner(object):
     def run(self):
         pre_command = None
         if self.settings.get("compiler", None) == "Visual Studio" and "compiler.version" in self.settings:
-            pre_command = vcvars_command(self.settings)
+            compiler_set = namedtuple("compiler", "version")(self.settings["compiler.version"])
+            mock_sets = namedtuple("mock_settings", "arch compiler")(self.settings["arch"], compiler_set)
+            pre_command = vcvars_command(mock_sets)
 
         self._run_test_package(pre_command=pre_command)
 
@@ -53,12 +55,13 @@ class TestPackageRunner(object):
         # Save the profile in a tmp file
         abs_profile_path = os.path.abspath(os.path.join(tempfile.mkdtemp(suffix='conan_package_tools_profiles'),
                                                         "profile"))
-        save(abs_profile_path, self._profile.dumps())
+        profile_txt = self._profile.dumps()
+        save(abs_profile_path, profile_txt)
         command = "conan test_package . --profile %s %s" % (abs_profile_path, self._args)
         if pre_command:
             command = '%s && %s' % (pre_command, command)
 
-        logger.info("******** RUNNING BUILD ********** \n%s" % command)
+        logger.info("******** RUNNING BUILD ********** \n%s\n\n%s" % (command, profile_txt))
         retcode = self._runner(command)
         if retcode != 0:
             exit("Error while executing:\n\t %s" % command)

@@ -2,6 +2,8 @@ import os
 import re
 import sys
 
+from conans.model.ref import ConanFileReference
+
 from conan.tst_package_runner import TestPackageRunner, DockerTestPackageRunner
 from conan.builds_generator import (get_linux_gcc_builds, get_visual_builds,
                                     get_osx_apple_clang_builds, get_mingw_builds, BuildConf)
@@ -87,8 +89,8 @@ class ConanMultiPackager(object):
             self.default_apple_clang_versions
 
         self.mingw_configurations = mingw_configurations or get_mingw_config_from_env()
-        self.mingw_installer_reference = os.getenv("CONAN_MINGW_INSTALLER_REFERENCE") or \
-            "mingw_installer/0.1@lasote/testing"
+        self.mingw_installer_reference = ConanFileReference.loads(os.getenv("CONAN_MINGW_INSTALLER_REFERENCE") or \
+            "mingw_installer/0.1@lasote/testing")
 
         self.archs = archs or \
             list(filter(None, os.getenv("CONAN_ARCHS", "").split(","))) or \
@@ -125,11 +127,10 @@ class ConanMultiPackager(object):
 
         builds = []
         if self._platform_info.system() == "Windows":
-            if get_mingw_builds(self.mingw_configurations):
-                builds = get_mingw_builds(self.mingw_configurations)
-            else:
-                builds = get_visual_builds(self.visual_versions, self.archs, self.visual_runtimes,
-                                           shared_option_name, dll_with_static_runtime, self.vs10_x86_64_enabled)
+            if self.mingw_configurations:
+                builds = get_mingw_builds(self.mingw_configurations, self.mingw_installer_reference, self.archs)
+            builds.extend(get_visual_builds(self.visual_versions, self.archs, self.visual_runtimes,
+                                            shared_option_name, dll_with_static_runtime, self.vs10_x86_64_enabled))
         elif self._platform_info.system() == "Linux" or self.use_docker is True:
             builds = get_linux_gcc_builds(self.gcc_versions, self.archs, shared_option_name, pure_c)
         elif self._platform_info.system() == "Darwin":

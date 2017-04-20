@@ -4,10 +4,12 @@ from collections import namedtuple
 BuildConf = namedtuple("BuildConf", "settings options env_vars build_requires")
 
 
-def get_mingw_builds(mingw_configurations, mingw_installer_reference):
+def get_mingw_builds(mingw_configurations, mingw_installer_reference, archs):
     builds = []
     for config in mingw_configurations:
         version, arch, exception, thread = config
+        if arch not in archs:
+            continue
         settings = {"arch": arch, "compiler": "gcc",
                     "compiler.version": version[0:3],
                     "compiler.threads": thread,
