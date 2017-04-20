@@ -103,7 +103,7 @@ class DockerTestPackageRunner(TestPackageRunner):
 
         command = "sudo docker run --rm -v %s:/home/conan/project -v " \
                   "~/.conan/data:/home/conan/.conan/data -it %s %s /bin/sh -c \"" \
-                  "cd project && sudo pip install conan_package_tools --upgrade %s && " \
+                  "cd project && sudo pip install conan_package_tools==0.3.0-dev12 --upgrade %s && " \
                   "run_test_package_in_docker\"" % (os.getcwd(), env_vars, self._docker_image, specific_conan_package)
         ret = self._runner(command)
         if ret != 0:

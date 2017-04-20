@@ -131,7 +131,7 @@ class ConanMultiPackager(object):
                 builds = get_mingw_builds(self.mingw_configurations, self.mingw_installer_reference, self.archs)
             builds.extend(get_visual_builds(self.visual_versions, self.archs, self.visual_runtimes,
                                             shared_option_name, dll_with_static_runtime, self.vs10_x86_64_enabled))
-        elif self._platform_info.system() == "Linux" or self.use_docker is True:
+        elif self._platform_info.system() == "Linux":
             builds = get_linux_gcc_builds(self.gcc_versions, self.archs, shared_option_name, pure_c)
         elif self._platform_info.system() == "Darwin":
             builds = get_osx_apple_clang_builds(self.apple_clang_versions, self.archs, shared_option_name, pure_c)
@@ -154,9 +154,6 @@ class ConanMultiPackager(object):
         curpage = curpage or int(self.curpage)
         total_pages = total_pages or int(self.total_pages)
         self.runner('conan export %s/%s' % (self.username, self.channel))
-
-        # Auto remove conan.conf if exist for perform a fresh detection
-        self.runner("conan info")  # Ensure conan.conf is created
 
         builds_in_current_page = []
         for index, build in enumerate(self.builds):

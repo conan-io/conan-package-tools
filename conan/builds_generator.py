@@ -27,7 +27,6 @@ def get_mingw_builds(mingw_configurations, mingw_installer_reference, archs):
 
 
 def _add_mingw_build_require(settings, mingw_installer_reference):
-    """"FIXME REPLACE WITH A BUILD REQUIRE WITH OPTIONS"""
     installer_options = {}
     for setting in ("compiler.threads", "compiler.exception", "compiler.version", "arch"):
         setting_value = settings.get(setting, None)

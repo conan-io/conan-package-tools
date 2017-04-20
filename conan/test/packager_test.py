@@ -64,7 +64,7 @@ class AppTest(unittest.TestCase):
                            "VAR_2": "TWO"},
                           {"*": ["myreference/1.0@lasote/testing"]})
         self.packager.run_builds(1, 1)
-        profile = self.runner.get_profile_from_trace(2)
+        profile = self.runner.get_profile_from_trace(1)
         self.assertEquals(profile.settings["os"], "Windows")
         self.assertEquals(profile.settings["compiler"], "gcc")
         self.assertEquals(profile.options.as_list(), [("option1", "One")])
@@ -113,13 +113,13 @@ class AppTest(unittest.TestCase):
         self._add_build(3)
 
         self.packager.run_builds(1, 2)
-        self.assertIn("sudo docker pull lasote/conangcc43", self.runner.calls[2])
-        self.assertIn('sudo docker run ', self.runner.calls[3])
-        self.assertIn('os=os1', self.runner.calls[3])
+        self.assertIn("sudo docker pull lasote/conangcc43", self.runner.calls[1])
+        self.assertIn('sudo docker run ', self.runner.calls[2])
+        self.assertIn('os=os1', self.runner.calls[2])
 
-        self.assertIn("sudo docker pull lasote/conangcc43", self.runner.calls[4])
-        self.assertIn('sudo docker run ', self.runner.calls[5])
-        self.assertIn('os=os3', self.runner.calls[5])
+        self.assertIn("sudo docker pull lasote/conangcc43", self.runner.calls[3])
+        self.assertIn('sudo docker run ', self.runner.calls[4])
+        self.assertIn('os=os3', self.runner.calls[4])
 
     def test_assign_builds_retrocompatibility(self):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
