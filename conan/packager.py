@@ -161,13 +161,6 @@ class ConanMultiPackager(object):
             if curpage is None or total_pages is None or (index % total_pages) + 1 == curpage:
                 builds_in_current_page.append(build)
 
-        if self.use_docker:
-            needed_gcc_versions = set()
-            for build in builds_in_current_page:
-                if "compiler" in build.settings and build.settings["compiler"] == "gcc" and \
-                                build.settings["compiler.version"] in self.gcc_versions:
-                    needed_gcc_versions.add(build.settings["compiler.version"])
-
         pulled_gcc_images = defaultdict(lambda: False)
         for build in builds_in_current_page:
             profile = _get_profile(build)
