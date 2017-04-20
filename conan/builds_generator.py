@@ -103,8 +103,23 @@ def get_visual_builds_for_version(visual_runtimes, visual_version, arch, shared_
     return ret
 
 
+def get_build(compiler, the_arch, the_build_type, the_compiler_version, the_libcxx=None, the_shared_option_name=None, the_shared=None):
+    options = {}
+    if the_shared_option_name:
+        options = {the_shared_option_name: the_shared}
+    setts = {"arch": the_arch,
+             "build_type": the_build_type,
+             "compiler": compiler,
+             "compiler.version": the_compiler_version}
+    if the_libcxx:
+        setts["compiler.libcxx"] = the_libcxx
+
+    return BuildConf(setts, options, {}, {})
+
+
 def get_osx_apple_clang_builds(apple_clang_versions, archs, shared_option_name, pure_c):
     ret = []
+
     # Not specified compiler or compiler version, will use the auto detected
     for compiler_version in apple_clang_versions:
         for arch in archs:
@@ -112,31 +127,17 @@ def get_osx_apple_clang_builds(apple_clang_versions, archs, shared_option_name, 
                 for shared in [True, False]:
                     for build_type in ["Debug", "Release"]:
                         if not pure_c:
-                            ret.append(BuildConf({"arch": arch,
-                                                  "build_type": build_type,
-                                                  "compiler": "apple-clang",
-                                                  "compiler.version": compiler_version,
-                                                  "compiler.libcxx": "libc++"},
-                                                 {shared_option_name: shared}, {}, {}))
+                            ret.append(get_build("apple-clang", arch, build_type, compiler_version,
+                                                 "libc++", shared_option_name, shared))
                         else:
-                            ret.append(BuildConf({"arch": arch,
-                                                  "build_type": build_type,
-                                                  "compiler": "apple-clang",
-                                                  "compiler.version": compiler_version},
-                                                 {shared_option_name: shared}, {}, {}))
+                            ret.append(get_build("apple-clang", arch, build_type, compiler_version, None, shared_option_name, shared))
             else:
                 for build_type in ["Debug", "Release"]:
                     if not pure_c:
-                        ret.append(BuildConf({"arch": arch,
-                                              "build_type": build_type,
-                                              "compiler": "apple-clang",
-                                              "compiler.version": compiler_version,
-                                              "compiler.libcxx": "libc++"}, {}, {}, {}))
+                        ret.append(get_build("apple-clang", arch, build_type, compiler_version, "libc++"))
                     else:
-                        ret.append(BuildConf({"arch": arch,
-                                              "build_type": build_type,
-                                              "compiler": "apple-clang",
-                                              "compiler.version": compiler_version}, {}, {}, {}))
+                        ret.append(get_build("apple-clang", arch, build_type, compiler_version))
+
     return ret
 
 
@@ -149,43 +150,22 @@ def get_linux_gcc_builds(gcc_versions, archs, shared_option_name, pure_c):
                 for shared in [True, False]:
                     for build_type in ["Debug", "Release"]:
                         if not pure_c:
-                            ret.append(BuildConf({"arch": arch,
-                                                  "build_type": build_type,
-                                                  "compiler": "gcc",
-                                                  "compiler.version": gcc_version,
-                                                  "compiler.libcxx": "libstdc++"},
-                                                 {shared_option_name: shared}, {}, {}))
+                            ret.append(get_build("gcc", arch, build_type, gcc_version,
+                                                 "libstdc++", shared_option_name, shared))
                             if float(gcc_version) > 5:
-                                ret.append(BuildConf({"arch": arch,
-                                                      "build_type": build_type,
-                                                      "compiler": "gcc",
-                                                      "compiler.version": gcc_version,
-                                                      "compiler.libcxx": "libstdc++11"},
-                                                      {shared_option_name: shared}, {}, {}))
+                                ret.append(get_build("gcc", arch, build_type, gcc_version,
+                                                     "libstdc++11", shared_option_name, shared))
                         else:
-                            ret.append(BuildConf({"arch": arch,
-                                                  "build_type": build_type,
-                                                  "compiler": "gcc",
-                                                  "compiler.version": gcc_version},
-                                                 {shared_option_name: shared}, {}, {}))
+                            ret.append(get_build("gcc", arch, build_type, gcc_version,
+                                                 None, shared_option_name, shared))
             else:
                 for build_type in ["Debug", "Release"]:
                     if not pure_c:
-                        ret.append(BuildConf({"arch": arch,
-                                              "build_type": build_type,
-                                              "compiler": "gcc",
-                                              "compiler.version": gcc_version,
-                                              "compiler.libcxx": "libstdc++"}, {}, {}, {}))
+                        ret.append(get_build("gcc", arch, build_type, gcc_version,
+                                             "libstdc++"))
                         if float(gcc_version) > 5:
-                            ret.append(BuildConf({"arch": arch,
-                                                  "build_type": build_type,
-                                                  "compiler": "gcc",
-                                                  "compiler.version": gcc_version,
-                                                  "compiler.libcxx": "libstdc++11"}, {}, {}, {}))
+                            ret.append(get_build("gcc", arch, build_type, gcc_version,
+                                                 "libstdc++11"))
                     else:
-                        ret.append(BuildConf({"arch": arch,
-                                              "build_type": build_type,
-                                              "compiler": "gcc",
-                                              "compiler.version": gcc_version}, {}, {}, {}))
-
+                        ret.append(get_build("gcc", arch, build_type, gcc_version))
     return ret
