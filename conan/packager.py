@@ -2,7 +2,7 @@ import os
 import re
 import sys
 
-from conan.test_package_runner import TestPackageRunner, DockerTestPackageRunner
+from conan.tst_package_runner import TestPackageRunner, DockerTestPackageRunner
 from conan.builds_generator import (get_linux_gcc_builds, get_visual_builds,
                                     get_osx_apple_clang_builds, get_mingw_builds, BuildConf)
 from conan.log import logger

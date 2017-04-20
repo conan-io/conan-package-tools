@@ -34,10 +34,12 @@ class MockRunner(object):
             assert(pr.settings["os"] == 'os%d' % num)
             assert(pr.options.as_list() == [('option%d' % num, 'value%d' % num)])
 
-        for calls_counter, call in enumerate(self.calls):
+        testp_counter = 0
+        for i, call in enumerate(self.calls):
             if call.startswith("conan test_package"):
-                profile = self.get_profile_from_trace(calls_counter)
-                assert_profile_for(profile, numbers[calls_counter])
+                profile = self.get_profile_from_trace(i)
+                assert_profile_for(profile, numbers[testp_counter])
+                testp_counter += 1
 
 
 class AppTest(unittest.TestCase):

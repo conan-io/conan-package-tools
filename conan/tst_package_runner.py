@@ -6,9 +6,10 @@ import platform
 import tempfile
 
 from conan.log import logger
+from conans import tools
 from conans.model.profile import Profile
 from conans.tools import vcvars_command
-from conans.util.files import save, load
+from conans.util.files import save, load, mkdir
 
 
 class TestPackageRunner(object):
@@ -106,8 +107,11 @@ class DockerTestPackageRunner(TestPackageRunner):
             raise Exception("Error building: %s" % command)
 
     def pull_image(self):
-        if not os.path.exists(os.path.expanduser("~/.conan/data")):
-            self._runner("mkdir ~/.conan/data && chmod -R 777 ~/.conan/data")
+        datadir = os.path.expanduser("~/.conan/data")
+        if not os.path.exists(datadir):
+            mkdir(datadir)
+            if platform.system() != "Windows":
+                self._runner("chmod -R 777 %s" % datadir)
         logger.info("Pulling docker image %s" % self._docker_image)
         self._runner("sudo docker pull %s" % self._docker_image)
 

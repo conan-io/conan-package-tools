@@ -1,7 +1,7 @@
 import os
 from conan.log import logger
 
-from conan.test_package_runner import DockerTestPackageRunner
+from conan.tst_package_runner import DockerTestPackageRunner
 
 
 def run():
