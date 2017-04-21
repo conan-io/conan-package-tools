@@ -96,7 +96,7 @@ class DockerTestPackageRunner(TestPackageRunner):
             self.pull_image()
             # Update the downloaded image
             command = "sudo docker run --name conan_runner %s /bin/sh -c " \
-                      "\"sudo pip install conan_package_tools==0.3.0-dev12 --upgrade" % self._docker_image
+                      "\"sudo pip install conan_package_tools --upgrade" % self._docker_image
             if self._conan_pip_package:
                 command += " && sudo pip install %s\"" % self._conan_pip_package
             else:
