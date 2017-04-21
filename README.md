@@ -24,27 +24,13 @@ Or you can [clone this repository](http://github.com/conan-io/conan-package-tool
 
 ## Quick start
 
-Suppose you are creating a conan package.
 You must have a **conanfile.py** file and a **test_package** folder in your current directory and the **conan test_package** command must work.
-If you don't have it ready, take a look to [Automatically creating and testing packages](http://docs.conan.io/en/latest/packaging/testing.html)
-
-In your **test_package/conanfile.py** you need to make a small adjustement, the require (current library) needs to be configurable with environment variables:
-
-
-    channel = os.getenv("CONAN_CHANNEL", "testing")
-    username = os.getenv("CONAN_USERNAME", "myuser")
-
-    class DefaultNameConan(ConanFile):
-        ...
-        requires = "zlib/1.2.8@%s/%s" % (username, channel)
-        ...
-
+If you don't have it ready, take a look to [Getting started creating packages](http://docs.conan.io/en/latest/packaging/getting_started.html)
 
 Now create a **build.py** file in the root of your project and instance a **ConanMultiPackager**:
 
 
-
-	from conan.packager import ConanMultiPackager
+    from conan.packager import ConanMultiPackager
 
 	if __name__ == "__main__":
 	    builder = ConanMultiPackager(username="myuser")
@@ -80,20 +66,23 @@ You can use **builder.add\_common\_builds** method and remove some configuration
         builder = ConanMultiPackager(username="myuser")
         builder.add_common_builds()
         filtered_builds = []
-        for settings, options in builder.builds:
+        for settings, options, env_vars, build_requires in builder.builds:
             if settings["compiler.version"] == "4.6":
-                 filtered_builds.append([settings, options])
+                 filtered_builds.append([settings, options, env_vars, build_requires])
         builder.builds = filtered_builds
         builder.run()
 
 
-Or add package's configurations without these method (settings and options):
+Or add package's configurations without these method (settings, options, environment variables and build requires):
 
 	from conan.packager import ConanMultiPackager
 
 	if __name__ == "__main__":
 	    builder = ConanMultiPackager(username="myuser")
-	    builder.add({"arch": "x86", "build_type": "Release"}, {"mypackage:option1": "ON"})
+	    builder.add({"arch": "x86", "build_type": "Release"},
+	                {"mypackage:option1": "ON"},
+	                {"PATH": "/path/to/custom"},
+	                {"*": ["MyBuildPackage/1.0@lasote/testing"]})
         builder.add({"arch": "x86_64", "build_type": "Release"}, {"mypackage:option1": "ON"})
         builder.add({"arch": "x86", "build_type": "Debug"}, {"mypackage:option2": "OFF", "mypackage:shared": True})
 	    builder.run()
@@ -101,7 +90,8 @@ Or add package's configurations without these method (settings and options):
 
 ## Visual Studio auto-configuration
 
-When the builder detects a Visual Studio compiler and its version, it will automatically configure the execution environment for the "conan test" command with the **vcvarsall.bat** script (provided by all Microsoft Visual Studio versions).
+When the builder detects a Visual Studio compiler and its version, it will automatically configure the execution environment
+for the "conan test" command with the **vcvarsall.bat** script (provided by all Microsoft Visual Studio versions).
 So you can compile your project with the right compiler automatically, even without CMake.
 
 ## MinGW builds
@@ -130,8 +120,6 @@ Or passing a list to ConanMultiPackager constructor:
     builder = ConanMultiPackager(username="lasote", mingw_configurations=mingw_configurations)
     builder.add_common_builds(pure_c=False)
     builder.run()
-    
-TODO: Handle shared option and control debug/release builds.
 
 
 ## Pagination
@@ -248,6 +236,7 @@ You can copy the files from this [conan-zlib repository](https://github.com/laso
         - CONAN_USERNAME="lasote"
         - CONAN_CHANNEL="ci"
         - CONAN_TOTAL_PAGES=2
+        - CONAN_STABLE_BRANCH_PATTERN="release/*"
 
       matrix:
         - CONAN_GCC_VERSIONS=4.6 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
@@ -319,6 +308,7 @@ In case you need just one job per compiler to compile all the packages:
         - CONAN_CHANNEL="ci"
         - CONAN_TOTAL_PAGES=1
         - CONAN_CURRENT_PAGE=1
+        - CONAN_STABLE_BRANCH_PATTERN="release/*"
 
       matrix:
         - CONAN_GCC_VERSIONS=4.6 CONAN_USE_DOCKER=1
@@ -410,6 +400,7 @@ This is very similar to Travis CI. With the same **build.py** script we have the
         CONAN_USERNAME: "lasote"
         CONAN_CHANNEL: "ci"
         CONAN_TOTAL_PAGES: 4
+        CONAN_STABLE_BRANCH_PATTERN: "release/*"
 
         matrix:
             - CONAN_CURRENT_PAGE: 1

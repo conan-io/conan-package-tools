@@ -25,7 +25,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version="0.2.37",
+    version="0.3.0-rc1",
 
     description='Packaging tools for Conan C/C++ package manager',
 
@@ -93,7 +93,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'conan_json_packager=conan.conan_json_packager:run',
+            'run_test_package_in_docker=conan.run_in_docker:run',
         ],
     },
 )
