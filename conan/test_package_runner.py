@@ -47,7 +47,7 @@ class TestPackageRunner(object):
         data = self._profile.env_values.data
         for _, dict_envs in data.items():
             if "CC" in dict_envs or "CXX" in dict_envs:
-                logger.debug("Overrride compiler, skipping compiler match")
+                logger.debug("Override compiler by CC or CXX, skipping compiler check")
                 return True
         return False
 
