@@ -1,0 +1,23 @@
+cache: pip
+language: python
+python:
+    - 2.7
+    - 3.6
+os: linux
+sudo: required
+dist: trusty
+
+matrix:
+    include:
+        - language: generic
+          os: osx
+          env: PYVER=py27
+
+# command to install dependencies
+install:
+  - ./.ci/travis/install.sh
+before_script:
+  - export PYTHONPATH=$PYTHONPATH:$(pwd)
+# command to run tests
+script:
+  - ./.ci/travis/run.sh
