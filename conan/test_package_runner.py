@@ -42,9 +42,18 @@ class TestPackageRunner(object):
 
         self._run_test_package(pre_command=pre_command)
 
+    def _detected_compiler_override(self):
+        """If the user has specified some env var with CC or CXX"""
+        data = self._profile.env_values.data
+        for _, dict_envs in data.items():
+            if "CC" in dict_envs or "CXX" in dict_envs:
+                logger.debug("Overrride compiler, skipping compiler match")
+                return True
+        return False
+
     def _run_test_package(self, pre_command=None):
         settings = collections.OrderedDict(sorted(self.settings.items()))
-        if platform.system() != "Windows":
+        if not self._detected_compiler_override() and platform.system() != "Windows":
             if settings.get("compiler", None) and settings.get("compiler.version", None):
                 conan_compiler, conan_compiler_version = self.conan_compiler_info()
                 if conan_compiler != settings.get("compiler", None) or \

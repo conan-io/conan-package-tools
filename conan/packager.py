@@ -90,8 +90,8 @@ class ConanMultiPackager(object):
             self.default_apple_clang_versions
 
         self.mingw_configurations = mingw_configurations or get_mingw_config_from_env()
-        self.mingw_installer_reference = ConanFileReference.loads(os.getenv("CONAN_MINGW_INSTALLER_REFERENCE") or \
-            "mingw_installer/0.1@lasote/testing")
+        self.mingw_installer_reference = ConanFileReference.loads(os.getenv("CONAN_MINGW_INSTALLER_REFERENCE") or
+                                                                  "mingw_installer/0.1@lasote/testing")
 
         self.archs = archs or \
             list(filter(None, os.getenv("CONAN_ARCHS", "").split(","))) or \
