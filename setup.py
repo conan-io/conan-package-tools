@@ -5,6 +5,9 @@ https://github.com/pypa/sampleproject
 """
 
 # Always prefer setuptools over distutils
+import re
+import os
+
 from setuptools import setup, find_packages
 # To use a consistent encoding
 from codecs import open
@@ -18,6 +21,17 @@ def get_requires(filename):
                 requirements.append(line)
     return requirements
 
+
+def load_version():
+    """Loads a file content"""
+    filename = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                            "conan", "__init__.py"))
+    with open(filename, "rt") as version_file:
+        conan_init = version_file.read()
+        version = re.search("__version__ = '([0-9a-z.-]+)'", conan_init).group(1)
+        return version
+
+
 project_requirements = get_requires("conan/requirements.txt")
 
 setup(
@@ -25,7 +39,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version="0.3.1",
+    version=load_version(),
 
     description='Packaging tools for Conan C/C++ package manager',
 
