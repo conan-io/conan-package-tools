@@ -7,6 +7,7 @@ import tempfile
 from collections import namedtuple
 
 from conan.log import logger
+from conan import __version__ as package_tools_version
 from conans.model.profile import Profile
 from conans.tools import vcvars_command
 from conans.util.files import save, load, mkdir
@@ -105,7 +106,8 @@ class DockerTestPackageRunner(TestPackageRunner):
             self.pull_image()
             # Update the downloaded image
             command = "sudo docker run --name conan_runner %s /bin/sh -c " \
-                      "\"sudo pip install conan_package_tools --upgrade" % self._docker_image
+                      "\"sudo pip install conan_package_tools==%s --upgrade" % (self._docker_image,
+                                                                                package_tools_version)
             if self._conan_pip_package:
                 command += " && sudo pip install %s\"" % self._conan_pip_package
             else:

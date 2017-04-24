@@ -126,7 +126,7 @@ class AppTest(unittest.TestCase):
                                            runner=self.runner,
                                            gcc_versions=["4.3", "5.2"],
                                            use_docker=True)
-
+        self.packager.add_common_builds()
         self.packager.builds = [({"os": "Windows"}, {"option": "value"})]
         self.assertEquals(self.packager.builds, [BuildConf(settings={'os': 'Windows'}, options={'option': 'value'}, env_vars={}, build_requires={})])
 

@@ -115,6 +115,7 @@ class ConanMultiPackager(object):
     @builds.setter
     def builds(self, confs):
         """For retrocompatibility directly assigning builds"""
+        self._builds = []
         for values in confs:
             if len(values) == 2:
                 self._builds.append(BuildConf(values[0], values[1], {}, {}))

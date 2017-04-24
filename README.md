@@ -363,6 +363,12 @@ In case you need just one job per compiler to compile all the packages:
 	conan user
 
 
+If you want to "pin" a **conan_package_tools** version use:
+
+    pip install conan_package_tools==0.3.2
+    
+That version will be used also in the docker images.
+
 
 **.travis/run.sh**
 
