@@ -419,7 +419,7 @@ This is very similar to Travis CI. With the same **build.py** script we have the
       - conan user # It creates the conan data directory
 
     test_script:
-      - C:\Python27-x64\python build.py
+      - python build.py
 
 
 
