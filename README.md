@@ -398,7 +398,7 @@ This is very similar to Travis CI. With the same **build.py** script we have the
     build: false
     environment:
         PYTHON: "C:\\Python27-x64"
-        PYTHON_VERSION: "2.7.11"
+        PYTHON_VERSION: "2.7.x"
         PYTHON_ARCH: "64"
 
         CONAN_UPLOAD: 1
@@ -414,13 +414,12 @@ This is very similar to Travis CI. With the same **build.py** script we have the
             - CONAN_CURRENT_PAGE: 3
             - CONAN_CURRENT_PAGE: 4
     install:
-      - set PATH=%PATH%;%PYTHON%/Scripts/
+      - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
       - pip.exe install conan_package_tools # It install conan too
       - conan user # It creates the conan data directory
 
     test_script:
-      - python build.py
-
+      - python build.py
 
 
 - Remember to set the **CONAN_PASSWORD** variable in appveyor build backoffice!
