@@ -192,6 +192,7 @@ This is especially useful for CI integration.
 - **CONAN_PASSWORD**:  Conan Password
 - **CONAN_REMOTE**:  Alternative remote name. Default "default"
 - **CONAN_UPLOAD**: If defined, it will upload the generated packages
+- **CONAN_UPLOAD_RETRY**: If defined, in case of fail retries to upload again the specified times
 - **CONAN_GCC_VERSIONS**: Gcc versions, comma separated, e.g. "4.6,4.8,5.2,6.3"
 - **CONAN_APPLE_CLANG_VERSIONS**: Apple clang versions, comma separated, e.g. "6.1,8.0"
 - **CONAN_ARCHS**: Architectures to build for, comma separated, e.g. "x86,x86_64"

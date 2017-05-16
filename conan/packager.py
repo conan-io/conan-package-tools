@@ -50,7 +50,8 @@ class ConanMultiPackager(object):
                  vs10_x86_64_enabled=False,
                  mingw_configurations=None,
                  stable_channel=None,
-                 platform_info=None):
+                 platform_info=None,
+                 upload_retry=None):
 
         self._builds = []
         self._platform_info = platform_info or PlatformInfo()
@@ -62,6 +63,7 @@ class ConanMultiPackager(object):
                             "parameter or use CONAN_USERNAME env variable")
 
         # Upload related variables
+        self.upload_retry = upload_retry or os.getenv("CONAN_UPLOAD_RETRY", 3)
         self.reference = reference or os.getenv("CONAN_REFERENCE", None)
         self.password = password or os.getenv("CONAN_PASSWORD", None)
         self.remote = remote or os.getenv("CONAN_REMOTE", None)
@@ -186,9 +188,10 @@ class ConanMultiPackager(object):
             logger.info("Skipped upload, some parameter (reference, password or channel)"
                         " is missing!")
             return
-        command = "conan upload %s@%s/%s --all --force" % (self.reference,
-                                                           self.username,
-                                                           self.channel)
+        command = "conan upload %s@%s/%s --retry %s --all --force" % (self.reference,
+                                                                      self.username,
+                                                                      self.channel,
+                                                                      self.upload_retry)
         user_command = 'conan user %s -p="%s"' % (self.username, self.password)
 
         logger.info("******** RUNNING UPLOAD COMMAND ********** \n%s" % command)
