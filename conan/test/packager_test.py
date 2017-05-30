@@ -1,6 +1,8 @@
 import platform
 import unittest
 
+from collections import defaultdict
+
 from conan.builds_generator import BuildConf
 from conan.packager import ConanMultiPackager
 from conans.model.ref import ConanFileReference
@@ -148,4 +150,18 @@ class AppTest(unittest.TestCase):
                      {},
                      {'*': [ConanFileReference.loads("mingw_installer/0.1@lasote/testing")]})]
         self.assertEquals([tuple(a) for a in builder.builds], expected)
+
+    def test_named_pages(self):
+        builder = ConanMultiPackager(visual_versions=[], username="Pepe")
+        named_builds = defaultdict(list)
+        builder.add_common_builds(shared_option_name="zlib:shared", pure_c=True)
+        for settings, options, env_vars, build_requires in builder.builds:
+            named_builds[settings['arch']].append([settings, options, env_vars, build_requires])
+        builder.named_builds = named_builds
+
+        self.assertEquals(builder.builds, [])
+        self.assertEquals(len(builder.named_builds), 2)
+        self.assertTrue("x86" in builder.named_builds)
+        self.assertTrue("x86_64" in builder.named_builds)
+
 
