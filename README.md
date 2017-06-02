@@ -254,11 +254,6 @@ You can copy the files from this [conan-zlib repository](https://github.com/laso
 **.travis.yml**
 
 
-    os: linux
-    services:
-       - docker
-    sudo: required
-    language: python
     env:
       global:
         - CONAN_UPLOAD=1
@@ -268,24 +263,73 @@ You can copy the files from this [conan-zlib repository](https://github.com/laso
         - CONAN_TOTAL_PAGES=2
         - CONAN_STABLE_BRANCH_PATTERN="release/*"
 
-      matrix:
-        - CONAN_GCC_VERSIONS=4.6 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
-        - CONAN_GCC_VERSIONS=4.6 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
-
-        - CONAN_GCC_VERSIONS=4.8 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
-        - CONAN_GCC_VERSIONS=4.8 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
-
-        - CONAN_GCC_VERSIONS=4.9 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
-        - CONAN_GCC_VERSIONS=4.9 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
-
-        - CONAN_GCC_VERSIONS=5.2 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
-        - CONAN_GCC_VERSIONS=5.2 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
-
-        - CONAN_GCC_VERSIONS=5.3 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
-        - CONAN_GCC_VERSIONS=5.3 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
-
     matrix:
        include:
+           - os: linux
+             services:
+               - docker
+             sudo: required
+             language: python
+             env: CONAN_GCC_VERSIONS=4.6 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
+           - os: linux
+             services:
+               - docker
+             sudo: required
+             language: python
+             env: CONAN_GCC_VERSIONS=4.6 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
+
+           - os: linux
+             services:
+               - docker
+             sudo: required
+             language: python
+             env: CONAN_GCC_VERSIONS=4.8 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
+           - os: linux
+             services:
+               - docker
+             sudo: required
+             language: python
+             env: CONAN_GCC_VERSIONS=4.8 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
+
+           - os: linux
+             services:
+               - docker
+             sudo: required
+             language: python
+             env: CONAN_GCC_VERSIONS=4.9 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
+           - os: linux
+             services:
+               - docker
+             sudo: required
+             language: python
+             env: CONAN_GCC_VERSIONS=4.9 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
+
+           - os: linux
+             services:
+               - docker
+             sudo: required
+             language: python
+             env: CONAN_GCC_VERSIONS=5.2 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
+           - os: linux
+             services:
+               - docker
+             sudo: required
+             language: python
+             env: CONAN_GCC_VERSIONS=5.2 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
+
+           - os: linux
+             services:
+               - docker
+             sudo: required
+             language: python
+             env: CONAN_GCC_VERSIONS=5.3 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
+           - os: linux
+             services:
+               - docker
+             sudo: required
+             language: python
+             env: CONAN_GCC_VERSIONS=5.3 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
+
            - os: osx
 	         osx_image: xcode8.2 # apple-clang 8.0
 	         language: generic
@@ -325,11 +369,6 @@ In case you need just one job per compiler to compile all the packages:
 **.travis.yml**
 
 
-    os: linux
-    services:
-       - docker
-    sudo: required
-    language: python
     env:
       global:
         - CONAN_UPLOAD=1
@@ -340,14 +379,39 @@ In case you need just one job per compiler to compile all the packages:
         - CONAN_CURRENT_PAGE=1
         - CONAN_STABLE_BRANCH_PATTERN="release/*"
 
-      matrix:
-        - CONAN_GCC_VERSIONS=4.6 CONAN_USE_DOCKER=1
-        - CONAN_GCC_VERSIONS=4.8 CONAN_USE_DOCKER=1
-        - CONAN_GCC_VERSIONS=4.9 CONAN_USE_DOCKER=1
-        - CONAN_GCC_VERSIONS=5.2 CONAN_USE_DOCKER=1
-        - CONAN_GCC_VERSIONS=5.3 CONAN_USE_DOCKER=1
     matrix:
        include:
+           - os: linux
+             services:
+               - docker
+             sudo: required
+             language: python
+             env: CONAN_GCC_VERSIONS=4.6 CONAN_USE_DOCKER=1
+           - os: linux
+             services:
+               - docker
+             sudo: required
+             language: python
+             env: CONAN_GCC_VERSIONS=4.8 CONAN_USE_DOCKER=1
+           - os: linux
+             services:
+               - docker
+             sudo: required
+             language: python
+             env: CONAN_GCC_VERSIONS=4.9 CONAN_USE_DOCKER=1
+           - os: linux
+             services:
+               - docker
+             sudo: required
+             language: python
+             env: CONAN_GCC_VERSIONS=5.2 CONAN_USE_DOCKER=1
+           - os: linux
+             services:
+               - docker
+             sudo: required
+             language: python
+             env: CONAN_GCC_VERSIONS=5.3 CONAN_USE_DOCKER=1
+
            - os: osx
              osx_image: xcode8.2 # apple-clang 8.0
              language: generic
