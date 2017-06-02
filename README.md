@@ -124,18 +124,47 @@ Or passing a list to ConanMultiPackager constructor:
 
 ## Pagination
 
-You can launch partial builds passing two pagination parameters, **curpage** and **total_pages**.
-This is very useful with CI servers like Travis, because you can split the builds in pages, just by passing some parameters:
+You can split builds in pages, this is very useful with CI servers like Travis to obey job time limit or just segment specific build configurations.
+
+There are two ways of setting pagination.
+
+**Named pages**
+
+By adding builds to the **named_builds** dictionary, and passing **curpage** with the page name: 
+
+    from conan.packager import ConanMultiPackager
+    from collections import defaultdict
+
+    if __name__ == '__main__':
+        builder = ConanMultiPackager(curpage="x86", total_pages=2)
+        named_builds = defaultdict(list)
+        builder.add_common_builds(shared_option_name="bzip2:shared", pure_c=True)
+        for settings, options, env_vars, build_requires in builder.builds:
+            named_builds[settings['arch']].append([settings, options, env_vars, build_requires])
+        builder.named_builds = named_builds
+        builder.run()
+
+named_builds not have a dictionary entry for x86 and another for x86_64:
+
+- for **curpage="x86"** it would do all x86 builds
+- for **curpage="x86_64"** it would do all x86_64 builds
+
+**Sequencial distribution**
+
+By simply passing two pagination parameters, **curpage** and **total_pages**:
 
     from conan.packager import ConanMultiPackager
 
     if __name__ == "__main__":
-        builder = ConanMultiPackager(curpage=1, total_pages=2)
+        builder = ConanMultiPackager(curpage=1, total_pages=3)
         builder.add_common_builds(shared_option_name="bzip2:shared", pure_c=True)
         builder.run()
 
-If you added 10 package's to the builder, each page will execute 1 package generation, so in the example above will create the first 5 packages.
+If you added 10 package's to the builder:
 
+- for **curpage=1** it would do builds 1,4,7,10
+- for **curpage=2** it would do builds 2,5,8
+- for **curpage=3** it would do builds 3,6,9
 
 ## Docker pack
 
@@ -192,6 +221,7 @@ This is especially useful for CI integration.
 - **CONAN_PASSWORD**:  Conan Password
 - **CONAN_REMOTE**:  Alternative remote name. Default "default"
 - **CONAN_UPLOAD**: If defined, it will upload the generated packages
+- **CONAN_UPLOAD_RETRY**: If defined, in case of fail retries to upload again the specified times
 - **CONAN_GCC_VERSIONS**: Gcc versions, comma separated, e.g. "4.6,4.8,5.2,6.3"
 - **CONAN_APPLE_CLANG_VERSIONS**: Apple clang versions, comma separated, e.g. "6.1,8.0"
 - **CONAN_ARCHS**: Architectures to build for, comma separated, e.g. "x86,x86_64"
@@ -398,7 +428,7 @@ This is very similar to Travis CI. With the same **build.py** script we have the
     build: false
     environment:
         PYTHON: "C:\\Python27-x64"
-        PYTHON_VERSION: "2.7.11"
+        PYTHON_VERSION: "2.7.x"
         PYTHON_ARCH: "64"
 
         CONAN_UPLOAD: 1
@@ -414,13 +444,12 @@ This is very similar to Travis CI. With the same **build.py** script we have the
             - CONAN_CURRENT_PAGE: 3
             - CONAN_CURRENT_PAGE: 4
     install:
-      - set PATH=%PATH%;%PYTHON%/Scripts/
+      - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
       - pip.exe install conan_package_tools # It install conan too
       - conan user # It creates the conan data directory
 
     test_script:
-      - python build.py
-
+      - python build.py
 
 
 - Remember to set the **CONAN_PASSWORD** variable in appveyor build backoffice!

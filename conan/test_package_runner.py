@@ -38,7 +38,7 @@ class TestPackageRunner(object):
         pre_command = None
         if self.settings.get("compiler", None) == "Visual Studio" and "compiler.version" in self.settings:
             compiler_set = namedtuple("compiler", "version")(self.settings["compiler.version"])
-            mock_sets = namedtuple("mock_settings", "arch compiler")(self.settings["arch"], compiler_set)
+            mock_sets = namedtuple("mock_settings", "arch compiler get_safe")(self.settings["arch"], compiler_set, lambda x: self.settings.get(x, None))
             pre_command = vcvars_command(mock_sets)
 
         self._run_test_package(pre_command=pre_command)
