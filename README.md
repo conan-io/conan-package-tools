@@ -149,6 +149,21 @@ named_builds not have a dictionary entry for x86 and another for x86_64:
 - for **curpage="x86"** it would do all x86 builds
 - for **curpage="x86_64"** it would do all x86_64 builds
 
+**Default named pages**
+
+conan-package-tools provide a default naming for the "standard" compiler under Windows, Linux and OSX, dividing pages by compiler/version/arch, that could be good for many cases.
+For gcc and apple-clang, it will build named pages like ``gcc_62``, ``apple-clang_81``, and for Windows it will use the architecture too: ``VisualStudio_15_x86_64``. The reason is that travis-ci has to account for more configurations, but they are faster, and Windows is slower to build, so it could more easily hit the limits.
+
+To use the default named pages, you can use:
+
+    from conan.packager import ConanMultiPackager
+    from collections import defaultdict
+
+    if __name__ == '__main__':
+        builder = ConanMultiPackager()
+        builder.use_default_named_pages()
+        builder.run()
+
 **Sequencial distribution**
 
 By simply passing two pagination parameters, **curpage** and **total_pages**:
