@@ -164,4 +164,16 @@ class AppTest(unittest.TestCase):
         self.assertTrue("x86" in builder.named_builds)
         self.assertTrue("x86_64" in builder.named_builds)
 
+    def test_default_named_pages(self):
+        builder = ConanMultiPackager(username="Pepe", visual_versions=["10", "12", "14", "15"])
+        builder.add_common_builds(shared_option_name="zlib:shared", pure_c=True)
+        builder.use_default_named_pages()
+
+        self.assertEquals(builder.builds, [])
+        if platform.system() == "Windows":
+            self.assertEquals(len(builder.named_builds), 7)
+            self.assertEqual(sorted(builder.named_builds.keys()),
+                             sorted(['VisualStudio_12_x86', 'VisualStudio_10_x86', 'VisualStudio_14_x86',
+                                     'VisualStudio_15_x86_64', 'VisualStudio_12_x86_64', 'VisualStudio_15_x86',
+                                     'VisualStudio_14_x86_64']))
 
