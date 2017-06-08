@@ -1,6 +1,6 @@
 import unittest
 
-from conan.builds_generator import get_visual_builds, get_mingw_builds, get_osx_apple_clang_builds, get_linux_gcc_builds
+from conan.builds_generator import get_visual_builds, get_mingw_builds, get_osx_apple_clang_builds, get_linux_gcc_builds, get_linux_clang_builds
 from conans.model.ref import ConanFileReference
 
 
@@ -59,7 +59,6 @@ class GeneratorsTest(unittest.TestCase):
         self.assertEquals([tuple(a) for a in builds], expected)
 
     def test_get_linux_gcc_builds(self):
-
         builds = get_linux_gcc_builds(["6.0"], ["x86_64"], "pack:shared", pure_c=False)
         expected = [({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++', 'compiler.version': '6.0', 'arch': 'x86_64'},
                      {'pack:shared': True}, {}, {}),
@@ -87,6 +86,37 @@ class GeneratorsTest(unittest.TestCase):
                     ({'arch': 'x86_64', 'compiler.version': '6.0', 'build_type': 'Debug', 'compiler': 'gcc'},
                      {'pack:shared': False}, {}, {}),
                     ({'arch': 'x86_64', 'compiler.version': '6.0', 'build_type': 'Release', 'compiler': 'gcc'},
+                     {'pack:shared': False}, {}, {})]
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+    def test_get_linux_clang_builds(self):
+        builds = get_linux_clang_builds(["4.0"], ["x86_64"], "pack:shared", pure_c=False)
+        expected = [({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++', 'compiler.version': '4.0', 'arch': 'x86_64'},
+                     {'pack:shared': True}, {}, {}),
+                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libc++', 'compiler.version': '4.0', 'arch': 'x86_64'},
+                     {'pack:shared': True}, {}, {}),
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++', 'compiler.version': '4.0', 'arch': 'x86_64'},
+                     {'pack:shared': True}, {}, {}),
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libc++', 'compiler.version': '4.0', 'arch': 'x86_64'},
+                     {'pack:shared': True}, {}, {}),
+                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++', 'compiler.version': '4.0', 'arch': 'x86_64'},
+                     {'pack:shared': False}, {}, {}),
+                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libc++', 'compiler.version': '4.0', 'arch': 'x86_64'},
+                     {'pack:shared': False}, {}, {}),
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++', 'compiler.version': '4.0', 'arch': 'x86_64'},
+                     {'pack:shared': False}, {}, {}),
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libc++', 'compiler.version': '4.0', 'arch': 'x86_64'},
+                     {'pack:shared': False}, {}, {})]
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_linux_clang_builds(["4.0"], ["x86_64"], "pack:shared", pure_c=True)
+        expected = [({'arch': 'x86_64', 'compiler.version': '4.0', 'build_type': 'Debug', 'compiler': 'clang'},
+                     {'pack:shared': True}, {}, {}),
+                    ({'arch': 'x86_64', 'compiler.version': '4.0', 'build_type': 'Release', 'compiler': 'clang'},
+                     {'pack:shared': True}, {}, {}),
+                    ({'arch': 'x86_64', 'compiler.version': '4.0', 'build_type': 'Debug', 'compiler': 'clang'},
+                     {'pack:shared': False}, {}, {}),
+                    ({'arch': 'x86_64', 'compiler.version': '4.0', 'build_type': 'Release', 'compiler': 'clang'},
                      {'pack:shared': False}, {}, {})]
         self.assertEquals([tuple(a) for a in builds], expected)
 

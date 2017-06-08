@@ -94,8 +94,12 @@ class DockerTestPackageRunner(TestPackageRunner):
     def __init__(self, profile, username, channel, mingw_installer_reference=None, runner=None, args=None,
                  conan_pip_package=None, docker_image=None):
 
-        gcc_version = profile.settings.get("compiler.version").replace(".", "")
-        self._docker_image = docker_image or "lasote/conangcc%s" % gcc_version
+        compiler_name = profile.settings.get("compiler")
+        if compiler_name not in ["clang", "gcc"]:
+            raise Exception("Compiler %s is not supported by Docker runner." % compiler_name)
+
+        compiler_version = profile.settings.get("compiler.version").replace(".", "")
+        self._docker_image = docker_image or "lasote/conan%s%s" % (compiler_name, compiler_version)
         super(DockerTestPackageRunner, self).__init__(profile, username, channel,
                                                       mingw_installer_reference=mingw_installer_reference,
                                                       runner=runner, args=args, conan_pip_package=conan_pip_package)

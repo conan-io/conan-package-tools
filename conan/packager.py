@@ -6,7 +6,7 @@ from collections import defaultdict
 from conans.model.ref import ConanFileReference
 
 from conan.test_package_runner import TestPackageRunner, DockerTestPackageRunner
-from conan.builds_generator import (get_linux_gcc_builds, get_visual_builds,
+from conan.builds_generator import (get_linux_gcc_builds, get_linux_clang_builds, get_visual_builds,
                                     get_osx_apple_clang_builds, get_mingw_builds, BuildConf)
 from conan.log import logger
 from conans.model.profile import Profile
@@ -36,6 +36,7 @@ class ConanMultiPackager(object):
     """ Help to generate common builds (setting's combinations), adjust the environment,
     and run conan test_package command in docker containers"""
     default_gcc_versions = ["4.6", "4.8", "4.9", "5.2", "5.3", "5.4", "6.2", "6.3"]
+    default_clang_versions = ["3.8", "3.9", "4.0"]
     default_visual_versions = ["10", "12", "14"]
     default_visual_runtimes = ["MT", "MD", "MTd", "MDd"]
     default_apple_clang_versions = ["7.3", "8.0", "8.1"]
@@ -51,7 +52,8 @@ class ConanMultiPackager(object):
                  mingw_configurations=None,
                  stable_channel=None,
                  platform_info=None,
-                 upload_retry=None):
+                 upload_retry=None,
+                 clang_versions=None):
 
         self._builds = []
         self._named_builds = {}
@@ -95,6 +97,10 @@ class ConanMultiPackager(object):
         self.mingw_configurations = mingw_configurations or get_mingw_config_from_env()
         self.mingw_installer_reference = ConanFileReference.loads(os.getenv("CONAN_MINGW_INSTALLER_REFERENCE") or
                                                                   "mingw_installer/0.1@lasote/testing")
+
+        self.clang_versions = clang_versions or \
+            list(filter(None, os.getenv("CONAN_CLANG_VERSIONS", "").split(","))) or \
+            self.default_clang_versions
 
         self.archs = archs or \
             list(filter(None, os.getenv("CONAN_ARCHS", "").split(","))) or \
@@ -158,6 +164,8 @@ class ConanMultiPackager(object):
             builds = get_linux_gcc_builds(self.gcc_versions, self.archs, shared_option_name, pure_c)
         elif self._platform_info.system() == "Darwin":
             builds = get_osx_apple_clang_builds(self.apple_clang_versions, self.archs, shared_option_name, pure_c)
+        elif self._platform_info.system() == "FreeBSD":
+            builds = get_linux_clang_builds(self.clang_versions, self.archs, shared_option_name, pure_c)
 
         self.builds.extend(builds)
 
@@ -166,7 +174,7 @@ class ConanMultiPackager(object):
         for settings, options, env_vars, build_requires in self.builds:
             if settings["compiler"] == "Visual Studio" and settings["compiler.version"] == "10" and settings["arch"] == "x86_64":
                 continue
-            if settings["compiler"] in ("gcc", "apple-clang"):
+            if settings["compiler"] in ("gcc", "apple-clang", "clang"):
                 name = "%s_%s" % (settings["compiler"], settings["compiler.version"].replace(".", ""))
             elif settings["compiler"] == "Visual Studio":
                 name = "%s_%s_%s" % (settings["compiler"].replace(" ", ""), settings["compiler.version"], settings["arch"])
