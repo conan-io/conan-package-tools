@@ -190,9 +190,8 @@ class AppTest(unittest.TestCase):
         builder.add_common_builds()
         builder.run()
 
-        self.assertEqual(runner.calls,
-                         ['conan export pepe/testing',
-                          'conan remote add upload_repo myurl',
+        self.assertEqual(runner.calls[-3:],
+                         ['conan remote add upload_repo myurl',
                           'conan user pepe -p="password" -r=upload_repo',
                           'conan upload Hello/0.1@pepe/testing --retry 3 --all --force -r=upload_repo'])
    
