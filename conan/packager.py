@@ -78,9 +78,18 @@ class ConanMultiPackager(object):
 
         os.environ["CONAN_CHANNEL"] = self.channel
 
-        self.gcc_versions = gcc_versions or \
-            list(filter(None, os.getenv("CONAN_GCC_VERSIONS", "").split(","))) or \
-            self.default_gcc_versions
+        self.clang_versions = clang_versions or list(filter(None, os.getenv("CONAN_CLANG_VERSIONS", "").split(",")))\
+
+        # If there are some GCC versions declared in the environment then we don't default the clang versions
+        if self.clang_versions is None and not os.getenv("CONAN_GCC_VERSIONS", False):
+            self.clang_versions = self.default_clang_versions
+
+        self.gcc_versions = gcc_versions or list(filter(None, os.getenv("CONAN_GCC_VERSIONS", "").split(",")))
+
+        # If there are some CLANG versions declared in the environment then we don't default the gcc versions
+        if self.gcc_versions is None and not os.getenv("CONAN_CLANG_VERSIONS", False):
+            self.gcc_versions = self.default_gcc_versions
+
         if visual_versions is not None:
             self.visual_versions = visual_versions
         else:
@@ -98,15 +107,13 @@ class ConanMultiPackager(object):
         self.mingw_installer_reference = ConanFileReference.loads(os.getenv("CONAN_MINGW_INSTALLER_REFERENCE") or
                                                                   "mingw_installer/0.1@lasote/testing")
 
-        self.clang_versions = clang_versions or \
-            list(filter(None, os.getenv("CONAN_CLANG_VERSIONS", "").split(","))) or \
-            self.default_clang_versions
-
         self.archs = archs or \
             list(filter(None, os.getenv("CONAN_ARCHS", "").split(","))) or \
             self.default_archs
 
-        self.use_docker = use_docker or os.getenv("CONAN_USE_DOCKER", False)
+        # If CONAN_DOCKER_IMAGE is speified, then use docker is True
+        self.use_docker = use_docker or os.getenv("CONAN_USE_DOCKER", False) or (os.getenv("CONAN_DOCKER_IMAGE", None) is not None)
+
         self.curpage = curpage or os.getenv("CONAN_CURRENT_PAGE", 1)
         self.total_pages = total_pages or os.getenv("CONAN_TOTAL_PAGES", 1)
         self.docker_image = docker_image or os.getenv("CONAN_DOCKER_IMAGE", None)
@@ -211,7 +218,7 @@ class ConanMultiPackager(object):
         elif len(self.named_builds) > 0:
             curpage = curpage or self.curpage
             if curpage not in self.named_builds:
-                raise Exception("No builds set for page " + curpage)
+                raise Exception("No builds set for page %s" % curpage)
             for build in self.named_builds[curpage]:
                 builds_in_current_page.append(build)
 
@@ -219,17 +226,16 @@ class ConanMultiPackager(object):
         print("Builds list:")
         for p in builds_in_current_page: print(list(p._asdict().items()))
 
-        pulled_gcc_images = defaultdict(lambda: False)
+        pulled_docker_images = defaultdict(lambda: False)
         for build in builds_in_current_page:
             profile = _get_profile(build)
-            gcc_version = profile.settings.get("compiler.version")
             if self.use_docker:
                 build_runner = DockerTestPackageRunner(profile, self.username, self.channel,
                                                        self.mingw_installer_reference, self.runner, self.args,
                                                        docker_image=self.docker_image)
 
-                build_runner.run(pull_image=not pulled_gcc_images[gcc_version])
-                pulled_gcc_images[gcc_version] = True
+                build_runner.run(pull_image=not pulled_docker_images[build_runner.docker_image])
+                pulled_docker_images[build_runner.docker_image] = True
             else:
                 build_runner = TestPackageRunner(profile, self.username, self.channel,
                                                  self.mingw_installer_reference, self.runner, self.args)
