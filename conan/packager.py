@@ -218,7 +218,7 @@ class ConanMultiPackager(object):
         elif len(self.named_builds) > 0:
             curpage = curpage or self.curpage
             if curpage not in self.named_builds:
-                raise Exception("No builds set for page " + curpage)
+                raise Exception("No builds set for page %s" % curpage)
             for build in self.named_builds[curpage]:
                 builds_in_current_page.append(build)
 
