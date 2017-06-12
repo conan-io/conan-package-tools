@@ -81,13 +81,13 @@ class ConanMultiPackager(object):
         self.clang_versions = clang_versions or list(filter(None, os.getenv("CONAN_CLANG_VERSIONS", "").split(",")))\
 
         # If there are some GCC versions declared in the environment then we don't default the clang versions
-        if self.clang_versions is None and not os.getenv("CONAN_GCC_VERSIONS", False):
+        if not self.clang_versions and not os.getenv("CONAN_GCC_VERSIONS", False):
             self.clang_versions = self.default_clang_versions
 
         self.gcc_versions = gcc_versions or list(filter(None, os.getenv("CONAN_GCC_VERSIONS", "").split(",")))
 
         # If there are some CLANG versions declared in the environment then we don't default the gcc versions
-        if self.gcc_versions is None and not os.getenv("CONAN_CLANG_VERSIONS", False):
+        if not self.gcc_versions and not os.getenv("CONAN_CLANG_VERSIONS", False):
             self.gcc_versions = self.default_gcc_versions
 
         if visual_versions is not None:
