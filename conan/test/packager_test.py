@@ -220,6 +220,37 @@ class AppTest(unittest.TestCase):
         self.assertTrue("x86" in builder.named_builds)
         self.assertTrue("x86_64" in builder.named_builds)
 
+    def test_remotes(self):
+        runner = MockRunner()
+        builder = ConanMultiPackager(username="Pepe",
+                                     remotes=["url1", "url2"],
+                                     runner=runner)
+        self.assertEqual(runner.calls,
+                        ['conan remote add remote0 url2 --insert',
+                         'conan remote add remote1 url1 --insert'])
+
+        runner = MockRunner()
+        builder = ConanMultiPackager(username="Pepe",
+                                     remotes="myurl1",
+                                     runner=runner)
+        self.assertEqual(runner.calls,
+                        ['conan remote add remote0 myurl1 --insert'])
+
+    def test_upload(self):
+        runner = MockRunner()
+        builder = ConanMultiPackager(username="pepe", channel="testing",
+                                     reference="Hello/0.1", password="password",
+                                     upload="myurl", visual_versions=[], gcc_versions=[],
+                                     apple_clang_versions=[],
+                                     runner=runner)
+        builder.add_common_builds()
+        builder.run()
+
+        self.assertEqual(runner.calls[-3:],
+                         ['conan remote add upload_repo myurl',
+                          'conan user pepe -p="password" -r=upload_repo',
+                          'conan upload Hello/0.1@pepe/testing --retry 3 --all --force -r=upload_repo'])
+   
     def test_default_named_pages(self):
         builder = ConanMultiPackager(username="Pepe", visual_versions=["10", "12", "14", "15"])
         builder.add_common_builds(shared_option_name="zlib:shared", pure_c=True)
