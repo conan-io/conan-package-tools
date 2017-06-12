@@ -1,4 +1,4 @@
-# Conan Package Tools
+# Conan Package Tools [![Build Status](https://travis-ci.org/conan-io/conan-package-tools.svg?branch=master)](https://travis-ci.org/conan-io/conan-package-tools)
 
 This package simplifies the generation of multiple packages when using the [conan package manager](http://conan.io).
 
@@ -8,7 +8,7 @@ It also eases the integration with  [TravisCI](https://travis-ci.org/) and [Appv
 
 - Easy definition of packages that will be created.
 - Pagination of package creation - you can split the build in different tasks (ideal for CI).
-- You can automatically use Docker for auto-generating packages for gcc 4.6, 4.8, 4.9, 5.2, 5.3, in a clean environment, every time.
+- You can automatically use Docker for auto-generating packages for gcc 4.6, 4.8, 4.9, 5.2, 5.3, 5.4, 6.3 and clang 3.8, 3.9, 4.0, in a clean environment, every time.
 - For Windows Visual Studio builds, auto-detect the Visual Studio version and prepare the environment to point to that compiler.
 - Upload packages directly to conan.io (or your own custom conan server)
 - Great and easy integration with [TravisCI](https://travis-ci.org/) and [Appveyor](http://www.appveyor.com/)
@@ -121,6 +121,30 @@ Or passing a list to ConanMultiPackager constructor:
     builder.add_common_builds(pure_c=False)
     builder.run()
 
+## Clang builds
+
+Clang compiler builds are also supported. You can use this feature with TravisCI.
+
+You can choose different Clang compiler configurations:
+
+- **Version**: 3.8, 3.9 and 4.0 are supported
+- **Architecture**: x86 and x86_64 are supported
+
+Using **CONAN_CLANG_VERSIONS** env variable:
+
+    os.environ["CONAN_CLANG_VERSIONS"] = "3.8,3.9,4.0"
+
+Or adding common Clang builds:
+
+    if __name__ == "__main__":
+        builder = ConanMultiPackager()
+        builder.add_common_builds(shared_option_name="gtest:shared", pure_c=False)
+        clang_builds = get_linux_clang_builds(clang_versions=builder.clang_versions, archs=builder.archs, shared_option_name="gtest:shared", pure_c=False)
+        builder.builds.extend(clang_builds)
+        builder.run()
+
+By default, Clang builds are added only for **FreeBSD**.
+
 
 ## Pagination
 
@@ -130,7 +154,7 @@ There are two ways of setting pagination.
 
 **Named pages**
 
-By adding builds to the **named_builds** dictionary, and passing **curpage** with the page name: 
+By adding builds to the **named_builds** dictionary, and passing **curpage** with the page name:
 
     from conan.packager import ConanMultiPackager
     from collections import defaultdict
@@ -186,11 +210,13 @@ If you added 10 package's to the builder:
 If you instance ConanMultiPackager with the parameter **use_docker=True**,
 it will launch N containers with a virtualized versions of Ubuntu.
 
-We have different images available at **dockerhub**, for gcc versions 4.6, 4.8, 4.9, 5.2, 5.3, 6.2 and 6.3.
+We have different images available at **dockerhub**, for gcc versions 4.6, 4.8, 4.9, 5.2, 5.3, 6.2, 6.3 and for clang versions 3.8, 3.9, 4.0.
 
 The containers will share the conan storage directory, so the packages will be generated in your conan directory.
 
 You can also specify a subset of **gcc versions** with the parameter **gcc_versions** and the pagination is also available with the parameters **curpage** and **total_pages**.
+
+You can also specify a subset of **clang versions** with the parameter **clang_versions** and the pagination is also available with the parameters **curpage** and **total_pages**.
 
 ## Upload packages
 
@@ -205,6 +231,7 @@ You can specify another remote name with parameter **remote**.
 - **args**: List with the parameters that will be passed to "conan test" command. e.j: args=['--build', 'all']. Default sys.argv[1:]
 - **username**: Your conan username
 - **gcc_versions**: List with a subset of gcc_versions. Default ["4.6", "4.8", "4.9", "5.2", "5.3", "5.4", "6.2", "6.3"]
+- **clang_versions**: List with a subset of clang_versions. Default ["3.8", "3.9", "4.0"]
 - **apple_clang_versions**: List with a subset of apple-clang versions. Default ["6.1", "7.3", "8.0"]
 - **visual_versions**: List with a subset of Visual Studio versions. Default [10, 12, 14]
 - **visual_runtimes**: List containing Visual Studio runtimes to use in builds. Default ["MT", "MD", "MTd", "MDd"]
@@ -238,6 +265,7 @@ This is especially useful for CI integration.
 - **CONAN_UPLOAD**: If defined, it will upload the generated packages
 - **CONAN_UPLOAD_RETRY**: If defined, in case of fail retries to upload again the specified times
 - **CONAN_GCC_VERSIONS**: Gcc versions, comma separated, e.g. "4.6,4.8,5.2,6.3"
+- **CONAN_CLANG_VERSIONS**: Clang versions, comma separated, e.g. "3.8,3.9,4.0"
 - **CONAN_APPLE_CLANG_VERSIONS**: Apple clang versions, comma separated, e.g. "6.1,8.0"
 - **CONAN_ARCHS**: Architectures to build for, comma separated, e.g. "x86,x86_64"
 - **CONAN_VISUAL_VERSIONS**: Visual versions, comma separated, e.g. "12,14"
@@ -245,7 +273,7 @@ This is especially useful for CI integration.
 - **CONAN_USE_DOCKER**: If defined will use docker
 - **CONAN_CURRENT_PAGE**:  Current page of packages to create
 - **CONAN_TOTAL_PAGES**: Total number of pages
-- **CONAN_DOCKER_IMAGE**: If defined and docker is being used, it will use this dockerimage instead of the default images
+- **CONAN_DOCKER_IMAGE**: If defined and docker is being used, it will use this dockerimage instead of the default images, e.g. "lasote/conangcc63"
 - **CONAN_STABLE_BRANCH_PATTERN**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *CONAN_STABLE_CHANNEL* channel. Default "master". E.j: "release/*"
 - **CONAN_STABLE_CHANNEL**: Stable channel name, default "stable"
 - **CONAN_STABLE_USERNAME**: Your conan username in case the `CONAN_STABLE_BRANCH_PATTERN` matches. Optional. If not defined `CONAN_USERNAME` is used.
@@ -411,7 +439,7 @@ In case you need just one job per compiler to compile all the packages:
 If you want to "pin" a **conan_package_tools** version use:
 
     pip install conan_package_tools==0.3.2
-    
+
 That version will be used also in the docker images.
 
 
@@ -472,18 +500,25 @@ This is very similar to Travis CI. With the same **build.py** script we have the
 ## Bamboo CI integration
 
 [Bamboo](https://www.atlassian.com/software/bamboo) is a commercial CI tool developed by Atlassian.
-When building from bamboo, several environement variables get set during builds.
+When building from bamboo, several environment variables get set during builds.
 
 If the env var **bamboo_buildNumber** is set and the branch name (**bamboo_planRepository_branch** env var) matches **stable_branch_pattern**, then the channel name gets set to ```stable```.
 
 ## Jenkins CI integration
 
 [Jenkins](https://jenkins.io/) is an open source CI tool that was originally forked from hudson.
-When building on jenkins, several environement variables get set during builds.
- 
+When building on jenkins, several environment variables get set during builds.
+
 If the env var **JENKINS_URL** is set and the branch name (**BRANCH_NAME** env var) matches **stable_branch_pattern**, then the channel name gets set to ```stable```.
 
 Currently, only the pipeline builds set the **BRANCH_NAME** env var automatically.
+
+## GitLab CI integration
+
+[GitLab CI](https://about.gitlab.com/features/gitlab-ci-cd/) is a commercial CI tool developed by GitLab.
+When building on gitlab-ci, several environment variables get set during builds.
+
+If the env var **GITLAB_CI** is set and the branch name (**CI_BUILD_REF_NAME** env var) matches **stable_branch_pattern**, then the channel name gets set to ```stable```.
 
 # Full example
 

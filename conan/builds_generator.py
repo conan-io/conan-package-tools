@@ -168,3 +168,31 @@ def get_linux_gcc_builds(gcc_versions, archs, shared_option_name, pure_c):
                     else:
                         ret.append(get_build("gcc", arch, build_type, gcc_version))
     return ret
+
+
+def get_linux_clang_builds(clang_versions, archs, shared_option_name, pure_c):
+    ret = []
+    # Not specified compiler or compiler version, will use the auto detected
+    for clang_version in clang_versions:
+        for arch in archs:
+            if shared_option_name:
+                for shared in [True, False]:
+                    for build_type in ["Debug", "Release"]:
+                        if not pure_c:
+                            ret.append(get_build("clang", arch, build_type, clang_version,
+                                                 "libstdc++", shared_option_name, shared))
+                            ret.append(get_build("clang", arch, build_type, clang_version,
+                                                 "libc++", shared_option_name, shared))
+                        else:
+                            ret.append(get_build("clang", arch, build_type, clang_version,
+                                                 None, shared_option_name, shared))
+            else:
+                for build_type in ["Debug", "Release"]:
+                    if not pure_c:
+                        ret.append(get_build("clang", arch, build_type, clang_version,
+                                             "libstdc++"))
+                        ret.append(get_build("clang", arch, build_type, clang_version,
+                                             "libstdc++"))
+                    else:
+                        ret.append(get_build("clang", arch, build_type, clang_version))
+    return ret

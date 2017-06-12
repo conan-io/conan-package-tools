@@ -6,7 +6,7 @@ from collections import defaultdict
 from conans.model.ref import ConanFileReference
 
 from conan.test_package_runner import TestPackageRunner, DockerTestPackageRunner
-from conan.builds_generator import (get_linux_gcc_builds, get_visual_builds,
+from conan.builds_generator import (get_linux_gcc_builds, get_linux_clang_builds, get_visual_builds,
                                     get_osx_apple_clang_builds, get_mingw_builds, BuildConf)
 from conan.log import logger
 from conans.model.profile import Profile
@@ -36,6 +36,7 @@ class ConanMultiPackager(object):
     """ Help to generate common builds (setting's combinations), adjust the environment,
     and run conan test_package command in docker containers"""
     default_gcc_versions = ["4.6", "4.8", "4.9", "5.2", "5.3", "5.4", "6.2", "6.3"]
+    default_clang_versions = ["3.8", "3.9", "4.0"]
     default_visual_versions = ["10", "12", "14"]
     default_visual_runtimes = ["MT", "MD", "MTd", "MDd"]
     default_apple_clang_versions = ["7.3", "8.0", "8.1"]
@@ -51,7 +52,8 @@ class ConanMultiPackager(object):
                  mingw_configurations=None,
                  stable_channel=None,
                  platform_info=None,
-                 upload_retry=None):
+                 upload_retry=None,
+                 clang_versions=None):
 
         self._builds = []
         self._named_builds = {}
@@ -76,9 +78,18 @@ class ConanMultiPackager(object):
 
         os.environ["CONAN_CHANNEL"] = self.channel
 
-        self.gcc_versions = gcc_versions or \
-            list(filter(None, os.getenv("CONAN_GCC_VERSIONS", "").split(","))) or \
-            self.default_gcc_versions
+        self.clang_versions = clang_versions or list(filter(None, os.getenv("CONAN_CLANG_VERSIONS", "").split(",")))\
+
+        # If there are some GCC versions declared in the environment then we don't default the clang versions
+        if not self.clang_versions and not os.getenv("CONAN_GCC_VERSIONS", False):
+            self.clang_versions = self.default_clang_versions
+
+        self.gcc_versions = gcc_versions or list(filter(None, os.getenv("CONAN_GCC_VERSIONS", "").split(",")))
+
+        # If there are some CLANG versions declared in the environment then we don't default the gcc versions
+        if not self.gcc_versions and not os.getenv("CONAN_CLANG_VERSIONS", False):
+            self.gcc_versions = self.default_gcc_versions
+
         if visual_versions is not None:
             self.visual_versions = visual_versions
         else:
@@ -100,7 +111,9 @@ class ConanMultiPackager(object):
             list(filter(None, os.getenv("CONAN_ARCHS", "").split(","))) or \
             self.default_archs
 
-        self.use_docker = use_docker or os.getenv("CONAN_USE_DOCKER", False)
+        # If CONAN_DOCKER_IMAGE is speified, then use docker is True
+        self.use_docker = use_docker or os.getenv("CONAN_USE_DOCKER", False) or (os.getenv("CONAN_DOCKER_IMAGE", None) is not None)
+
         self.curpage = curpage or os.getenv("CONAN_CURRENT_PAGE", 1)
         self.total_pages = total_pages or os.getenv("CONAN_TOTAL_PAGES", 1)
         self.docker_image = docker_image or os.getenv("CONAN_DOCKER_IMAGE", None)
@@ -158,6 +171,8 @@ class ConanMultiPackager(object):
             builds = get_linux_gcc_builds(self.gcc_versions, self.archs, shared_option_name, pure_c)
         elif self._platform_info.system() == "Darwin":
             builds = get_osx_apple_clang_builds(self.apple_clang_versions, self.archs, shared_option_name, pure_c)
+        elif self._platform_info.system() == "FreeBSD":
+            builds = get_linux_clang_builds(self.clang_versions, self.archs, shared_option_name, pure_c)
 
         self.builds.extend(builds)
 
@@ -166,7 +181,7 @@ class ConanMultiPackager(object):
         for settings, options, env_vars, build_requires in self.builds:
             if settings["compiler"] == "Visual Studio" and settings["compiler.version"] == "10" and settings["arch"] == "x86_64":
                 continue
-            if settings["compiler"] in ("gcc", "apple-clang"):
+            if settings["compiler"] in ("gcc", "apple-clang", "clang"):
                 name = "%s_%s" % (settings["compiler"], settings["compiler.version"].replace(".", ""))
             elif settings["compiler"] == "Visual Studio":
                 name = "%s_%s_%s" % (settings["compiler"].replace(" ", ""), settings["compiler.version"], settings["arch"])
@@ -203,7 +218,7 @@ class ConanMultiPackager(object):
         elif len(self.named_builds) > 0:
             curpage = curpage or self.curpage
             if curpage not in self.named_builds:
-                raise Exception("No builds set for page " + curpage)
+                raise Exception("No builds set for page %s" % curpage)
             for build in self.named_builds[curpage]:
                 builds_in_current_page.append(build)
 
@@ -211,17 +226,16 @@ class ConanMultiPackager(object):
         print("Builds list:")
         for p in builds_in_current_page: print(list(p._asdict().items()))
 
-        pulled_gcc_images = defaultdict(lambda: False)
+        pulled_docker_images = defaultdict(lambda: False)
         for build in builds_in_current_page:
             profile = _get_profile(build)
-            gcc_version = profile.settings.get("compiler.version")
             if self.use_docker:
                 build_runner = DockerTestPackageRunner(profile, self.username, self.channel,
                                                        self.mingw_installer_reference, self.runner, self.args,
                                                        docker_image=self.docker_image)
 
-                build_runner.run(pull_image=not pulled_gcc_images[gcc_version])
-                pulled_gcc_images[gcc_version] = True
+                build_runner.run(pull_image=not pulled_docker_images[build_runner.docker_image])
+                pulled_docker_images[build_runner.docker_image] = True
             else:
                 build_runner = TestPackageRunner(profile, self.username, self.channel,
                                                  self.mingw_installer_reference, self.runner, self.args)
