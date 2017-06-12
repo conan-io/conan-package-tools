@@ -176,20 +176,6 @@ class ConanMultiPackager(object):
 
         self.builds.extend(builds)
 
-    def use_default_named_pages(self):
-        named_builds = {}
-        for settings, options, env_vars, build_requires in self.builds:
-            if settings["compiler"] == "Visual Studio" and settings["compiler.version"] == "10" and settings["arch"] == "x86_64":
-                continue
-            if settings["compiler"] in ("gcc", "apple-clang", "clang"):
-                name = "%s_%s" % (settings["compiler"], settings["compiler.version"].replace(".", ""))
-            elif settings["compiler"] == "Visual Studio":
-                name = "%s_%s_%s" % (settings["compiler"].replace(" ", ""), settings["compiler.version"], settings["arch"])
-            named_build = named_builds.setdefault(name, [])
-            named_build.append([settings, options, env_vars, build_requires])
-        self.builds = []
-        self.named_builds = named_builds
-
     def add(self, settings=None, options=None, env_vars=None, build_requires=None):
         settings = settings or {}
         options = options or {}
