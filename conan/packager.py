@@ -56,7 +56,7 @@ class ConanMultiPackager(object):
                  clang_versions=None):
 
         self._builds = []
-        self._named_builds = {}
+        self._named_builds = {}f
         self._platform_info = platform_info or PlatformInfo()
         self.runner = runner or os.system
         self.args = args or " ".join(sys.argv[1:])
