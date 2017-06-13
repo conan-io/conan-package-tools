@@ -145,13 +145,6 @@ class ConanMultiPackager(object):
         self.conan_pip_package = os.getenv("CONAN_PIP_PACKAGE", None)
         self.vs10_x86_64_enabled = vs10_x86_64_enabled
 
-        # Set the remotes
-        if self.remotes:
-            if not isinstance(self.remotes, list):
-                self.remotes = [r.strip() for r in self.remotes.split(",") if r.strip()]
-            for counter, remote in enumerate(reversed(self.remotes)):
-                self.runner("conan remote add remote%s %s --insert" % (counter, remote))
-
     @property
     def builds(self):
         return self._builds
@@ -247,13 +240,14 @@ class ConanMultiPackager(object):
             if self.use_docker:
                 build_runner = DockerTestPackageRunner(profile, self.username, self.channel,
                                                        self.mingw_installer_reference, self.runner, self.args,
-                                                       docker_image=self.docker_image)
+                                                       docker_image=self.docker_image, remotes=self.remotes)
 
                 build_runner.run(pull_image=not pulled_docker_images[build_runner.docker_image])
                 pulled_docker_images[build_runner.docker_image] = True
             else:
                 build_runner = TestPackageRunner(profile, self.username, self.channel,
-                                                 self.mingw_installer_reference, self.runner, self.args)
+                                                 self.mingw_installer_reference, self.runner, self.args,
+                                                 remotes=self.remotes)
                 build_runner.run()
 
     def upload_packages(self):
