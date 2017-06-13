@@ -146,10 +146,10 @@ class ConanMultiPackager(object):
         self.vs10_x86_64_enabled = vs10_x86_64_enabled
 
         # Set the remotes
-        if remotes:
-            if not isinstance(remotes, list):
-                remotes = [r.strip() for r in remotes.split(",") if r.strip()]
-            for counter, remote in enumerate(reversed(remotes)):
+        if self.remotes:
+            if not isinstance(self.remotes, list):
+                self.remotes = [r.strip() for r in self.remotes.split(",") if r.strip()]
+            for counter, remote in enumerate(reversed(self.remotes)):
                 self.runner("conan remote add remote%s %s --insert" % (counter, remote))
 
     @property
@@ -197,6 +197,7 @@ class ConanMultiPackager(object):
                                             shared_option_name, dll_with_static_runtime, self.vs10_x86_64_enabled))
         elif self._platform_info.system() == "Linux":
             builds = get_linux_gcc_builds(self.gcc_versions, self.archs, shared_option_name, pure_c)
+            builds.extend(get_linux_clang_builds(self.clang_versions, self.archs, shared_option_name, pure_c))
         elif self._platform_info.system() == "Darwin":
             builds = get_osx_apple_clang_builds(self.apple_clang_versions, self.archs, shared_option_name, pure_c)
         elif self._platform_info.system() == "FreeBSD":
