@@ -47,6 +47,7 @@ class ConanMultiPackager(object):
                  apple_clang_versions=None, archs=None,
                  use_docker=None, curpage=None, total_pages=None,
                  docker_image=None, reference=None, password=None, remote=None,
+                 remotes=None,
                  upload=None, stable_branch_pattern=None,
                  vs10_x86_64_enabled=False,
                  mingw_configurations=None,
@@ -70,11 +71,31 @@ class ConanMultiPackager(object):
         self.reference = reference or os.getenv("CONAN_REFERENCE", None)
         self.password = password or os.getenv("CONAN_PASSWORD", None)
         self.remote = remote or os.getenv("CONAN_REMOTE", None)
-        self.upload = upload or (os.getenv("CONAN_UPLOAD", None) in ["True", "true", "1"])
+
+        if self.remote:
+            raise Exception('''
+'remote' argument is deprecated. Use:
+        - 'upload' argument to specify the remote URL to upload your packages (or None to disable upload)
+        - 'remotes' argument to specify additional remote URLs, for example, different user repositories.
+''')
+
+        self.remotes = remotes or os.getenv("CONAN_REMOTES", None)
+        self.upload = upload or os.getenv("CONAN_UPLOAD", None)
+
         self.stable_branch_pattern = stable_branch_pattern or os.getenv("CONAN_STABLE_BRANCH_PATTERN", None)
         default_channel = channel or os.getenv("CONAN_CHANNEL", "testing")
         stable_channel = stable_channel or os.getenv("CONAN_STABLE_CHANNEL", "stable")
         self.channel = self._get_channel(default_channel, stable_channel)
+
+        if upload:
+            if upload in ("0", "None", "False"):
+                self.upload = None
+            elif upload == "1":
+                raise Exception(
+                    "WARNING! 'upload' argument has changed. Use 'upload' argument or CONAN_UPLOAD environment variable "
+                    "to specify a remote URL to upload your packages. e.j: upload='https://api.bintray.com/conan/myuser/myconanrepo'")
+            elif not self.reference or not self.password or not self.channel or not self.username:
+                raise Exception("Upload not possible, some parameter (reference, password or channel) is missing!")
 
         os.environ["CONAN_CHANNEL"] = self.channel
 
@@ -123,6 +144,13 @@ class ConanMultiPackager(object):
 
         self.conan_pip_package = os.getenv("CONAN_PIP_PACKAGE", None)
         self.vs10_x86_64_enabled = vs10_x86_64_enabled
+
+        # Set the remotes
+        if remotes:
+            if not isinstance(remotes, list):
+                remotes = [r.strip() for r in remotes.split(",") if r.strip()]
+            for counter, remote in enumerate(reversed(remotes)):
+                self.runner("conan remote add remote%s %s --insert" % (counter, remote))
 
     @property
     def builds(self):
@@ -231,24 +259,19 @@ class ConanMultiPackager(object):
 
         if not self.upload:
             return
-        if not self.reference or not self.password or not self.channel or not self.username:
-            logger.info("Skipped upload, some parameter (reference, password or channel)"
-                        " is missing!")
-            return
-        command = "conan upload %s@%s/%s --retry %s --all --force" % (self.reference,
-                                                                      self.username,
-                                                                      self.channel,
-                                                                      self.upload_retry)
-        user_command = 'conan user %s -p="%s"' % (self.username, self.password)
+
+        remote_command = 'conan remote add upload_repo %s' % self.upload
+        ret = self.runner(remote_command)
+        if ret != 0:
+            raise Exception("Error while setting remote repo URL")
+        command = "conan upload %s@%s/%s --retry %s --all --force -r=upload_repo" % (self.reference, self.username,
+                                                                                     self.channel, self.upload_retry)
+        user_command = 'conan user %s -p="%s" -r=upload_repo' % (self.username, self.password)
 
         logger.info("******** RUNNING UPLOAD COMMAND ********** \n%s" % command)
         if self._platform_info.system() == "Linux" and self.use_docker:
             self.runner("sudo chmod -R 777 ~/.conan/data")
             # self.runner("ls -la ~/.conan")
-
-        if self.remote:
-            command += " -r %s" % self.remote
-            user_command += " -r %s" % self.remote
 
         ret = self.runner(user_command)
         if ret != 0:
@@ -316,7 +339,14 @@ def _get_profile(build_conf):
     for pattern, build_requires in build_conf.build_requires.items():
         br_lines += "\n".join(["%s:%s" % (pattern, br) for br in build_requires])
 
-    return Profile.loads(tmp % (settings, options, env_vars, br_lines))
+    profile_text = tmp % (settings, options, env_vars, br_lines)
+    # FIXME: Remove when conan==0.24.0
+    if hasattr(Profile, "loads"):
+        return Profile.loads(profile_text)
+    else:
+        # Fixme, make public in conan?
+        from conans.client.profile_loader import _load_profile
+        return _load_profile(profile_text, None, None)[0]
 
 
 if __name__ == "__main__":
