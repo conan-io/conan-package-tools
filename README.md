@@ -1,5 +1,16 @@
 # Conan Package Tools [![Build Status](https://travis-ci.org/conan-io/conan-package-tools.svg?branch=master)](https://travis-ci.org/conan-io/conan-package-tools)
 
+
+## Important changes in version 0.4.0!
+
+- Use `CONAN_UPLOAD` to specify the URL of the remote to be used to upload your packages.
+- Use `REMOTES` to specify other URLs ("," separated) of remotes to be used to retrieve requirements.
+- Use `CONAN_PASSWORD` as usual to specify the remote password if you want to upload packages, if the remote
+is a Bintray repository use an API key. [Read more here](#bintray)
+
+
+## Introduction
+
 This package simplifies the generation of multiple packages when using the [conan package manager](http://conan.io).
 
 It also eases the integration with  [TravisCI](https://travis-ci.org/) and [Appveyor](http://www.appveyor.com/), and allows for the automation of package creation in CI servers, as well as the upload of the generated packages to [conan](http://conan.io).
@@ -55,7 +66,7 @@ If your conanfile.py have an option to specify **shared**/**static** packages yo
 
 If you are using Visual Studio and you want build shared libraries with static runtime (MT, MTd) you can pass **dll_with_static_runtime** parameter to True in **add_common_builds**.
 
-
+<a name="bintray"></a>
 ## Working with Bintray: Configuring repositories
 
 Use the argument `upload` or environment variable `CONAN_UPLOAD` to set the URL of the repository where you want to
