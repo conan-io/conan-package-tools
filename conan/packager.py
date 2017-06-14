@@ -145,6 +145,18 @@ class ConanMultiPackager(object):
         self.conan_pip_package = os.getenv("CONAN_PIP_PACKAGE", None)
         self.vs10_x86_64_enabled = vs10_x86_64_enabled
 
+        # Set the remotes
+        if self.remotes:
+            if not isinstance(self.remotes, list):
+                remotes = [r.strip() for r in self.remotes.split(",") if r.strip()]
+            for counter, remote in enumerate(reversed(remotes)):
+                if self.runner("conan remote add remote%s %s --insert" % (counter, remote)) != 0:
+                    logger.info("Remote add with insert failed... trying to add at the end")
+                    self.runner("conan remote add remote%s %s" % (counter, remote))  # Retrocompatibility
+            self.runner("conan remote list")
+        else:
+            logger.info("Not additional remotes declared...")
+
     @property
     def builds(self):
         return self._builds
@@ -240,14 +252,13 @@ class ConanMultiPackager(object):
             if self.use_docker:
                 build_runner = DockerTestPackageRunner(profile, self.username, self.channel,
                                                        self.mingw_installer_reference, self.runner, self.args,
-                                                       docker_image=self.docker_image, remotes=self.remotes)
+                                                       docker_image=self.docker_image)
 
                 build_runner.run(pull_image=not pulled_docker_images[build_runner.docker_image])
                 pulled_docker_images[build_runner.docker_image] = True
             else:
                 build_runner = TestPackageRunner(profile, self.username, self.channel,
-                                                 self.mingw_installer_reference, self.runner, self.args,
-                                                 remotes=self.remotes)
+                                                 self.mingw_installer_reference, self.runner, self.args)
                 build_runner.run()
 
     def upload_packages(self):

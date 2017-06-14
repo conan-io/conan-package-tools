@@ -16,7 +16,7 @@ from conans.util.files import save, load, mkdir
 class TestPackageRunner(object):
 
     def __init__(self, profile, username, channel, mingw_installer_reference=None, runner=None, args=None,
-                 conan_pip_package=None, remotes=None):
+                 conan_pip_package=None):
 
         self._profile = profile
         self._mingw_installer_reference = mingw_installer_reference
@@ -25,21 +25,8 @@ class TestPackageRunner(object):
         self._channel = channel
         self._conan_pip_package = conan_pip_package
         self._runner = runner or os.system
-        self._remotes = remotes
         self.runner = runner
 
-        # Set the remotes
-        if self._remotes:
-            if not isinstance(self._remotes, list):
-                remotes = [r.strip() for r in self._remotes.split(",") if r.strip()]
-            for counter, remote in enumerate(reversed(remotes)):
-                if self.runner("conan remote add remote%s %s --insert" % (counter, remote)) != 0:
-                    logger.info("Remote add with insert failed... trying to add at the end")
-                    self.runner("conan remote add remote%s %s" % (counter, remote)) # Retrocompatibility
-
-            self.runner("conan remote list")
-        else:
-            logger.info("Not additional remotes declared...")
     @property
     def settings(self):
         return self._profile.settings
@@ -115,14 +102,13 @@ def autodetect_docker_image(profile):
 class DockerTestPackageRunner(TestPackageRunner):
 
     def __init__(self, profile, username, channel, mingw_installer_reference=None, runner=None, args=None,
-                 conan_pip_package=None, docker_image=None, remotes=None):
+                 conan_pip_package=None, docker_image=None):
 
          self.docker_image = docker_image or autodetect_docker_image(profile)
 
          super(DockerTestPackageRunner, self).__init__(profile, username, channel,
                                                        mingw_installer_reference=mingw_installer_reference,
-                                                       runner=runner, args=args, conan_pip_package=conan_pip_package,
-                                                       remotes=remotes)
+                                                       runner=runner, args=args, conan_pip_package=conan_pip_package)
 
     def run(self, pull_image=True):
 
@@ -148,8 +134,8 @@ class DockerTestPackageRunner(TestPackageRunner):
                    "-e CONAN_CHANNEL=%s" % (serial, self._username, self._channel)
 
         command = "sudo docker run --rm -v %s:/home/conan/project -v " \
-                  "~/.conan/data:/home/conan/.conan/data -it %s %s /bin/sh -c \"" \
-                  "cd project && run_test_package_in_docker\"" % (os.getcwd(), env_vars,  self.docker_image)
+                  "~/.conan/:/home/conan/.conan -it %s %s /bin/sh -c \"" \
+                  "rm /home/conan/.conan/conan.conf && cd project && run_test_package_in_docker\"" % (os.getcwd(), env_vars,  self.docker_image)
         ret = self._runner(command)
         if ret != 0:
             raise Exception("Error building: %s" % command)
@@ -165,7 +151,6 @@ class DockerTestPackageRunner(TestPackageRunner):
 
     def serialize(self):
         doc = {"args": self._args,
-               "remotes": self._remotes,
                "username": self._username,
                "channel": self._channel,
                "profile": self._profile.dumps(),
@@ -180,6 +165,5 @@ class DockerTestPackageRunner(TestPackageRunner):
                                 username=the_json["username"],
                                 channel=the_json["channel"],
                                 args=the_json["args"],
-                                conan_pip_package=the_json["conan_pip_package"],
-                                remotes=the_json["remotes"])
+                                conan_pip_package=the_json["conan_pip_package"])
         return ret
