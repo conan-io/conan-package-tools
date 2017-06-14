@@ -6,7 +6,7 @@ from collections import defaultdict
 from conans.model.ref import ConanFileReference
 
 from conan.test_package_runner import TestPackageRunner, DockerTestPackageRunner
-from conan.builds_generator import (get_linux_gcc_builds, get_visual_builds,
+from conan.builds_generator import (get_linux_gcc_builds, get_linux_clang_builds, get_visual_builds,
                                     get_osx_apple_clang_builds, get_mingw_builds, BuildConf)
 from conan.log import logger
 from conans.model.profile import Profile
@@ -36,6 +36,7 @@ class ConanMultiPackager(object):
     """ Help to generate common builds (setting's combinations), adjust the environment,
     and run conan test_package command in docker containers"""
     default_gcc_versions = ["4.6", "4.8", "4.9", "5.2", "5.3", "5.4", "6.2", "6.3"]
+    default_clang_versions = ["3.8", "3.9", "4.0"]
     default_visual_versions = ["10", "12", "14"]
     default_visual_runtimes = ["MT", "MD", "MTd", "MDd"]
     default_apple_clang_versions = ["7.3", "8.0", "8.1"]
@@ -46,12 +47,14 @@ class ConanMultiPackager(object):
                  apple_clang_versions=None, archs=None,
                  use_docker=None, curpage=None, total_pages=None,
                  docker_image=None, reference=None, password=None, remote=None,
+                 remotes=None,
                  upload=None, stable_branch_pattern=None,
                  vs10_x86_64_enabled=False,
                  mingw_configurations=None,
                  stable_channel=None,
                  platform_info=None,
-                 upload_retry=None):
+                 upload_retry=None,
+                 clang_versions=None):
 
         self._builds = []
         self._named_builds = {}
@@ -68,17 +71,46 @@ class ConanMultiPackager(object):
         self.reference = reference or os.getenv("CONAN_REFERENCE", None)
         self.password = password or os.getenv("CONAN_PASSWORD", None)
         self.remote = remote or os.getenv("CONAN_REMOTE", None)
-        self.upload = upload or (os.getenv("CONAN_UPLOAD", None) in ["True", "true", "1"])
+
+        if self.remote:
+            raise Exception('''
+'remote' argument is deprecated. Use:
+        - 'upload' argument to specify the remote URL to upload your packages (or None to disable upload)
+        - 'remotes' argument to specify additional remote URLs, for example, different user repositories.
+''')
+
+        self.remotes = remotes or os.getenv("CONAN_REMOTES", None)
+        self.upload = upload or os.getenv("CONAN_UPLOAD", None)
+
         self.stable_branch_pattern = stable_branch_pattern or os.getenv("CONAN_STABLE_BRANCH_PATTERN", None)
         default_channel = channel or os.getenv("CONAN_CHANNEL", "testing")
         stable_channel = stable_channel or os.getenv("CONAN_STABLE_CHANNEL", "stable")
         self.channel = self._get_channel(default_channel, stable_channel)
 
+        if upload:
+            if upload in ("0", "None", "False"):
+                self.upload = None
+            elif upload == "1":
+                raise Exception(
+                    "WARNING! 'upload' argument has changed. Use 'upload' argument or CONAN_UPLOAD environment variable "
+                    "to specify a remote URL to upload your packages. e.j: upload='https://api.bintray.com/conan/myuser/myconanrepo'")
+            elif not self.reference or not self.password or not self.channel or not self.username:
+                raise Exception("Upload not possible, some parameter (reference, password or channel) is missing!")
+
         os.environ["CONAN_CHANNEL"] = self.channel
 
-        self.gcc_versions = gcc_versions or \
-            list(filter(None, os.getenv("CONAN_GCC_VERSIONS", "").split(","))) or \
-            self.default_gcc_versions
+        self.clang_versions = clang_versions or list(filter(None, os.getenv("CONAN_CLANG_VERSIONS", "").split(",")))\
+
+        # If there are some GCC versions declared in the environment then we don't default the clang versions
+        if not self.clang_versions and not os.getenv("CONAN_GCC_VERSIONS", False):
+            self.clang_versions = self.default_clang_versions
+
+        self.gcc_versions = gcc_versions or list(filter(None, os.getenv("CONAN_GCC_VERSIONS", "").split(",")))
+
+        # If there are some CLANG versions declared in the environment then we don't default the gcc versions
+        if not self.gcc_versions and not os.getenv("CONAN_CLANG_VERSIONS", False):
+            self.gcc_versions = self.default_gcc_versions
+
         if visual_versions is not None:
             self.visual_versions = visual_versions
         else:
@@ -100,7 +132,9 @@ class ConanMultiPackager(object):
             list(filter(None, os.getenv("CONAN_ARCHS", "").split(","))) or \
             self.default_archs
 
-        self.use_docker = use_docker or os.getenv("CONAN_USE_DOCKER", False)
+        # If CONAN_DOCKER_IMAGE is speified, then use docker is True
+        self.use_docker = use_docker or os.getenv("CONAN_USE_DOCKER", False) or (os.getenv("CONAN_DOCKER_IMAGE", None) is not None)
+
         self.curpage = curpage or os.getenv("CONAN_CURRENT_PAGE", 1)
         self.total_pages = total_pages or os.getenv("CONAN_TOTAL_PAGES", 1)
         self.docker_image = docker_image or os.getenv("CONAN_DOCKER_IMAGE", None)
@@ -110,6 +144,28 @@ class ConanMultiPackager(object):
 
         self.conan_pip_package = os.getenv("CONAN_PIP_PACKAGE", None)
         self.vs10_x86_64_enabled = vs10_x86_64_enabled
+
+        if self.upload:
+            remote_command = 'conan remote add upload_repo %s' % self.upload
+            ret = self.runner(remote_command)
+            if ret != 0:
+                raise Exception("Error while setting remote upload URL")
+
+        # Set the remotes
+        if self.remotes:
+            if not isinstance(self.remotes, list):
+                remotes = [r.strip() for r in self.remotes.split(",") if r.strip()]
+
+            for counter, remote in enumerate(reversed(remotes)):
+                if remote == self.upload:  # Already added
+                    continue
+                remote_name = "remote%s" % counter
+                if self.runner("conan remote add remote%s %s --insert" % (counter, remote)) != 0:
+                    logger.info("Remote add with insert failed... trying to add at the end")
+                    self.runner("conan remote add %s %s" % (remote_name, remote))  # Retrocompatibility
+            self.runner("conan remote list")
+        else:
+            logger.info("Not additional remotes declared...")
 
     @property
     def builds(self):
@@ -156,24 +212,13 @@ class ConanMultiPackager(object):
                                             shared_option_name, dll_with_static_runtime, self.vs10_x86_64_enabled))
         elif self._platform_info.system() == "Linux":
             builds = get_linux_gcc_builds(self.gcc_versions, self.archs, shared_option_name, pure_c)
+            builds.extend(get_linux_clang_builds(self.clang_versions, self.archs, shared_option_name, pure_c))
         elif self._platform_info.system() == "Darwin":
             builds = get_osx_apple_clang_builds(self.apple_clang_versions, self.archs, shared_option_name, pure_c)
+        elif self._platform_info.system() == "FreeBSD":
+            builds = get_linux_clang_builds(self.clang_versions, self.archs, shared_option_name, pure_c)
 
         self.builds.extend(builds)
-
-    def use_default_named_pages(self):
-        named_builds = {}
-        for settings, options, env_vars, build_requires in self.builds:
-            if settings["compiler"] == "Visual Studio" and settings["compiler.version"] == "10" and settings["arch"] == "x86_64":
-                continue
-            if settings["compiler"] in ("gcc", "apple-clang"):
-                name = "%s_%s" % (settings["compiler"], settings["compiler.version"].replace(".", ""))
-            elif settings["compiler"] == "Visual Studio":
-                name = "%s_%s_%s" % (settings["compiler"].replace(" ", ""), settings["compiler.version"], settings["arch"])
-            named_build = named_builds.setdefault(name, [])
-            named_build.append([settings, options, env_vars, build_requires])
-        self.builds = []
-        self.named_builds = named_builds
 
     def add(self, settings=None, options=None, env_vars=None, build_requires=None):
         settings = settings or {}
@@ -203,7 +248,7 @@ class ConanMultiPackager(object):
         elif len(self.named_builds) > 0:
             curpage = curpage or self.curpage
             if curpage not in self.named_builds:
-                raise Exception("No builds set for page " + curpage)
+                raise Exception("No builds set for page %s" % curpage)
             for build in self.named_builds[curpage]:
                 builds_in_current_page.append(build)
 
@@ -211,17 +256,16 @@ class ConanMultiPackager(object):
         print("Builds list:")
         for p in builds_in_current_page: print(list(p._asdict().items()))
 
-        pulled_gcc_images = defaultdict(lambda: False)
+        pulled_docker_images = defaultdict(lambda: False)
         for build in builds_in_current_page:
             profile = _get_profile(build)
-            gcc_version = profile.settings.get("compiler.version")
             if self.use_docker:
                 build_runner = DockerTestPackageRunner(profile, self.username, self.channel,
                                                        self.mingw_installer_reference, self.runner, self.args,
                                                        docker_image=self.docker_image)
 
-                build_runner.run(pull_image=not pulled_gcc_images[gcc_version])
-                pulled_gcc_images[gcc_version] = True
+                build_runner.run(pull_image=not pulled_docker_images[build_runner.docker_image])
+                pulled_docker_images[build_runner.docker_image] = True
             else:
                 build_runner = TestPackageRunner(profile, self.username, self.channel,
                                                  self.mingw_installer_reference, self.runner, self.args)
@@ -231,24 +275,15 @@ class ConanMultiPackager(object):
 
         if not self.upload:
             return
-        if not self.reference or not self.password or not self.channel or not self.username:
-            logger.info("Skipped upload, some parameter (reference, password or channel)"
-                        " is missing!")
-            return
-        command = "conan upload %s@%s/%s --retry %s --all --force" % (self.reference,
-                                                                      self.username,
-                                                                      self.channel,
-                                                                      self.upload_retry)
-        user_command = 'conan user %s -p="%s"' % (self.username, self.password)
+
+        command = "conan upload %s@%s/%s --retry %s --all --force -r=upload_repo" % (self.reference, self.username,
+                                                                                     self.channel, self.upload_retry)
+        user_command = 'conan user %s -p="%s" -r=upload_repo' % (self.username, self.password)
 
         logger.info("******** RUNNING UPLOAD COMMAND ********** \n%s" % command)
         if self._platform_info.system() == "Linux" and self.use_docker:
             self.runner("sudo chmod -R 777 ~/.conan/data")
             # self.runner("ls -la ~/.conan")
-
-        if self.remote:
-            command += " -r %s" % self.remote
-            user_command += " -r %s" % self.remote
 
         ret = self.runner(user_command)
         if ret != 0:
@@ -316,7 +351,14 @@ def _get_profile(build_conf):
     for pattern, build_requires in build_conf.build_requires.items():
         br_lines += "\n".join(["%s:%s" % (pattern, br) for br in build_requires])
 
-    return Profile.loads(tmp % (settings, options, env_vars, br_lines))
+    profile_text = tmp % (settings, options, env_vars, br_lines)
+    # FIXME: Remove when conan==0.24.0
+    if hasattr(Profile, "loads"):
+        return Profile.loads(profile_text)
+    else:
+        # Fixme, make public in conan?
+        from conans.client.profile_loader import _load_profile
+        return _load_profile(profile_text, None, None)[0]
 
 
 if __name__ == "__main__":
