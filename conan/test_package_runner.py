@@ -25,6 +25,7 @@ class TestPackageRunner(object):
         self._channel = channel
         self._conan_pip_package = conan_pip_package
         self._runner = runner or os.system
+        self.runner = runner
 
     @property
     def settings(self):
@@ -133,8 +134,8 @@ class DockerTestPackageRunner(TestPackageRunner):
                    "-e CONAN_CHANNEL=%s" % (serial, self._username, self._channel)
 
         command = "sudo docker run --rm -v %s:/home/conan/project -v " \
-                  "~/.conan/data:/home/conan/.conan/data -it %s %s /bin/sh -c \"" \
-                  "cd project && run_test_package_in_docker\"" % (os.getcwd(), env_vars,  self.docker_image)
+                  "~/.conan/:/home/conan/.conan -it %s %s /bin/sh -c \"" \
+                  "rm /home/conan/.conan/conan.conf && cd project && run_test_package_in_docker\"" % (os.getcwd(), env_vars,  self.docker_image)
         ret = self._runner(command)
         if ret != 0:
             raise Exception("Error building: %s" % command)

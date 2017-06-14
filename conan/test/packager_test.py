@@ -9,6 +9,7 @@ from conans.model.ref import ConanFileReference
 from conans.util.files import load
 from conans.model.profile import Profile
 
+
 class MockRunner(object):
 
     def __init__(self):
@@ -26,7 +27,11 @@ class MockRunner(object):
         profile_start = call.find("--profile") + 10
         end_profile = call[profile_start:].find(" ") + profile_start
         profile_path = call[profile_start: end_profile]
-        return Profile.loads(load(profile_path))
+        if hasattr(Profile, "loads"):  # retrocompatibility
+            return Profile.loads(load(profile_path))
+        else:
+            from conans.client.profile_loader import read_profile
+            return read_profile(profile_path, None, None)[0]
 
     def assert_tests_for(self, numbers):
         """Check if executor has ran the builds that are expected.
@@ -220,15 +225,67 @@ class AppTest(unittest.TestCase):
         self.assertTrue("x86" in builder.named_builds)
         self.assertTrue("x86_64" in builder.named_builds)
 
-    def test_default_named_pages(self):
-        builder = ConanMultiPackager(username="Pepe", visual_versions=["10", "12", "14", "15"])
-        builder.add_common_builds(shared_option_name="zlib:shared", pure_c=True)
-        builder.use_default_named_pages()
+    def test_remotes(self):
+        runner = MockRunner()
+        builder = ConanMultiPackager(username="Pepe",
+                                     remotes=["url1", "url2"],
+                                     runner=runner)
 
-        self.assertEquals(builder.builds, [])
-        if platform.system() == "Windows":
-            self.assertEquals(len(builder.named_builds), 7)
-            self.assertEqual(sorted(builder.named_builds.keys()),
-                             sorted(['VisualStudio_12_x86', 'VisualStudio_10_x86', 'VisualStudio_14_x86',
-                                     'VisualStudio_15_x86_64', 'VisualStudio_12_x86_64', 'VisualStudio_15_x86',
-                                     'VisualStudio_14_x86_64']))
+        builder.add({}, {}, {}, {})
+        builder.run_builds()
+        self.assertIn('conan remote add remote0 url2 --insert', runner.calls)
+        self.assertIn('conan remote add remote1 url1 --insert', runner.calls)
+
+        runner = MockRunner()
+        builder = ConanMultiPackager(username="Pepe",
+                                     remotes="myurl1",
+                                     runner=runner)
+
+        builder.add({}, {}, {}, {})
+        builder.run_builds()
+        self.assertIn('conan remote add remote0 myurl1 --insert', runner.calls)
+
+    def test_upload(self):
+
+        class PlatformInfoMock(object):
+            def system(self):
+                return "Darwin"
+
+        runner = MockRunner()
+        builder = ConanMultiPackager(username="pepe", channel="testing",
+                                     reference="Hello/0.1", password="password",
+                                     upload="myurl", visual_versions=[], gcc_versions=[],
+                                     apple_clang_versions=[],
+                                     runner=runner,
+                                     remotes="myurl, otherurl",
+                                     platform_info=PlatformInfoMock())
+        builder.add_common_builds()
+        builder.run()
+
+        # Duplicated upload remote is ignored
+        self.assertEqual(runner.calls[0:3],
+                         ['conan remote add upload_repo myurl',
+                          'conan remote add remote0 otherurl --insert',
+                          'conan remote list',
+                          ])
+        self.assertEqual(runner.calls[-1],
+                         'conan upload Hello/0.1@pepe/testing --retry 3 --all --force -r=upload_repo')
+
+        runner = MockRunner()
+        builder = ConanMultiPackager(username="pepe", channel="testing",
+                                     reference="Hello/0.1", password="password",
+                                     upload="myurl", visual_versions=[], gcc_versions=[],
+                                     apple_clang_versions=[],
+                                     runner=runner,
+                                     remotes="otherurl",
+                                     platform_info=PlatformInfoMock())
+        builder.add_common_builds()
+        builder.run()
+
+        self.assertEqual(runner.calls[0:3],
+                         ['conan remote add upload_repo myurl',
+                          'conan remote add remote0 otherurl --insert',
+                          'conan remote list'])
+
+        self.assertEqual(runner.calls[-1],
+                         'conan upload Hello/0.1@pepe/testing --retry 3 --all --force -r=upload_repo')
