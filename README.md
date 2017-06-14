@@ -59,7 +59,11 @@ If you are using Visual Studio and you want build shared libraries with static r
 ## Working with Bintray: Configuring repositories
 
 Use the argument `upload` or environment variable `CONAN_UPLOAD` to set the URL of the repository where you want to
-upload your packages. Will be also used to read from it.
+upload your packages. Will be also used to read from it. Use `CONAN_PASSWORD` environment variable to set the API key
+from Bintray. If you are using travis or appveyor you can use a hidden enviroment variable from the repository setup
+package.
+
+To get an API key in Bintray to "Edit profile"/"API key".
 
 Use the argument `remotes` or environment variable `CONAN_REMOTES` to configure additional repositories containing
 needed requirements.
