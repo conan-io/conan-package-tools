@@ -549,7 +549,7 @@ This is especially useful for CI integration.
 
 - **CONAN_USERNAME**: Your conan username
 - **CONAN_REFERENCE**: Reference of the package to upload, e.g. "zlib/1.2.8"
-- **CONAN_PASSWORD**: Conan Password
+- **CONAN_PASSWORD**: Conan Password, or API key if you are using Bintray.
 - **CONAN_REMOTES**: List of URLs separated by "," for the additional remotes (read).
 - **CONAN_UPLOAD**: URL of the repository where we want to use to upload the packages.
 - **CONAN_UPLOAD_RETRY**: If defined, in case of fail retries to upload again the specified times
