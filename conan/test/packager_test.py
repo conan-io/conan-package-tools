@@ -263,13 +263,13 @@ class AppTest(unittest.TestCase):
         builder.run()
 
         # Duplicated upload remote is ignored
-        self.assertEqual(runner.calls,
+        self.assertEqual(runner.calls[0:3],
                          ['conan remote add upload_repo myurl',
                           'conan remote add remote0 otherurl --insert',
                           'conan remote list',
-                          'conan export pepe/testing',
-                          'conan user pepe -p="password" -r=upload_repo',
-                          'conan upload Hello/0.1@pepe/testing --retry 3 --all --force -r=upload_repo'])
+                          ])
+        self.assertEqual(runner.calls[-1],
+                         'conan upload Hello/0.1@pepe/testing --retry 3 --all --force -r=upload_repo')
 
         runner = MockRunner()
         builder = ConanMultiPackager(username="pepe", channel="testing",
@@ -282,10 +282,10 @@ class AppTest(unittest.TestCase):
         builder.add_common_builds()
         builder.run()
 
-        self.assertEqual(runner.calls,
+        self.assertEqual(runner.calls[0:3],
                          ['conan remote add upload_repo myurl',
                           'conan remote add remote0 otherurl --insert',
-                          'conan remote list',
-                          'conan export pepe/testing',
-                          'conan user pepe -p="password" -r=upload_repo',
-                          'conan upload Hello/0.1@pepe/testing --retry 3 --all --force -r=upload_repo'])
+                          'conan remote list'])
+
+        self.assertEqual(runner.calls[-1],
+                         'conan upload Hello/0.1@pepe/testing --retry 3 --all --force -r=upload_repo')
