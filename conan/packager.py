@@ -145,14 +145,24 @@ class ConanMultiPackager(object):
         self.conan_pip_package = os.getenv("CONAN_PIP_PACKAGE", None)
         self.vs10_x86_64_enabled = vs10_x86_64_enabled
 
+        if self.upload:
+            remote_command = 'conan remote add upload_repo %s' % self.upload
+            ret = self.runner(remote_command)
+            if ret != 0:
+                raise Exception("Error while setting remote upload URL")
+
         # Set the remotes
         if self.remotes:
             if not isinstance(self.remotes, list):
                 remotes = [r.strip() for r in self.remotes.split(",") if r.strip()]
+
             for counter, remote in enumerate(reversed(remotes)):
+                if remote == self.upload:  # Already added
+                    continue
+                remote_name = "remote%s" % counter
                 if self.runner("conan remote add remote%s %s --insert" % (counter, remote)) != 0:
                     logger.info("Remote add with insert failed... trying to add at the end")
-                    self.runner("conan remote add remote%s %s" % (counter, remote))  # Retrocompatibility
+                    self.runner("conan remote add %s %s" % (remote_name, remote))  # Retrocompatibility
             self.runner("conan remote list")
         else:
             logger.info("Not additional remotes declared...")
@@ -266,10 +276,6 @@ class ConanMultiPackager(object):
         if not self.upload:
             return
 
-        remote_command = 'conan remote add upload_repo %s' % self.upload
-        ret = self.runner(remote_command)
-        if ret != 0:
-            raise Exception("Error while setting remote repo URL")
         command = "conan upload %s@%s/%s --retry %s --all --force -r=upload_repo" % (self.reference, self.username,
                                                                                      self.channel, self.upload_retry)
         user_command = 'conan user %s -p="%s" -r=upload_repo' % (self.username, self.password)

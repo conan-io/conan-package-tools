@@ -55,6 +55,20 @@ If your conanfile.py have an option to specify **shared**/**static** packages yo
 
 If you are using Visual Studio and you want build shared libraries with static runtime (MT, MTd) you can pass **dll_with_static_runtime** parameter to True in **add_common_builds**.
 
+## Working with Bintray: Configuring repositories
+
+    Use the argument `upload` or environment variable `CONAN_UPLOAD` to set the URL of the repository where you want to
+    upload your packages. Will be also used to read from it.
+
+    Use the argument 'remotes' or environment variable `CONAN_REMOTES` to configure additional repositories containing
+    needed requirements.
+
+    **Example:** Add your personal Bintray repository to retrieve and upload your packages and also some other different
+    repositories to read some requirements.
+
+        CONAN_UPLOAD: "https://api.bintray.com/mybintrayuser/conan_repository"
+        CONAN_REMOTES: "https://api.bintray.com/other_bintray_user/conan-repo, https://api.bintray.com/other_bintray_user2/conan-repo"
+
 
 ## Select the packages to be generated
 
@@ -134,18 +148,6 @@ Using **CONAN_CLANG_VERSIONS** env variable:
 
     os.environ["CONAN_CLANG_VERSIONS"] = "3.8,3.9,4.0"
 
-Or adding common Clang builds:
-
-    if __name__ == "__main__":
-        builder = ConanMultiPackager()
-        builder.add_common_builds(shared_option_name="gtest:shared", pure_c=False)
-        clang_builds = get_linux_clang_builds(clang_versions=builder.clang_versions, archs=builder.archs, shared_option_name="gtest:shared", pure_c=False)
-        builder.builds.extend(clang_builds)
-        builder.run()
-
-By default, Clang builds are added only for **FreeBSD**.
-
-
 ## Pagination
 
 You can split builds in pages, this is very useful with CI servers like Travis to obey job time limit or just segment specific build configurations.
@@ -221,12 +223,15 @@ You can specify another remote name with parameter **remote**.
 - **apple_clang_versions**: List with a subset of apple-clang versions. Default ["6.1", "7.3", "8.0"]
 - **visual_versions**: List with a subset of Visual Studio versions. Default [10, 12, 14]
 - **visual_runtimes**: List containing Visual Studio runtimes to use in builds. Default ["MT", "MD", "MTd", "MDd"]
+- **mingw_configurations**: Configurations for MinGW
 - **archs**: List containing specific architectures to build for. Default ["x86", "x86_64"]
 - **use_docker**: Use docker for package creation in Linux systems.
 - **curpage**: Current page of packages to create
 - **total_pages**: Total number of pages
 - **vs10_x86_64_enabled**: Flag indicating whether or not to build for VS10 64bits. Default [False]
-
+- **upload_retry**: Num retries in upload in case of failure.
+- **remotes**: List of URLs separated by "," for the additional remotes (read).
+- **upload**: URL of the repository where we want to use to upload the packages.
 
 Upload related parameters:
 
@@ -235,6 +240,7 @@ Upload related parameters:
 - **password**. Conan Password
 - **remote**: Alternative remote name. Default "default"
 - **stable_branch_pattern**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *stable* channel. Default "master"
+- **stable_channel**: Stable channel, default "stable".
 - **channel**: Channel where your packages will be uploaded if previous parameter doesn't match
 
 
@@ -244,11 +250,11 @@ You can also use environment variables to change the behavior of ConanMultiPacka
 
 This is especially useful for CI integration.
 
-- **CONAN_USERNAME**:  Your conan username
+- **CONAN_USERNAME**: Your conan username
 - **CONAN_REFERENCE**: Reference of the package to upload, e.g. "zlib/1.2.8"
-- **CONAN_PASSWORD**:  Conan Password
-- **CONAN_REMOTE**:  Alternative remote name. Default "default"
-- **CONAN_UPLOAD**: If defined, it will upload the generated packages
+- **CONAN_PASSWORD**: Conan Password
+- **CONAN_REMOTES**: List of URLs separated by "," for the additional remotes (read).
+- **CONAN_UPLOAD**: URL of the repository where we want to use to upload the packages.
 - **CONAN_UPLOAD_RETRY**: If defined, in case of fail retries to upload again the specified times
 - **CONAN_GCC_VERSIONS**: Gcc versions, comma separated, e.g. "4.6,4.8,5.2,6.3"
 - **CONAN_CLANG_VERSIONS**: Clang versions, comma separated, e.g. "3.8,3.9,4.0"

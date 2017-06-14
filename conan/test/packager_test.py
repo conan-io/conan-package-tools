@@ -252,11 +252,34 @@ class AppTest(unittest.TestCase):
                                      reference="Hello/0.1", password="password",
                                      upload="myurl", visual_versions=[], gcc_versions=[],
                                      apple_clang_versions=[],
-                                     runner=runner)
+                                     runner=runner,
+                                     remotes="myurl, otherurl")
         builder.add_common_builds()
         builder.run()
 
-        self.assertEqual(runner.calls[-3:],
+        # Duplicated upload remote is ignored
+        self.assertEqual(runner.calls,
                          ['conan remote add upload_repo myurl',
+                          'conan remote add remote0 otherurl --insert',
+                          'conan remote list',
+                          'conan export pepe/testing',
+                          'conan user pepe -p="password" -r=upload_repo',
+                          'conan upload Hello/0.1@pepe/testing --retry 3 --all --force -r=upload_repo'])
+
+        runner = MockRunner()
+        builder = ConanMultiPackager(username="pepe", channel="testing",
+                                     reference="Hello/0.1", password="password",
+                                     upload="myurl", visual_versions=[], gcc_versions=[],
+                                     apple_clang_versions=[],
+                                     runner=runner,
+                                     remotes="otherurl")
+        builder.add_common_builds()
+        builder.run()
+
+        self.assertEqual(runner.calls,
+                         ['conan remote add upload_repo myurl',
+                          'conan remote add remote0 otherurl --insert',
+                          'conan remote list',
+                          'conan export pepe/testing',
                           'conan user pepe -p="password" -r=upload_repo',
                           'conan upload Hello/0.1@pepe/testing --retry 3 --all --force -r=upload_repo'])
