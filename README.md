@@ -228,66 +228,6 @@ You also need to pass the parameters **reference** (ex: "bzip2/1.0.2"), **passwo
 
 You can specify another remote name with parameter **remote**.
 
-## Complete ConanMultiPackager parameters reference
-
-- **args**: List with the parameters that will be passed to "conan test" command. e.j: args=['--build', 'all']. Default sys.argv[1:]
-- **username**: Your conan username
-- **gcc_versions**: List with a subset of gcc_versions. Default ["4.6", "4.8", "4.9", "5.2", "5.3", "5.4", "6.2", "6.3"]
-- **clang_versions**: List with a subset of clang_versions. Default ["3.8", "3.9", "4.0"]
-- **apple_clang_versions**: List with a subset of apple-clang versions. Default ["6.1", "7.3", "8.0"]
-- **visual_versions**: List with a subset of Visual Studio versions. Default [10, 12, 14]
-- **visual_runtimes**: List containing Visual Studio runtimes to use in builds. Default ["MT", "MD", "MTd", "MDd"]
-- **mingw_configurations**: Configurations for MinGW
-- **archs**: List containing specific architectures to build for. Default ["x86", "x86_64"]
-- **use_docker**: Use docker for package creation in Linux systems.
-- **curpage**: Current page of packages to create
-- **total_pages**: Total number of pages
-- **vs10_x86_64_enabled**: Flag indicating whether or not to build for VS10 64bits. Default [False]
-- **upload_retry**: Num retries in upload in case of failure.
-- **remotes**: List of URLs separated by "," for the additional remotes (read).
-- **upload**: URL of the repository where we want to use to upload the packages.
-
-Upload related parameters:
-
-- **upload**: True or False. Default False
-- **reference**: Reference of the package to upload. Ex: "zlib/1.2.8"
-- **password**. Conan Password
-- **remote**: Alternative remote name. Default "default"
-- **stable_branch_pattern**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *stable* channel. Default "master"
-- **stable_channel**: Stable channel, default "stable".
-- **channel**: Channel where your packages will be uploaded if previous parameter doesn't match
-
-
-## Environment configuration
-
-You can also use environment variables to change the behavior of ConanMultiPackager, so that you don't pass parameters to the ConanMultiPackager constructor.
-
-This is especially useful for CI integration.
-
-- **CONAN_USERNAME**: Your conan username
-- **CONAN_REFERENCE**: Reference of the package to upload, e.g. "zlib/1.2.8"
-- **CONAN_PASSWORD**: Conan Password
-- **CONAN_REMOTES**: List of URLs separated by "," for the additional remotes (read).
-- **CONAN_UPLOAD**: URL of the repository where we want to use to upload the packages.
-- **CONAN_UPLOAD_RETRY**: If defined, in case of fail retries to upload again the specified times
-- **CONAN_GCC_VERSIONS**: Gcc versions, comma separated, e.g. "4.6,4.8,5.2,6.3"
-- **CONAN_CLANG_VERSIONS**: Clang versions, comma separated, e.g. "3.8,3.9,4.0"
-- **CONAN_APPLE_CLANG_VERSIONS**: Apple clang versions, comma separated, e.g. "6.1,8.0"
-- **CONAN_ARCHS**: Architectures to build for, comma separated, e.g. "x86,x86_64"
-- **CONAN_VISUAL_VERSIONS**: Visual versions, comma separated, e.g. "12,14"
-- **CONAN_VISUAL_RUNTIMES**: Visual runtimes, comma separated, e.g. "MT,MD"
-- **CONAN_USE_DOCKER**: If defined will use docker
-- **CONAN_CURRENT_PAGE**:  Current page of packages to create
-- **CONAN_TOTAL_PAGES**: Total number of pages
-- **CONAN_DOCKER_IMAGE**: If defined and docker is being used, it will use this dockerimage instead of the default images, e.g. "lasote/conangcc63"
-- **CONAN_STABLE_BRANCH_PATTERN**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *CONAN_STABLE_CHANNEL* channel. Default "master". E.j: "release/*"
-- **CONAN_STABLE_CHANNEL**: Stable channel name, default "stable"
-- **CONAN_STABLE_USERNAME**: Your conan username in case the `CONAN_STABLE_BRANCH_PATTERN` matches. Optional. If not defined `CONAN_USERNAME` is used.
-- **CONAN_STABLE_PASSWORD**: Password for `CONAN_STABLE_USERNAME`. Default: `CONAN_PASSWORD`
-- **CONAN_CHANNEL**: Channel where your packages will be uploaded if the previous parameter doesn't match
-- **CONAN_PIP_PACKAGE**: Specify a conan package to install (by default, installs the latest) e.j conan==0.0.1rc7
-- **MINGW_CONFIGURATIONS**: Specify a list of MinGW builds. See MinGW builds section.
-
 
 ## Travis integration
 
@@ -573,3 +513,65 @@ If the env var **GITLAB_CI** is set and the branch name (**CI_BUILD_REF_NAME** e
 # Full example
 
 You can see the full zlib example [here](https://github.com/lasote/conan-zlib)
+
+# REFERENCE
+
+## Complete ConanMultiPackager parameters reference
+
+- **args**: List with the parameters that will be passed to "conan test" command. e.j: args=['--build', 'all']. Default sys.argv[1:]
+- **username**: Your conan username
+- **gcc_versions**: List with a subset of gcc_versions. Default ["4.6", "4.8", "4.9", "5.2", "5.3", "5.4", "6.2", "6.3"]
+- **clang_versions**: List with a subset of clang_versions. Default ["3.8", "3.9", "4.0"]
+- **apple_clang_versions**: List with a subset of apple-clang versions. Default ["6.1", "7.3", "8.0"]
+- **visual_versions**: List with a subset of Visual Studio versions. Default [10, 12, 14]
+- **visual_runtimes**: List containing Visual Studio runtimes to use in builds. Default ["MT", "MD", "MTd", "MDd"]
+- **mingw_configurations**: Configurations for MinGW
+- **archs**: List containing specific architectures to build for. Default ["x86", "x86_64"]
+- **use_docker**: Use docker for package creation in Linux systems.
+- **curpage**: Current page of packages to create
+- **total_pages**: Total number of pages
+- **vs10_x86_64_enabled**: Flag indicating whether or not to build for VS10 64bits. Default [False]
+- **upload_retry**: Num retries in upload in case of failure.
+- **remotes**: List of URLs separated by "," for the additional remotes (read).
+- **upload**: URL of the repository where we want to use to upload the packages.
+
+Upload related parameters:
+
+- **upload**: True or False. Default False
+- **reference**: Reference of the package to upload. Ex: "zlib/1.2.8"
+- **password**. Conan Password
+- **remote**: Alternative remote name. Default "default"
+- **stable_branch_pattern**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *stable* channel. Default "master"
+- **stable_channel**: Stable channel, default "stable".
+- **channel**: Channel where your packages will be uploaded if previous parameter doesn't match
+
+
+## Environment configuration
+
+You can also use environment variables to change the behavior of ConanMultiPackager, so that you don't pass parameters to the ConanMultiPackager constructor.
+
+This is especially useful for CI integration.
+
+- **CONAN_USERNAME**: Your conan username
+- **CONAN_REFERENCE**: Reference of the package to upload, e.g. "zlib/1.2.8"
+- **CONAN_PASSWORD**: Conan Password
+- **CONAN_REMOTES**: List of URLs separated by "," for the additional remotes (read).
+- **CONAN_UPLOAD**: URL of the repository where we want to use to upload the packages.
+- **CONAN_UPLOAD_RETRY**: If defined, in case of fail retries to upload again the specified times
+- **CONAN_GCC_VERSIONS**: Gcc versions, comma separated, e.g. "4.6,4.8,5.2,6.3"
+- **CONAN_CLANG_VERSIONS**: Clang versions, comma separated, e.g. "3.8,3.9,4.0"
+- **CONAN_APPLE_CLANG_VERSIONS**: Apple clang versions, comma separated, e.g. "6.1,8.0"
+- **CONAN_ARCHS**: Architectures to build for, comma separated, e.g. "x86,x86_64"
+- **CONAN_VISUAL_VERSIONS**: Visual versions, comma separated, e.g. "12,14"
+- **CONAN_VISUAL_RUNTIMES**: Visual runtimes, comma separated, e.g. "MT,MD"
+- **CONAN_USE_DOCKER**: If defined will use docker
+- **CONAN_CURRENT_PAGE**:  Current page of packages to create
+- **CONAN_TOTAL_PAGES**: Total number of pages
+- **CONAN_DOCKER_IMAGE**: If defined and docker is being used, it will use this dockerimage instead of the default images, e.g. "lasote/conangcc63"
+- **CONAN_STABLE_BRANCH_PATTERN**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *CONAN_STABLE_CHANNEL* channel. Default "master". E.j: "release/*"
+- **CONAN_STABLE_CHANNEL**: Stable channel name, default "stable"
+- **CONAN_STABLE_USERNAME**: Your conan username in case the `CONAN_STABLE_BRANCH_PATTERN` matches. Optional. If not defined `CONAN_USERNAME` is used.
+- **CONAN_STABLE_PASSWORD**: Password for `CONAN_STABLE_USERNAME`. Default: `CONAN_PASSWORD`
+- **CONAN_CHANNEL**: Channel where your packages will be uploaded if the previous parameter doesn't match
+- **CONAN_PIP_PACKAGE**: Specify a conan package to install (by default, installs the latest) e.j conan==0.0.1rc7
+- **MINGW_CONFIGURATIONS**: Specify a list of MinGW builds. See MinGW builds section.
