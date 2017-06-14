@@ -283,149 +283,187 @@ We can configure the builds to be executed in the jobs by defining some environm
 The following is a real example of a *.travis.yml* file that will generate packages for **Linux (gcc 4.6-5.2) and OSx for xcode6.4 and xcode7.3 and xcode8.2**
 It uses 2 different jobs for each compiler version.
 
-You can copy the files from this [conan-zlib repository](https://github.com/lasote/conan-zlib). Just copy the **".travis"** folder and the **".travis.yml"** file to your project and edit the latter, adjusting CONAN_REFERENCE, CONAN_USERNAME and maybe the travis matrix to run more or fewer packages per job:
+Remember, from conan 0.24 you can use `conan new` command to generate the base files for appveyor, travis etc. Check `conan new --help`.
 
-
-**.travis.yml**
-
-
-    os: linux
-    services:
-       - docker
-    sudo: required
-    language: python
-    env:
-      global:
-        - CONAN_UPLOAD=1
-        - CONAN_REFERENCE="bzip2/1.0.6"
-        - CONAN_USERNAME="lasote"
-        - CONAN_CHANNEL="ci"
-        - CONAN_TOTAL_PAGES=2
-        - CONAN_STABLE_BRANCH_PATTERN="release/*"
-
-      matrix:
-        - CONAN_GCC_VERSIONS=4.6 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
-        - CONAN_GCC_VERSIONS=4.6 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
-
-        - CONAN_GCC_VERSIONS=4.8 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
-        - CONAN_GCC_VERSIONS=4.8 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
-
-        - CONAN_GCC_VERSIONS=4.9 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
-        - CONAN_GCC_VERSIONS=4.9 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
-
-        - CONAN_GCC_VERSIONS=5.2 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
-        - CONAN_GCC_VERSIONS=5.2 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
-
-        - CONAN_GCC_VERSIONS=5.3 CONAN_CURRENT_PAGE=1 CONAN_USE_DOCKER=1
-        - CONAN_GCC_VERSIONS=5.3 CONAN_CURRENT_PAGE=2 CONAN_USE_DOCKER=1
-
-    matrix:
-       include:
-           - os: osx
-	         osx_image: xcode8.2 # apple-clang 8.0
-	         language: generic
-	         env: CONAN_CURRENT_PAGE=1
-           - os: osx
-	         osx_image: xcode8.2 # apple-clang 8.0
-	         language: generic
-	         env: CONAN_CURRENT_PAGE=2
-
-           - os: osx
-	         osx_image: xcode7.3 # apple-clang 7.3
-	         language: generic
-	         env: CONAN_CURRENT_PAGE=1
-           - os: osx
-	         osx_image: xcode7.3 # apple-clang 7.3
-	         language: generic
-	         env: CONAN_CURRENT_PAGE=2
-
-           - os: osx
-	         osx_image: xcode6.4 # apple-clang 6.1
-	         language: generic
-	         env: CONAN_CURRENT_PAGE=1
-           - os: osx
-	         osx_image: xcode6.4 # apple-clang 6.1
-	         language: generic
-	         env: CONAN_CURRENT_PAGE=2
-
-    install:
-      - ./.travis/install.sh
-    script:
-      - ./.travis/run.sh
-
-
-In case you need just one job per compiler to compile all the packages:
-
+.travis.yml example:
 
 **.travis.yml**
 
 
-    os: linux
-    services:
-       - docker
-    sudo: required
-    language: python
-    env:
-      global:
-        - CONAN_UPLOAD=1
-        - CONAN_REFERENCE="bzip2/1.0.6"
-        - CONAN_USERNAME="lasote"
-        - CONAN_CHANNEL="ci"
-        - CONAN_TOTAL_PAGES=1
-        - CONAN_CURRENT_PAGE=1
-        - CONAN_STABLE_BRANCH_PATTERN="release/*"
+   env:
+       global:
+         - CONAN_REFERENCE: "lib/1.0"
+         - CONAN_USERNAME: "lasote"
+         - CONAN_CHANNEL: "stable"
+         - CONAN_UPLOAD: "https://api.bintray.com/mybintrayuser/myconanrepo"
+         - CONAN_REMOTES: "https://api.bintray.com/otherbintrayuser/otherconanrepo"
 
-      matrix:
-        - CONAN_GCC_VERSIONS=4.6 CONAN_USE_DOCKER=1
-        - CONAN_GCC_VERSIONS=4.8 CONAN_USE_DOCKER=1
-        - CONAN_GCC_VERSIONS=4.9 CONAN_USE_DOCKER=1
-        - CONAN_GCC_VERSIONS=5.2 CONAN_USE_DOCKER=1
-        - CONAN_GCC_VERSIONS=5.3 CONAN_USE_DOCKER=1
+    linux: &linux
+       os: linux
+       sudo: required
+       language: python
+       python: "3.6"
+       services:
+         - docker
+    osx: &osx
+       os: osx
+       language: generic
     matrix:
        include:
-           - os: osx
-             osx_image: xcode8.2 # apple-clang 8.0
-             language: generic
-             env:
-           - os: osx
-             osx_image: xcode7.3 # apple-clang 7.3
-             language: generic
-             env:
-           - os: osx
-             osx_image: xcode6.4 # apple-clang 6.1
-             language: generic
-             env:
+
+          - <<: *linux
+            env: CONAN_GCC_VERSIONS=4.9 CONAN_DOCKER_IMAGE=lasote/conangcc49
+
+          - <<: *linux
+            env: CONAN_GCC_VERSIONS=5.4 CONAN_DOCKER_IMAGE=lasote/conangcc54
+
+          - <<: *linux
+            env: CONAN_GCC_VERSIONS=6.3 CONAN_DOCKER_IMAGE=lasote/conangcc63
+
+          - <<: *linux
+            env: CONAN_CLANG_VERSIONS=3.9 CONAN_DOCKER_IMAGE=lasote/conanclang39
+
+          - <<: *linux
+            env: CONAN_CLANG_VERSIONS=4.0 CONAN_DOCKER_IMAGE=lasote/conanclang40
+
+          - <<: *osx
+            osx_image: xcode7.3
+            env: CONAN_APPLE_CLANG_VERSIONS=7.3
+
+          - <<: *osx
+            osx_image: xcode8.2
+            env: CONAN_APPLE_CLANG_VERSIONS=8.0
+
+          - <<: *osx
+            osx_image: xcode8.3
+            env: CONAN_APPLE_CLANG_VERSIONS=8.1
+
     install:
+      - chmod +x .travis/install.sh
       - ./.travis/install.sh
+
     script:
+      - chmod +x .travis/run.sh
       - ./.travis/run.sh
 
 
+You can also use multiples "pages" to split the builds in different jobs:
+
+**.travis.yml**
+
+    env:
+       global:
+         - CONAN_REFERENCE: "lib/1.0"
+         - CONAN_USERNAME: "lasote"
+         - CONAN_CHANNEL: "stable"
+         - CONAN_UPLOAD: "https://api.bintray.com/mybintrayuser/myconanrepo"
+         - CONAN_REMOTES: "https://api.bintray.com/otherbintrayuser/otherconanrepo"
+         - CONAN_TOTAL_PAGES: 2
+
+    linux: &linux
+       os: linux
+       sudo: required
+       language: python
+       python: "3.6"
+       services:
+         - docker
+    osx: &osx
+       os: osx
+       language: generic
+    matrix:
+       include:
+
+          - <<: *linux
+            env: CONAN_GCC_VERSIONS=4.9 CONAN_DOCKER_IMAGE=lasote/conangcc49 CONAN_CURRENT_PAGE=1
+
+          - <<: *linux
+            env: CONAN_GCC_VERSIONS=4.9 CONAN_DOCKER_IMAGE=lasote/conangcc49 CONAN_CURRENT_PAGE=2
+
+          - <<: *linux
+            env: CONAN_GCC_VERSIONS=5.4 CONAN_DOCKER_IMAGE=lasote/conangcc54 CONAN_CURRENT_PAGE=1
+
+           - <<: *linux
+            env: CONAN_GCC_VERSIONS=5.4 CONAN_DOCKER_IMAGE=lasote/conangcc54 CONAN_CURRENT_PAGE=2
+
+          - <<: *linux
+            env: CONAN_GCC_VERSIONS=6.3 CONAN_DOCKER_IMAGE=lasote/conangcc63 CONAN_CURRENT_PAGE=1
+
+          - <<: *linux
+            env: CONAN_GCC_VERSIONS=6.3 CONAN_DOCKER_IMAGE=lasote/conangcc63 CONAN_CURRENT_PAGE=2
+
+          - <<: *linux
+            env: CONAN_CLANG_VERSIONS=3.9 CONAN_DOCKER_IMAGE=lasote/conanclang39 CONAN_CURRENT_PAGE=1
+
+           - <<: *linux
+            env: CONAN_CLANG_VERSIONS=3.9 CONAN_DOCKER_IMAGE=lasote/conanclang39 CONAN_CURRENT_PAGE=2
+
+          - <<: *linux
+            env: CONAN_CLANG_VERSIONS=4.0 CONAN_DOCKER_IMAGE=lasote/conanclang40 CONAN_CURRENT_PAGE=1
+
+          - <<: *linux
+            env: CONAN_CLANG_VERSIONS=4.0 CONAN_DOCKER_IMAGE=lasote/conanclang40 CONAN_CURRENT_PAGE=2
+
+          - <<: *osx
+            osx_image: xcode7.3
+            env: CONAN_APPLE_CLANG_VERSIONS=7.3 CONAN_CURRENT_PAGE=1
+
+          - <<: *osx
+            osx_image: xcode7.3
+            env: CONAN_APPLE_CLANG_VERSIONS=7.3 CONAN_CURRENT_PAGE=2
+
+
+          - <<: *osx
+            osx_image: xcode8.2
+            env: CONAN_APPLE_CLANG_VERSIONS=8.0 CONAN_CURRENT_PAGE=1
+
+          - <<: *osx
+            osx_image: xcode8.2
+            env: CONAN_APPLE_CLANG_VERSIONS=8.0 CONAN_CURRENT_PAGE=2
+
+          - <<: *osx
+            osx_image: xcode8.3
+            env: CONAN_APPLE_CLANG_VERSIONS=8.1 CONAN_CURRENT_PAGE=1
+
+          - <<: *osx
+            osx_image: xcode8.3
+            env: CONAN_APPLE_CLANG_VERSIONS=8.1 CONAN_CURRENT_PAGE=2
+
+    install:
+      - chmod +x .travis/install.sh
+      - ./.travis/install.sh
+
+    script:
+      - chmod +x .travis/run.sh
+      - ./.travis/run.sh
 
 **.travis/install.sh**
 
     #!/bin/bash
 
-	set -e
-	set -x
+    set -e
+    set -x
 
-	if [[ "$(uname -s)" == 'Darwin' ]]; then
-	    brew update || brew update
-	    brew outdated pyenv || brew upgrade pyenv
-	    brew install pyenv-virtualenv
+    if [[ "$(uname -s)" == 'Darwin' ]]; then
+        brew update || brew update
+        brew outdated pyenv || brew upgrade pyenv
+        brew install pyenv-virtualenv
+        brew install cmake || true
 
-	    if which pyenv > /dev/null; then
-		eval "$(pyenv init -)"
-	    fi
+        if which pyenv > /dev/null; then
+            eval "$(pyenv init -)"
+        fi
 
-	    pyenv install 2.7.10
-	    pyenv virtualenv 2.7.10 conan
-	    pyenv rehash
-	    pyenv activate conan
-	fi
+        pyenv install 2.7.10
+        pyenv virtualenv 2.7.10 conan
+        pyenv rehash
+        pyenv activate conan
+    fi
 
-	pip install conan_package_tools # It install conan too
-	conan user
+    pip install conan --upgrade
+    pip install conan_package_tools==0.3.7dev12
+
+    conan user
+
 
 
 If you want to "pin" a **conan_package_tools** version use:
@@ -440,20 +478,20 @@ That version will be used also in the docker images.
 
     #!/bin/bash
 
-	set -e
-	set -x
+    set -e
+    set -x
 
-	if [[ "$(uname -s)" == 'Darwin' ]]; then
-	    if which pyenv > /dev/null; then
-		eval "$(pyenv init -)"
-	    fi
-	    pyenv activate conan
-	fi
+    if [[ "$(uname -s)" == 'Darwin' ]]; then
+        if which pyenv > /dev/null; then
+            eval "$(pyenv init -)"
+        fi
+        pyenv activate conan
+    fi
 
-	python build.py
+    python build.py
 
 
-Remember to set the CONAN_PASSWORD variable in the travis build backoffice!
+Remember to set the CONAN_PASSWORD variable in the travis build control panel!
 
 
 ## Appveyor integration
@@ -461,33 +499,39 @@ Remember to set the CONAN_PASSWORD variable in the travis build backoffice!
 This is very similar to Travis CI. With the same **build.py** script we have the following **appveyor.yml** file:
 
     build: false
-    environment:
-        PYTHON: "C:\\Python27-x64"
-        PYTHON_VERSION: "2.7.x"
-        PYTHON_ARCH: "64"
 
-        CONAN_UPLOAD: 1
-        CONAN_REFERENCE: "bzip2/1.0.6"
+    environment:
+        PYTHON: "C:\\Python27"
+        PYTHON_VERSION: "2.7.8"
+        PYTHON_ARCH: "32"
+
+        CONAN_REFERENCE: "lib/1.0"
         CONAN_USERNAME: "lasote"
-        CONAN_CHANNEL: "ci"
-        CONAN_TOTAL_PAGES: 4
-        CONAN_STABLE_BRANCH_PATTERN: "release/*"
+        CONAN_CHANNEL: "stable"
+        VS150COMNTOOLS: "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\Common7\\Tools\\"
+        CONAN_UPLOAD: "https://api.bintray.com/conan/luisconanorg/fakeconancenter"
+        CONAN_REMOTES: "https://api.bintray.com/conan/luisconanorg/conan-testing"
 
         matrix:
-            - CONAN_CURRENT_PAGE: 1
-            - CONAN_CURRENT_PAGE: 2  
-            - CONAN_CURRENT_PAGE: 3
-            - CONAN_CURRENT_PAGE: 4
+            - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+              CONAN_VISUAL_VERSIONS: 12
+            - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+              CONAN_VISUAL_VERSIONS: 14
+            - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+              CONAN_VISUAL_VERSIONS: 15
+
+
     install:
-      - set PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
-      - pip.exe install conan_package_tools # It install conan too
+      - set PATH=%PATH%;%PYTHON%/Scripts/
+      - pip.exe install conan --upgrade
+      - pip.exe install conan_package_tools==0.3.7dev12
       - conan user # It creates the conan data directory
 
     test_script:
       - python build.py
 
 
-- Remember to set the **CONAN_PASSWORD** variable in appveyor build backoffice!
+- Remember to set the **CONAN_PASSWORD** variable in appveyor build control panel!
 
 ## Bamboo CI integration
 
