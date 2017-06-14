@@ -55,19 +55,20 @@ If your conanfile.py have an option to specify **shared**/**static** packages yo
 
 If you are using Visual Studio and you want build shared libraries with static runtime (MT, MTd) you can pass **dll_with_static_runtime** parameter to True in **add_common_builds**.
 
+
 ## Working with Bintray: Configuring repositories
 
-    Use the argument `upload` or environment variable `CONAN_UPLOAD` to set the URL of the repository where you want to
-    upload your packages. Will be also used to read from it.
+Use the argument `upload` or environment variable `CONAN_UPLOAD` to set the URL of the repository where you want to
+upload your packages. Will be also used to read from it.
 
-    Use the argument 'remotes' or environment variable `CONAN_REMOTES` to configure additional repositories containing
-    needed requirements.
+Use the argument 'remotes' or environment variable `CONAN_REMOTES` to configure additional repositories containing
+needed requirements.
 
-    **Example:** Add your personal Bintray repository to retrieve and upload your packages and also some other different
-    repositories to read some requirements.
+**Example:** Add your personal Bintray repository to retrieve and upload your packages and also some other different
+repositories to read some requirements.
 
-        CONAN_UPLOAD: "https://api.bintray.com/mybintrayuser/conan_repository"
-        CONAN_REMOTES: "https://api.bintray.com/other_bintray_user/conan-repo, https://api.bintray.com/other_bintray_user2/conan-repo"
+    CONAN_UPLOAD: "https://api.bintray.com/mybintrayuser/conan_repository"
+    CONAN_REMOTES: "https://api.bintray.com/other_bintray_user/conan-repo, https://api.bintray.com/other_bintray_user2/conan-repo"
 
 
 ## Select the packages to be generated
