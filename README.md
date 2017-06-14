@@ -134,9 +134,9 @@ You can choose different MinGW compiler configurations:
 - **Threads**: posix and win32 are supported
 
 
-Using **MINGW_CONFIGURATIONS** env variable:
+Using **MINGW_CONFIGURATIONS** env variable in Travis ci or Appveyor:
 
-    os.environ["MINGW_CONFIGURATIONS"] = '4.9@x86_64@seh@posix, 4.9@x86_64@seh@win32'
+    MINGW_CONFIGURATIONS = '4.9@x86_64@seh@posix, 4.9@x86_64@seh@win32'
 
 
 Or passing a list to ConanMultiPackager constructor:
@@ -158,9 +158,9 @@ You can choose different Clang compiler configurations:
 - **Version**: 3.8, 3.9 and 4.0 are supported
 - **Architecture**: x86 and x86_64 are supported
 
-Using **CONAN_CLANG_VERSIONS** env variable:
+Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 
-    os.environ["CONAN_CLANG_VERSIONS"] = "3.8,3.9,4.0"
+    CONAN_CLANG_VERSIONS = "3.8,3.9,4.0"
 
 ## Pagination
 
@@ -186,8 +186,8 @@ By adding builds to the **named_builds** dictionary, and passing **curpage** wit
 
 named_builds not have a dictionary entry for x86 and another for x86_64:
 
-- for **curpage="x86"** it would do all x86 builds
-- for **curpage="x86_64"** it would do all x86_64 builds
+- for **CONAN_CURRENT_PAGE="x86"** it would do all x86 builds
+- for **CONAN_CURRENT_PAGE="x86_64"** it would do all x86_64 builds
 
 
 **Sequencial distribution**
@@ -203,9 +203,9 @@ By simply passing two pagination parameters, **curpage** and **total_pages**:
 
 If you added 10 package's to the builder:
 
-- for **curpage=1** it would do builds 1,4,7,10
-- for **curpage=2** it would do builds 2,5,8
-- for **curpage=3** it would do builds 3,6,9
+- for **CONAN_CURRENT_PAGE=1** it would do builds 1,4,7,10
+- for **CONAN_CURRENT_PAGE=2** it would do builds 2,5,8
+- for **CONAN_CURRENT_PAGE=3** it would do builds 3,6,9
 
 ## Docker pack
 
@@ -239,12 +239,11 @@ It uses 2 different jobs for each compiler version.
 
 Remember, from conan 0.24 you can use `conan new` command to generate the base files for appveyor, travis etc. Check `conan new --help`.
 
-.travis.yml example:
 
-**.travis.yml**
+**.travis.yml** example:
 
 
-   env:
+    env:
        global:
          - CONAN_REFERENCE: "lib/1.0"
          - CONAN_USERNAME: "lasote"
@@ -510,11 +509,7 @@ When building on gitlab-ci, several environment variables get set during builds.
 
 If the env var **GITLAB_CI** is set and the branch name (**CI_BUILD_REF_NAME** env var) matches **stable_branch_pattern**, then the channel name gets set to ```stable```.
 
-# Full example
-
-You can see the full zlib example [here](https://github.com/lasote/conan-zlib)
-
-# REFERENCE
+# Reference
 
 ## Complete ConanMultiPackager parameters reference
 
@@ -575,3 +570,8 @@ This is especially useful for CI integration.
 - **CONAN_CHANNEL**: Channel where your packages will be uploaded if the previous parameter doesn't match
 - **CONAN_PIP_PACKAGE**: Specify a conan package to install (by default, installs the latest) e.j conan==0.0.1rc7
 - **MINGW_CONFIGURATIONS**: Specify a list of MinGW builds. See MinGW builds section.
+
+
+# Full example
+
+You can see the full zlib example [here](https://github.com/lasote/conan-zlib)
