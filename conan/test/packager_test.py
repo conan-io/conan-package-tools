@@ -230,16 +230,21 @@ class AppTest(unittest.TestCase):
         builder = ConanMultiPackager(username="Pepe",
                                      remotes=["url1", "url2"],
                                      runner=runner)
-        self.assertEqual(runner.calls,
-                         ['conan remote add remote0 url2 --insert',
-                          'conan remote add remote1 url1 --insert'])
+
+        builder.add({}, {}, {}, {})
+        builder.run_builds()
+        self.assertIn('conan remote add remote0 url2 --insert', runner.calls)
+        self.assertIn('conan remote add remote1 url1 --insert', runner.calls)
 
         runner = MockRunner()
         builder = ConanMultiPackager(username="Pepe",
                                      remotes="myurl1",
                                      runner=runner)
-        self.assertEqual(runner.calls,
-                         ['conan remote add remote0 myurl1 --insert'])
+
+        builder.add({}, {}, {}, {})
+        builder.run_builds()
+        self.assertIn('conan remote add remote0 myurl1 --insert', runner.calls)
+
 
     def test_upload(self):
         runner = MockRunner()

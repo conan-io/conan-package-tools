@@ -26,7 +26,7 @@ class TestPackageRunner(object):
         self._conan_pip_package = conan_pip_package
         self._runner = runner or os.system
         self._remotes = remotes
-        self.runner = os.system
+        self.runner = runner
 
         # Set the remotes
         if self._remotes:
