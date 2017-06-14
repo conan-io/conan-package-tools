@@ -245,15 +245,20 @@ class AppTest(unittest.TestCase):
         builder.run_builds()
         self.assertIn('conan remote add remote0 myurl1 --insert', runner.calls)
 
-
     def test_upload(self):
+
+        class PlatformInfoMock(object):
+            def system(self):
+                return "Darwin"
+
         runner = MockRunner()
         builder = ConanMultiPackager(username="pepe", channel="testing",
                                      reference="Hello/0.1", password="password",
                                      upload="myurl", visual_versions=[], gcc_versions=[],
                                      apple_clang_versions=[],
                                      runner=runner,
-                                     remotes="myurl, otherurl")
+                                     remotes="myurl, otherurl",
+                                     platform_info=PlatformInfoMock())
         builder.add_common_builds()
         builder.run()
 
@@ -272,7 +277,8 @@ class AppTest(unittest.TestCase):
                                      upload="myurl", visual_versions=[], gcc_versions=[],
                                      apple_clang_versions=[],
                                      runner=runner,
-                                     remotes="otherurl")
+                                     remotes="otherurl",
+                                     platform_info=PlatformInfoMock())
         builder.add_common_builds()
         builder.run()
 
