@@ -192,7 +192,7 @@ def get_linux_clang_builds(clang_versions, archs, shared_option_name, pure_c):
                         ret.append(get_build("clang", arch, build_type, clang_version,
                                              "libstdc++"))
                         ret.append(get_build("clang", arch, build_type, clang_version,
-                                             "libstdc++"))
+                                             "libc++"))
                     else:
                         ret.append(get_build("clang", arch, build_type, clang_version))
     return ret
