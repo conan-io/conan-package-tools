@@ -59,7 +59,11 @@ If you are using Visual Studio and you want build shared libraries with static r
 ## Working with Bintray: Configuring repositories
 
 Use the argument `upload` or environment variable `CONAN_UPLOAD` to set the URL of the repository where you want to
-upload your packages. Will be also used to read from it.
+upload your packages. Will be also used to read from it. Use `CONAN_PASSWORD` environment variable to set the API key
+from Bintray. If you are using travis or appveyor you can use a hidden enviroment variable from the repository setup
+package.
+
+To get an API key in Bintray to "Edit profile"/"API key".
 
 Use the argument `remotes` or environment variable `CONAN_REMOTES` to configure additional repositories containing
 needed requirements.
@@ -549,7 +553,7 @@ This is especially useful for CI integration.
 
 - **CONAN_USERNAME**: Your conan username
 - **CONAN_REFERENCE**: Reference of the package to upload, e.g. "zlib/1.2.8"
-- **CONAN_PASSWORD**: Conan Password
+- **CONAN_PASSWORD**: Conan Password, or API key if you are using Bintray.
 - **CONAN_REMOTES**: List of URLs separated by "," for the additional remotes (read).
 - **CONAN_UPLOAD**: URL of the repository where we want to use to upload the packages.
 - **CONAN_UPLOAD_RETRY**: If defined, in case of fail retries to upload again the specified times
