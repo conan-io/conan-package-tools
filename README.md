@@ -61,14 +61,27 @@ If you are using Visual Studio and you want build shared libraries with static r
 Use the argument `upload` or environment variable `CONAN_UPLOAD` to set the URL of the repository where you want to
 upload your packages. Will be also used to read from it.
 
-Use the argument 'remotes' or environment variable `CONAN_REMOTES` to configure additional repositories containing
+Use the argument `remotes` or environment variable `CONAN_REMOTES` to configure additional repositories containing
 needed requirements.
 
 **Example:** Add your personal Bintray repository to retrieve and upload your packages and also some other different
 repositories to read some requirements.
 
-    CONAN_UPLOAD: "https://api.bintray.com/mybintrayuser/conan_repository"
-    CONAN_REMOTES: "https://api.bintray.com/other_bintray_user/conan-repo, https://api.bintray.com/other_bintray_user2/conan-repo"
+In your `.travis.yml` or `appveyor.yml` files declare the environment variables:
+
+    CONAN_UPLOAD="https://api.bintray.com/mybintrayuser/conan_repository"
+    CONAN_REMOTES="https://api.bintray.com/other_bintray_user/conan-repo, https://api.bintray.com/other_bintray_user2/conan-repo"
+
+Or in your `build.py`:
+
+    from conan.packager import ConanMultiPackager
+
+    if __name__ == "__main__":
+        builder = ConanMultiPackager(username="myuser",
+                                     upload="https://api.bintray.com/mybintrayuser/conan_repository",
+                                     remotes="https://api.bintray.com/other_bintray_user/conan-repo, https://api.bintray.com/other_bintray_user2/conan-repo")
+        builder.add_common_builds()
+        builder.run()
 
 
 ## Select the packages to be generated
