@@ -321,6 +321,7 @@ You can also use multiples "pages" to split the builds in different jobs:
        global:
          - CONAN_REFERENCE: "lib/1.0"
          - CONAN_USERNAME: "lasote"
+         - CONAN_LOGIN_USERNAME: "lasote"
          - CONAN_CHANNEL: "stable"
          - CONAN_UPLOAD: "https://api.bintray.com/mybintrayuser/myconanrepo"
          - CONAN_REMOTES: "https://api.bintray.com/otherbintrayuser/otherconanrepo"
@@ -473,6 +474,7 @@ This is very similar to Travis CI. With the same **build.py** script we have the
 
         CONAN_REFERENCE: "lib/1.0"
         CONAN_USERNAME: "lasote"
+        CONAN_LOGIN_USERNAME: "lasote"
         CONAN_CHANNEL: "stable"
         VS150COMNTOOLS: "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\Common7\\Tools\\"
         CONAN_UPLOAD: "https://api.bintray.com/conan/luisconanorg/fakeconancenter"
