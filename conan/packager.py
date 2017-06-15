@@ -54,7 +54,8 @@ class ConanMultiPackager(object):
                  stable_channel=None,
                  platform_info=None,
                  upload_retry=None,
-                 clang_versions=None):
+                 clang_versions=None,
+                 login_username=None):
 
         self._builds = []
         self._named_builds = {}
@@ -62,6 +63,7 @@ class ConanMultiPackager(object):
         self.runner = runner or os.system
         self.args = args or " ".join(sys.argv[1:])
         self.username = username or os.getenv("CONAN_USERNAME", None)
+        self.login_username = login_username or os.getenv("CONAN_LOGIN_USERNAME", None) or self.username
         if not self.username:
             raise Exception("Instance ConanMultiPackage with 'username' "
                             "parameter or use CONAN_USERNAME env variable")
@@ -278,7 +280,7 @@ class ConanMultiPackager(object):
 
         command = "conan upload %s@%s/%s --retry %s --all --force -r=upload_repo" % (self.reference, self.username,
                                                                                      self.channel, self.upload_retry)
-        user_command = 'conan user %s -p="%s" -r=upload_repo' % (self.username, self.password)
+        user_command = 'conan user %s -p="%s" -r=upload_repo' % (self.login_username, self.password)
 
         logger.info("******** RUNNING UPLOAD COMMAND ********** \n%s" % command)
         if self._platform_info.system() == "Linux" and self.use_docker:

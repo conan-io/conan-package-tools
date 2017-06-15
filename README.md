@@ -5,6 +5,8 @@
 
 - Use `CONAN_UPLOAD` to specify the URL of the remote to be used to upload your packages.
 - Use `REMOTES` to specify other URLs ("," separated) of remotes to be used to retrieve requirements.
+- Use `CONAN_LOGIN_USERNAME` to specify your Bintray username, can be different from `CONAN_USERNAME` that only 
+determine the user name in the reference of your package.
 - Use `CONAN_PASSWORD` as usual to specify the remote password if you want to upload packages, if the remote
 is a Bintray repository use an API key. [Read more here](#bintray)
 
@@ -44,7 +46,7 @@ Now create a **build.py** file in the root of your project and instance a **Cona
     from conan.packager import ConanMultiPackager
 
 	if __name__ == "__main__":
-	    builder = ConanMultiPackager(username="myuser")
+	    builder = ConanMultiPackager(username="myuser") # Will export to myuser/XXXXX.
 	    builder.add_common_builds()
 	    builder.run()
 
@@ -70,8 +72,12 @@ If you are using Visual Studio and you want build shared libraries with static r
 ## Working with Bintray: Configuring repositories
 
 Use the argument `upload` or environment variable `CONAN_UPLOAD` to set the URL of the repository where you want to
-upload your packages. Will be also used to read from it. Use `CONAN_PASSWORD` environment variable to set the API key
-from Bintray. If you are using travis or appveyor you can use a hidden enviroment variable from the repository setup
+upload your packages. Will be also used to read from it. 
+
+Use `CONAN_PASSWORD` environment variable to set the API key from Bintray. If your username in Bintray doesn't match with
+the specified `CONAN_USERNAME` specify the variable `CONAN_LOGIN_USERNAME` or the parameter `login_username` to ConanMultiPackager .
+
+If you are using travis or appveyor you can use a hidden enviroment variable from the repository setup
 package.
 
 To get an API key in Bintray to "Edit profile"/"API key".
