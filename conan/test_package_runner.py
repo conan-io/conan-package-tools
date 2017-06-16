@@ -160,7 +160,12 @@ class DockerTestPackageRunner(TestPackageRunner):
     @staticmethod
     def deserialize(data):
         the_json = json.loads(data)
-        profile = Profile.loads(the_json["profile"])
+        if hasattr(Profile, "loads"):
+            profile = Profile.loads(the_json["profile"])
+        else:
+            # Fixme, make public in conan?
+            from conans.client.profile_loader import _load_profile
+            return _load_profile(the_json["profile"], None, None)[0]
         ret = TestPackageRunner(profile,
                                 username=the_json["username"],
                                 channel=the_json["channel"],
