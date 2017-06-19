@@ -135,7 +135,7 @@ class DockerTestPackageRunner(TestPackageRunner):
 
         command = "sudo docker run --rm -v %s:/home/conan/project -v " \
                   "~/.conan/:/home/conan/.conan -it %s %s /bin/sh -c \"" \
-                  "rm /home/conan/.conan/conan.conf && cd project && run_test_package_in_docker\"" % (os.getcwd(), env_vars,  self.docker_image)
+                  "rm -f /home/conan/.conan/conan.conf && cd project && run_test_package_in_docker\"" % (os.getcwd(), env_vars,  self.docker_image)
         ret = self._runner(command)
         if ret != 0:
             raise Exception("Error building: %s" % command)
