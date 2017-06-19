@@ -45,6 +45,7 @@ class ConanOutputRunner(ConanRunner):
 
             def write(self, data):
                 self.output += str(data)
+                sys.stdout.write(data)
 
         self._output = OutputInternal()
 
@@ -113,13 +114,13 @@ class ConanMultiPackager(object):
         stable_channel = stable_channel or os.getenv("CONAN_STABLE_CHANNEL", "stable")
         self.channel = self._get_channel(default_channel, stable_channel)
 
-        if upload:
-            if upload in ("0", "None", "False"):
+        if self.upload:
+            if self.upload in ("0", "None", "False"):
                 self.upload = None
-            elif upload == "1":
-                raise Exception(
-                    "WARNING! 'upload' argument has changed. Use 'upload' argument or CONAN_UPLOAD environment variable "
-                    "to specify a remote URL to upload your packages. e.j: upload='https://api.bintray.com/conan/myuser/myconanrepo'")
+            elif self.upload == "1":
+                raise Exception("WARNING! 'upload' argument has changed. Use 'upload' argument or CONAN_UPLOAD "
+                                "environment variable to specify a remote URL to upload your packages. e.j: "
+                                "upload='https://api.bintray.com/conan/myuser/myconanrepo'")
             elif not self.reference or not self.password or not self.channel or not self.username:
                 raise Exception("Upload not possible, some parameter (reference, password or channel) is missing!")
 
