@@ -1,4 +1,3 @@
-import platform
 import unittest
 
 from collections import defaultdict
@@ -14,6 +13,7 @@ class MockRunner(object):
 
     def __init__(self):
         self.reset()
+        self.output = ""
 
     def reset(self):
         self.calls = []
@@ -252,6 +252,7 @@ class AppTest(unittest.TestCase):
                 return "Darwin"
 
         runner = MockRunner()
+        runner.output = "arepo: myurl"
         builder = ConanMultiPackager(username="pepe", channel="testing",
                                      reference="Hello/0.1", password="password",
                                      upload="myurl", visual_versions=[], gcc_versions=[],
@@ -263,10 +264,12 @@ class AppTest(unittest.TestCase):
         builder.run()
 
         # Duplicated upload remote is ignored
-        self.assertEqual(runner.calls[0:3],
-                         ['conan remote add upload_repo myurl',
-                          'conan remote add remote0 otherurl --insert',
+        self.assertEqual(runner.calls[0:5],
+                         ['conan remote list',
+                          'conan remote remove arepo',
+                          'conan remote add upload_repo myurl',
                           'conan remote list',
+                          'conan remote add remote0 otherurl --insert'
                           ])
         self.assertEqual(runner.calls[-1],
                          'conan upload Hello/0.1@pepe/testing --retry 3 --all --force -r=upload_repo')
@@ -282,10 +285,11 @@ class AppTest(unittest.TestCase):
         builder.add_common_builds()
         builder.run()
 
-        self.assertEqual(runner.calls[0:3],
-                         ['conan remote add upload_repo myurl',
-                          'conan remote add remote0 otherurl --insert',
-                          'conan remote list'])
+        self.assertEqual(runner.calls[0:4],
+                         ['conan remote list',
+                          'conan remote add upload_repo myurl',
+                          'conan remote list',
+                          'conan remote add remote0 otherurl --insert'])
 
         self.assertEqual(runner.calls[-1],
                          'conan upload Hello/0.1@pepe/testing --retry 3 --all --force -r=upload_repo')
