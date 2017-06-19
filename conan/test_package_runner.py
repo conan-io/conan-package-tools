@@ -165,7 +165,7 @@ class DockerTestPackageRunner(TestPackageRunner):
         else:
             # Fixme, make public in conan?
             from conans.client.profile_loader import _load_profile
-            return _load_profile(the_json["profile"], None, None)[0]
+            profile = _load_profile(the_json["profile"], None, None)[0]
         ret = TestPackageRunner(profile,
                                 username=the_json["username"],
                                 channel=the_json["channel"],

@@ -3,6 +3,8 @@ import re
 import sys
 
 from collections import defaultdict
+
+from conans.client.runner import ConanRunner
 from conans.model.ref import ConanFileReference
 
 from conan.test_package_runner import TestPackageRunner, DockerTestPackageRunner
@@ -30,6 +32,28 @@ class PlatformInfo(object):
     def system(self):
         import platform
         return platform.system()
+
+
+class ConanOutputRunner(ConanRunner):
+
+    def __init__(self):
+        super(ConanOutputRunner, self).__init__()
+
+        class OutputInternal(object):
+            def __init__(self):
+                self.output = ""
+
+            def write(self, data):
+                self.output += str(data)
+
+        self._output = OutputInternal()
+
+    @property
+    def output(self):
+        return self._output.output
+
+    def __call__(self, command):
+        return super(ConanOutputRunner, self).__call__(command, output=self._output)
 
 
 class ConanMultiPackager(object):
@@ -60,7 +84,7 @@ class ConanMultiPackager(object):
         self._builds = []
         self._named_builds = {}
         self._platform_info = platform_info or PlatformInfo()
-        self.runner = runner or os.system
+        self.runner = runner or ConanOutputRunner()
         self.args = args or " ".join(sys.argv[1:])
         self.username = username or os.getenv("CONAN_USERNAME", None)
         self.login_username = login_username or os.getenv("CONAN_LOGIN_USERNAME", None) or self.username
@@ -148,10 +172,7 @@ class ConanMultiPackager(object):
         self.vs10_x86_64_enabled = vs10_x86_64_enabled
 
         if self.upload:
-            remote_command = 'conan remote add upload_repo %s' % self.upload
-            ret = self.runner(remote_command)
-            if ret != 0:
-                raise Exception("Error while setting remote upload URL")
+            self.add_remote_safe("upload_repo", self.upload, insert=False)
 
         # Set the remotes
         if self.remotes:
@@ -162,12 +183,32 @@ class ConanMultiPackager(object):
                 if remote == self.upload:  # Already added
                     continue
                 remote_name = "remote%s" % counter
-                if self.runner("conan remote add remote%s %s --insert" % (counter, remote)) != 0:
-                    logger.info("Remote add with insert failed... trying to add at the end")
-                    self.runner("conan remote add %s %s" % (remote_name, remote))  # Retrocompatibility
+                self.add_remote_safe(remote_name, remote, insert=True)
             self.runner("conan remote list")
         else:
             logger.info("Not additional remotes declared...")
+
+    def get_remote_name(self, remote_url):
+        # FIXME: Use conan api when prepared to return the list
+        self.runner("conan remote list")
+        for line in self.runner.output.splitlines():
+            if remote_url in line:
+                return line.split(":", 1)[0]
+        return None
+
+    def add_remote_safe(self, name, url, insert=False):
+        # FIXME: Use conan api when prepared to call
+        """Add a remove previoulsy removing if needed an already configured repository with the same URL"""
+        existing_name = self.get_remote_name(url)
+        if existing_name:
+            self.runner("conan remote remove %s" % existing_name)
+
+        if insert:
+            if self.runner("conan remote add %s %s --insert" % (name, url)) != 0:
+                logger.info("Remote add with insert failed... trying to add at the end")
+            else:
+                return 0
+        self.runner("conan remote add %s %s" % (name, url))  # Retrocompatibility
 
     @property
     def builds(self):
@@ -364,12 +405,6 @@ def _get_profile(build_conf):
 
 
 if __name__ == "__main__":
-    os.environ["MINGW_CONFIGURATIONS"] = '4.9@x86_64@seh@posix, 4.9@x86_64@seh@win32'
-#     mingw_configurations = [("4.9", "x86_64", "seh", "posix"),
-#                             ("4.9", "x86_64", "sjlj", "posix"),
-#                             ("4.9", "x86", "sjlj", "posix"),
-#                             ("4.9", "x86", "dwarf2", "posix")]
-    builder = ConanMultiPackager(username="lasote", mingw_configurations=None, use_docker=False)
-    builder.add_common_builds(pure_c=False)
-    builder.add(build_requires={"*": ["uno/1.0@lasote/stable", "dos/0.1@lasote/testing"]})
-    builder.run()
+    runner = ConanOutputRunner()
+    runner("ls")
+
