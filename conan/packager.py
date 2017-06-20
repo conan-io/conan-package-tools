@@ -116,7 +116,7 @@ class ConanMultiPackager(object):
         self.stable_channel = stable_channel or os.getenv("CONAN_STABLE_CHANNEL", "stable")
         self.channel = self._get_channel(default_channel, self.stable_channel)
 
-        self.upload_only_when_stable = upload_only_when_stable or os.getenv("CONAN_UPLOAD_ONLY_WHEN_STABLE", None)
+        self.upload_only_when_stable = upload_only_when_stable or os.getenv("CONAN_UPLOAD_ONLY_WHEN_STABLE", False)
 
         if self.upload:
             if self.upload in ("0", "None", "False"):
@@ -322,7 +322,8 @@ class ConanMultiPackager(object):
         if not self.upload:
             return
 
-        if self.upload_only_when_stable and self.channel != self.stable_channel:
+        st_channel = self.stable_channel or "stable"
+        if self.upload_only_when_stable and self.channel != st_channel:
             print("Skipping upload, not stable channel")
 
         if not self.reference or not self.password or not self.channel or not self.username:
