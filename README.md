@@ -544,6 +544,7 @@ If the env var **GITLAB_CI** is set and the branch name (**CI_BUILD_REF_NAME** e
 - **upload_retry**: Num retries in upload in case of failure.
 - **remotes**: List of URLs separated by "," for the additional remotes (read).
 - **upload**: URL of the repository where we want to use to upload the packages.
+- **upload_only_when_stable**: Will try to upload only if the channel is the stable channel
 
 Upload related parameters:
 
@@ -568,6 +569,7 @@ This is especially useful for CI integration.
 - **CONAN_REMOTES**: List of URLs separated by "," for the additional remotes (read).
 - **CONAN_UPLOAD**: URL of the repository where we want to use to upload the packages.
 - **CONAN_UPLOAD_RETRY**: If defined, in case of fail retries to upload again the specified times
+- **CONAN_UPLOAD_ONLY_WHEN_STABLE**: If defined, will try to upload the packages only when the current channel is the stable one.
 - **CONAN_GCC_VERSIONS**: Gcc versions, comma separated, e.g. "4.6,4.8,5.2,6.3"
 - **CONAN_CLANG_VERSIONS**: Clang versions, comma separated, e.g. "3.8,3.9,4.0"
 - **CONAN_APPLE_CLANG_VERSIONS**: Apple clang versions, comma separated, e.g. "6.1,8.0"
