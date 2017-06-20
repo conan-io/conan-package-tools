@@ -325,6 +325,7 @@ class ConanMultiPackager(object):
         st_channel = self.stable_channel or "stable"
         if self.upload_only_when_stable and self.channel != st_channel:
             print("Skipping upload, not stable channel")
+            return
 
         if not self.reference or not self.password or not self.channel or not self.username:
             print("Upload not possible, some parameter (reference, password or channel) is missing!")
