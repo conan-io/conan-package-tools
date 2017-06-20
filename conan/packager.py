@@ -122,8 +122,6 @@ class ConanMultiPackager(object):
                 raise Exception("WARNING! 'upload' argument has changed. Use 'upload' argument or CONAN_UPLOAD "
                                 "environment variable to specify a remote URL to upload your packages. e.j: "
                                 "upload='https://api.bintray.com/conan/myuser/myconanrepo'")
-            elif not self.reference or not self.password or not self.channel or not self.username:
-                raise Exception("Upload not possible, some parameter (reference, password or channel) is missing!")
 
         os.environ["CONAN_CHANNEL"] = self.channel
 
@@ -319,6 +317,10 @@ class ConanMultiPackager(object):
     def upload_packages(self):
 
         if not self.upload:
+            return
+
+        if not self.reference or not self.password or not self.channel or not self.username:
+            print("Upload not possible, some parameter (reference, password or channel) is missing!")
             return
 
         command = "conan upload %s@%s/%s --retry %s --all --force -r=upload_repo" % (self.reference, self.username,

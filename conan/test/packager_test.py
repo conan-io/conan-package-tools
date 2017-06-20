@@ -245,10 +245,6 @@ class AppTest(unittest.TestCase):
         builder.run_builds()
         self.assertIn('conan remote add remote0 myurl1 --insert', runner.calls)
 
-    def no_pass_supplied_test(self):
-        with self.assertRaisesRegexp(Exception, str("Upload not possible, some parameter")):
-            ConanMultiPackager(username="pepe", upload="url")
-
     def test_upload(self):
 
         class PlatformInfoMock(object):
