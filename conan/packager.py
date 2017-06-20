@@ -80,7 +80,8 @@ class ConanMultiPackager(object):
                  platform_info=None,
                  upload_retry=None,
                  clang_versions=None,
-                 login_username=None):
+                 login_username=None,
+                 upload_only_when_stable=False):
 
         self._builds = []
         self._named_builds = {}
@@ -112,8 +113,10 @@ class ConanMultiPackager(object):
 
         self.stable_branch_pattern = stable_branch_pattern or os.getenv("CONAN_STABLE_BRANCH_PATTERN", None)
         default_channel = channel or os.getenv("CONAN_CHANNEL", "testing")
-        stable_channel = stable_channel or os.getenv("CONAN_STABLE_CHANNEL", "stable")
-        self.channel = self._get_channel(default_channel, stable_channel)
+        self.stable_channel = stable_channel or os.getenv("CONAN_STABLE_CHANNEL", "stable")
+        self.channel = self._get_channel(default_channel, self.stable_channel)
+
+        self.upload_only_when_stable = upload_only_when_stable or os.getenv("CONAN_UPLOAD_ONLY_WHEN_STABLE", None)
 
         if self.upload:
             if self.upload in ("0", "None", "False"):
@@ -318,6 +321,9 @@ class ConanMultiPackager(object):
 
         if not self.upload:
             return
+
+        if self.upload_only_when_stable and self.channel != self.stable_channel:
+            print("Skipping upload, not stable channel")
 
         if not self.reference or not self.password or not self.channel or not self.username:
             print("Upload not possible, some parameter (reference, password or channel) is missing!")
