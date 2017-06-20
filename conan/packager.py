@@ -85,7 +85,8 @@ class ConanMultiPackager(object):
         self._builds = []
         self._named_builds = {}
         self._platform_info = platform_info or PlatformInfo()
-        self.runner = runner or ConanOutputRunner()
+        self.runner = runner or os.system
+        self.output_runner = ConanOutputRunner()
         self.args = args or " ".join(sys.argv[1:])
         self.username = username or os.getenv("CONAN_USERNAME", None)
         self.login_username = login_username or os.getenv("CONAN_LOGIN_USERNAME", None) or self.username
@@ -191,8 +192,8 @@ class ConanMultiPackager(object):
 
     def get_remote_name(self, remote_url):
         # FIXME: Use conan api when prepared to return the list
-        self.runner("conan remote list")
-        for line in self.runner.output.splitlines():
+        self.output_runner("conan remote list")
+        for line in self.output_runner.output.splitlines():
             if remote_url in line:
                 return line.split(":", 1)[0]
         return None
