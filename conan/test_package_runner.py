@@ -6,8 +6,12 @@ import platform
 import tempfile
 from collections import namedtuple
 
+import sys
+
 from conan.log import logger
 from conan import __version__ as package_tools_version
+from conans.client.client_cache import ClientCache
+from conans.client.output import ConanOutput
 from conans.model.profile import Profile
 from conans.tools import vcvars_command
 from conans.util.files import save, load, mkdir
@@ -79,15 +83,16 @@ class TestPackageRunner(object):
 
     def conan_compiler_info(self):
         """return the compiler and its version readed in conan.conf"""
-        from six.moves import configparser
-        parser = configparser.ConfigParser()
-        home = os.environ.get("CONAN_USER_HOME", "~/")
-        conf_path = os.path.expanduser("%s/.conan/conan.conf" % home)
-        if not os.path.exists(conf_path) or "compiler.version" not in load(conf_path):
-            self._runner("conan user")  # Force default settings autodetection
-        parser.read(conf_path)
-        items = dict(parser.items("settings_defaults"))
-        return items["compiler"], items["compiler.version"]
+        out = ConanOutput(sys.stdout)
+        cache = ClientCache(os.environ.get("CONAN_USER_HOME", "~/"), None, out)
+
+        if hasattr(cache, "default_profile"):
+            profile = cache.default_profile
+            settings = profile.settings
+        else:
+            settings = dict(cache.conan_config.get_conf("settings_defaults"))
+
+        return settings["compiler"], settings["compiler.version"]
 
 
 def autodetect_docker_image(profile):
