@@ -144,7 +144,12 @@ class ConanMultiPackager(object):
             self.visual_versions = visual_versions
         else:
             env_visual_versions = list(filter(None, os.getenv("CONAN_VISUAL_VERSIONS", "").split(",")))
-            self.visual_versions = env_visual_versions or self.default_visual_versions
+            self.visual_versions = env_visual_versions
+            if not mingw_configurations and not get_mingw_config_from_env():
+                self.visual_versions = self.default_visual_versions
+            else:
+                self.visual_versions = None
+
         self.visual_runtimes = visual_runtimes or \
             list(filter(None, os.getenv("CONAN_VISUAL_RUNTIMES", "").split(","))) or \
             self.default_visual_runtimes
