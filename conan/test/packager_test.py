@@ -4,6 +4,7 @@ from collections import defaultdict
 
 from conan.builds_generator import BuildConf
 from conan.packager import ConanMultiPackager
+from conans import tools
 from conans.model.ref import ConanFileReference
 from conans.util.files import load
 from conans.model.profile import Profile
@@ -244,6 +245,31 @@ class AppTest(unittest.TestCase):
         builder.add({}, {}, {}, {})
         builder.run_builds()
         self.assertIn('conan remote add remote0 myurl1 --insert', runner.calls)
+
+    def test_visual_defaults(self):
+
+        with tools.environment_append({"CONAN_VISUAL_VERSIONS": "10"}):
+            class PlatformInfoMock(object):
+                def system(self):
+                    return "Windows"
+
+            builder = ConanMultiPackager(username="Pepe", platform_info=PlatformInfoMock())
+            builder.add_common_builds()
+            for settings, _, _, _ in builder.builds:
+                self.assertEquals(settings["compiler"], "Visual Studio")
+                self.assertEquals(settings["compiler.version"], "10")
+
+        with tools.environment_append({"CONAN_VISUAL_VERSIONS": "10", "MINGW_CONFIGURATIONS": "4.9@x86_64@seh@posix"}):
+            class PlatformInfoMock(object):
+                def system(self):
+                    return "Windows"
+
+            builder = ConanMultiPackager(username="Pepe", platform_info=PlatformInfoMock())
+            builder.add_common_builds()
+            for settings, _, _, _ in builder.builds:
+                self.assertEquals(settings["compiler"], "gcc")
+                self.assertEquals(settings["compiler.version"], "4.9")
+
 
     def test_upload(self):
 
