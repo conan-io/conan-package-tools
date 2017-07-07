@@ -336,7 +336,7 @@ class ConanMultiPackager(object):
             print("Upload not possible, some parameter (reference, password or channel) is missing!")
             return
 
-        command = "conan upload %s@%s/%s --retry %s --all --force --confirum -r=upload_repo" % (
+        command = "conan upload %s@%s/%s --retry %s --all --force --confirm -r=upload_repo" % (
                 self.reference, self.username, self.channel, self.upload_retry)
         user_command = 'conan user %s -p="%s" -r=upload_repo' % (self.login_username, self.password)
 
