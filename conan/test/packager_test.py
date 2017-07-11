@@ -270,7 +270,7 @@ class AppTest(unittest.TestCase):
                           'conan remote list',
                           ])
         self.assertEqual(runner.calls[-1],
-                         'conan upload Hello/0.1@pepe/testing --retry 3 --all --force -r=upload_repo')
+                         'conan upload Hello/0.1@pepe/testing --retry 3 --all --force --confirm -r=upload_repo')
 
         runner = MockRunner()
         builder = ConanMultiPackager(username="pepe", channel="testing",
@@ -288,4 +288,4 @@ class AppTest(unittest.TestCase):
                           'conan remote add remote0 otherurl --insert'])
 
         self.assertEqual(runner.calls[-1],
-                         'conan upload Hello/0.1@pepe/testing --retry 3 --all --force -r=upload_repo')
+                         'conan upload Hello/0.1@pepe/testing --retry 3 --all --force --confirm -r=upload_repo')
