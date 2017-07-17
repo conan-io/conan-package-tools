@@ -341,7 +341,8 @@ class ConanMultiPackager(object):
 
         logger.info("******** RUNNING UPLOAD COMMAND ********** \n%s" % command)
         if self._platform_info.system() == "Linux" and self.use_docker:
-            self.runner("sudo chmod -R 777 ~/.conan/data")
+            data_dir = os.path.expanduser("~/.conan/data")
+            self.runner("sudo chmod -R 777 %s" % data_dir)
             # self.runner("ls -la ~/.conan")
 
         ret = self.runner(user_command)
