@@ -84,7 +84,8 @@ class TestPackageRunner(object):
     def conan_compiler_info(self):
         """return the compiler and its version readed in conan.conf"""
         out = ConanOutput(sys.stdout)
-        cache = ClientCache(os.environ.get("CONAN_USER_HOME", "~/"), None, out)
+        data_dir = os.path.expanduser(os.environ.get("CONAN_USER_HOME", "~/"))
+        cache = ClientCache(data_dir, None, out)
 
         if hasattr(cache, "default_profile"):
             profile = cache.default_profile
