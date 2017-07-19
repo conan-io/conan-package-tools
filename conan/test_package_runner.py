@@ -72,7 +72,8 @@ class TestPackageRunner(object):
                                                         "profile"))
         profile_txt = self._profile.dumps()
         save(abs_profile_path, profile_txt)
-        command = "conan test_package . --profile %s %s" % (abs_profile_path, self._args)
+        command = "conan create --profile %s %s %s/%s" % (abs_profile_path, self._args,
+                                                            self._username, self._channel)
         if pre_command:
             command = '%s && %s' % (pre_command, command)
 
