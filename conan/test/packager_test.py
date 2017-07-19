@@ -45,7 +45,7 @@ class MockRunner(object):
 
         testp_counter = 0
         for i, call in enumerate(self.calls):
-            if call.startswith("conan test_package"):
+            if call.startswith("conan create"):
                 profile = self.get_profile_from_trace(i)
                 assert_profile_for(profile, numbers[testp_counter])
                 testp_counter += 1
