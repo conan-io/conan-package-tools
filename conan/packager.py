@@ -286,7 +286,7 @@ class ConanMultiPackager(object):
         if len(self.named_builds) > 0 and len(self.builds) > 0:
             raise Exception("Both bulk and named builds are set. Only one is allowed.")
 
-        self.runner('conan export %s/%s' % (self.username, self.channel))
+        # self.runner('conan export %s/%s' % (self.username, self.channel))
 
         builds_in_current_page = []
         if len(self.builds) > 0:
