@@ -72,7 +72,7 @@ class AppTest(unittest.TestCase):
                            "VAR_2": "TWO"},
                           {"*": ["myreference/1.0@lasote/testing"]})
         self.packager.run_builds(1, 1)
-        profile = self.runner.get_profile_from_trace(1)
+        profile = self.runner.get_profile_from_trace(0)
         self.assertEquals(profile.settings["os"], "Windows")
         self.assertEquals(profile.settings["compiler"], "gcc")
         self.assertEquals(profile.options.as_list(), [("option1", "One")])
@@ -121,12 +121,12 @@ class AppTest(unittest.TestCase):
         self._add_build(3, "gcc", "4.3")
 
         self.packager.run_builds(1, 2)
-        self.assertIn("sudo docker pull lasote/conangcc43", self.runner.calls[1])
-        self.assertIn('sudo docker run ', self.runner.calls[2])
-        self.assertIn('os=os1', self.runner.calls[5])
+        self.assertIn("sudo docker pull lasote/conangcc43", self.runner.calls[0])
+        self.assertIn('sudo docker run ', self.runner.calls[1])
+        self.assertIn('os=os1', self.runner.calls[4])
 
         # Next build from 4.3 is cached, not pulls are performed
-        self.assertIn('os=os3', self.runner.calls[6])
+        self.assertIn('os=os3', self.runner.calls[5])
 
     def test_docker_clang(self):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
@@ -140,12 +140,12 @@ class AppTest(unittest.TestCase):
         self._add_build(3, "clang", "3.8")
 
         self.packager.run_builds(1, 2)
-        self.assertIn("sudo docker pull lasote/conanclang38", self.runner.calls[1])
-        self.assertIn('sudo docker run ', self.runner.calls[2])
-        self.assertIn('os=os1', self.runner.calls[5])
+        self.assertIn("sudo docker pull lasote/conanclang38", self.runner.calls[0])
+        self.assertIn('sudo docker run ', self.runner.calls[1])
+        self.assertIn('os=os1', self.runner.calls[4])
 
         # Next build from 3.8 is cached, not pulls are performed
-        self.assertIn('os=os3', self.runner.calls[6])
+        self.assertIn('os=os3', self.runner.calls[5])
 
     def test_docker_gcc_and_clang(self):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
@@ -163,16 +163,16 @@ class AppTest(unittest.TestCase):
         self._add_build(6, "clang", "3.9")
 
         self.packager.run_builds(1, 2)
-        self.assertIn("sudo docker pull lasote/conangcc54", self.runner.calls[1])
-        self.assertIn('sudo docker run ', self.runner.calls[2])
-        self.assertIn('os=os1', self.runner.calls[5])
-        self.assertIn('os=os3', self.runner.calls[6])
+        self.assertIn("sudo docker pull lasote/conangcc54", self.runner.calls[0])
+        self.assertIn('sudo docker run ', self.runner.calls[1])
+        self.assertIn('os=os1', self.runner.calls[4])
+        self.assertIn('os=os3', self.runner.calls[5])
 
         self.packager.run_builds(2, 2)
-        self.assertIn("sudo docker pull lasote/conanclang39", self.runner.calls[18])
-        self.assertIn('sudo docker run ', self.runner.calls[19])
-        self.assertIn('os=os4', self.runner.calls[22])
-        self.assertIn('os=os6', self.runner.calls[23])
+        self.assertIn("sudo docker pull lasote/conanclang39", self.runner.calls[16])
+        self.assertIn('sudo docker run ', self.runner.calls[17])
+        self.assertIn('os=os4', self.runner.calls[20])
+        self.assertIn('os=os6', self.runner.calls[21])
 
     def test_docker_invalid(self):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
