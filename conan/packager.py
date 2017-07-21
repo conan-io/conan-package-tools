@@ -178,22 +178,21 @@ class ConanMultiPackager(object):
         self.conan_pip_package = os.getenv("CONAN_PIP_PACKAGE", None)
         self.vs10_x86_64_enabled = vs10_x86_64_enabled
 
-        if self.upload:
-            self.add_remote_safe("upload_repo", self.upload, insert=False)
-
         # Set the remotes
         if self.remotes:
             if not isinstance(self.remotes, list):
-                remotes = [r.strip() for r in self.remotes.split(",") if r.strip()]
-
-            for counter, remote in enumerate(reversed(remotes)):
-                if remote == self.upload:  # Already added
-                    continue
-                remote_name = "remote%s" % counter
+                self.remotes = [r.strip() for r in self.remotes.split(",") if r.strip()]
+            for counter, remote in enumerate(reversed(self.remotes)):
+                remote_name = "remote%s" % counter if remote != self.upload else "upload_repo"
                 self.add_remote_safe(remote_name, remote, insert=True)
             self.runner("conan remote list")
         else:
             logger.info("Not additional remotes declared...")
+
+        if self.upload and self.upload not in self.remotes:
+            # If you specify the upload as a remote, put it first
+            # this way we can cover all the possibilities
+            self.add_remote_safe("upload_repo", self.upload, insert=False)
 
     def get_remote_name(self, remote_url):
         # FIXME: Use conan api when prepared to return the list
