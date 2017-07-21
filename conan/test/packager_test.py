@@ -271,7 +271,6 @@ class AppTest(unittest.TestCase):
                 self.assertEquals(settings["compiler"], "gcc")
                 self.assertEquals(settings["compiler.version"], "4.9")
 
-
     def test_upload(self):
 
         class PlatformInfoMock(object):
@@ -290,12 +289,27 @@ class AppTest(unittest.TestCase):
         builder.add_common_builds()
         builder.run()
 
-        # Duplicated upload remote is ignored
-        self.assertEqual(runner.calls[0:3],
-                         ['conan remote add upload_repo myurl',
-                          'conan remote add remote0 otherurl --insert',
-                          'conan remote list',
-                          ])
+        # Duplicated upload remote puts upload repo first (in the remotes order)
+        self.assertEqual(runner.calls[0:3], ['conan remote add remote0 otherurl --insert',
+                                             'conan remote add upload_repo myurl --insert',
+                                             'conan remote list'])
+
+        # Now check that the upload remote order is preserved if we specify it in the remotes
+        runner = MockRunner()
+        builder = ConanMultiPackager(username="pepe", channel="testing",
+                                     reference="Hello/0.1", password="password",
+                                     upload="myurl", visual_versions=[], gcc_versions=[],
+                                     apple_clang_versions=[],
+                                     runner=runner,
+                                     remotes="otherurl, myurl, moreurl",
+                                     platform_info=PlatformInfoMock())
+        builder.add_common_builds()
+        builder.run()
+
+        # Duplicated upload remote puts upload repo first (in the remotes order)
+        self.assertEqual(runner.calls[0:3], ['conan remote add remote0 moreurl --insert',
+                                             'conan remote add upload_repo myurl --insert',
+                                             'conan remote add remote2 otherurl --insert'])
 
         channel = "stable" if os.getenv("APPVEYOR", False) or os.getenv("TRAVIS", False) else "testing"
 
@@ -313,9 +327,10 @@ class AppTest(unittest.TestCase):
         builder.add_common_builds()
         builder.run()
 
-        self.assertEqual(runner.calls[0:2],
-                         ['conan remote add upload_repo myurl',
-                          'conan remote add remote0 otherurl --insert'])
+        self.assertEqual(runner.calls[0:3],
+                         ['conan remote add remote0 otherurl --insert',
+                          'conan remote list',
+                          'conan remote add upload_repo myurl'])
 
         self.assertEqual(runner.calls[-1],
                          'conan upload Hello/0.1@pepe/%s --retry 3 --all --force --confirm -r=upload_repo' % channel)
