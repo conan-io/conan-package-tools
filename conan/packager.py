@@ -108,7 +108,7 @@ class ConanMultiPackager(object):
         - 'remotes' argument to specify additional remote URLs, for example, different user repositories.
 ''')
 
-        self.remotes = remotes or os.getenv("CONAN_REMOTES", None)
+        self.remotes = remotes or os.getenv("CONAN_REMOTES", [])
         self.upload = upload or os.getenv("CONAN_UPLOAD", None)
 
         self.stable_branch_pattern = stable_branch_pattern or os.getenv("CONAN_STABLE_BRANCH_PATTERN", None)
