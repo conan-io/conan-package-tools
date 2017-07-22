@@ -311,10 +311,16 @@ class AppTest(unittest.TestCase):
                                              'conan remote add upload_repo myurl --insert',
                                              'conan remote add remote2 otherurl --insert'])
 
-        channel = "stable" if os.getenv("APPVEYOR", False) or os.getenv("TRAVIS", False) else "testing"
+        if os.getenv("APPVEYOR", False) and os.getenv("APPVEYOR_REPO_BRANCH", "") == "master":
+            channel = "stable"
+        elif os.getenv("TRAVIS", False) and os.getenv("TRAVIS_BRANCH", "") == "master":
+            channel = "stable"
+        else:
+            channel = "testing"
 
         self.assertEqual(runner.calls[-1],
-                         'conan upload Hello/0.1@pepe/%s --retry 3 --all --force --confirm -r=upload_repo' % channel)
+                         'conan upload Hello/0.1@pepe/%s --retry 3 --all --force '
+                         '--confirm -r=upload_repo' % channel)
 
         runner = MockRunner()
         builder = ConanMultiPackager(username="pepe", channel="testing",
@@ -333,4 +339,5 @@ class AppTest(unittest.TestCase):
                           'conan remote add upload_repo myurl'])
 
         self.assertEqual(runner.calls[-1],
-                         'conan upload Hello/0.1@pepe/%s --retry 3 --all --force --confirm -r=upload_repo' % channel)
+                         'conan upload Hello/0.1@pepe/%s --retry 3 --all '
+                         '--force --confirm -r=upload_repo' % channel)
