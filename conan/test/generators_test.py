@@ -10,7 +10,8 @@ class GeneratorsTest(unittest.TestCase):
 
         mingw_configurations = [("4.9", "x86", "dwarf2", "posix")]
 
-        builds = get_mingw_builds(mingw_configurations, ConanFileReference.loads("mingw_installer/1.0@lasote/testing"), ["x86"])
+        builds = get_mingw_builds(mingw_configurations, ConanFileReference.loads(
+            "mingw_installer/1.0@lasote/testing"), ["x86"], "pack:shared")
         expected = [
             ({'build_type': 'Release', 'compiler.version': '4.9', 'compiler.libcxx': 'libstdc++',
               'compiler': 'gcc', 'arch': 'x86', 'compiler.exception': 'dwarf2',

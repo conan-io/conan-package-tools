@@ -256,7 +256,8 @@ class ConanMultiPackager(object):
         builds = []
         if self._platform_info.system() == "Windows":
             if self.mingw_configurations:
-                builds = get_mingw_builds(self.mingw_configurations, self.mingw_installer_reference, self.archs)
+                builds = get_mingw_builds(self.mingw_configurations, self.mingw_installer_reference, self.archs,
+                                            shared_option_name)
             builds.extend(get_visual_builds(self.visual_versions, self.archs, self.visual_runtimes,
                                             shared_option_name, dll_with_static_runtime, self.vs10_x86_64_enabled))
         elif self._platform_info.system() == "Linux":
