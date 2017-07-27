@@ -17,17 +17,41 @@ class GeneratorsTest(unittest.TestCase):
               'compiler': 'gcc', 'arch': 'x86', 'compiler.exception': 'dwarf2',
               'compiler.threads': 'posix'},
              {'mingw_installer:arch': 'x86', 'mingw_installer:version': '4.9',
-              'mingw_installer:threads': 'posix', 'mingw_installer:exception': 'dwarf2'},
+              'mingw_installer:threads': 'posix', 'mingw_installer:exception': 'dwarf2',
+              'pack:shared': True},
              {},
              {'*': [ConanFileReference.loads("mingw_installer/1.0@lasote/testing")]}),
-
             ({'compiler.version': '4.9', 'compiler.libcxx': 'libstdc++', 'compiler': 'gcc',
               'build_type': 'Debug', 'compiler.exception': 'dwarf2', 'compiler.threads': 'posix',
               'arch': 'x86'},
              {'mingw_installer:arch': 'x86', 'mingw_installer:version': '4.9',
-              'mingw_installer:threads': 'posix', 'mingw_installer:exception': 'dwarf2'},
+              'mingw_installer:threads': 'posix', 'mingw_installer:exception': 'dwarf2',
+              'pack:shared': True},
+             {},
+             {'*': [ConanFileReference.loads("mingw_installer/1.0@lasote/testing")]}),
+
+            ({'build_type': 'Release', 'compiler.version': '4.9', 'compiler.libcxx': 'libstdc++',
+              'compiler': 'gcc', 'arch': 'x86', 'compiler.exception': 'dwarf2',
+              'compiler.threads': 'posix'},
+             {'mingw_installer:arch': 'x86', 'mingw_installer:version': '4.9',
+              'mingw_installer:threads': 'posix', 'mingw_installer:exception': 'dwarf2',
+              'pack:shared': False},
+                {},
+                {'*': [ConanFileReference.loads("mingw_installer/1.0@lasote/testing")]}),
+            ({'compiler.version': '4.9', 'compiler.libcxx': 'libstdc++', 'compiler': 'gcc',
+              'build_type': 'Debug', 'compiler.exception': 'dwarf2', 'compiler.threads': 'posix',
+              'arch': 'x86'},
+             {'mingw_installer:arch': 'x86', 'mingw_installer:version': '4.9',
+              'mingw_installer:threads': 'posix', 'mingw_installer:exception': 'dwarf2',
+              'pack:shared': False},
              {},
              {'*': [ConanFileReference.loads("mingw_installer/1.0@lasote/testing")]})]
+
+        print(">>>>Builds list:")
+        for p in builds:
+            print(list(p._asdict().items()))
+        print(">>>>Builds list END")
+
         self.assertEquals([tuple(a) for a in builds], expected)
 
     def test_get_osx_apple_clang_builds(self):
