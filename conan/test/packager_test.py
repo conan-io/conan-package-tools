@@ -226,10 +226,6 @@ class AppTest(unittest.TestCase):
                      {},
                      {'*': [ConanFileReference.loads("mingw_installer/0.1@lasote/testing")]})]
 
-        print(">>>>Builds list:")
-        for p in builder.builds:
-            print(list(p._asdict().items()))
-        print(">>>>Builds list END")
         self.assertEquals([tuple(a) for a in builder.builds], expected)
 
     def test_named_pages(self):

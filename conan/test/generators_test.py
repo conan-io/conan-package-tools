@@ -47,11 +47,6 @@ class GeneratorsTest(unittest.TestCase):
              {},
              {'*': [ConanFileReference.loads("mingw_installer/1.0@lasote/testing")]})]
 
-        print(">>>>Builds list:")
-        for p in builds:
-            print(list(p._asdict().items()))
-        print(">>>>Builds list END")
-
         self.assertEquals([tuple(a) for a in builds], expected)
 
     def test_get_osx_apple_clang_builds(self):
