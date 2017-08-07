@@ -4,7 +4,7 @@ from collections import namedtuple
 BuildConf = namedtuple("BuildConf", "settings options env_vars build_requires")
 
 
-def get_mingw_builds(mingw_configurations, mingw_installer_reference, archs):
+def get_mingw_builds(mingw_configurations, mingw_installer_reference, archs, shared_option_name):
     builds = []
     for config in mingw_configurations:
         version, arch, exception, thread = config
@@ -16,13 +16,26 @@ def get_mingw_builds(mingw_configurations, mingw_installer_reference, archs):
                     "compiler.exception": exception}
         options, build_requires = _add_mingw_build_require(settings, mingw_installer_reference)
 
-        settings.update({"compiler.libcxx": "libstdc++"})
-        settings.update({"build_type": "Release"})
-        builds.append(BuildConf(settings, options, {}, build_requires))
-        s2 = copy.copy(settings)
-        s2.update({"build_type": "Debug"})
+        if shared_option_name:
+            for shared in [True, False]:
+                opt = copy.copy(options)
+                opt[shared_option_name] = shared
+                builds += _make_mingw_builds(settings, opt, build_requires)
+        else:
+            builds += _make_mingw_builds(settings, options, build_requires)
 
-        builds.append(BuildConf(s2, options, {}, build_requires))
+    return builds
+
+
+def _make_mingw_builds(settings, options, build_requires):
+    builds = []
+    settings.update({"compiler.libcxx": "libstdc++"})
+    settings.update({"build_type": "Release"})
+    builds.append(BuildConf(settings, options, {}, build_requires))
+
+    s2 = copy.copy(settings)
+    s2.update({"build_type": "Debug"})
+    builds.append(BuildConf(s2, options, {}, build_requires))
     return builds
 
 
