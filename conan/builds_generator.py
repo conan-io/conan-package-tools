@@ -31,6 +31,7 @@ def get_mingw_builds(mingw_configurations, mingw_installer_reference, archs, sha
 def _make_mingw_builds(settings, options, build_requires):
     builds = []
     settings.update({"build_type": "Release"})
+    settings.update({"compiler.libcxx": "libstdc++"})
     builds.append(BuildConf(settings, options, {}, build_requires))
 
     s2 = copy.copy(settings)
