@@ -204,25 +204,21 @@ class AppTest(unittest.TestCase):
         mingw_configurations = [("4.9", "x86_64", "seh", "posix")]
         builder = ConanMultiPackager(mingw_configurations=mingw_configurations, visual_versions=[], username="Pepe", platform_info=PlatformInfoMock())
         builder.add_common_builds(shared_option_name="zlib:shared", pure_c=True)
-        expected = [({'compiler.libcxx': 'libstdc++', 'compiler.exception': 'seh', 'compiler.threads': 'posix', 'compiler.version': '4.9', 'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'gcc'},
-                     {'mingw_installer:threads': 'posix', 'mingw_installer:arch': 'x86_64', 'mingw_installer:version': '4.9', 'mingw_installer:exception': 'seh',
-                     'zlib:shared': True},
+        expected = [({'compiler.exception': 'seh', 'compiler.threads': 'posix', 'compiler.version': '4.9', 'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'gcc'},
+                     {'zlib:shared': True},
                      {},
                      {'*': [ConanFileReference.loads("mingw_installer/0.1@lasote/testing")]}),
-                    ({'compiler.exception': 'seh', 'arch': 'x86_64', 'compiler.threads': 'posix', 'compiler.version': '4.9', 'compiler.libcxx': 'libstdc++', 'build_type': 'Debug', 'compiler': 'gcc'},
-                     {'mingw_installer:threads': 'posix', 'mingw_installer:arch': 'x86_64', 'mingw_installer:version': '4.9', 'mingw_installer:exception': 'seh',
-                      'zlib:shared': True},
+                    ({'compiler.exception': 'seh', 'arch': 'x86_64', 'compiler.threads': 'posix', 'compiler.version': '4.9', 'build_type': 'Debug', 'compiler': 'gcc'},
+                     {'zlib:shared': True},
                      {},
                      {'*': [ConanFileReference.loads("mingw_installer/0.1@lasote/testing")]}),
-                     
-                    ({'compiler.libcxx': 'libstdc++', 'compiler.exception': 'seh', 'compiler.threads': 'posix', 'compiler.version': '4.9', 'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'gcc'},
-                     {'mingw_installer:threads': 'posix', 'mingw_installer:arch': 'x86_64', 'mingw_installer:version': '4.9', 'mingw_installer:exception': 'seh',
-                      'zlib:shared': False},
+
+                    ({'compiler.exception': 'seh', 'compiler.threads': 'posix', 'compiler.version': '4.9', 'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'gcc'},
+                     {'zlib:shared': False},
                      {},
                      {'*': [ConanFileReference.loads("mingw_installer/0.1@lasote/testing")]}),
-                    ({'compiler.exception': 'seh', 'arch': 'x86_64', 'compiler.threads': 'posix', 'compiler.version': '4.9', 'compiler.libcxx': 'libstdc++', 'build_type': 'Debug', 'compiler': 'gcc'},
-                     {'mingw_installer:threads': 'posix', 'mingw_installer:arch': 'x86_64', 'mingw_installer:version': '4.9', 'mingw_installer:exception': 'seh',
-                      'zlib:shared': False},
+                    ({'compiler.exception': 'seh', 'arch': 'x86_64', 'compiler.threads': 'posix', 'compiler.version': '4.9', 'build_type': 'Debug', 'compiler': 'gcc'},
+                     {'zlib:shared': False},
                      {},
                      {'*': [ConanFileReference.loads("mingw_installer/0.1@lasote/testing")]})]
 

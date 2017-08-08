@@ -14,7 +14,8 @@ def get_mingw_builds(mingw_configurations, mingw_installer_reference, archs, sha
                     "compiler.version": version[0:3],
                     "compiler.threads": thread,
                     "compiler.exception": exception}
-        options, build_requires = _add_mingw_build_require(settings, mingw_installer_reference)
+        build_requires = {"*": [mingw_installer_reference]}
+        options = {}
 
         if shared_option_name:
             for shared in [True, False]:
@@ -29,7 +30,6 @@ def get_mingw_builds(mingw_configurations, mingw_installer_reference, archs, sha
 
 def _make_mingw_builds(settings, options, build_requires):
     builds = []
-    settings.update({"compiler.libcxx": "libstdc++"})
     settings.update({"build_type": "Release"})
     builds.append(BuildConf(settings, options, {}, build_requires))
 
@@ -37,18 +37,6 @@ def _make_mingw_builds(settings, options, build_requires):
     s2.update({"build_type": "Debug"})
     builds.append(BuildConf(s2, options, {}, build_requires))
     return builds
-
-
-def _add_mingw_build_require(settings, mingw_installer_reference):
-    installer_options = {}
-    for setting in ("compiler.threads", "compiler.exception", "compiler.version", "arch"):
-        setting_value = settings.get(setting, None)
-        if setting_value:
-            short_name = setting.split(".", 1)[-1]
-            option_name = "%s:%s" % (mingw_installer_reference.name, short_name)
-            installer_options[option_name] = setting_value
-
-    return installer_options, {"*": [mingw_installer_reference]}
 
 
 def get_visual_builds(visual_versions, archs, visual_runtimes, shared_option_name,
