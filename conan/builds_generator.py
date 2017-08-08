@@ -4,7 +4,7 @@ from collections import namedtuple
 BuildConf = namedtuple("BuildConf", "settings options env_vars build_requires")
 
 
-def get_mingw_builds(mingw_configurations, mingw_installer_reference, archs):
+def get_mingw_builds(mingw_configurations, mingw_installer_reference, archs, shared_option_name):
     builds = []
     for config in mingw_configurations:
         version, arch, exception, thread = config
@@ -14,28 +14,30 @@ def get_mingw_builds(mingw_configurations, mingw_installer_reference, archs):
                     "compiler.version": version[0:3],
                     "compiler.threads": thread,
                     "compiler.exception": exception}
-        options, build_requires = _add_mingw_build_require(settings, mingw_installer_reference)
+        build_requires = {"*": [mingw_installer_reference]}
+        options = {}
 
-        settings.update({"compiler.libcxx": "libstdc++"})
-        settings.update({"build_type": "Release"})
-        builds.append(BuildConf(settings, options, {}, build_requires))
-        s2 = copy.copy(settings)
-        s2.update({"build_type": "Debug"})
+        if shared_option_name:
+            for shared in [True, False]:
+                opt = copy.copy(options)
+                opt[shared_option_name] = shared
+                builds += _make_mingw_builds(settings, opt, build_requires)
+        else:
+            builds += _make_mingw_builds(settings, options, build_requires)
 
-        builds.append(BuildConf(s2, options, {}, build_requires))
     return builds
 
 
-def _add_mingw_build_require(settings, mingw_installer_reference):
-    installer_options = {}
-    for setting in ("compiler.threads", "compiler.exception", "compiler.version", "arch"):
-        setting_value = settings.get(setting, None)
-        if setting_value:
-            short_name = setting.split(".", 1)[-1]
-            option_name = "%s:%s" % (mingw_installer_reference.name, short_name)
-            installer_options[option_name] = setting_value
+def _make_mingw_builds(settings, options, build_requires):
+    builds = []
+    settings.update({"build_type": "Release"})
+    settings.update({"compiler.libcxx": "libstdc++"})
+    builds.append(BuildConf(settings, options, {}, build_requires))
 
-    return installer_options, {"*": [mingw_installer_reference]}
+    s2 = copy.copy(settings)
+    s2.update({"build_type": "Debug"})
+    builds.append(BuildConf(s2, options, {}, build_requires))
+    return builds
 
 
 def get_visual_builds(visual_versions, archs, visual_runtimes, shared_option_name,

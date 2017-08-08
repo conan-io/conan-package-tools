@@ -78,7 +78,8 @@ class AppTest(unittest.TestCase):
         self.assertEquals(profile.options.as_list(), [("option1", "One")])
         self.assertEquals(profile.env_values.data[None]["VAR_1"], "ONE")
         self.assertEquals(profile.env_values.data[None]["VAR_2"], "TWO")
-        self.assertEquals(profile.build_requires["*"], [ConanFileReference.loads("myreference/1.0@lasote/testing")])
+        self.assertEquals(profile.build_requires["*"],
+                          [ConanFileReference.loads("myreference/1.0@lasote/testing")])
 
     def test_pages(self):
         for number in range(10):
@@ -193,7 +194,9 @@ class AppTest(unittest.TestCase):
                                            use_docker=True)
         self.packager.add_common_builds()
         self.packager.builds = [({"os": "Windows"}, {"option": "value"})]
-        self.assertEquals(self.packager.builds, [BuildConf(settings={'os': 'Windows'}, options={'option': 'value'}, env_vars={}, build_requires={})])
+        self.assertEquals(self.packager.builds, [BuildConf(settings={'os': 'Windows'},
+                                                           options={'option': 'value'},
+                                                           env_vars={}, build_requires={})])
 
     def test_only_mingw(self):
 
@@ -202,16 +205,35 @@ class AppTest(unittest.TestCase):
                 return "Windows"
 
         mingw_configurations = [("4.9", "x86_64", "seh", "posix")]
-        builder = ConanMultiPackager(mingw_configurations=mingw_configurations, visual_versions=[], username="Pepe", platform_info=PlatformInfoMock())
+        builder = ConanMultiPackager(mingw_configurations=mingw_configurations, visual_versions=[],
+                                     username="Pepe", platform_info=PlatformInfoMock())
         builder.add_common_builds(shared_option_name="zlib:shared", pure_c=True)
-        expected = [({'compiler.libcxx': 'libstdc++', 'compiler.exception': 'seh', 'compiler.threads': 'posix', 'compiler.version': '4.9', 'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'gcc'},
-                     {'mingw_installer:threads': 'posix', 'mingw_installer:arch': 'x86_64', 'mingw_installer:version': '4.9', 'mingw_installer:exception': 'seh'},
+        expected = [({'compiler.exception': 'seh', 'compiler.libcxx': "libstdc++",
+                      'compiler.threads': 'posix', 'compiler.version': '4.9', 'arch': 'x86_64',
+                      'build_type': 'Release', 'compiler': 'gcc'},
+                     {'zlib:shared': True},
                      {},
-                     {'*': [ConanFileReference.loads("mingw_installer/0.1@lasote/testing")]}),
-                    ({'compiler.exception': 'seh', 'arch': 'x86_64', 'compiler.threads': 'posix', 'compiler.version': '4.9', 'compiler.libcxx': 'libstdc++', 'build_type': 'Debug', 'compiler': 'gcc'},
-                     {'mingw_installer:threads': 'posix', 'mingw_installer:arch': 'x86_64', 'mingw_installer:version': '4.9', 'mingw_installer:exception': 'seh'},
+                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}),
+                    ({'compiler.exception': 'seh', 'compiler.libcxx': "libstdc++", 'arch': 'x86_64',
+                      'compiler.threads': 'posix', 'compiler.version': '4.9', 'build_type': 'Debug',
+                      'compiler': 'gcc'},
+                     {'zlib:shared': True},
                      {},
-                     {'*': [ConanFileReference.loads("mingw_installer/0.1@lasote/testing")]})]
+                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}),
+
+                    ({'compiler.exception': 'seh', 'compiler.libcxx': "libstdc++",
+                      'compiler.threads': 'posix', 'compiler.version': '4.9', 'arch': 'x86_64',
+                      'build_type': 'Release', 'compiler': 'gcc'},
+                     {'zlib:shared': False},
+                     {},
+                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}),
+                    ({'compiler.exception': 'seh', 'compiler.libcxx': "libstdc++", 'arch': 'x86_64',
+                      'compiler.threads': 'posix', 'compiler.version': '4.9', 'build_type': 'Debug',
+                      'compiler': 'gcc'},
+                     {'zlib:shared': False},
+                     {},
+                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]})]
+
         self.assertEquals([tuple(a) for a in builder.builds], expected)
 
     def test_named_pages(self):
@@ -260,7 +282,8 @@ class AppTest(unittest.TestCase):
                 self.assertEquals(settings["compiler"], "Visual Studio")
                 self.assertEquals(settings["compiler.version"], "10")
 
-        with tools.environment_append({"CONAN_VISUAL_VERSIONS": "10", "MINGW_CONFIGURATIONS": "4.9@x86_64@seh@posix"}):
+        with tools.environment_append({"CONAN_VISUAL_VERSIONS": "10",
+                                       "MINGW_CONFIGURATIONS": "4.9@x86_64@seh@posix"}):
             class PlatformInfoMock(object):
                 def system(self):
                     return "Windows"
