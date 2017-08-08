@@ -159,7 +159,7 @@ class ConanMultiPackager(object):
 
         self.mingw_configurations = mingw_configurations or get_mingw_config_from_env()
         self.mingw_installer_reference = ConanFileReference.loads(os.getenv("CONAN_MINGW_INSTALLER_REFERENCE") or
-                                                                  "mingw_installer/0.1@lasote/testing")
+                                                                  "mingw_installer/1.0@conan/stable")
 
         self.archs = archs or \
             list(filter(None, os.getenv("CONAN_ARCHS", "").split(","))) or \

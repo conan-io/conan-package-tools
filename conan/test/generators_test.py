@@ -11,33 +11,33 @@ class GeneratorsTest(unittest.TestCase):
         mingw_configurations = [("4.9", "x86", "dwarf2", "posix")]
 
         builds = get_mingw_builds(mingw_configurations, ConanFileReference.loads(
-            "mingw_installer/1.0@lasote/testing"), ["x86"], "pack:shared")
+            "mingw_installer/1.0@conan/stable"), ["x86"], "pack:shared")
         expected = [
             ({'build_type': 'Release', 'compiler.version': '4.9',
               'compiler': 'gcc', 'arch': 'x86', 'compiler.exception': 'dwarf2',
               'compiler.threads': 'posix'},
              {'pack:shared': True},
              {},
-             {'*': [ConanFileReference.loads("mingw_installer/1.0@lasote/testing")]}),
+             {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}),
             ({'compiler.version': '4.9', 'compiler': 'gcc',
               'build_type': 'Debug', 'compiler.exception': 'dwarf2', 'compiler.threads': 'posix',
               'arch': 'x86'},
              {'pack:shared': True},
              {},
-             {'*': [ConanFileReference.loads("mingw_installer/1.0@lasote/testing")]}),
+             {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}),
 
             ({'build_type': 'Release', 'compiler.version': '4.9',
               'compiler': 'gcc', 'arch': 'x86', 'compiler.exception': 'dwarf2',
               'compiler.threads': 'posix'},
              {'pack:shared': False},
                 {},
-                {'*': [ConanFileReference.loads("mingw_installer/1.0@lasote/testing")]}),
+                {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}),
             ({'compiler.version': '4.9', 'compiler': 'gcc',
               'build_type': 'Debug', 'compiler.exception': 'dwarf2', 'compiler.threads': 'posix',
               'arch': 'x86'},
              {'pack:shared': False},
              {},
-             {'*': [ConanFileReference.loads("mingw_installer/1.0@lasote/testing")]})]
+             {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]})]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
