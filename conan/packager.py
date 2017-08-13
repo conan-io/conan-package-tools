@@ -84,7 +84,9 @@ class ConanMultiPackager(object):
                  upload_only_when_stable=False):
 
         self._builds = []
+        self.builds_after_upload = []
         self._named_builds = {}
+        self.pulled_docker_images = defaultdict(lambda: False)
         self._platform_info = platform_info or PlatformInfo()
         self.runner = runner or os.system
         self.output_runner = ConanOutputRunner()
@@ -252,7 +254,7 @@ class ConanMultiPackager(object):
                 else:
                     self._named_builds.setdefault(key,[]).append(BuildConf(*values))
 
-    def add_common_builds(self, shared_option_name=None, pure_c=True, dll_with_static_runtime=False):
+    def add_common_builds(self, shared_option_name=None, pure_c=True, dll_with_static_runtime=False, upload=True):
         builds = []
         if self._platform_info.system() == "Windows":
             if self.mingw_configurations:
@@ -269,18 +271,24 @@ class ConanMultiPackager(object):
             builds = get_linux_clang_builds(self.clang_versions, self.archs, shared_option_name, pure_c)
 
         self.builds.extend(builds)
+        if not upload:
+            self.builds_after_upload.extend(builds)
 
-    def add(self, settings=None, options=None, env_vars=None, build_requires=None):
+    def add(self, settings=None, options=None, env_vars=None, build_requires=None, upload=True):
         settings = settings or {}
         options = options or {}
         env_vars = env_vars or {}
         build_requires = build_requires or {}
-        self.builds.append(BuildConf(settings, options, env_vars, build_requires))
+        build = BuildConf(settings, options, env_vars, build_requires)
+        self.builds.append(build)
+        if not upload:
+            self.builds_after_upload.append(build)
 
     def run(self):
         self._pip_install()
         self.run_builds()
         self.upload_packages()
+        self.run_builds_after_upload()
 
     def run_builds(self, curpage=None, total_pages=None):
         if len(self.named_builds) > 0 and len(self.builds) > 0:
@@ -306,20 +314,32 @@ class ConanMultiPackager(object):
         print("Builds list:")
         for p in builds_in_current_page: print(list(p._asdict().items()))
 
-        pulled_docker_images = defaultdict(lambda: False)
+        self.pulled_docker_images = defaultdict(lambda: False)
+        
         for build in builds_in_current_page:
-            profile = _get_profile(build)
-            if self.use_docker:
-                build_runner = DockerTestPackageRunner(profile, self.username, self.channel,
-                                                       self.mingw_installer_reference, self.runner, self.args,
-                                                       docker_image=self.docker_image)
-
-                build_runner.run(pull_image=not pulled_docker_images[build_runner.docker_image])
-                pulled_docker_images[build_runner.docker_image] = True
+            if build in self.builds_after_upload:
+                logger.debug("- Skipped build for now, will be built after upload:\n%s" %
+                             str(list(build._asdict().items())))
             else:
-                build_runner = TestPackageRunner(profile, self.username, self.channel,
-                                                 self.mingw_installer_reference, self.runner, self.args)
-                build_runner.run()
+                self.run_build(build)
+
+    def run_builds_after_upload(self):
+        for build in self.builds_after_upload:
+            self.run_build(build)
+
+    def run_build(self, build):
+        profile = _get_profile(build)
+        if self.use_docker:
+            build_runner = DockerTestPackageRunner(profile, self.username, self.channel,
+                                                    self.mingw_installer_reference, self.runner, self.args,
+                                                    docker_image=self.docker_image)
+
+            build_runner.run(pull_image=not self.pulled_docker_images[build_runner.docker_image])
+            self.pulled_docker_images[build_runner.docker_image] = True
+        else:
+            build_runner = TestPackageRunner(profile, self.username, self.channel,
+                                                self.mingw_installer_reference, self.runner, self.args)
+            build_runner.run()
 
     def upload_packages(self):
 
