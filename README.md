@@ -6,7 +6,7 @@
 - Use `CONAN_UPLOAD` to specify the URL of the remote to be used to upload your packages. This remote
   will be configured at the end. If you want to put it in an specific order (prioritized over the default ones)
   add the same URL in the remotes.
-- Use `REMOTES` to specify other URLs ("," separated) of remotes to be used to retrieve requirements. 
+- Use `CONAN_REMOTES` to specify other URLs ("," separated) of remotes to be used to retrieve requirements. 
   Will be inserted in the same order at the beginning of the remotes list.
 - Use `CONAN_LOGIN_USERNAME` to specify your Bintray username, can be different from `CONAN_USERNAME` that only 
 determine the user name in the reference of your package.
