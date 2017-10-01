@@ -66,6 +66,7 @@ class ConanMultiPackager(object):
     default_visual_runtimes = ["MT", "MD", "MTd", "MDd"]
     default_apple_clang_versions = ["7.3", "8.0", "8.1"]
     default_archs = ["x86", "x86_64"]
+    default_build_type = ["Release", "Debug"]
 
     def __init__(self, args=None, username=None, channel=None, runner=None,
                  gcc_versions=None, visual_versions=None, visual_runtimes=None,
@@ -81,7 +82,8 @@ class ConanMultiPackager(object):
                  upload_retry=None,
                  clang_versions=None,
                  login_username=None,
-                 upload_only_when_stable=False):
+                 upload_only_when_stable=False,
+                 build_type=None):
 
         self._builds = []
         self._named_builds = {}
@@ -164,6 +166,10 @@ class ConanMultiPackager(object):
         self.archs = archs or \
             list(filter(None, os.getenv("CONAN_ARCHS", "").split(","))) or \
             self.default_archs
+
+        self.build_type = build_type or \
+            list(filter(None, os.getenv("CONAN_BUILD_TYPE", "").split(","))) or \
+            self.default_build_type
 
         # If CONAN_DOCKER_IMAGE is speified, then use docker is True
         self.use_docker = use_docker or os.getenv("CONAN_USE_DOCKER", False) or (os.getenv("CONAN_DOCKER_IMAGE", None) is not None)
@@ -254,19 +260,20 @@ class ConanMultiPackager(object):
 
     def add_common_builds(self, shared_option_name=None, pure_c=True, dll_with_static_runtime=False):
         builds = []
+
         if self._platform_info.system() == "Windows":
             if self.mingw_configurations:
                 builds = get_mingw_builds(self.mingw_configurations, self.mingw_installer_reference, self.archs,
-                                            shared_option_name)
+                                            shared_option_name, self.build_type)
             builds.extend(get_visual_builds(self.visual_versions, self.archs, self.visual_runtimes,
-                                            shared_option_name, dll_with_static_runtime, self.vs10_x86_64_enabled))
+                                            shared_option_name, dll_with_static_runtime, self.vs10_x86_64_enabled, self.build_type))
         elif self._platform_info.system() == "Linux":
-            builds = get_linux_gcc_builds(self.gcc_versions, self.archs, shared_option_name, pure_c)
-            builds.extend(get_linux_clang_builds(self.clang_versions, self.archs, shared_option_name, pure_c))
+            builds = get_linux_gcc_builds(self.gcc_versions, self.archs, shared_option_name, pure_c, self.build_type)
+            builds.extend(get_linux_clang_builds(self.clang_versions, self.archs, shared_option_name, pure_c, self.build_type))
         elif self._platform_info.system() == "Darwin":
-            builds = get_osx_apple_clang_builds(self.apple_clang_versions, self.archs, shared_option_name, pure_c)
+            builds = get_osx_apple_clang_builds(self.apple_clang_versions, self.archs, shared_option_name, pure_c, self.build_type)
         elif self._platform_info.system() == "FreeBSD":
-            builds = get_linux_clang_builds(self.clang_versions, self.archs, shared_option_name, pure_c)
+            builds = get_linux_clang_builds(self.clang_versions, self.archs, shared_option_name, pure_c, self.build_type)
 
         self.builds.extend(builds)
 
