@@ -548,6 +548,7 @@ If the env var **GITLAB_CI** is set and the branch name (**CI_BUILD_REF_NAME** e
 - **remotes**: List of URLs separated by "," for the additional remotes (read).
 - **upload**: URL of the repository where we want to use to upload the packages.
 - **upload_only_when_stable**: Will try to upload only if the channel is the stable channel
+- **build_types**: List containing specific build types. Default ["Release", "Debug"]
 
 Upload related parameters:
 
@@ -577,6 +578,7 @@ This is especially useful for CI integration.
 - **CONAN_CLANG_VERSIONS**: Clang versions, comma separated, e.g. "3.8,3.9,4.0"
 - **CONAN_APPLE_CLANG_VERSIONS**: Apple clang versions, comma separated, e.g. "6.1,8.0"
 - **CONAN_ARCHS**: Architectures to build for, comma separated, e.g. "x86,x86_64"
+- **CONAN_BUILD_TYPES**: Build types to build for, comma separated, e.g. "Release,Debug"
 - **CONAN_VISUAL_VERSIONS**: Visual versions, comma separated, e.g. "12,14"
 - **CONAN_VISUAL_RUNTIMES**: Visual runtimes, comma separated, e.g. "MT,MD"
 - **CONAN_USE_DOCKER**: If defined will use docker
