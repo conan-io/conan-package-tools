@@ -83,7 +83,8 @@ class ConanMultiPackager(object):
                  clang_versions=None,
                  login_username=None,
                  upload_only_when_stable=False,
-                 build_types=None):
+                 build_types=None,
+                 check_credentials_before=False):
 
         self._builds = []
         self._named_builds = {}
@@ -119,6 +120,7 @@ class ConanMultiPackager(object):
         self.channel = self._get_channel(default_channel, self.stable_channel)
 
         self.upload_only_when_stable = upload_only_when_stable or os.getenv("CONAN_UPLOAD_ONLY_WHEN_STABLE", False)
+        self.check_credentials_before = check_credentials_before or os.getenv("CONAN_CHECK_CREDENTIALS_BEFORE", False)
 
         if self.upload:
             if self.upload in ("0", "None", "False"):
@@ -286,6 +288,7 @@ class ConanMultiPackager(object):
 
     def run(self):
         self._pip_install()
+        self._check_credentials_before_to_build()
         self.run_builds()
         self.upload_packages()
 
@@ -328,37 +331,57 @@ class ConanMultiPackager(object):
                                                  self.mingw_installer_reference, self.runner, self.args)
                 build_runner.run()
 
-    def upload_packages(self):
-
-        if not self.upload:
+    def check_credentials(self):
+        if not self._can_upload_package():
             return
 
-        st_channel = self.stable_channel or "stable"
-        if self.upload_only_when_stable and self.channel != st_channel:
-            print("Skipping upload, not stable channel")
-            return
-
-        if not self.reference or not self.password or not self.channel or not self.username:
-            print("Upload not possible, some parameter (reference, password or channel) is missing!")
-            return
-
-        command = "conan upload %s@%s/%s --retry %s --all --force --confirm -r=upload_repo" % (
-                self.reference, self.username, self.channel, self.upload_retry)
         user_command = 'conan user %s -p="%s" -r=upload_repo' % (self.login_username, self.password)
 
-        logger.info("******** RUNNING UPLOAD COMMAND ********** \n%s" % command)
+        logger.info("******** VERIFYING YOUR CREDENTIALS **********\n")
         if self._platform_info.system() == "Linux" and self.use_docker:
             data_dir = os.path.expanduser("~/.conan/data")
             self.runner("sudo chmod -R 777 %s" % data_dir)
-            # self.runner("ls -la ~/.conan")
 
         ret = self.runner(user_command)
         if ret != 0:
             raise Exception("Error with user credentials")
 
+    def upload_packages(self):
+        if not self._can_upload_package():
+            return
+
+        self.check_credentials()
+
+        command = "conan upload %s@%s/%s --retry %s --all --force --confirm -r=upload_repo" % (
+                self.reference, self.username, self.channel, self.upload_retry)
+
+        logger.info("******** RUNNING UPLOAD COMMAND ********** \n%s" % command)
+        if self._platform_info.system() == "Linux" and self.use_docker:
+            data_dir = os.path.expanduser("~/.conan/data")
+            self.runner("sudo chmod -R 777 %s" % data_dir)
+
         ret = self.runner(command)
         if ret != 0:
             raise Exception("Error uploading")
+
+    def _check_credentials_before_to_build(self):
+        if self.check_credentials_before:
+            self.check_credentials()
+
+    def _can_upload_package(self):
+        if not self.upload:
+            return False
+
+        st_channel = self.stable_channel or "stable"
+        if self.upload_only_when_stable and self.channel != st_channel:
+            print("Skipping upload, not stable channel")
+            return False
+
+        if not self.reference or not self.password or not self.channel or not self.username:
+            print("Upload not possible, some parameter (reference, password or channel) is missing!")
+            return False
+
+        return True
 
     def _pip_install(self):
 

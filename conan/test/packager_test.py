@@ -364,3 +364,54 @@ class AppTest(unittest.TestCase):
         self.assertEqual(runner.calls[-1],
                          'conan upload Hello/0.1@pepe/%s --retry 3 --all '
                          '--force --confirm -r=upload_repo' % channel)
+
+    def test_check_credentials(self):
+
+        class PlatformInfoMock(object):
+            def system(self):
+                return "Darwin"
+
+        runner = MockRunner()
+        runner.output = "arepo: myurl"
+        builder = ConanMultiPackager(username="pepe", channel="testing",
+                                     reference="Hello/0.1", password="password",
+                                     upload="myurl", visual_versions=[], gcc_versions=[],
+                                     apple_clang_versions=[],
+                                     runner=runner,
+                                     platform_info=PlatformInfoMock(),
+                                     check_credentials_before=True)
+        builder.add_common_builds()
+        builder.run()
+
+        print(runner.calls)
+
+        # When activated, check credentials before to create the profiles
+        self.assertEqual(runner.calls[0:2], ['conan remote add upload_repo myurl',
+                                             'conan user pepe -p="password" -r=upload_repo'])
+
+        if os.getenv("APPVEYOR", False) and os.getenv("APPVEYOR_REPO_BRANCH", "") == "master":
+            channel = "stable"
+        elif os.getenv("TRAVIS", False) and os.getenv("TRAVIS_BRANCH", "") == "master":
+            channel = "stable"
+        else:
+            channel = "testing"
+
+        self.assertEqual(runner.calls[-2:],
+                         ['conan user pepe -p="password" -r=upload_repo',
+                         'conan upload Hello/0.1@pepe/%s --retry 3 --all --force --confirm -r=upload_repo' % channel])
+
+        runner = MockRunner()
+        builder = ConanMultiPackager(username="pepe", channel="testing",
+                                     reference="Hello/0.1", password="password",
+                                     visual_versions=[], gcc_versions=[],
+                                     apple_clang_versions=[],
+                                     runner=runner,
+                                     remotes="otherurl",
+                                     platform_info=PlatformInfoMock(),
+                                     check_credentials_before=True)
+        builder.add_common_builds()
+        builder.run()
+
+        # When upload is not required, credentials verification must be avoided
+        self.assertFalse('conan user pepe -p="password" -r=upload_repo' in runner.calls)
+        self.assertFalse('conan upload Hello/0.1@pepe/%s --retry 3 --all --force --confirm -r=upload_repo' % channel in runner.calls)
