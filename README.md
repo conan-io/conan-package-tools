@@ -549,6 +549,7 @@ If the env var **GITLAB_CI** is set and the branch name (**CI_BUILD_REF_NAME** e
 - **upload**: URL of the repository where we want to use to upload the packages.
 - **upload_only_when_stable**: Will try to upload only if the channel is the stable channel
 - **build_types**: List containing specific build types. Default ["Release", "Debug"]
+- **check_credentials_before**: Check user credentials before to build when upload is required. Default [False]
 
 Upload related parameters:
 
@@ -574,6 +575,7 @@ This is especially useful for CI integration.
 - **CONAN_UPLOAD**: URL of the repository where we want to use to upload the packages.
 - **CONAN_UPLOAD_RETRY**: If defined, in case of fail retries to upload again the specified times
 - **CONAN_UPLOAD_ONLY_WHEN_STABLE**: If defined, will try to upload the packages only when the current channel is the stable one.
+- **CONAN_CHECK_CREDENTIALS_BEFORE**: Force to check user credentials before to build when upload is required.
 - **CONAN_GCC_VERSIONS**: Gcc versions, comma separated, e.g. "4.6,4.8,5.2,6.3"
 - **CONAN_CLANG_VERSIONS**: Clang versions, comma separated, e.g. "3.8,3.9,4.0"
 - **CONAN_APPLE_CLANG_VERSIONS**: Apple clang versions, comma separated, e.g. "6.1,8.0"
