@@ -549,7 +549,7 @@ If the env var **GITLAB_CI** is set and the branch name (**CI_BUILD_REF_NAME** e
 - **upload**: URL of the repository where we want to use to upload the packages.
 - **upload_only_when_stable**: Will try to upload only if the channel is the stable channel
 - **build_types**: List containing specific build types. Default ["Release", "Debug"]
-- **check_credentials_before**: Check user credentials before to build when upload is required. Default [False]
+- **skip_check_credentials**: Conan will check the user credentials before building the packages. Default [False]
 
 Upload related parameters:
 
