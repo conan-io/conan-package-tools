@@ -87,7 +87,7 @@ another one for `x86_64 Debug`.
     ...
 
 
-If we inspect the local cache we can see that there are two binaries generated for out recipe, in this case the zlib recipe:
+If we inspect the local cache we can see that there are two binaries generated for our recipe, in this case the zlib recipe:
 
     $ conan search zlib/1.2.11@myuser/testing
 
@@ -232,7 +232,7 @@ Or you can adjust environment variables:
 
 Check the **REFERENCE** section to see all the parameters and **ENVIRONMENT VARIABLES** available.
 
-So, if we want to generate packages for x86_64 and armv8 but only for Debug and apple-clang 9.0:
+So, if we want to generate packages for ``x86_64`` and ``armv8`` but only for ``Debug`` and ``apple-clang 9.0``:
 
 
     $ export CONAN_ARCHS=x86_64,armv8
@@ -577,8 +577,7 @@ This is very similar to Travis CI. With the same **build.py** script we have the
 
     install:
       - set PATH=%PATH%;%PYTHON%/Scripts/
-      - pip.exe install conan --upgrade
-      - pip.exe install conan_package_tools==0.3.7dev12
+      - pip.exe install conan_package_tools --upgrade
       - conan user # It creates the conan data directory
 
     test_script:
