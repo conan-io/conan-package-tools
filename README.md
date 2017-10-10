@@ -549,7 +549,7 @@ If the env var **GITLAB_CI** is set and the branch name (**CI_BUILD_REF_NAME** e
 - **upload**: URL of the repository where we want to use to upload the packages.
 - **upload_only_when_stable**: Will try to upload only if the channel is the stable channel
 - **build_types**: List containing specific build types. Default ["Release", "Debug"]
-- **check_credentials_before**: Check user credentials before to build when upload is required. Default [False]
+- **skip_check_credentials**: Conan will check the user credentials before building the packages. Default [False]
 
 Upload related parameters:
 
@@ -561,6 +561,24 @@ Upload related parameters:
 - **stable_channel**: Stable channel, default "stable".
 - **channel**: Channel where your packages will be uploaded if previous parameter doesn't match
 
+
+## Complete ConanMultiPackager methods reference:
+
+- **add_common_builds(shared_option_name=None, pure_c=True, dll_with_static_runtime=False)**: Generate a set of package configurations and add them to the
+  list of packages that will be created.
+
+    - **shared_option_name**: If given, ConanMultiPackager will add different configurations for -o shared=True and -o shared=False.
+    - **pure_c**: ConanMultiPackager won't generate different builds for the **libstdc++** c++ standard library, because it is a pure C library.
+    - **dll_with_static_runtime**: generate also build for "MT" runtime when the library is shared.
+
+- **login(remote_name, user=None, password=None, force=False)**: Performs a `conan user` command in the specified remote. If `force` the login will be called
+ every time, otherwise, for the same remote, ConanMultiPackager will call `conan user` only once even with multiple calls to the login() method.
+
+- **add(settings=None, options=None, env_vars=None, build_requires=None)**: Add a new build configuration, so a new binary package will be built for the specified configuration.
+
+- **run()**: Run the builds (Will invoke conan create for every specified configuration)
+
+- **upload_packages()**: Called automatically by "run()" when upload is enabled. Can be called explicitly.
 
 ## Environment configuration
 
