@@ -232,6 +232,13 @@ Or you can adjust environment variables:
 
 Check the **REFERENCE** section to see all the parameters and **ENVIRONMENT VARIABLES** available.
 
+
+---
+**IMPORTANT!** Both the constructor parameters and the corresponding environment variables ONLY affect when calling `builder.add_common_builds()`.
+
+---
+
+
 So, if we want to generate packages for ``x86_64`` and ``armv8`` but only for ``Debug`` and ``apple-clang 9.0``:
 
 
