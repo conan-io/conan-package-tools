@@ -1,34 +1,14 @@
 # Conan Package Tools [![Build Status](https://travis-ci.org/conan-io/conan-package-tools.svg?branch=master)](https://travis-ci.org/conan-io/conan-package-tools)
 
 
-## Important changes in version 0.4.0!
-
-- Use `CONAN_UPLOAD` to specify the URL of the remote to be used to upload your packages. This remote
-  will be configured at the end. If you want to put it in an specific order (prioritized over the default ones)
-  add the same URL in the remotes.
-- Use `CONAN_REMOTES` to specify other URLs ("," separated) of remotes to be used to retrieve requirements. 
-  Will be inserted in the same order at the beginning of the remotes list.
-- Use `CONAN_LOGIN_USERNAME` to specify your Bintray username, can be different from `CONAN_USERNAME` that only 
-determine the user name in the reference of your package.
-- Use `CONAN_PASSWORD` as usual to specify the remote password if you want to upload packages, if the remote
-is a Bintray repository use an API key. [Read more here](#bintray)
-
-
 ## Introduction
 
-This package simplifies the generation of multiple packages when using the [conan package manager](http://conan.io).
+This package allows to automate the creation of [conan](https://github.com/conan-io/conan) packages for different configurations.
 
-It also eases the integration with  [TravisCI](https://travis-ci.org/) and [Appveyor](http://www.appveyor.com/), and allows for the automation of package creation in CI servers, as well as the upload of the generated packages to [conan](http://conan.io).
+It eases the integration with CI servers like [TravisCI](https://travis-ci.org/) and [Appveyor](http://www.appveyor.com/), so you can use the
+cloud to generate different binary packages for your conan recipe.
 
-## Features:
-
-- Easy definition of packages that will be created.
-- Pagination of package creation - you can split the build in different tasks (ideal for CI).
-- You can automatically use Docker for auto-generating packages for gcc 4.6, 4.8, 4.9, 5.2, 5.3, 5.4, 6.3 and clang 3.8, 3.9, 4.0, in a clean environment, every time.
-- For Windows Visual Studio builds, auto-detect the Visual Studio version and prepare the environment to point to that compiler.
-- Upload packages directly to conan.io (or your own custom conan server)
-- Great and easy integration with [TravisCI](https://travis-ci.org/) and [Appveyor](http://www.appveyor.com/)
-
+Also supports Docker to create packages for different **GCC and Clang** versions.
 
 ## Installation
 
@@ -38,94 +18,130 @@ It also eases the integration with  [TravisCI](https://travis-ci.org/) and [Appv
 Or you can [clone this repository](http://github.com/conan-io/conan-package-tools) and store its location in PYTHONPATH.
 
 
-## Quick start
+## How it works
 
-You must have a **conanfile.py** file and a **test_package** folder in your current directory and the **conan test_package** command must work.
-If you don't have it ready, take a look to [Getting started creating packages](http://docs.conan.io/en/latest/packaging/getting_started.html)
+Using only conan C/C++ package manager (without conan package tools), you can use the `conan create` command to generate, for the same recipe, different binary packages for different configurations.
+The easier way to do it is using profiles:
 
-Now create a **build.py** file in the root of your project and instance a **ConanMultiPackager**:
+    $ conan create myuser/channel --profile win32
+    $ conan create myuser/channel --profile raspi
+    $ ...
 
+The profiles can contain, settings, options, environment variables and build_requires. Take a look to the [conan docs](https://docs.conan.io) to know more.
+
+`Conan package tools` allows to declare (or autogenerate) a set of different configurations (different profiles). It will call `conan create` for each one, uploading the generated packages
+to a remote (if needed), and using optionally docker images to ease the creation of different binaries for different compiler versions (gcc and clang supported).
+
+### Basic, but not very practical, example
+
+Create a **build.py** file in your recipe repository, and add the following lines:
 
     from conan.packager import ConanMultiPackager
 
 	if __name__ == "__main__":
-	    builder = ConanMultiPackager(username="myuser") # Will export to myuser/XXXXX.
-	    builder.add_common_builds()
+	    builder = ConanMultiPackager(username="myusername")
+	    builder.add(settings={"arch": "x86", "build_type": "Debug"},
+	                options={}, env_vars={}, build_requires={})
+	    builder.add(settings={"arch": "x86_64", "build_type": "Debug"},
+	                options={}, env_vars={}, build_requires={})
 	    builder.run()
 
-Generate the packages:
+Now we can run the python script, the `ConanMutiPackager` will run the `conan create` command two times, one to generate `x86 Debug` package and
+another one for `x86_64 Debug`.
 
-	$> python build.py
+
+    > python build.py
+
+    ############## CONAN PACKAGE TOOLS ######################
+
+    INFO: ******** RUNNING BUILD **********
+    conan create myuser/testing --profile /var/folders/y1/9qybgph50sjg_3sm2_ztlm6dr56zsd/T/tmpz83xXmconan_package_tools_profiles/profile
+
+    [build_requires]
+    [settings]
+    arch=x86
+    build_type=Debug
+    [options]
+    [scopes]
+    [env]
+
+    ...
 
 
-If your project is C++, pass the **pure\_c=False** parameter to **add_common_builds**,  and will be generated packages with the setting *compiler.libcxx*.
+    ############## CONAN PACKAGE TOOLS ######################
 
-If your conanfile.py have an option to specify **shared**/**static** packages you can also pass it to **add_common_builds** and it will generate the package configurations corresponding to shared and static packages:
+    INFO: ******** RUNNING BUILD **********
+    conan create myuser/testing --profile /var/folders/y1/9qybgph50sjg_3sm2_ztlm6dr56zsd/T/tmpMiqSZUconan_package_tools_profiles/profile
 
+    [build_requires]
+    [settings]
+    arch=x86_64
+    build_type=Debug
+    [options]
+    [scopes]
+    [env]
+
+
+    #########################################################
+
+    ...
+
+
+If we inspect the local cache we can see that there are two binaries generated for our recipe, in this case the zlib recipe:
+
+    $ conan search zlib/1.2.11@myuser/testing
+
+    Existing packages for recipe zlib/1.2.11@myuser/testing:
+
+    Package_ID: a792eaa8ec188d30441564f5ba593ed5b0136807
+        [options]
+            shared: False
+        [settings]
+            arch: x86
+            build_type: Debug
+            compiler: apple-clang
+            compiler.version: 9.0
+            os: Macos
+        outdated from recipe: False
+
+    Package_ID: e68b263f26a4d7513e28c9cae1673aa0466af777
+        [options]
+            shared: False
+        [settings]
+            arch: x86_64
+            build_type: Debug
+            compiler: apple-clang
+            compiler.version: 9.0
+            os: Macos
+        outdated from recipe: False
+
+
+Now, we could add new build configurations, but in this case we only want to add Visual Studio configurations and the runtime, but, of course, only if we are on Windows:
+
+    import platform
     from conan.packager import ConanMultiPackager
 
-    if __name__ == "__main__":
-        builder = ConanMultiPackager()
-        builder.add_common_builds(shared_option_name="bzip2:shared", pure_c=True)
-        builder.run()
+	if __name__ == "__main__":
+	    builder = ConanMultiPackager(username="myusername")
+	    if platform.system() == "Windows":
+	        builder.add(settings={"arch": "x86", "build_type": "Debug", "compiler": "Visual Studio", "compiler.version": 14, "compiler.runtime": "MTd"},
+	                    options={}, env_vars={}, build_requires={})
+	        builder.add(settings={"arch": "x86_64", "build_type": "Release", "compiler": "Visual Studio", "compiler.version": 14, "compiler.runtime": "MT"},
+	                    options={}, env_vars={}, build_requires={})
+	    else:
+	        builder.add(settings={"arch": "x86", "build_type": "Debug"},
+	                    options={}, env_vars={}, build_requires={})
+	        builder.add(settings={"arch": "x86_64", "build_type": "Debug"},
+	                    options={}, env_vars={}, build_requires={})
+	    builder.run()
 
-If you are using Visual Studio and you want build shared libraries with static runtime (MT, MTd) you can pass **dll_with_static_runtime** parameter to True in **add_common_builds**.
+In the previous example, when we are on Windows, we are adding two build configurations:
 
-<a name="bintray"></a>
-## Working with Bintray: Configuring repositories
-
-Use the argument `upload` or environment variable `CONAN_UPLOAD` to set the URL of the repository where you want to
-upload your packages. Will be also used to read from it. 
-
-Use `CONAN_PASSWORD` environment variable to set the API key from Bintray. If your username in Bintray doesn't match with
-the specified `CONAN_USERNAME` specify the variable `CONAN_LOGIN_USERNAME` or the parameter `login_username` to ConanMultiPackager .
-
-If you are using travis or appveyor you can use a hidden enviroment variable from the repository setup
-package.
-
-To get an API key in Bintray to "Edit profile"/"API key".
-
-Use the argument `remotes` or environment variable `CONAN_REMOTES` to configure additional repositories containing
-needed requirements.
-
-**Example:** Add your personal Bintray repository to retrieve and upload your packages and also some other different
-repositories to read some requirements.
-
-In your `.travis.yml` or `appveyor.yml` files declare the environment variables:
-
-    CONAN_UPLOAD="https://api.bintray.com/mybintrayuser/conan_repository"
-    CONAN_REMOTES="https://api.bintray.com/other_bintray_user/conan-repo, https://api.bintray.com/other_bintray_user2/conan-repo"
-
-Or in your `build.py`:
-
-    from conan.packager import ConanMultiPackager
-
-    if __name__ == "__main__":
-        builder = ConanMultiPackager(username="myuser",
-                                     upload="https://api.bintray.com/mybintrayuser/conan_repository",
-                                     remotes="https://api.bintray.com/other_bintray_user/conan-repo, https://api.bintray.com/other_bintray_user2/conan-repo")
-        builder.add_common_builds()
-        builder.run()
+    - "Visual Studio 14, Debug, MTd runtime"
+    - "Visual Studio 14, Release, MT runtime"
 
 
-## Select the packages to be generated
-
-You can use **builder.add\_common\_builds** method and remove some configurations. EX: just keep the compiler 4.6 packages:
-
-    from conan.packager import ConanMultiPackager
-
-    if __name__ == "__main__":
-        builder = ConanMultiPackager(username="myuser")
-        builder.add_common_builds()
-        filtered_builds = []
-        for settings, options, env_vars, build_requires in builder.builds:
-            if settings["compiler.version"] == "4.6":
-                 filtered_builds.append([settings, options, env_vars, build_requires])
-        builder.builds = filtered_builds
-        builder.run()
-
-
-Or add package's configurations without these method (settings, options, environment variables and build requires):
+We can also adjust the options, environment variables and build_requires:
 
 	from conan.packager import ConanMultiPackager
 
@@ -140,109 +156,189 @@ Or add package's configurations without these method (settings, options, environ
 	    builder.run()
 
 
-## Visual Studio auto-configuration
+We could continue adding configurations, but probably you realized that it would be such a tedious task if you want to generate many different configurations
+in different operating systems, using different compilers, different compiler versions etc.
 
-When the builder detects a Visual Studio compiler and its version, it will automatically configure the execution environment
-for the "conan test" command with the **vcvarsall.bat** script (provided by all Microsoft Visual Studio versions).
-So you can compile your project with the right compiler automatically, even without CMake.
+## Generating the build configurations automatically
 
-## MinGW builds
+Conan package tools can generate automatically a matrix of build configurations combining  architecture, compiler, compiler.version, compiler.runtime, compiler.libcxx, build_type and
+and shared/static options.
 
-MinGW compiler builds are also supported. You can use this feature with Appveyor.
-
-You can choose different MinGW compiler configurations:
-
-- **Version**: 4.8 and 4.9 are supported
-- **Architecture**: x86 and x86_64 are supported
-- **Exceptions**: seh and sjlj are supported
-- **Threads**: posix and win32 are supported
-
-
-Using **MINGW_CONFIGURATIONS** env variable in Appveyor:
-
-    MINGW_CONFIGURATIONS: '4.9@x86_64@seh@posix, 4.9@x86_64@seh@win32'
-    
-Check an example [here](https://github.com/lasote/conan-zlib/blob/release/1.2.8/appveyor.yml)
-
-
-## Clang builds
-
-Clang compiler builds are also supported. You can use this feature with TravisCI.
-
-You can choose different Clang compiler configurations:
-
-- **Version**: 3.8, 3.9 and 4.0 are supported
-- **Architecture**: x86 and x86_64 are supported
-
-Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
-
-    CONAN_CLANG_VERSIONS = "3.8,3.9,4.0"
-
-## Pagination
-
-You can split builds in pages, this is very useful with CI servers like Travis to obey job time limit or just segment specific build configurations.
-
-There are two ways of setting pagination.
-
-**Named pages**
-
-By adding builds to the **named_builds** dictionary, and passing **curpage** with the page name:
-
-    from conan.packager import ConanMultiPackager
-    from collections import defaultdict
-
-    if __name__ == '__main__':
-        builder = ConanMultiPackager(curpage="x86", total_pages=2)
-        named_builds = defaultdict(list)
-        builder.add_common_builds(shared_option_name="bzip2:shared", pure_c=True)
-        for settings, options, env_vars, build_requires in builder.builds:
-            named_builds[settings['arch']].append([settings, options, env_vars, build_requires])
-        builder.named_builds = named_builds
-        builder.run()
-
-named_builds not have a dictionary entry for x86 and another for x86_64:
-
-- for **CONAN_CURRENT_PAGE="x86"** it would do all x86 builds
-- for **CONAN_CURRENT_PAGE="x86_64"** it would do all x86_64 builds
-
-
-**Sequencial distribution**
-
-By simply passing two pagination parameters, **curpage** and **total_pages**:
 
     from conan.packager import ConanMultiPackager
 
     if __name__ == "__main__":
-        builder = ConanMultiPackager(curpage=1, total_pages=3)
-        builder.add_common_builds(shared_option_name="bzip2:shared", pure_c=True)
+        builder = ConanMultiPackager()
+        builder.add_common_builds()
         builder.run()
 
-If you added 10 package's to the builder:
+If you run the ``python build.py`` command, for instance, in Mac OSX, it will add the following configurations automatically:
 
-- for **CONAN_CURRENT_PAGE=1** it would do builds 1,4,7,10
-- for **CONAN_CURRENT_PAGE=2** it would do builds 2,5,8
-- for **CONAN_CURRENT_PAGE=3** it would do builds 3,6,9
+```
+{'compiler.version': '7.3', 'arch': 'x86', 'build_type': 'Release', 'compiler': 'apple-clang'})
+{'compiler.version': '7.3', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'apple-clang'})
+{'compiler.version': '7.3', 'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'apple-clang'})
+{'compiler.version': '7.3', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'apple-clang'})
+{'compiler.version': '8.0', 'arch': 'x86', 'build_type': 'Release', 'compiler': 'apple-clang'})
+{'compiler.version': '8.0', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'apple-clang'})
+{'compiler.version': '8.0', 'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'apple-clang'})
+{'compiler.version': '8.0', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'apple-clang'})
+{'compiler.version': '8.1', 'arch': 'x86', 'build_type': 'Release', 'compiler': 'apple-clang'})
+{'compiler.version': '8.1', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'apple-clang'})
+{'compiler.version': '8.1', 'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'apple-clang'})
+{'compiler.version': '8.1', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'apple-clang'})
+```
 
-## Docker pack
+These are all the combinations of arch=x86/x86_64, build_type=Release/Debug for different compiler versions.
 
-If you instance ConanMultiPackager with the parameter **use_docker=True**,
-it will launch N containers with a virtualized versions of Ubuntu.
+But having different apple-clang compiler versions installed in the same machine is not common at all.
+We can adjust the compiler versions using a parameter or an environment variable, specially useful for a CI environment:
 
-We have different images available at **dockerhub**, for gcc versions 4.6, 4.8, 4.9, 5.2, 5.3, 6.2, 6.3 and for clang versions 3.8, 3.9, 4.0.
+    from conan.packager import ConanMultiPackager
+
+    if __name__ == "__main__":
+        builder = ConanMultiPackager(apple_clang_versions=["9.0"]) # or declare env var CONAN_APPLE_CLANG_VERSIONS=9.0
+        builder.add_common_builds()
+        builder.run()
+
+In this case, it will call `conan create` with only this configurations:
+
+```
+{'compiler.version': '9.0', 'arch': 'x86', 'build_type': 'Release', 'compiler': 'apple-clang'})
+{'compiler.version': '9.0', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'apple-clang'})
+{'compiler.version': '9.0', 'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'apple-clang'})
+{'compiler.version': '9.0', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'apple-clang'})
+```
+
+You can adjust other constructor parameters to control the build configurations that will be generated:
+
+
+- **gcc_versions**: Generate only build configurations for the specified gcc versions (Ignored if the current machine is not Linux)
+- **visual_versions**: Generate only build configurations for the specified Visual Studio versions (Ignore if the current machine is not Windows)
+- **visual_runtimes**: Generate only build configurations for the specified runtimes, (only for Visual Studio)
+- **apple_clang_versions**: Generate only build configurations for the specified apple clang versions (Ignored if the current machine is not OSX)
+- **archs**: Generate build configurations for the specified architectures, by default, ["x86", "x86_64"].
+- **build_types**: Generate build configurations for the specified build_types, by default ["Debug", "Release"].
+
+Or you can adjust environment variables:
+
+- **CONAN_GCC_VERSIONS**
+- **CONAN_VISUAL_VERSIONS**
+- **CONAN_VISUAL_RUNTIMES**
+- **CONAN_APPLE_CLANG_VERSIONS**
+- **CONAN_CLANG_VERSIONS**
+- **CONAN_ARCHS**
+- **CONAN_BUILD_TYPES**
+
+Check the **REFERENCE** section to see all the parameters and **ENVIRONMENT VARIABLES** available.
+
+
+---
+**IMPORTANT!** Both the constructor parameters and the corresponding environment variables ONLY affect when calling `builder.add_common_builds()`.
+
+---
+
+
+So, if we want to generate packages for ``x86_64`` and ``armv8`` but only for ``Debug`` and ``apple-clang 9.0``:
+
+
+    $ export CONAN_ARCHS=x86_64,armv8
+    $ export CONAN_APPLE_CLANG_VERSIONS=9.0
+    $ export CONAN_BUILD_TYPES=Debug
+
+    $ python build.py
+
+
+There are also two additional parameters of the ``add_common_builds``:
+
+- **pure_c**: (Default True) If your project is C++, pass the **pure_c=False**, it will add new build combinations using **libstdc** and **libstdc++11** in the setting **compiler.libcxx**.
+- **shared_option_name**: If your conanfile.py have an option to specify **shared**/**static** packages, you can add new build combinations for static/shared packages.
+- **dll_with_static_runtime**: Will add also the combination of runtime MT with shared libraries.
+
+```
+from conan.packager import ConanMultiPackager
+
+if __name__ == "__main__":
+    builder = ConanMultiPackager()
+    builder.add_common_builds(shared_option_name="mypackagename:shared", pure_c=False)
+    builder.run()
+```
+
+## Filtering the configurations
+
+You can use **builder.add_common_builds** method and remove then some configurations. EX: Remove the GCC 4.6 packages with build_type=Debug:
+
+    from conan.packager import ConanMultiPackager
+
+    if __name__ == "__main__":
+        builder = ConanMultiPackager(username="myuser")
+        builder.add_common_builds()
+        filtered_builds = []
+        for settings, options, env_vars, build_requires in builder.builds:
+            if settings["compiler.version"] != "4.6" and settings["build_type"] != "Debug":
+                 filtered_builds.append([settings, options, env_vars, build_requires])
+        builder.builds = filtered_builds
+        builder.run()
+
+
+## Using Docker
+
+Instance ConanMultiPackager with the parameter **use_docker=True**, or declare the environment variable **CONAN_USE_DOCKER**:
+It will launch, when needed, a container for the current build configuration that is being built (only for Linux builds).
+
+There are docker images available for different gcc versions: 4.6, 4.8, 4.9, 5.2, 5.3, 6.2, 6.3 and clang versions: 3.8, 3.9, 4.0.
 
 The containers will share the conan storage directory, so the packages will be generated in your conan directory.
 
-You can also specify a subset of **gcc versions** with the parameter **gcc_versions** and the pagination is also available with the parameters **curpage** and **total_pages**.
+**Example**:
 
-You can also specify a subset of **clang versions** with the parameter **clang_versions** and the pagination is also available with the parameters **curpage** and **total_pages**.
 
-## Upload packages
+    from conan.packager import ConanMultiPackager
 
-Instance ConanMultiPackager with the **upload** parameter and it will automatically upload the generated packages to a remote.
+	if __name__ == "__main__":
+	    builder = ConanMultiPackager()
+	    builder.add_common_builds()
+	    builder.run()
 
-You also need to pass the parameters **reference** (ex: "bzip2/1.0.2"), **password** and **username**.
+And run the build.py:
 
-You can specify another remote name with parameter **remote**.
+    $ export CONAN_USERNAME=myuser
+    $ export CONAN_GCC_VERSIONS=4.9
+    $ export CONAN_DOCKER_IMAGE=lasote/conangcc49
+    $ export CONAN_USE_DOCKER=1
+    $ python build.py
+
+
+It will generate a set of build configurations (profiles) for gcc 4.9 and will run it inside a container of the ``lasote/conangcc49`` image.
+
+
+# The CI integration
+
+If you are going to use a CI server to generate different binary packages for your recipe, the best approach is to control
+the build configurations with environment variables.
+
+So, having a generic ``build.py`` should be enough for almost all the cases:
+
+
+    from conan.packager import ConanMultiPackager
+
+	if __name__ == "__main__":
+	    builder = ConanMultiPackager()
+	    builder.add_common_builds(shared_option_name="mypackagename:shared", pure_c=False)
+	    builder.run()
+
+Then, in your CI configuration, you can declare different environment variables to limit the build configurations to an specific compiler version,
+using a specific docker image etc.
+
+For example, if you declare the following environment variables:
+
+    CONAN_GCC_VERSIONS=4.9
+    CONAN_DOCKER_IMAGE=lasote/conangcc49
+
+the ``add_common_builds()`` method will only add different build configurations for GCC=4.9 and will run them in a docker container.
+
+
+You can see working integrations with Travis and Appveyor in the zlib repository [here](https://github.com/lasote/conan-zlib)
 
 
 ## Travis integration
@@ -250,10 +346,9 @@ You can specify another remote name with parameter **remote**.
 Travis CI can generate a build with multiple jobs defining a matrix with environment variables.
 We can configure the builds to be executed in the jobs by defining some environment variables.
 
-The following is a real example of a *.travis.yml* file that will generate packages for **Linux (gcc 4.6-5.2) and OSx for xcode6.4 and xcode7.3 and xcode8.2**
-It uses 2 different jobs for each compiler version.
+The following is a real example of a **.travis.yml** file that will generate packages for Linux gcc (4.9, 5.4, 6.3), Linux Clang (3.9 and 4.0) and OSx with apple-clang (8.0, 8.1 and 9.0).
 
-Remember, from conan 0.24 you can use `conan new` command to generate the base files for appveyor, travis etc. Check `conan new --help`.
+Remember, you can use `conan new` command to generate the base files for appveyor, travis etc. Check `conan new --help`.
 
 
 **.travis.yml** example:
@@ -261,11 +356,13 @@ Remember, from conan 0.24 you can use `conan new` command to generate the base f
 
     env:
        global:
-         - CONAN_REFERENCE: "lib/1.0"
-         - CONAN_USERNAME: "lasote"
-         - CONAN_CHANNEL: "stable"
-         - CONAN_UPLOAD: "https://api.bintray.com/mybintrayuser/myconanrepo"
-         - CONAN_REMOTES: "https://api.bintray.com/otherbintrayuser/otherconanrepo"
+         - CONAN_REFERENCE: "zlib/1.2.11" # ADJUST WITH YOUR REFERENCE!
+         - CONAN_USERNAME: "conan" # ADJUST WITH YOUR REFERENCE USERNAME!
+         - CONAN_LOGIN_USERNAME: "lasote" # ADJUST WITH YOUR LOGIN USERNAME!
+         - CONAN_CHANNEL: "testing" # ADJUST WITH YOUR CHANNEL!
+         - CONAN_UPLOAD: "https://api.bintray.com/conan/conan-community/conan" # ADJUST WITH YOUR REMOTE!
+         - CONAN_STABLE_BRANCH_PATTERN: "release/*"
+         - CONAN_UPLOAD_ONLY_WHEN_STABLE: 1 # Will only upload when the branch matches "release/*"
 
     linux: &linux
        os: linux
@@ -282,30 +379,26 @@ Remember, from conan 0.24 you can use `conan new` command to generate the base f
 
           - <<: *linux
             env: CONAN_GCC_VERSIONS=4.9 CONAN_DOCKER_IMAGE=lasote/conangcc49
-
           - <<: *linux
             env: CONAN_GCC_VERSIONS=5.4 CONAN_DOCKER_IMAGE=lasote/conangcc54
-
           - <<: *linux
             env: CONAN_GCC_VERSIONS=6.3 CONAN_DOCKER_IMAGE=lasote/conangcc63
-
           - <<: *linux
             env: CONAN_CLANG_VERSIONS=3.9 CONAN_DOCKER_IMAGE=lasote/conanclang39
-
           - <<: *linux
             env: CONAN_CLANG_VERSIONS=4.0 CONAN_DOCKER_IMAGE=lasote/conanclang40
-
           - <<: *osx
             osx_image: xcode7.3
             env: CONAN_APPLE_CLANG_VERSIONS=7.3
-
           - <<: *osx
             osx_image: xcode8.2
             env: CONAN_APPLE_CLANG_VERSIONS=8.0
-
           - <<: *osx
             osx_image: xcode8.3
             env: CONAN_APPLE_CLANG_VERSIONS=8.1
+          - <<: *osx
+            osx_image: xcode9
+            env: CONAN_APPLE_CLANG_VERSIONS=9.0
 
     install:
       - chmod +x .travis/install.sh
@@ -315,20 +408,19 @@ Remember, from conan 0.24 you can use `conan new` command to generate the base f
       - chmod +x .travis/run.sh
       - ./.travis/run.sh
 
-
-You can also use multiples "pages" to split the builds in different jobs:
+You can also use multiples "pages" to split the builds in different jobs (Check pagination section first to understand):
 
 **.travis.yml**
 
     env:
        global:
-         - CONAN_REFERENCE: "lib/1.0"
-         - CONAN_USERNAME: "lasote"
-         - CONAN_LOGIN_USERNAME: "lasote"
-         - CONAN_CHANNEL: "stable"
-         - CONAN_UPLOAD: "https://api.bintray.com/mybintrayuser/myconanrepo"
-         - CONAN_REMOTES: "https://api.bintray.com/otherbintrayuser/otherconanrepo"
-         - CONAN_TOTAL_PAGES: 2
+         - CONAN_REFERENCE: "zlib/1.2.11" # ADJUST WITH YOUR REFERENCE!
+         - CONAN_USERNAME: "conan" # ADJUST WITH YOUR REFERENCE USERNAME!
+         - CONAN_LOGIN_USERNAME: "lasote" # ADJUST WITH YOUR LOGIN USERNAME!
+         - CONAN_CHANNEL: "testing" # ADJUST WITH YOUR CHANNEL!
+         - CONAN_UPLOAD: "https://api.bintray.com/conan/conan-community/conan" # ADJUST WITH YOUR REMOTE!
+         - CONAN_STABLE_BRANCH_PATTERN: "release/*"
+         - CONAN_UPLOAD_ONLY_WHEN_STABLE: 1 # Will only upload when the branch matches "release/*"
 
     linux: &linux
        os: linux
@@ -381,7 +473,6 @@ You can also use multiples "pages" to split the builds in different jobs:
             osx_image: xcode7.3
             env: CONAN_APPLE_CLANG_VERSIONS=7.3 CONAN_CURRENT_PAGE=2
 
-
           - <<: *osx
             osx_image: xcode8.2
             env: CONAN_APPLE_CLANG_VERSIONS=8.0 CONAN_CURRENT_PAGE=1
@@ -433,7 +524,6 @@ You can also use multiples "pages" to split the builds in different jobs:
     pip install conan_package_tools==0.3.7dev12
 
     conan user
-
 
 
 If you want to "pin" a **conan_package_tools** version use:
@@ -494,8 +584,7 @@ This is very similar to Travis CI. With the same **build.py** script we have the
 
     install:
       - set PATH=%PATH%;%PYTHON%/Scripts/
-      - pip.exe install conan --upgrade
-      - pip.exe install conan_package_tools==0.3.7dev12
+      - pip.exe install conan_package_tools --upgrade
       - conan user # It creates the conan data directory
 
     test_script:
@@ -527,9 +616,166 @@ When building on gitlab-ci, several environment variables get set during builds.
 
 If the env var **GITLAB_CI** is set and the branch name (**CI_BUILD_REF_NAME** env var) matches **stable_branch_pattern**, then the channel name gets set to ```stable```.
 
-# Reference
 
-## Complete ConanMultiPackager parameters reference
+## Upload packages
+
+You can upload the generated packages automatically to a conan-server using the following environment variables (parameters also available):
+
+- Remote url:
+
+        CONAN_UPLOAD: "https://api.bintray.com/conan/conan-community/conan"
+
+- User to login in the remote:
+
+        CONAN_LOGIN_USERNAME: "lasote"
+
+- User (to generate the packages in that user namespace, e.j: zlib/1.2.11@conan/stable):
+
+
+        CONAN_USERNAME: "conan"
+
+- Channel (to generate the packages in that channel namespace, e.j: zlib/1.2.11@conan/testing):
+
+        CONAN_CHANNEL: "testing"
+
+- If the detected branch in the CI matches the pattern, declare the CONAN_CHANNEL as stable:
+
+        CONAN_STABLE_BRANCH_PATTERN: "release/*"
+
+
+
+## Pagination
+
+Sometimes, if your library is big or complex enough in terms of compilation time, the CI server could reach the maximum time of execution,
+because it's building, for example, 20 different binary packages for your library in the same machine.
+
+You can split the different build configurations in different "pages". So, you can configure your CI to run more "worker" machines, one per "page".
+
+There are two approaches:
+
+### Sequencial distribution
+
+By simply passing two pagination parameters, **curpage** and **total_pages** or the corresponding environment variables:
+
+    $ export CONAN_TOTAL_PAGES=3
+    $ export CONAN_CURRENT_PAGE=1
+
+    $ python build.py
+
+
+If you added 10 different build configurations to the builder:
+
+- With **CONAN_CURRENT_PAGE=1** it runs only 1,4,7,10
+- With **CONAN_CURRENT_PAGE=2** it runs only 2,5,8
+- With **CONAN_CURRENT_PAGE=3** it runs only 3,6,9
+
+In your CI server you can configure a matrix with different "virtual machines" or "jobs" or "workers":
+In each "machine" you can specify a different CONAN_CURRENT_PAGE environment variable.
+So your different configurations will be distributed in the different machines.
+
+
+### Named pages
+
+By adding builds to the **named_builds** dictionary, and passing **curpage** with the page name:
+
+    from conan.packager import ConanMultiPackager
+    from collections import defaultdict
+
+    if __name__ == '__main__':
+        builder = ConanMultiPackager(curpage="x86", total_pages=2)
+        named_builds = defaultdict(list)
+        builder.add_common_builds(shared_option_name="bzip2:shared", pure_c=True)
+        for settings, options, env_vars, build_requires in builder.builds:
+            named_builds[settings['arch']].append([settings, options, env_vars, build_requires])
+        builder.named_builds = named_builds
+        builder.run()
+
+named_builds not have a dictionary entry for x86 and another for x86_64:
+
+- for **CONAN_CURRENT_PAGE="x86"** it would do all x86 builds
+- for **CONAN_CURRENT_PAGE="x86_64"** it would do all x86_64 builds
+
+
+<a name="bintray"></a>
+## Working with Bintray: Configuring repositories
+
+Use the argument `upload` or environment variable `CONAN_UPLOAD` to set the URL of the repository where you want to
+upload your packages. Will be also used to read from it. 
+
+Use `CONAN_PASSWORD` environment variable to set the API key from Bintray. If your username in Bintray doesn't match with
+the specified `CONAN_USERNAME` specify the variable `CONAN_LOGIN_USERNAME` or the parameter `login_username` to ConanMultiPackager .
+
+If you are using travis or appveyor you can use a hidden enviroment variable from the repository setup
+package.
+
+To get an API key in Bintray to "Edit profile"/"API key".
+
+Use the argument `remotes` or environment variable `CONAN_REMOTES` to configure additional repositories containing
+needed requirements.
+
+**Example:** Add your personal Bintray repository to retrieve and upload your packages and also some other different
+repositories to read some requirements.
+
+In your `.travis.yml` or `appveyor.yml` files declare the environment variables:
+
+    CONAN_UPLOAD="https://api.bintray.com/mybintrayuser/conan_repository"
+    CONAN_REMOTES="https://api.bintray.com/other_bintray_user/conan-repo, https://api.bintray.com/other_bintray_user2/conan-repo"
+
+Or in your `build.py`:
+
+    from conan.packager import ConanMultiPackager
+
+    if __name__ == "__main__":
+        builder = ConanMultiPackager(username="myuser",
+                                     upload="https://api.bintray.com/mybintrayuser/conan_repository",
+                                     remotes="https://api.bintray.com/other_bintray_user/conan-repo, https://api.bintray.com/other_bintray_user2/conan-repo")
+        builder.add_common_builds()
+        builder.run()
+
+
+
+## Visual Studio auto-configuration
+
+When the builder detects a Visual Studio compiler and its version, it will automatically configure the execution environment
+for the "conan test" command with the **vcvarsall.bat** script (provided by all Microsoft Visual Studio versions).
+So you can compile your project with the right compiler automatically, even without CMake.
+
+## MinGW builds
+
+MinGW compiler builds are also supported. You can use this feature with Appveyor.
+
+You can choose different MinGW compiler configurations:
+
+- **Version**: 4.8 and 4.9 are supported
+- **Architecture**: x86 and x86_64 are supported
+- **Exceptions**: seh and sjlj are supported
+- **Threads**: posix and win32 are supported
+
+
+Using **MINGW_CONFIGURATIONS** env variable in Appveyor:
+
+    MINGW_CONFIGURATIONS: '4.9@x86_64@seh@posix, 4.9@x86_64@seh@win32'
+    
+Check an example [here](https://github.com/lasote/conan-zlib/blob/release/1.2.8/appveyor.yml)
+
+
+## Clang builds
+
+Clang compiler builds are also supported. You can use this feature with TravisCI.
+
+You can choose different Clang compiler configurations:
+
+- **Version**: 3.8, 3.9 and 4.0 are supported
+- **Architecture**: x86 and x86_64 are supported
+
+Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
+
+    CONAN_CLANG_VERSIONS = "3.8,3.9,4.0"
+
+
+# FULL REFERENCE
+
+## ConanMultiPackager parameters reference
 
 - **args**: List with the parameters that will be passed to "conan test" command. e.j: args=['--build', 'all']. Default sys.argv[1:]
 - **username**: Your conan username
@@ -579,6 +825,7 @@ Upload related parameters:
 - **run()**: Run the builds (Will invoke conan create for every specified configuration)
 
 - **upload_packages()**: Called automatically by "run()" when upload is enabled. Can be called explicitly.
+
 
 ## Environment configuration
 
