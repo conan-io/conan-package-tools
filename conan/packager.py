@@ -390,8 +390,8 @@ class ConanMultiPackager(object):
             return False
 
         if not self.reference or not self.password or not self.channel or not self.username:
-            print("Upload not possible, some parameter (reference, password or channel) is missing!")
-            return False
+            raise Exception("Upload not possible, some parameter "
+                            "(reference, password or channel) is missing!")
 
         return True
 
