@@ -795,6 +795,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **upload**: URL of the repository where we want to use to upload the packages.
 - **upload_only_when_stable**: Will try to upload only if the channel is the stable channel
 - **build_types**: List containing specific build types. Default ["Release", "Debug"]
+- **skip_check_credentials**: Conan will check the user credentials before building the packages. Default [False]
 
 Upload related parameters:
 
@@ -807,7 +808,7 @@ Upload related parameters:
 - **channel**: Channel where your packages will be uploaded if previous parameter doesn't match
 
 
-## ConanMultiPackager methods reference:
+## Complete ConanMultiPackager methods reference:
 
 - **add_common_builds(shared_option_name=None, pure_c=True, dll_with_static_runtime=False)**: Generate a set of package configurations and add them to the
   list of packages that will be created.
@@ -839,6 +840,7 @@ This is especially useful for CI integration.
 - **CONAN_UPLOAD**: URL of the repository where we want to use to upload the packages.
 - **CONAN_UPLOAD_RETRY**: If defined, in case of fail retries to upload again the specified times
 - **CONAN_UPLOAD_ONLY_WHEN_STABLE**: If defined, will try to upload the packages only when the current channel is the stable one.
+- **CONAN_CHECK_CREDENTIALS_BEFORE**: Force to check user credentials before to build when upload is required.
 - **CONAN_GCC_VERSIONS**: Gcc versions, comma separated, e.g. "4.6,4.8,5.2,6.3"
 - **CONAN_CLANG_VERSIONS**: Clang versions, comma separated, e.g. "3.8,3.9,4.0"
 - **CONAN_APPLE_CLANG_VERSIONS**: Apple clang versions, comma separated, e.g. "6.1,8.0"

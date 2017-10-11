@@ -11,6 +11,13 @@ from conans.util.files import load
 from conans.model.profile import Profile
 
 
+def platform_mock_for(so):
+     class PlatformInfoMock(object):
+        def system(self):
+            return so
+     return PlatformInfoMock()
+
+
 class MockRunner(object):
 
     def __init__(self):
@@ -200,13 +207,9 @@ class AppTest(unittest.TestCase):
 
     def test_only_mingw(self):
 
-        class PlatformInfoMock(object):
-            def system(self):
-                return "Windows"
-
         mingw_configurations = [("4.9", "x86_64", "seh", "posix")]
         builder = ConanMultiPackager(mingw_configurations=mingw_configurations, visual_versions=[],
-                                     username="Pepe", platform_info=PlatformInfoMock())
+                                     username="Pepe", platform_info=platform_mock_for("Windows"))
         builder.add_common_builds(shared_option_name="zlib:shared", pure_c=True)
         expected = [({'compiler.exception': 'seh', 'compiler.libcxx': "libstdc++",
                       'compiler.threads': 'posix', 'compiler.version': '4.9', 'arch': 'x86_64',
@@ -272,11 +275,8 @@ class AppTest(unittest.TestCase):
     def test_visual_defaults(self):
 
         with tools.environment_append({"CONAN_VISUAL_VERSIONS": "10"}):
-            class PlatformInfoMock(object):
-                def system(self):
-                    return "Windows"
-
-            builder = ConanMultiPackager(username="Pepe", platform_info=PlatformInfoMock())
+            builder = ConanMultiPackager(username="Pepe",
+                                         platform_info=platform_mock_for("Windows"))
             builder.add_common_builds()
             for settings, _, _, _ in builder.builds:
                 self.assertEquals(settings["compiler"], "Visual Studio")
@@ -284,21 +284,42 @@ class AppTest(unittest.TestCase):
 
         with tools.environment_append({"CONAN_VISUAL_VERSIONS": "10",
                                        "MINGW_CONFIGURATIONS": "4.9@x86_64@seh@posix"}):
-            class PlatformInfoMock(object):
-                def system(self):
-                    return "Windows"
 
-            builder = ConanMultiPackager(username="Pepe", platform_info=PlatformInfoMock())
+            builder = ConanMultiPackager(username="Pepe",
+                                         platform_info=platform_mock_for("Windows"))
             builder.add_common_builds()
             for settings, _, _, _ in builder.builds:
                 self.assertEquals(settings["compiler"], "gcc")
                 self.assertEquals(settings["compiler.version"], "4.9")
 
-    def test_upload(self):
+    def select_defaults_test(self):
+        builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
+                                     gcc_versions=["4.8", "5.2"],
+                                     username="foo")
 
-        class PlatformInfoMock(object):
-            def system(self):
-                return "Darwin"
+        self.assertEquals(builder.clang_versions, [])
+
+        with tools.environment_append({"CONAN_GCC_VERSIONS": "4.8, 5.2"}):
+            builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
+                                         username="foo")
+
+            self.assertEquals(builder.clang_versions, [])
+            self.assertEquals(builder.gcc_versions, ["4.8", "5.2"])
+
+        builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
+                                     clang_versions=["4.8", "5.2"],
+                                     username="foo")
+
+        self.assertEquals(builder.gcc_versions, [])
+
+        with tools.environment_append({"CONAN_CLANG_VERSIONS": "4.8, 5.2"}):
+            builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
+                                         username="foo")
+
+            self.assertEquals(builder.gcc_versions, [])
+            self.assertEquals(builder.clang_versions, ["4.8", "5.2"])
+
+    def test_upload(self):
 
         runner = MockRunner()
         runner.output = "arepo: myurl"
@@ -308,7 +329,7 @@ class AppTest(unittest.TestCase):
                                      apple_clang_versions=[],
                                      runner=runner,
                                      remotes="myurl, otherurl",
-                                     platform_info=PlatformInfoMock())
+                                     platform_info=platform_mock_for("Darwin"))
         builder.add_common_builds()
         builder.run()
 
@@ -325,7 +346,7 @@ class AppTest(unittest.TestCase):
                                      apple_clang_versions=[],
                                      runner=runner,
                                      remotes="otherurl, myurl, moreurl",
-                                     platform_info=PlatformInfoMock())
+                                     platform_info=platform_mock_for("Darwin"))
         builder.add_common_builds()
         builder.run()
 
@@ -352,7 +373,7 @@ class AppTest(unittest.TestCase):
                                      apple_clang_versions=[],
                                      runner=runner,
                                      remotes="otherurl",
-                                     platform_info=PlatformInfoMock())
+                                     platform_info=platform_mock_for("Darwin"))
         builder.add_common_builds()
         builder.run()
 
@@ -364,3 +385,89 @@ class AppTest(unittest.TestCase):
         self.assertEqual(runner.calls[-1],
                          'conan upload Hello/0.1@pepe/%s --retry 3 --all '
                          '--force --confirm -r=upload_repo' % channel)
+
+    def test_login(self):
+        runner = MockRunner()
+        builder = ConanMultiPackager(username="pepe", channel="testing",
+                                     reference="Hello/0.1", password="password",
+                                     upload="myurl", visual_versions=[], gcc_versions=[],
+                                     apple_clang_versions=[],
+                                     runner=runner)
+
+        builder.login("Myremote", "myuser", "mypass", force=False)
+        self.assertIn('conan user myuser -p="mypass" -r=Myremote', runner.calls[-1])
+        runner.calls = []
+        # Already logged, not call conan user again
+        builder.login("Myremote", "myuser", "mypass", force=False)
+        self.assertEquals(len(runner.calls), 0)
+        # Already logged, but forced
+        runner.calls = []
+        builder.login("Myremote", "myuser", "mypass", force=True)
+        self.assertEquals(len(runner.calls), 1)
+
+        # Default users/pass
+        runner.calls = []
+        builder.login("Myremote2")
+        self.assertIn('conan user pepe -p="password" -r=Myremote2', runner.calls[-1])
+
+    def test_check_credentials(self):
+
+        runner = MockRunner()
+        runner.output = "arepo: myurl"
+        builder = ConanMultiPackager(username="pepe", channel="testing",
+                                     reference="Hello/0.1", password="password",
+                                     upload="myurl", visual_versions=[], gcc_versions=[],
+                                     apple_clang_versions=[],
+                                     runner=runner,
+                                     platform_info=platform_mock_for("Darwin"))
+        builder.add_common_builds()
+        builder.run()
+
+        # When activated, check credentials before to create the profiles
+        self.assertEqual(runner.calls[0:2], ['conan remote add upload_repo myurl',
+                                             'conan user pepe -p="password" -r=upload_repo'])
+
+        if os.getenv("APPVEYOR", False) and os.getenv("APPVEYOR_REPO_BRANCH", "") == "master":
+            channel = "stable"
+        elif os.getenv("TRAVIS", False) and os.getenv("TRAVIS_BRANCH", "") == "master":
+            channel = "stable"
+        else:
+            channel = "testing"
+
+        self.assertEqual(runner.calls[1],
+                         'conan user pepe -p="password" -r=upload_repo')
+        self.assertIn("conan create", runner.calls[-2])  # Not login again before upload its cached
+        self.assertEqual(runner.calls[-1],
+                         "conan upload Hello/0.1@pepe/%s --retry 3 --all --force --confirm "
+                         "-r=upload_repo" % channel)
+
+        runner = MockRunner()
+        builder = ConanMultiPackager(username="pepe", channel="testing",
+                                     reference="Hello/0.1", password="password",
+                                     visual_versions=[], gcc_versions=[],
+                                     apple_clang_versions=[],
+                                     runner=runner,
+                                     remotes="otherurl",
+                                     platform_info=platform_mock_for("Darwin"))
+        builder.add_common_builds()
+        builder.run()
+
+        # When upload is not required, credentials verification must be avoided
+        self.assertFalse('conan user pepe -p="password" -r=upload_repo' in runner.calls)
+        self.assertFalse('conan upload Hello/0.1@pepe/%s --retry 3 --all --force --confirm -r=upload_repo' % channel in runner.calls)
+
+        # If we skip the credentials check, the login will be performed just before the upload
+        builder = ConanMultiPackager(username="pepe", channel="testing",
+                                     reference="Hello/0.1", password="password",
+                                     upload="myurl", visual_versions=[], gcc_versions=[],
+                                     apple_clang_versions=[],
+                                     runner=runner,
+                                     platform_info=platform_mock_for("Darwin"),
+                                     skip_check_credentials=True)
+        builder.add_common_builds()
+        builder.run()
+        self.assertEqual(runner.calls[-2],
+                         'conan user pepe -p="password" -r=upload_repo')
+        self.assertEqual(runner.calls[-1],
+                         "conan upload Hello/0.1@pepe/%s --retry 3 --all --force --confirm "
+                         "-r=upload_repo" % channel)
