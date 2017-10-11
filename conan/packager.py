@@ -83,7 +83,8 @@ class ConanMultiPackager(object):
                  clang_versions=None,
                  login_username=None,
                  upload_only_when_stable=False,
-                 build_types=None):
+                 build_types=None,
+                 skip_check_credentials=False):
 
         self._builds = []
         self._named_builds = {}
@@ -103,6 +104,9 @@ class ConanMultiPackager(object):
         self.password = password or os.getenv("CONAN_PASSWORD", None)
         self.remote = remote or os.getenv("CONAN_REMOTE", None)
 
+        # User is already logged
+        self._logged_user_in_remote = defaultdict(lambda: False)
+
         if self.remote:
             raise Exception('''
 'remote' argument is deprecated. Use:
@@ -119,6 +123,7 @@ class ConanMultiPackager(object):
         self.channel = self._get_channel(default_channel, self.stable_channel)
 
         self.upload_only_when_stable = upload_only_when_stable or os.getenv("CONAN_UPLOAD_ONLY_WHEN_STABLE", False)
+        self.skip_check_credentials = skip_check_credentials or os.getenv("CONAN_SKIP_CHECK_CREDENTIALS", False)
 
         if self.upload:
             if self.upload in ("0", "None", "False"):
@@ -286,6 +291,8 @@ class ConanMultiPackager(object):
 
     def run(self):
         self._pip_install()
+        if not self.skip_check_credentials and self._upload_enabled():
+            self.login("upload_repo")
         self.run_builds()
         self.upload_packages()
 
@@ -328,37 +335,55 @@ class ConanMultiPackager(object):
                                                  self.mingw_installer_reference, self.runner, self.args)
                 build_runner.run()
 
+    def login(self, remote_name, user=None, password=None, force=False):
+        if force or not self._logged_user_in_remote[remote_name]:
+            user_command = 'conan user %s -p="%s" -r=%s' % (user or self.login_username,
+                                                            password or self.password,
+                                                            remote_name)
+
+            logger.info("******** VERIFYING YOUR CREDENTIALS **********\n")
+            if self._platform_info.system() == "Linux" and self.use_docker:
+                data_dir = os.path.expanduser("~/.conan/data")
+                self.runner("sudo chmod -R 777 %s" % data_dir)
+
+            ret = self.runner(user_command)
+            if ret != 0:
+                raise Exception("Error with user credentials for remote %s" % remote_name)
+
+        self._logged_user_in_remote[remote_name] = True
+
     def upload_packages(self):
-
-        if not self.upload:
+        if not self._upload_enabled():
             return
 
-        st_channel = self.stable_channel or "stable"
-        if self.upload_only_when_stable and self.channel != st_channel:
-            print("Skipping upload, not stable channel")
-            return
-
-        if not self.reference or not self.password or not self.channel or not self.username:
-            print("Upload not possible, some parameter (reference, password or channel) is missing!")
-            return
+        self.login("upload_repo")
 
         command = "conan upload %s@%s/%s --retry %s --all --force --confirm -r=upload_repo" % (
                 self.reference, self.username, self.channel, self.upload_retry)
-        user_command = 'conan user %s -p="%s" -r=upload_repo' % (self.login_username, self.password)
 
         logger.info("******** RUNNING UPLOAD COMMAND ********** \n%s" % command)
         if self._platform_info.system() == "Linux" and self.use_docker:
             data_dir = os.path.expanduser("~/.conan/data")
             self.runner("sudo chmod -R 777 %s" % data_dir)
-            # self.runner("ls -la ~/.conan")
-
-        ret = self.runner(user_command)
-        if ret != 0:
-            raise Exception("Error with user credentials")
 
         ret = self.runner(command)
         if ret != 0:
             raise Exception("Error uploading")
+
+    def _upload_enabled(self):
+        if not self.upload:
+            return False
+
+        st_channel = self.stable_channel or "stable"
+        if self.upload_only_when_stable and self.channel != st_channel:
+            print("Skipping upload, not stable channel")
+            return False
+
+        if not self.reference or not self.password or not self.channel or not self.username:
+            print("Upload not possible, some parameter (reference, password or channel) is missing!")
+            return False
+
+        return True
 
     def _pip_install(self):
 
