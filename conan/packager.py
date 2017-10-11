@@ -34,6 +34,9 @@ class PlatformInfo(object):
         return platform.system()
 
 
+def split_colon_env(varname):
+    return [a.strip() for a in list(filter(None, os.getenv(varname, "").split(",")))]
+
 class ConanOutputRunner(ConanRunner):
 
     def __init__(self):
@@ -93,7 +96,8 @@ class ConanMultiPackager(object):
         self.output_runner = ConanOutputRunner()
         self.args = args or " ".join(sys.argv[1:])
         self.username = username or os.getenv("CONAN_USERNAME", None)
-        self.login_username = login_username or os.getenv("CONAN_LOGIN_USERNAME", None) or self.username
+        self.login_username = login_username or os.getenv("CONAN_LOGIN_USERNAME",
+                                                          None) or self.username
         if not self.username:
             raise Exception("Instance ConanMultiPackage with 'username' "
                             "parameter or use CONAN_USERNAME env variable")
@@ -110,74 +114,80 @@ class ConanMultiPackager(object):
         if self.remote:
             raise Exception('''
 'remote' argument is deprecated. Use:
-        - 'upload' argument to specify the remote URL to upload your packages (or None to disable upload)
-        - 'remotes' argument to specify additional remote URLs, for example, different user repositories.
+        - 'upload' argument to specify the remote URL to upload your packages (or None to disable 
+        upload)
+        - 'remotes' argument to specify additional remote URLs, for example, different user 
+        repositories.
 ''')
 
         self.remotes = remotes or os.getenv("CONAN_REMOTES", [])
         self.upload = upload or os.getenv("CONAN_UPLOAD", None)
 
-        self.stable_branch_pattern = stable_branch_pattern or os.getenv("CONAN_STABLE_BRANCH_PATTERN", None)
+        self.stable_branch_pattern = stable_branch_pattern or \
+                                     os.getenv("CONAN_STABLE_BRANCH_PATTERN", None)
         default_channel = channel or os.getenv("CONAN_CHANNEL", "testing")
         self.stable_channel = stable_channel or os.getenv("CONAN_STABLE_CHANNEL", "stable")
         self.channel = self._get_channel(default_channel, self.stable_channel)
 
-        self.upload_only_when_stable = upload_only_when_stable or os.getenv("CONAN_UPLOAD_ONLY_WHEN_STABLE", False)
-        self.skip_check_credentials = skip_check_credentials or os.getenv("CONAN_SKIP_CHECK_CREDENTIALS", False)
+        self.upload_only_when_stable = upload_only_when_stable or \
+                                       os.getenv("CONAN_UPLOAD_ONLY_WHEN_STABLE", False)
+        self.skip_check_credentials = skip_check_credentials or \
+                                      os.getenv("CONAN_SKIP_CHECK_CREDENTIALS", False)
 
         if self.upload:
             if self.upload in ("0", "None", "False"):
                 self.upload = None
             elif self.upload == "1":
-                raise Exception("WARNING! 'upload' argument has changed. Use 'upload' argument or CONAN_UPLOAD "
-                                "environment variable to specify a remote URL to upload your packages. e.j: "
+                raise Exception("WARNING! 'upload' argument has changed. Use 'upload' argument or "
+                                "CONAN_UPLOAD environment variable to specify a remote URL to "
+                                "upload your packages. e.j: "
                                 "upload='https://api.bintray.com/conan/myuser/myconanrepo'")
 
         os.environ["CONAN_CHANNEL"] = self.channel
 
-        self.clang_versions = clang_versions or list(filter(None, os.getenv("CONAN_CLANG_VERSIONS", "").split(",")))\
+        self.clang_versions = clang_versions or split_colon_env("CONAN_CLANG_VERSIONS")
+        self.gcc_versions = gcc_versions or split_colon_env("CONAN_GCC_VERSIONS")
 
-        # If there are some GCC versions declared in the environment then we don't default the clang versions
-        if not self.clang_versions and not os.getenv("CONAN_GCC_VERSIONS", False):
+        # If there are some GCC versions declared then we don't default the clang
+        # versions
+        if not self.clang_versions and not self.gcc_versions:
             self.clang_versions = self.default_clang_versions
 
-        self.gcc_versions = gcc_versions or list(filter(None, os.getenv("CONAN_GCC_VERSIONS", "").split(",")))
-
-        # If there are some CLANG versions declared in the environment then we don't default the gcc versions
-        if not self.gcc_versions and not os.getenv("CONAN_CLANG_VERSIONS", False):
+        # If there are some CLANG versions declared then we don't default the gcc
+        # versions
+        if not self.gcc_versions and self.clang_versions == self.default_clang_versions:
             self.gcc_versions = self.default_gcc_versions
 
         if visual_versions is not None:
             self.visual_versions = visual_versions
         else:
-            self.visual_versions = list(filter(None, os.getenv("CONAN_VISUAL_VERSIONS", "").split(",")))
+            self.visual_versions = split_colon_env("CONAN_VISUAL_VERSIONS")
             if not self.visual_versions and not mingw_configurations and not get_mingw_config_from_env():
                 self.visual_versions = self.default_visual_versions
             elif mingw_configurations or get_mingw_config_from_env():
                 self.visual_versions = []
 
-        self.visual_runtimes = visual_runtimes or \
-            list(filter(None, os.getenv("CONAN_VISUAL_RUNTIMES", "").split(","))) or \
-            self.default_visual_runtimes
+        self.visual_runtimes = visual_runtimes or split_colon_env("CONAN_VISUAL_RUNTIMES") or \
+                               self.default_visual_runtimes
 
         self.apple_clang_versions = apple_clang_versions or \
-            list(filter(None, os.getenv("CONAN_APPLE_CLANG_VERSIONS", "").split(","))) or \
-            self.default_apple_clang_versions
+                                    split_colon_env("CONAN_APPLE_CLANG_VERSIONS") or \
+                                    self.default_apple_clang_versions
 
         self.mingw_configurations = mingw_configurations or get_mingw_config_from_env()
-        self.mingw_installer_reference = ConanFileReference.loads(os.getenv("CONAN_MINGW_INSTALLER_REFERENCE") or
-                                                                  "mingw_installer/1.0@conan/stable")
+        env_ref = os.getenv("CONAN_MINGW_INSTALLER_REFERENCE")
+        self.mingw_installer_reference = ConanFileReference.loads(env_ref or
+                                                                  "mingw_installer/1.0"
+                                                                  "@conan/stable")
 
-        self.archs = archs or \
-            list(filter(None, os.getenv("CONAN_ARCHS", "").split(","))) or \
-            self.default_archs
+        self.archs = archs or split_colon_env("CONAN_ARCHS") or self.default_archs
 
-        self.build_types = build_types or \
-            list(filter(None, os.getenv("CONAN_BUILD_TYPES", "").split(","))) or \
-            self.default_build_types
+        self.build_types = build_types or split_colon_env("CONAN_BUILD_TYPES") or \
+                           self.default_build_types
 
         # If CONAN_DOCKER_IMAGE is speified, then use docker is True
-        self.use_docker = use_docker or os.getenv("CONAN_USE_DOCKER", False) or (os.getenv("CONAN_DOCKER_IMAGE", None) is not None)
+        self.use_docker = use_docker or os.getenv("CONAN_USE_DOCKER", False) or \
+                          (os.getenv("CONAN_DOCKER_IMAGE", None) is not None)
 
         self.curpage = curpage or os.getenv("CONAN_CURRENT_PAGE", 1)
         self.total_pages = total_pages or os.getenv("CONAN_TOTAL_PAGES", 1)

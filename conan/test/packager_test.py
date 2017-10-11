@@ -11,6 +11,13 @@ from conans.util.files import load
 from conans.model.profile import Profile
 
 
+def platform_mock_for(so):
+     class PlatformInfoMock(object):
+        def system(self):
+            return so
+     return PlatformInfoMock()
+
+
 class MockRunner(object):
 
     def __init__(self):
@@ -200,13 +207,9 @@ class AppTest(unittest.TestCase):
 
     def test_only_mingw(self):
 
-        class PlatformInfoMock(object):
-            def system(self):
-                return "Windows"
-
         mingw_configurations = [("4.9", "x86_64", "seh", "posix")]
         builder = ConanMultiPackager(mingw_configurations=mingw_configurations, visual_versions=[],
-                                     username="Pepe", platform_info=PlatformInfoMock())
+                                     username="Pepe", platform_info=platform_mock_for("Windows"))
         builder.add_common_builds(shared_option_name="zlib:shared", pure_c=True)
         expected = [({'compiler.exception': 'seh', 'compiler.libcxx': "libstdc++",
                       'compiler.threads': 'posix', 'compiler.version': '4.9', 'arch': 'x86_64',
@@ -272,11 +275,8 @@ class AppTest(unittest.TestCase):
     def test_visual_defaults(self):
 
         with tools.environment_append({"CONAN_VISUAL_VERSIONS": "10"}):
-            class PlatformInfoMock(object):
-                def system(self):
-                    return "Windows"
-
-            builder = ConanMultiPackager(username="Pepe", platform_info=PlatformInfoMock())
+            builder = ConanMultiPackager(username="Pepe",
+                                         platform_info=platform_mock_for("Windows"))
             builder.add_common_builds()
             for settings, _, _, _ in builder.builds:
                 self.assertEquals(settings["compiler"], "Visual Studio")
@@ -284,21 +284,42 @@ class AppTest(unittest.TestCase):
 
         with tools.environment_append({"CONAN_VISUAL_VERSIONS": "10",
                                        "MINGW_CONFIGURATIONS": "4.9@x86_64@seh@posix"}):
-            class PlatformInfoMock(object):
-                def system(self):
-                    return "Windows"
 
-            builder = ConanMultiPackager(username="Pepe", platform_info=PlatformInfoMock())
+            builder = ConanMultiPackager(username="Pepe",
+                                         platform_info=platform_mock_for("Windows"))
             builder.add_common_builds()
             for settings, _, _, _ in builder.builds:
                 self.assertEquals(settings["compiler"], "gcc")
                 self.assertEquals(settings["compiler.version"], "4.9")
 
-    def test_upload(self):
+    def select_defaults_test(self):
+        builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
+                                     gcc_versions=["4.8", "5.2"],
+                                     username="foo")
 
-        class PlatformInfoMock(object):
-            def system(self):
-                return "Darwin"
+        self.assertEquals(builder.clang_versions, [])
+
+        with tools.environment_append({"CONAN_GCC_VERSIONS": "4.8, 5.2"}):
+            builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
+                                         username="foo")
+
+            self.assertEquals(builder.clang_versions, [])
+            self.assertEquals(builder.gcc_versions, ["4.8", "5.2"])
+
+        builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
+                                     clang_versions=["4.8", "5.2"],
+                                     username="foo")
+
+        self.assertEquals(builder.gcc_versions, [])
+
+        with tools.environment_append({"CONAN_CLANG_VERSIONS": "4.8, 5.2"}):
+            builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
+                                         username="foo")
+
+            self.assertEquals(builder.gcc_versions, [])
+            self.assertEquals(builder.clang_versions, ["4.8", "5.2"])
+
+    def test_upload(self):
 
         runner = MockRunner()
         runner.output = "arepo: myurl"
@@ -308,7 +329,7 @@ class AppTest(unittest.TestCase):
                                      apple_clang_versions=[],
                                      runner=runner,
                                      remotes="myurl, otherurl",
-                                     platform_info=PlatformInfoMock())
+                                     platform_info=platform_mock_for("Darwin"))
         builder.add_common_builds()
         builder.run()
 
@@ -325,7 +346,7 @@ class AppTest(unittest.TestCase):
                                      apple_clang_versions=[],
                                      runner=runner,
                                      remotes="otherurl, myurl, moreurl",
-                                     platform_info=PlatformInfoMock())
+                                     platform_info=platform_mock_for("Darwin"))
         builder.add_common_builds()
         builder.run()
 
@@ -352,7 +373,7 @@ class AppTest(unittest.TestCase):
                                      apple_clang_versions=[],
                                      runner=runner,
                                      remotes="otherurl",
-                                     platform_info=PlatformInfoMock())
+                                     platform_info=platform_mock_for("Darwin"))
         builder.add_common_builds()
         builder.run()
 
@@ -391,10 +412,6 @@ class AppTest(unittest.TestCase):
 
     def test_check_credentials(self):
 
-        class PlatformInfoMock(object):
-            def system(self):
-                return "Darwin"
-
         runner = MockRunner()
         runner.output = "arepo: myurl"
         builder = ConanMultiPackager(username="pepe", channel="testing",
@@ -402,7 +419,7 @@ class AppTest(unittest.TestCase):
                                      upload="myurl", visual_versions=[], gcc_versions=[],
                                      apple_clang_versions=[],
                                      runner=runner,
-                                     platform_info=PlatformInfoMock())
+                                     platform_info=platform_mock_for("Darwin"))
         builder.add_common_builds()
         builder.run()
 
@@ -431,7 +448,7 @@ class AppTest(unittest.TestCase):
                                      apple_clang_versions=[],
                                      runner=runner,
                                      remotes="otherurl",
-                                     platform_info=PlatformInfoMock())
+                                     platform_info=platform_mock_for("Darwin"))
         builder.add_common_builds()
         builder.run()
 
@@ -445,7 +462,7 @@ class AppTest(unittest.TestCase):
                                      upload="myurl", visual_versions=[], gcc_versions=[],
                                      apple_clang_versions=[],
                                      runner=runner,
-                                     platform_info=PlatformInfoMock(),
+                                     platform_info=platform_mock_for("Darwin"),
                                      skip_check_credentials=True)
         builder.add_common_builds()
         builder.run()
