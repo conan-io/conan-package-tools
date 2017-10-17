@@ -389,9 +389,17 @@ class ConanMultiPackager(object):
             print("Skipping upload, not stable channel")
             return False
 
-        if not self.reference or not self.password or not self.channel or not self.username:
-            raise Exception("Upload not possible, some parameter "
-                            "(reference, password or channel) is missing!")
+        def raise_error(field):
+            raise Exception("Upload not possible, '%s' is missing!" % field)
+
+        if not self.reference:
+            raise_error("reference")
+        if not self.password:
+            raise_error("password")
+        if not self.channel:
+            raise_error("channel")
+        if not self.username:
+            raise_error("username")
 
         return True
 
