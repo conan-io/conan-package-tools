@@ -390,10 +390,11 @@ class ConanMultiPackager(object):
             print("Skipping upload, not stable channel")
             return False
 
-        if os.getenv("TRAVIS_PULL_REQUEST", "false") != "false" or \
-           os.getenv("APPVEYOR_PULL_REQUEST_NUMBER"):  # PENDING! can't found info for gitlab/bamboo
-            print("Skipping upload, this is a Pull Request")
-            return False
+        if not os.getenv("CONAN_TEST_SUITE", False):
+            if os.getenv("TRAVIS_PULL_REQUEST", "false") != "false" or \
+               os.getenv("APPVEYOR_PULL_REQUEST_NUMBER"):  # PENDING! can't found info for gitlab/bamboo
+                print("Skipping upload, this is a Pull Request")
+                return False
 
         def raise_error(field):
             raise Exception("Upload not possible, '%s' is missing!" % field)

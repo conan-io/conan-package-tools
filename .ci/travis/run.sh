@@ -12,4 +12,4 @@ fi
 
 conan user
 mkdir ~/.conan/data
-nosetests conan.test
+CONAN_TEST_SUITE=1 && nosetests conan.test
