@@ -18,6 +18,7 @@ install:
   - ./.ci/travis/install.sh
 before_script:
   - export PYTHONPATH=$PYTHONPATH:$(pwd)
+  - export CONAN_TEST_SUITE=1
 # command to run tests
 script:
   - ./.ci/travis/run.sh
