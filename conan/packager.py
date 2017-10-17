@@ -37,6 +37,7 @@ class PlatformInfo(object):
 def split_colon_env(varname):
     return [a.strip() for a in list(filter(None, os.getenv(varname, "").split(",")))]
 
+
 class ConanOutputRunner(ConanRunner):
 
     def __init__(self):
@@ -389,9 +390,22 @@ class ConanMultiPackager(object):
             print("Skipping upload, not stable channel")
             return False
 
-        if not self.reference or not self.password or not self.channel or not self.username:
-            raise Exception("Upload not possible, some parameter "
-                            "(reference, password or channel) is missing!")
+        if os.getenv("TRAVIS_PULL_REQUEST") != "False" or \
+           os.getenv("APPVEYOR_PULL_REQUEST_NUMBER"):  # PENDING! can't found info for gitlab/bamboo
+            print("Skipping upload, this is a Pull Request")
+            return False
+
+        def raise_error(field):
+            raise Exception("Upload not possible, '%s' is missing!" % field)
+
+        if not self.reference:
+            raise_error("reference")
+        if not self.password:
+            raise_error("password")
+        if not self.channel:
+            raise_error("channel")
+        if not self.username:
+            raise_error("username")
 
         return True
 
