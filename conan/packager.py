@@ -115,9 +115,9 @@ class ConanMultiPackager(object):
         if self.remote:
             raise Exception('''
 'remote' argument is deprecated. Use:
-        - 'upload' argument to specify the remote URL to upload your packages (or None to disable 
+        - 'upload' argument to specify the remote URL to upload your packages (or None to disable
         upload)
-        - 'remotes' argument to specify additional remote URLs, for example, different user 
+        - 'remotes' argument to specify additional remote URLs, for example, different user
         repositories.
 ''')
 
@@ -390,7 +390,7 @@ class ConanMultiPackager(object):
             print("Skipping upload, not stable channel")
             return False
 
-        if os.getenv("TRAVIS_PULL_REQUEST") != "False" or \
+        if os.getenv("TRAVIS_PULL_REQUEST", "false") != "false" or \
            os.getenv("APPVEYOR_PULL_REQUEST_NUMBER"):  # PENDING! can't found info for gitlab/bamboo
             print("Skipping upload, this is a Pull Request")
             return False
@@ -480,4 +480,3 @@ def _get_profile(build_conf):
 if __name__ == "__main__":
     runner = ConanOutputRunner()
     runner("ls")
-
