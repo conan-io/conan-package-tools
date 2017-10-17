@@ -37,6 +37,7 @@ class PlatformInfo(object):
 def split_colon_env(varname):
     return [a.strip() for a in list(filter(None, os.getenv(varname, "").split(",")))]
 
+
 class ConanOutputRunner(ConanRunner):
 
     def __init__(self):
@@ -387,6 +388,11 @@ class ConanMultiPackager(object):
         st_channel = self.stable_channel or "stable"
         if self.upload_only_when_stable and self.channel != st_channel:
             print("Skipping upload, not stable channel")
+            return False
+
+        if os.getenv("TRAVIS_PULL_REQUEST") != "False" or \
+           os.getenv("APPVEYOR_PULL_REQUEST_NUMBER"):  # PENDING! can't found info for gitlab/bamboo
+            print("Skipping upload, this is a Pull Request")
             return False
 
         def raise_error(field):
