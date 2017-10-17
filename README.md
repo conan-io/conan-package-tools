@@ -700,7 +700,7 @@ named_builds not have a dictionary entry for x86 and another for x86_64:
 ## Working with Bintray: Configuring repositories
 
 Use the argument `upload` or environment variable `CONAN_UPLOAD` to set the URL of the repository where you want to
-upload your packages. Will be also used to read from it. 
+upload your packages. Will be also used to read from it.
 
 Use `CONAN_PASSWORD` environment variable to set the API key from Bintray. If your username in Bintray doesn't match with
 the specified `CONAN_USERNAME` specify the variable `CONAN_LOGIN_USERNAME` or the parameter `login_username` to ConanMultiPackager .
@@ -755,7 +755,7 @@ You can choose different MinGW compiler configurations:
 Using **MINGW_CONFIGURATIONS** env variable in Appveyor:
 
     MINGW_CONFIGURATIONS: '4.9@x86_64@seh@posix, 4.9@x86_64@seh@win32'
-    
+
 Check an example [here](https://github.com/lasote/conan-zlib/blob/release/1.2.8/appveyor.yml)
 
 
@@ -840,7 +840,7 @@ This is especially useful for CI integration.
 - **CONAN_UPLOAD**: URL of the repository where we want to use to upload the packages.
 - **CONAN_UPLOAD_RETRY**: If defined, in case of fail retries to upload again the specified times
 - **CONAN_UPLOAD_ONLY_WHEN_STABLE**: If defined, will try to upload the packages only when the current channel is the stable one.
-- **CONAN_CHECK_CREDENTIALS_BEFORE**: Force to check user credentials before to build when upload is required.
+- **CONAN_SKIP_CHECK_CREDENTIALS**: Force to check user credentials before to build when upload is required. By default is False.
 - **CONAN_GCC_VERSIONS**: Gcc versions, comma separated, e.g. "4.6,4.8,5.2,6.3"
 - **CONAN_CLANG_VERSIONS**: Clang versions, comma separated, e.g. "3.8,3.9,4.0"
 - **CONAN_APPLE_CLANG_VERSIONS**: Apple clang versions, comma separated, e.g. "6.1,8.0"
@@ -859,7 +859,7 @@ This is especially useful for CI integration.
 - **CONAN_CHANNEL**: Channel where your packages will be uploaded if the previous parameter doesn't match
 - **CONAN_PIP_PACKAGE**: Specify a conan package to install (by default, installs the latest) e.j conan==0.0.1rc7
 - **MINGW_CONFIGURATIONS**: Specify a list of MinGW builds. See MinGW builds section.
-- **CONAN_BASH_PATH**: Path to a bash executable. Used only in windows to help the tools.run_in_windows_bash() function to locate our Cygwin/MSYS2 bash. 
+- **CONAN_BASH_PATH**: Path to a bash executable. Used only in windows to help the tools.run_in_windows_bash() function to locate our Cygwin/MSYS2 bash.
   Set it with the bash executable path if it’s not in the PATH or you want to use a different one.
 
 
