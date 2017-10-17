@@ -390,7 +390,6 @@ class ConanMultiPackager(object):
             print("Skipping upload, not stable channel")
             return False
 
-
         if not os.getenv("CONAN_TEST_SUITE", False):
             if os.getenv("TRAVIS_PULL_REQUEST", "false") != "false" or \
                os.getenv("APPVEYOR_PULL_REQUEST_NUMBER"):  # PENDING! can't found info for gitlab/bamboo
