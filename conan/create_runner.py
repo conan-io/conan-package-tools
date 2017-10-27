@@ -7,16 +7,17 @@ from collections import namedtuple
 
 from conan import __version__ as package_tools_version
 from conan.log import logger
-from conans.model.profile import Profile
+from conans.client.conan_api import Conan
+from conans.client.profile_loader import _load_profile
 from conans.tools import vcvars_command
 from conans.util.files import save, mkdir
 
 
 class TestPackageRunner(object):
-    def __init__(self, profile, username, channel, mingw_installer_reference=None, runner=None,
+    def __init__(self, profile_text, username, channel, mingw_installer_reference=None, runner=None,
                  args=None, conan_pip_package=None):
 
-        self._profile = profile
+        self._profile_text = profile_text
         self._mingw_installer_reference = mingw_installer_reference
         self._args = args
         self._username = username
@@ -24,14 +25,25 @@ class TestPackageRunner(object):
         self._conan_pip_package = conan_pip_package
         self._runner = runner or os.system
         self.runner = runner
+        self.conan_api, self.client_cache, self.user_io = Conan.factory()
+        if not os.path.exists(self.client_cache.default_profile_path):
+            self.conan_api.create_profile("default", detect=True)
+
+        # Save the profile in a tmp file
+        tmp = os.path.join(tempfile.mkdtemp(suffix='conan_package_tools_profiles'), "profile")
+        self.abs_profile_path = os.path.abspath(tmp)
+        save(self.abs_profile_path, self._profile_text)
+
+        self.profile, _ = _load_profile(self._profile_text, os.path.dirname(self.abs_profile_path),
+                                        self.client_cache.profiles_path)
 
     @property
     def settings(self):
-        return self._profile.settings
+        return self.profile.settings
 
     @property
     def options(self):
-        return self._profile.options
+        return self.profile.options
 
     def run(self):
         pre_command = None
@@ -43,20 +55,16 @@ class TestPackageRunner(object):
                                                              lambda x: self.settings.get(x, None))
             pre_command = vcvars_command(mock_sets)
 
-        self._run_test_package(pre_command=pre_command)
+        self._run_create(pre_command=pre_command)
 
-    def _run_test_package(self, pre_command=None):
-        # Save the profile in a tmp file
-        tmp = os.path.join(tempfile.mkdtemp(suffix='conan_package_tools_profiles'), "profile")
-        abs_profile_path = os.path.abspath(tmp)
-        profile_txt = self._profile.dumps()
-        save(abs_profile_path, profile_txt)
+    def _run_create(self, pre_command=None):
+
         command = "conan create %s/%s --profile %s %s" % (self._username, self._channel,
-                                                          abs_profile_path, self._args)
+                                                          self.abs_profile_path, self._args)
         if pre_command:
             command = '%s && %s' % (pre_command, command)
 
-        logger.info("******** RUNNING BUILD ********** \n%s\n\n%s" % (command, profile_txt))
+        logger.info("******** RUNNING BUILD ********** \n%s\n\n%s" % (command, self._profile_text))
         retcode = self._runner(command)
         if retcode != 0:
             exit("Error while executing:\n\t %s" % command)
@@ -72,15 +80,15 @@ def autodetect_docker_image(profile):
 
 
 class DockerTestPackageRunner(TestPackageRunner):
-    def __init__(self, profile, username, channel, mingw_ref=None, runner=None,
+    def __init__(self, profile_text, username, channel, mingw_ref=None, runner=None,
                  args=None, conan_pip_package=None, docker_image=None):
 
-        self.docker_image = docker_image or autodetect_docker_image(profile)
-
-        super(DockerTestPackageRunner, self).__init__(profile, username, channel,
+        super(DockerTestPackageRunner, self).__init__(profile_text, username, channel,
                                                       mingw_installer_reference=mingw_ref,
                                                       runner=runner, args=args,
                                                       conan_pip_package=conan_pip_package)
+
+        self.docker_image = docker_image or autodetect_docker_image(self.profile)
 
     def run(self, pull_image=True):
 
@@ -109,7 +117,9 @@ class DockerTestPackageRunner(TestPackageRunner):
         command = "sudo docker run --rm -v %s:/home/conan/project -v " \
                   "~/.conan/:/home/conan/.conan -it %s %s /bin/sh -c \"" \
                   "rm -f /home/conan/.conan/conan.conf && cd project && " \
-                  "run_test_package_in_docker\"" % (os.getcwd(), env_vars, self.docker_image)
+                  "rm -r /home/conan/.conan/profiles/default && " \
+                  "conan profile new default --detect && " \
+                  "run_create_in_docker\"" % (os.getcwd(), env_vars, self.docker_image)
         ret = self._runner(command)
         if ret != 0:
             raise Exception("Error building: %s" % command)
@@ -127,20 +137,14 @@ class DockerTestPackageRunner(TestPackageRunner):
         doc = {"args": self._args,
                "username": self._username,
                "channel": self._channel,
-               "profile": self._profile.dumps(),
+               "profile": self._profile_text,
                "conan_pip_package": self._conan_pip_package}
         return json.dumps(doc)
 
     @staticmethod
     def deserialize(data):
         the_json = json.loads(data)
-        if hasattr(Profile, "loads"):
-            profile = Profile.loads(the_json["profile"])
-        else:
-            # Fixme, make public in conan?
-            from conans.client.profile_loader import _load_profile
-            profile = _load_profile(the_json["profile"], None, None)[0]
-        ret = TestPackageRunner(profile,
+        ret = TestPackageRunner(the_json["profile"],
                                 username=the_json["username"],
                                 channel=the_json["channel"],
                                 args=the_json["args"],

@@ -107,7 +107,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'run_test_package_in_docker=conan.run_in_docker:run',
+            'run_create_in_docker=conan.run_in_docker:run',
         ],
     },
 )
