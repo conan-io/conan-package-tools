@@ -1,13 +1,15 @@
 import os
 import re
 import sys
+import tempfile
 
 from collections import defaultdict
 
+from conans import tools
 from conans.client.runner import ConanRunner
 from conans.model.ref import ConanFileReference
 
-from conan.test_package_runner import TestPackageRunner, DockerTestPackageRunner
+from conan.create_runner import TestPackageRunner, DockerTestPackageRunner
 from conan.builds_generator import (get_linux_gcc_builds, get_linux_clang_builds, get_visual_builds,
                                     get_osx_apple_clang_builds, get_mingw_builds, BuildConf)
 from conan.log import logger
@@ -37,7 +39,6 @@ class PlatformInfo(object):
 def split_colon_env(varname):
     return [a.strip() for a in list(filter(None, os.getenv(varname, "").split(",")))]
 
-
 class ConanOutputRunner(ConanRunner):
 
     def __init__(self):
@@ -63,7 +64,7 @@ class ConanOutputRunner(ConanRunner):
 
 class ConanMultiPackager(object):
     """ Help to generate common builds (setting's combinations), adjust the environment,
-    and run conan test_package command in docker containers"""
+    and run conan create command in docker containers"""
     default_gcc_versions = ["4.6", "4.8", "4.9", "5.2", "5.3", "5.4", "6.2", "6.3"]
     default_clang_versions = ["3.8", "3.9", "4.0"]
     default_visual_versions = ["10", "12", "14"]
@@ -276,20 +277,23 @@ class ConanMultiPackager(object):
 
     def add_common_builds(self, shared_option_name=None, pure_c=True, dll_with_static_runtime=False):
         builds = []
-
-        if self._platform_info.system() == "Windows":
-            if self.mingw_configurations:
-                builds = get_mingw_builds(self.mingw_configurations, self.mingw_installer_reference, self.archs,
-                                            shared_option_name, self.build_types)
-            builds.extend(get_visual_builds(self.visual_versions, self.archs, self.visual_runtimes,
-                                            shared_option_name, dll_with_static_runtime, self.vs10_x86_64_enabled, self.build_types))
-        elif self._platform_info.system() == "Linux":
+        if self.use_docker:
             builds = get_linux_gcc_builds(self.gcc_versions, self.archs, shared_option_name, pure_c, self.build_types)
             builds.extend(get_linux_clang_builds(self.clang_versions, self.archs, shared_option_name, pure_c, self.build_types))
-        elif self._platform_info.system() == "Darwin":
-            builds = get_osx_apple_clang_builds(self.apple_clang_versions, self.archs, shared_option_name, pure_c, self.build_types)
-        elif self._platform_info.system() == "FreeBSD":
-            builds = get_linux_clang_builds(self.clang_versions, self.archs, shared_option_name, pure_c, self.build_types)
+        else:
+            if self._platform_info.system() == "Windows":
+                if self.mingw_configurations:
+                    builds = get_mingw_builds(self.mingw_configurations, self.mingw_installer_reference, self.archs,
+                                                shared_option_name, self.build_types)
+                builds.extend(get_visual_builds(self.visual_versions, self.archs, self.visual_runtimes,
+                                                shared_option_name, dll_with_static_runtime, self.vs10_x86_64_enabled, self.build_types))
+            elif self._platform_info.system() == "Linux":
+                builds = get_linux_gcc_builds(self.gcc_versions, self.archs, shared_option_name, pure_c, self.build_types)
+                builds.extend(get_linux_clang_builds(self.clang_versions, self.archs, shared_option_name, pure_c, self.build_types))
+            elif self._platform_info.system() == "Darwin":
+                builds = get_osx_apple_clang_builds(self.apple_clang_versions, self.archs, shared_option_name, pure_c, self.build_types)
+            elif self._platform_info.system() == "FreeBSD":
+                builds = get_linux_clang_builds(self.clang_versions, self.archs, shared_option_name, pure_c, self.build_types)
 
         self.builds.extend(builds)
 
@@ -333,7 +337,7 @@ class ConanMultiPackager(object):
 
         pulled_docker_images = defaultdict(lambda: False)
         for build in builds_in_current_page:
-            profile = _get_profile(build)
+            profile = self._get_profile(build)
             if self.use_docker:
                 build_runner = DockerTestPackageRunner(profile, self.username, self.channel,
                                                        self.mingw_installer_reference, self.runner, self.args,
@@ -449,9 +453,11 @@ class ConanMultiPackager(object):
 
         return ret
 
+    @staticmethod
+    def _get_profile(build_conf):
+        tmp = """
+include(default)
 
-def _get_profile(build_conf):
-    tmp = """
 [settings]
 %s
 [options]
@@ -460,22 +466,16 @@ def _get_profile(build_conf):
 %s
 [build_requires]
 %s
-"""
-    settings = "\n".join(["%s=%s" % (k, v) for k, v in sorted(build_conf.settings.items())])
-    options = "\n".join(["%s=%s" % (k, v) for k, v in build_conf.options.items()])
-    env_vars = "\n".join(["%s=%s" % (k, v) for k, v in build_conf.env_vars.items()])
-    br_lines = ""
-    for pattern, build_requires in build_conf.build_requires.items():
-        br_lines += "\n".join(["%s:%s" % (pattern, br) for br in build_requires])
+    """
+        settings = "\n".join(["%s=%s" % (k, v) for k, v in sorted(build_conf.settings.items())])
+        options = "\n".join(["%s=%s" % (k, v) for k, v in build_conf.options.items()])
+        env_vars = "\n".join(["%s=%s" % (k, v) for k, v in build_conf.env_vars.items()])
+        br_lines = ""
+        for pattern, build_requires in build_conf.build_requires.items():
+            br_lines += "\n".join(["%s:%s" % (pattern, br) for br in build_requires])
 
-    profile_text = tmp % (settings, options, env_vars, br_lines)
-    # FIXME: Remove when conan==0.24.0
-    if hasattr(Profile, "loads"):
-        return Profile.loads(profile_text)
-    else:
-        # Fixme, make public in conan?
-        from conans.client.profile_loader import _load_profile
-        return _load_profile(profile_text, None, None)[0]
+        profile_text = tmp % (settings, options, env_vars, br_lines)
+        return profile_text
 
 
 if __name__ == "__main__":

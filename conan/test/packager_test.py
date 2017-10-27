@@ -40,7 +40,8 @@ class MockRunner(object):
             return Profile.loads(load(profile_path))
         else:
             from conans.client.profile_loader import read_profile
-            return read_profile(profile_path, None, None)[0]
+            tools.replace_in_file(profile_path, "include", "#include")  # FIXME: Not able to load here the default
+            return read_profile(profile_path, os.path.dirname(profile_path), None)[0]
 
     def assert_tests_for(self, numbers):
         """Check if executor has ran the builds that are expected.
