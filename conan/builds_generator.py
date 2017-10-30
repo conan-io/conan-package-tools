@@ -1,7 +1,16 @@
 import copy
+import platform
 from collections import namedtuple
 
 BuildConf = namedtuple("BuildConf", "settings options env_vars build_requires")
+
+def detected_os():
+    result = platform.system()
+    if result == "Darwin":
+        return "Macos"
+    if result.startswith("CYGWIN"):
+        return "Windows"
+    return result
 
 
 def get_mingw_builds(mingw_configurations, mingw_installer_reference, archs, shared_option_name, build_types):
@@ -10,10 +19,13 @@ def get_mingw_builds(mingw_configurations, mingw_installer_reference, archs, sha
         version, arch, exception, thread = config
         if arch not in archs:
             continue
-        settings = {"arch": arch, "compiler": "gcc",
+        settings = {"os": detected_os(),
+                    "arch": arch,
+                    "compiler": "gcc",
                     "compiler.version": version[0:3],
                     "compiler.threads": thread,
-                    "compiler.exception": exception}
+                    "compiler.exception": exception,
+                    "compiler.libcxx": "libstdc++"}
         build_requires = {"*": [mingw_installer_reference]}
         options = {}
 
@@ -56,7 +68,8 @@ def get_visual_builds(visual_versions, archs, visual_runtimes, shared_option_nam
 
 
 def get_visual_builds_for_version(visual_runtimes, visual_version, arch, shared_option_name, dll_with_static_runtime, build_types):
-    base_set = {"compiler": "Visual Studio",
+    base_set = {"os": detected_os(),
+                "compiler": "Visual Studio",
                 "compiler.version": visual_version,
                 "arch": arch}
     sets = []
@@ -108,7 +121,8 @@ def get_build(compiler, the_arch, the_build_type, the_compiler_version, the_libc
     options = {}
     if the_shared_option_name:
         options = {the_shared_option_name: the_shared}
-    setts = {"arch": the_arch,
+    setts = {"os": detected_os(),
+             "arch": the_arch,
              "build_type": the_build_type,
              "compiler": compiler,
              "compiler.version": the_compiler_version}
