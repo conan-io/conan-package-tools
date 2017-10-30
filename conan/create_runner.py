@@ -26,8 +26,14 @@ class TestPackageRunner(object):
         self._runner = runner or os.system
         self.runner = runner
         self.conan_api, self.client_cache, self.user_io = Conan.factory()
+        default_profile_name = os.path.basename(self.client_cache.default_profile_path)
         if not os.path.exists(self.client_cache.default_profile_path):
-            self.conan_api.create_profile("default", detect=True)
+            self.conan_api.create_profile(default_profile_name, detect=True)
+
+        if default_profile_name != "default":  # User have a different default profile name
+            # https://github.com/conan-io/conan-package-tools/issues/121
+            self._profile_text = self._profile_text.replace("include(default)",
+                                                            "include(%s)" % default_profile_name)
 
         # Save the profile in a tmp file
         tmp = os.path.join(tempfile.mkdtemp(suffix='conan_package_tools_profiles'), "profile")
