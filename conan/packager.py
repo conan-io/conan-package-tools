@@ -1,19 +1,14 @@
 import os
 import re
 import sys
-import tempfile
-
 from collections import defaultdict
 
-from conans import tools
-from conans.client.runner import ConanRunner
-from conans.model.ref import ConanFileReference
-
-from conan.create_runner import TestPackageRunner, DockerTestPackageRunner
 from conan.builds_generator import (get_linux_gcc_builds, get_linux_clang_builds, get_visual_builds,
                                     get_osx_apple_clang_builds, get_mingw_builds, BuildConf)
+from conan.create_runner import TestPackageRunner, DockerTestPackageRunner
 from conan.log import logger
-from conans.model.profile import Profile
+from conans.client.runner import ConanRunner
+from conans.model.ref import ConanFileReference
 
 
 def get_mingw_config_from_env():
@@ -38,6 +33,7 @@ class PlatformInfo(object):
 
 def split_colon_env(varname):
     return [a.strip() for a in list(filter(None, os.getenv(varname, "").split(",")))]
+
 
 class ConanOutputRunner(ConanRunner):
 
@@ -227,7 +223,8 @@ class ConanMultiPackager(object):
 
     def add_remote_safe(self, name, url, insert=False):
         # FIXME: Use conan api when prepared to call
-        """Add a remove previoulsy removing if needed an already configured repository with the same URL"""
+        """Add a remove previoulsy removing if needed an already configured repository
+        with the same URL"""
         existing_name = self.get_remote_name(url)
         if existing_name:
             self.runner("conan remote remove %s" % existing_name)
