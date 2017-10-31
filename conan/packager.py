@@ -7,6 +7,7 @@ from conan.builds_generator import (get_linux_gcc_builds, get_linux_clang_builds
                                     get_osx_apple_clang_builds, get_mingw_builds, BuildConf)
 from conan.create_runner import TestPackageRunner, DockerTestPackageRunner
 from conan.log import logger
+from conans.client.conan_api import Conan
 from conans.client.runner import ConanRunner
 from conans.model.ref import ConanFileReference
 
@@ -213,6 +214,9 @@ class ConanMultiPackager(object):
             # this way we can cover all the possibilities
             self.add_remote_safe("upload_repo", self.upload, insert=False)
 
+        _, client_cache, _ = Conan.factory()
+        self.data_home = client_cache.store
+
     def get_remote_name(self, remote_url):
         # FIXME: Use conan api when prepared to return the list
         self.output_runner("conan remote list")
@@ -355,7 +359,7 @@ class ConanMultiPackager(object):
 
             logger.info("******** VERIFYING YOUR CREDENTIALS **********\n")
             if self._platform_info.system() == "Linux" and self.use_docker:
-                data_dir = os.path.expanduser("~/.conan/data")
+                data_dir = os.path.expanduser(self.data_home)
                 self.runner("sudo chmod -R 777 %s" % data_dir)
 
             ret = self.runner(user_command)
@@ -375,7 +379,7 @@ class ConanMultiPackager(object):
 
         logger.info("******** RUNNING UPLOAD COMMAND ********** \n%s" % command)
         if self._platform_info.system() == "Linux" and self.use_docker:
-            data_dir = os.path.expanduser("~/.conan/data")
+            data_dir = os.path.expanduser(self.data_home)
             self.runner("sudo chmod -R 777 %s" % data_dir)
 
         ret = self.runner(command)

@@ -7,6 +7,7 @@ from collections import namedtuple
 
 from conan import __version__ as package_tools_version
 from conan.log import logger
+from conan.tools import get_bool_from_env
 from conans.client.conan_api import Conan
 from conans.client.profile_loader import _load_profile
 from conans.tools import vcvars_command
@@ -26,6 +27,9 @@ class TestPackageRunner(object):
         self._runner = runner or os.system
         self.runner = runner
         self.conan_api, self.client_cache, self.user_io = Conan.factory()
+        self.conan_home = os.path.realpath(self.client_cache.conan_folder)
+        self.data_home = os.path.realpath(self.client_cache.store)
+
         default_profile_name = os.path.basename(self.client_cache.default_profile_path)
         if not os.path.exists(self.client_cache.default_profile_path):
             self.conan_api.create_profile(default_profile_name, detect=True)
@@ -95,15 +99,19 @@ class DockerTestPackageRunner(TestPackageRunner):
                                                       conan_pip_package=conan_pip_package)
 
         self.docker_image = docker_image or autodetect_docker_image(self.profile)
+        if get_bool_from_env("CONAN_DOCKER_USE_SUDO") or platform.system() == "Linux":
+            self.sudo_command = "sudo"
+        else:
+            self.sudo_command = ""
 
     def run(self, pull_image=True):
 
         if pull_image:
             self.pull_image()
             # Update the downloaded image
-            command = "sudo docker run --name conan_runner %s /bin/sh -c " \
+            command = "%s docker run --name conan_runner %s /bin/sh -c " \
                       "\"sudo pip install conan_package_tools==%s " \
-                      "--upgrade" % (self.docker_image, package_tools_version)
+                      "--upgrade" % (self.sudo_command, self.docker_image, package_tools_version)
             if self._conan_pip_package:
                 command += " && sudo pip install %s\"" % self._conan_pip_package
             else:
@@ -112,32 +120,33 @@ class DockerTestPackageRunner(TestPackageRunner):
             self._runner(command)
             # Save the image with the updated installed
             # packages and remove the intermediate container
-            self._runner("sudo docker commit conan_runner %s" % self.docker_image)
-            self._runner("sudo docker rm conan_runner")
+            self._runner("%s docker commit conan_runner %s" % (self.sudo_command, self.docker_image))
+            self._runner("%s docker rm conan_runner" % self.sudo_command)
 
         # Run the build
         serial = pipes.quote(self.serialize())
         env_vars = "-e CONAN_RUNNER_ENCODED=%s -e CONAN_USERNAME=%s " \
                    "-e CONAN_CHANNEL=%s" % (serial, self._username, self._channel)
 
-        command = "sudo docker run --rm -v %s:/home/conan/project -v " \
-                  "~/.conan/:/home/conan/.conan -it %s %s /bin/sh -c \"" \
+        command = "%s docker run --rm -v %s:/home/conan/project -v " \
+                  "%s:/home/conan/.conan %s %s /bin/sh -c \"" \
                   "rm -f /home/conan/.conan/conan.conf && cd project && " \
                   "rm -r /home/conan/.conan/profiles/default && " \
                   "conan profile new default --detect && " \
-                  "run_create_in_docker\"" % (os.getcwd(), env_vars, self.docker_image)
+                  "run_create_in_docker\"" % (self.sudo_command, os.getcwd(), self.conan_home,
+                                              env_vars, self.docker_image)
         ret = self._runner(command)
         if ret != 0:
             raise Exception("Error building: %s" % command)
 
     def pull_image(self):
-        datadir = os.path.expanduser("~/.conan/data")
+        datadir = os.path.expanduser(self.data_home)
         if not os.path.exists(datadir):
             mkdir(datadir)
             if platform.system() != "Windows":
                 self._runner("chmod -R 777 %s" % datadir)
         logger.info("Pulling docker image %s" % self.docker_image)
-        self._runner("sudo docker pull %s" % self.docker_image)
+        self._runner("%s docker pull %s" % (self.sudo_command, self.docker_image))
 
     def serialize(self):
         doc = {"args": self._args,
