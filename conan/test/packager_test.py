@@ -130,9 +130,15 @@ class AppTest(unittest.TestCase):
         self._add_build(3, "gcc", "4.3")
 
         self.packager.run_builds(1, 2)
-        self.assertIn("sudo docker pull lasote/conangcc43", self.runner.calls[0])
-        self.assertIn('sudo docker run ', self.runner.calls[1])
+        self.assertIn("docker pull lasote/conangcc43", self.runner.calls[0])
+        self.assertIn('docker run ', self.runner.calls[1])
         self.assertIn('os=os1', self.runner.calls[4])
+        self.packager.run_builds(1, 2)
+        self.assertIn("docker pull lasote/conangcc43", self.runner.calls[0])
+
+        with tools.environment_append({"CONAN_DOCKER_USE_SUDO": "1"}):
+             self.packager.run_builds(1, 2)
+             self.assertIn("sudo docker run", self.runner.calls[-1])
 
         # Next build from 4.3 is cached, not pulls are performed
         self.assertIn('os=os3', self.runner.calls[5])
@@ -149,8 +155,8 @@ class AppTest(unittest.TestCase):
         self._add_build(3, "clang", "3.8")
 
         self.packager.run_builds(1, 2)
-        self.assertIn("sudo docker pull lasote/conanclang38", self.runner.calls[0])
-        self.assertIn('sudo docker run ', self.runner.calls[1])
+        self.assertIn("docker pull lasote/conanclang38", self.runner.calls[0])
+        self.assertIn('docker run ', self.runner.calls[1])
         self.assertIn('os=os1', self.runner.calls[4])
 
         # Next build from 3.8 is cached, not pulls are performed
@@ -172,14 +178,14 @@ class AppTest(unittest.TestCase):
         self._add_build(6, "clang", "3.9")
 
         self.packager.run_builds(1, 2)
-        self.assertIn("sudo docker pull lasote/conangcc54", self.runner.calls[0])
-        self.assertIn('sudo docker run ', self.runner.calls[1])
+        self.assertIn("docker pull lasote/conangcc54", self.runner.calls[0])
+        self.assertIn('docker run ', self.runner.calls[1])
         self.assertIn('os=os1', self.runner.calls[4])
         self.assertIn('os=os3', self.runner.calls[5])
 
         self.packager.run_builds(2, 2)
-        self.assertIn("sudo docker pull lasote/conanclang39", self.runner.calls[16])
-        self.assertIn('sudo docker run ', self.runner.calls[17])
+        self.assertIn("docker pull lasote/conanclang39", self.runner.calls[16])
+        self.assertIn('docker run ', self.runner.calls[17])
         self.assertIn('os=os4', self.runner.calls[20])
         self.assertIn('os=os6', self.runner.calls[21])
 
