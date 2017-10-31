@@ -29,7 +29,7 @@ logger = logging.getLogger('conans')
 if CONAN_LOGGING_FILE is not None:
     hdlr = logging.FileHandler(CONAN_LOGGING_FILE)
 else:
-    hdlr = StreamHandler(sys.stderr)
+    hdlr = StreamHandler(sys.stdout)
 
 formatter = MultiLineFormatter('\n############## CONAN PACKAGE TOOLS ######################\n\n%(levelname)s: '
                                '%(message)s \n\n#########################################################\n')
