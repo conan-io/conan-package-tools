@@ -312,6 +312,23 @@ And run the build.py:
 It will generate a set of build configurations (profiles) for gcc 4.9 and will run it inside a container of the ``lasote/conangcc49`` image.
 
 
+## Specifying a different base profile
+
+The options, settings and environment variables that the ``add_common_builds()`` method generate, are applied into the default profile 
+of the conan installation. If you want to use a different default profile you can pass the name of the profile in the ``run()`` method.
+
+
+ **Example**:
+
+
+    from conan.packager import ConanMultiPackager
+
+	if __name__ == "__main__":
+	    builder = ConanMultiPackager()
+	    builder.add_common_builds(clang_versions=["3.8", "3.9"])
+	    builder.run("myclang")
+
+
 # The CI integration
 
 If you are going to use a CI server to generate different binary packages for your recipe, the best approach is to control
