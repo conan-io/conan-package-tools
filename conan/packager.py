@@ -305,14 +305,14 @@ class ConanMultiPackager(object):
         build_requires = build_requires or {}
         self.builds.append(BuildConf(settings, options, env_vars, build_requires))
 
-    def run(self):
+    def run(self, profile_name=None):
         self._pip_install()
         if not self.skip_check_credentials and self._upload_enabled():
             self.login("upload_repo")
-        self.run_builds()
+        self.run_builds(profile_name=profile_name)
         self.upload_packages()
 
-    def run_builds(self, curpage=None, total_pages=None):
+    def run_builds(self, curpage=None, total_pages=None, profile_name=None):
         if len(self.named_builds) > 0 and len(self.builds) > 0:
             raise Exception("Both bulk and named builds are set. Only one is allowed.")
 
@@ -338,7 +338,7 @@ class ConanMultiPackager(object):
 
         pulled_docker_images = defaultdict(lambda: False)
         for build in builds_in_current_page:
-            profile = self._get_profile(build)
+            profile = self._get_profile(build, profile_name)
             if self.use_docker:
                 build_runner = DockerTestPackageRunner(profile, self.username, self.channel,
                                                        self.mingw_installer_reference, self.runner, self.args,
@@ -455,9 +455,14 @@ class ConanMultiPackager(object):
         return ret
 
     @staticmethod
-    def _get_profile(build_conf):
+    def _get_profile(build_conf, profile_name):
+        if profile_name:
+            print("**************************************************")
+            print("Using specified default base profile: %s" % profile_name)
+            print("**************************************************")
+        profile_name = profile_name or "default"
         tmp = """
-include(default)
+include(%s)
 
 [settings]
 %s
@@ -475,7 +480,7 @@ include(default)
         for pattern, build_requires in build_conf.build_requires.items():
             br_lines += "\n".join(["%s:%s" % (pattern, br) for br in build_requires])
 
-        profile_text = tmp % (settings, options, env_vars, br_lines)
+        profile_text = tmp % (profile_name, settings, options, env_vars, br_lines)
         return profile_text
 
 
