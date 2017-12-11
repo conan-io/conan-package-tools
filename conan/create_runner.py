@@ -5,6 +5,8 @@ import platform
 import tempfile
 from collections import namedtuple
 
+import sys
+
 from conan import __version__ as package_tools_version
 from conan.log import logger
 from conan.tools import get_bool_from_env
@@ -75,7 +77,8 @@ class TestPackageRunner(object):
         if pre_command:
             command = '%s && %s' % (pre_command, command)
 
-        logger.info("******** RUNNING BUILD ********** \n%s\n\n%s" % (command, self._profile_text))
+        print("******** RUNNING BUILD ********** \n%s\n\n%s" % (command, self._profile_text))
+        sys.stdout.flush()
         retcode = self._runner(command)
         if retcode != 0:
             exit("Error while executing:\n\t %s" % command)
