@@ -63,7 +63,7 @@ class ConanOutputRunner(ConanRunner):
 class ConanMultiPackager(object):
     """ Help to generate common builds (setting's combinations), adjust the environment,
     and run conan create command in docker containers"""
-    default_gcc_versions = ["4.6", "4.8", "4.9", "5.2", "5.3", "5.4", "6.2", "6.3"]
+    default_gcc_versions = ["4.9", "5", "6", "7"]
     default_clang_versions = ["3.8", "3.9", "4.0"]
     default_visual_versions = ["10", "12", "14"]
     default_visual_runtimes = ["MT", "MD", "MTd", "MDd"]
@@ -160,7 +160,7 @@ class ConanMultiPackager(object):
         if not self.gcc_versions and self.clang_versions == self.default_clang_versions:
             self.gcc_versions = self.default_gcc_versions
 
-        if gcc_versions and not self.allow_gcc_minors:
+        if self.gcc_versions and not self.allow_gcc_minors:
             for a_version in self.gcc_versions:
                 if Version(a_version) >= Version("5") and "." in a_version:
                     raise Exception("""
