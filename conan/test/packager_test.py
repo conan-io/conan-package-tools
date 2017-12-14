@@ -119,11 +119,20 @@ class AppTest(unittest.TestCase):
         self.packager.run_builds(3, 3)
         self.runner.assert_tests_for([2, 5, 8])
 
+    def test_deprecation_gcc(self):
+
+        with self.assertRaisesRegexp(Exception, "DEPRECATED GCC MINOR VERSIONS!"):
+            ConanMultiPackager("--build missing -r conan.io",
+                               "lasote", "mychannel",
+                               runner=self.runner,
+                               gcc_versions=["4.3", "5.4"],
+                               use_docker=True)
+
     def test_docker_gcc(self):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
                                            "lasote", "mychannel",
                                            runner=self.runner,
-                                           gcc_versions=["4.3", "5.2"],
+                                           gcc_versions=["4.3", "5"],
                                            use_docker=True)
         self._add_build(1, "gcc", "4.3")
         self._add_build(2, "gcc", "4.3")
@@ -166,19 +175,19 @@ class AppTest(unittest.TestCase):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
                                            "lasote", "mychannel",
                                            runner=self.runner,
-                                           gcc_versions=["5.4", "6.3"],
+                                           gcc_versions=["5", "6"],
                                            clang_versions=["3.9", "4.0"],
                                            use_docker=True)
 
-        self._add_build(1, "gcc", "5.4")
-        self._add_build(2, "gcc", "5.4")
-        self._add_build(3, "gcc", "5.4")
+        self._add_build(1, "gcc", "5")
+        self._add_build(2, "gcc", "5")
+        self._add_build(3, "gcc", "5")
         self._add_build(4, "clang", "3.9")
         self._add_build(5, "clang", "3.9")
         self._add_build(6, "clang", "3.9")
 
         self.packager.run_builds(1, 2)
-        self.assertIn("docker pull lasote/conangcc54", self.runner.calls[0])
+        self.assertIn("docker pull lasote/conangcc5", self.runner.calls[0])
         self.assertIn('docker run ', self.runner.calls[1])
         self.assertIn('os=os1', self.runner.calls[4])
         self.assertIn('os=os3', self.runner.calls[5])
@@ -204,7 +213,7 @@ class AppTest(unittest.TestCase):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
                                            "lasote", "mychannel",
                                            runner=self.runner,
-                                           gcc_versions=["4.3", "5.2"],
+                                           gcc_versions=["4.3", "5"],
                                            use_docker=True)
         self.packager.add_common_builds()
         self.packager.builds = [({"os": "Windows"}, {"option": "value"})]
@@ -301,30 +310,30 @@ class AppTest(unittest.TestCase):
 
     def select_defaults_test(self):
         builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
-                                     gcc_versions=["4.8", "5.2"],
+                                     gcc_versions=["4.8", "5"],
                                      username="foo")
 
         self.assertEquals(builder.clang_versions, [])
 
-        with tools.environment_append({"CONAN_GCC_VERSIONS": "4.8, 5.2"}):
+        with tools.environment_append({"CONAN_GCC_VERSIONS": "4.8, 5"}):
             builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
                                          username="foo")
 
             self.assertEquals(builder.clang_versions, [])
-            self.assertEquals(builder.gcc_versions, ["4.8", "5.2"])
+            self.assertEquals(builder.gcc_versions, ["4.8", "5"])
 
         builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
-                                     clang_versions=["4.8", "5.2"],
+                                     clang_versions=["4.8", "5"],
                                      username="foo")
 
         self.assertEquals(builder.gcc_versions, [])
 
-        with tools.environment_append({"CONAN_CLANG_VERSIONS": "4.8, 5.2"}):
+        with tools.environment_append({"CONAN_CLANG_VERSIONS": "4.8, 5"}):
             builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
                                          username="foo")
 
             self.assertEquals(builder.gcc_versions, [])
-            self.assertEquals(builder.clang_versions, ["4.8", "5.2"])
+            self.assertEquals(builder.clang_versions, ["4.8", "5"])
 
     def test_upload(self):
 

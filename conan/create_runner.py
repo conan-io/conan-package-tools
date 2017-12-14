@@ -12,6 +12,7 @@ from conan.log import logger
 from conan.tools import get_bool_from_env
 from conans.client.conan_api import Conan
 from conans.client.profile_loader import _load_profile
+from conans.model.version import Version
 from conans.tools import vcvars_command
 from conans.util.files import save, mkdir
 
@@ -89,6 +90,9 @@ def autodetect_docker_image(profile):
     compiler_version = profile.settings.get("compiler.version", None)
     if compiler_name not in ["clang", "gcc"]:
         raise Exception("Docker image cannot be autodetected for the compiler %s" % compiler_name)
+
+    if compiler_name == "gcc" and Version(compiler_version) > Version("5"):
+        compiler_version = Version(compiler_version).major(fill=False)
 
     return "lasote/conan%s%s" % (compiler_name, compiler_version.replace(".", ""))
 
