@@ -166,8 +166,8 @@ class ConanMultiPackager(object):
                     raise Exception("""
 ******************* DEPRECATED GCC MINOR VERSIONS! ***************************************                    
                     
-- The use of gcc versions > 5 and specifying the minor version (e.j "5.4") is deprecated.
-- The ABI of gcc > 5 (5, 6, and 7) is compatible between minor versions (e.j 5.3 is compatible with 5.4)
+- The use of gcc versions >= 5 and specifying the minor version (e.j "5.4") is deprecated.
+- The ABI of gcc >= 5 (5, 6, and 7) is compatible between minor versions (e.j 5.3 is compatible with 5.4)
 - Specify only the major in your script: 
    - CONAN_GCC_VERSIONS="5,6,7" if you are using environment variables.
    - gcc_versions=["5", "6", "7"] if you are using the constructor parameter.
