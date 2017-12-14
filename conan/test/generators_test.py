@@ -123,77 +123,77 @@ class GeneratorsTest(unittest.TestCase):
         self.assertEquals([tuple(a) for a in builds], expected)
 
     def test_get_linux_gcc_builds(self):
-        builds = get_linux_gcc_builds(["6.0"], ["x86_64"], "pack:shared", pure_c=False, build_types=["Debug", "Release"])
-        expected = [({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++', 'compiler.version': '6.0', 'arch': 'x86_64'},
+        builds = get_linux_gcc_builds(["6"], ["x86_64"], "pack:shared", pure_c=False, build_types=["Debug", "Release"])
+        expected = [({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++', 'compiler.version': '6', 'arch': 'x86_64'},
                      {'pack:shared': True}, {}, {}),
-                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++11', 'compiler.version': '6.0', 'arch': 'x86_64'},
+                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++11', 'compiler.version': '6', 'arch': 'x86_64'},
                      {'pack:shared': True}, {}, {}),
-                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++', 'compiler.version': '6.0', 'arch': 'x86_64'},
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++', 'compiler.version': '6', 'arch': 'x86_64'},
                      {'pack:shared': True}, {}, {}),
-                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++11', 'compiler.version': '6.0', 'arch': 'x86_64'},
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++11', 'compiler.version': '6', 'arch': 'x86_64'},
                      {'pack:shared': True}, {}, {}),
-                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++', 'compiler.version': '6.0', 'arch': 'x86_64'},
+                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++', 'compiler.version': '6', 'arch': 'x86_64'},
                      {'pack:shared': False}, {}, {}),
-                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++11', 'compiler.version': '6.0', 'arch': 'x86_64'},
+                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++11', 'compiler.version': '6', 'arch': 'x86_64'},
                      {'pack:shared': False}, {}, {}),
-                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++', 'compiler.version': '6.0', 'arch': 'x86_64'},
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++', 'compiler.version': '6', 'arch': 'x86_64'},
                      {'pack:shared': False}, {}, {}),
-                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++11', 'compiler.version': '6.0', 'arch': 'x86_64'},
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++11', 'compiler.version': '6', 'arch': 'x86_64'},
                      {'pack:shared': False}, {}, {})]
         self.assertEquals([tuple(a) for a in builds], expected)
 
-        builds = get_linux_gcc_builds(["6.0"], ["x86_64"], "pack:shared", pure_c=True, build_types=["Debug", "Release"])
-        expected = [({'arch': 'x86_64', 'compiler.version': '6.0', 'build_type': 'Debug', 'compiler': 'gcc'},
+        builds = get_linux_gcc_builds(["6"], ["x86_64"], "pack:shared", pure_c=True, build_types=["Debug", "Release"])
+        expected = [({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Debug', 'compiler': 'gcc'},
                      {'pack:shared': True}, {}, {}),
-                    ({'arch': 'x86_64', 'compiler.version': '6.0', 'build_type': 'Release', 'compiler': 'gcc'},
+                    ({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Release', 'compiler': 'gcc'},
                      {'pack:shared': True}, {}, {}),
-                    ({'arch': 'x86_64', 'compiler.version': '6.0', 'build_type': 'Debug', 'compiler': 'gcc'},
+                    ({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Debug', 'compiler': 'gcc'},
                      {'pack:shared': False}, {}, {}),
-                    ({'arch': 'x86_64', 'compiler.version': '6.0', 'build_type': 'Release', 'compiler': 'gcc'},
+                    ({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Release', 'compiler': 'gcc'},
                      {'pack:shared': False}, {}, {})]
         self.assertEquals([tuple(a) for a in builds], expected)
 
-        builds = get_linux_gcc_builds(["6.0"], ["x86_64"], "pack:shared", pure_c=False, build_types=["Debug"])
+        builds = get_linux_gcc_builds(["6"], ["x86_64"], "pack:shared", pure_c=False, build_types=["Debug"])
         expected = [({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
-                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                      'compiler.version': '6', 'arch': 'x86_64'},
                      {'pack:shared': True}, {}, {}),
                     ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++11',
-                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                      'compiler.version': '6', 'arch': 'x86_64'},
                      {'pack:shared': True}, {}, {}),
                     ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
-                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                      'compiler.version': '6', 'arch': 'x86_64'},
                      {'pack:shared': False}, {}, {}),
                     ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++11',
-                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                      'compiler.version': '6', 'arch': 'x86_64'},
                      {'pack:shared': False}, {}, {})]
         self.assertEquals([tuple(a) for a in builds], expected)
 
-        builds = get_linux_gcc_builds(["6.0"], ["x86_64"], "pack:shared", pure_c=True, build_types=["Debug"])
-        expected = [({'arch': 'x86_64', 'compiler.version': '6.0', 'build_type': 'Debug', 'compiler': 'gcc'},
+        builds = get_linux_gcc_builds(["6"], ["x86_64"], "pack:shared", pure_c=True, build_types=["Debug"])
+        expected = [({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Debug', 'compiler': 'gcc'},
                      {'pack:shared': True}, {}, {}),
-                    ({'arch': 'x86_64', 'compiler.version': '6.0', 'build_type': 'Debug', 'compiler': 'gcc'},
+                    ({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Debug', 'compiler': 'gcc'},
                      {'pack:shared': False}, {}, {})]
         self.assertEquals([tuple(a) for a in builds], expected)
 
-        builds = get_linux_gcc_builds(["6.0"], ["x86_64"], "pack:shared", pure_c=False, build_types=["Release"])
+        builds = get_linux_gcc_builds(["6"], ["x86_64"], "pack:shared", pure_c=False, build_types=["Release"])
         expected = [({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
-                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                      'compiler.version': '6', 'arch': 'x86_64'},
                      {'pack:shared': True}, {}, {}),
                     ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++11',
-                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                      'compiler.version': '6', 'arch': 'x86_64'},
                      {'pack:shared': True}, {}, {}),
                     ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
-                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                      'compiler.version': '6', 'arch': 'x86_64'},
                      {'pack:shared': False}, {}, {}),
                     ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++11',
-                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                      'compiler.version': '6', 'arch': 'x86_64'},
                      {'pack:shared': False}, {}, {})]
         self.assertEquals([tuple(a) for a in builds], expected)
 
-        builds = get_linux_gcc_builds(["6.0"], ["x86_64"], "pack:shared", pure_c=True, build_types=["Release"])
-        expected = [({'arch': 'x86_64', 'compiler.version': '6.0', 'build_type': 'Release', 'compiler': 'gcc'},
+        builds = get_linux_gcc_builds(["6"], ["x86_64"], "pack:shared", pure_c=True, build_types=["Release"])
+        expected = [({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Release', 'compiler': 'gcc'},
                      {'pack:shared': True}, {}, {}),
-                    ({'arch': 'x86_64', 'compiler.version': '6.0', 'build_type': 'Release', 'compiler': 'gcc'},
+                    ({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Release', 'compiler': 'gcc'},
                      {'pack:shared': False}, {}, {})]
         self.assertEquals([tuple(a) for a in builds], expected)
 

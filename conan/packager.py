@@ -10,6 +10,7 @@ from conan.log import logger
 from conans.client.conan_api import Conan
 from conans.client.runner import ConanRunner
 from conans.model.ref import ConanFileReference
+from conans.model.version import Version
 
 
 def get_mingw_config_from_env():
@@ -86,8 +87,10 @@ class ConanMultiPackager(object):
                  login_username=None,
                  upload_only_when_stable=False,
                  build_types=None,
-                 skip_check_credentials=False):
+                 skip_check_credentials=False,
+                 allow_gcc_minors=False):
 
+        self.allow_gcc_minors = allow_gcc_minors or os.getenv("CONAN_ALLOW_GCC_MINORS", False)
         self._builds = []
         self._named_builds = {}
         self._platform_info = platform_info or PlatformInfo()
@@ -156,6 +159,28 @@ class ConanMultiPackager(object):
         # versions
         if not self.gcc_versions and self.clang_versions == self.default_clang_versions:
             self.gcc_versions = self.default_gcc_versions
+
+        if gcc_versions and not self.allow_gcc_minors:
+            for a_version in self.gcc_versions:
+                if Version(a_version) >= Version("5") and "." in a_version:
+                    raise Exception("""
+******************* DEPRECATED GCC MINOR VERSIONS! ***************************************                    
+                    
+- The use of gcc versions > 5 and specifying the minor version (e.j "5.4") is deprecated.
+- The ABI of gcc > 5 (5, 6, and 7) is compatible between minor versions (e.j 5.3 is compatible with 5.4)
+- Specify only the major in your script: 
+   - CONAN_GCC_VERSIONS="5","6","7" if you are using environment variables.
+   - gcc_versions=["5", "6", "7"] if you are using the constructor parameter.
+   
+You can still keep using the same docker images, or use the new "lasote/conangcc5", "lasote/conangcc6", "lasote/conangcc7"
+
+If you still want to keep the old behavior, set the environment var CONAN_ALLOW_GCC_MINORS or pass the 
+"allow_gcc_minors=True" parameter. But it is not recommended, if your packages are public most users
+won't be able to use them.
+
+******************************************************************************************
+
+""")
 
         if visual_versions is not None:
             self.visual_versions = visual_versions
@@ -285,7 +310,7 @@ class ConanMultiPackager(object):
             if self._platform_info.system() == "Windows":
                 if self.mingw_configurations:
                     builds = get_mingw_builds(self.mingw_configurations, self.mingw_installer_reference, self.archs,
-                                                shared_option_name, self.build_types)
+                                              shared_option_name, self.build_types)
                 builds.extend(get_visual_builds(self.visual_versions, self.archs, self.visual_runtimes,
                                                 shared_option_name, dll_with_static_runtime, self.vs10_x86_64_enabled, self.build_types))
             elif self._platform_info.system() == "Linux":
