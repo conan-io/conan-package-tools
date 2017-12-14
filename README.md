@@ -286,7 +286,7 @@ You can use **builder.add_common_builds** method and remove then some configurat
 Instance ConanMultiPackager with the parameter **use_docker=True**, or declare the environment variable **CONAN_USE_DOCKER**:
 It will launch, when needed, a container for the current build configuration that is being built (only for Linux builds).
 
-There are docker images available for different gcc versions: 4.6, 4.8, 4.9, 5.2, 5.3, 6.2, 6.3 and clang versions: 3.8, 3.9, 4.0.
+There are docker images available for different gcc versions: 4.6, 4.8, 4.9, 5, 6, 7 and clang versions: 3.8, 3.9, 4.0.
 
 The containers will share the conan storage directory, so the packages will be generated in your conan directory.
 
@@ -363,7 +363,7 @@ You can see working integrations with Travis and Appveyor in the zlib repository
 Travis CI can generate a build with multiple jobs defining a matrix with environment variables.
 We can configure the builds to be executed in the jobs by defining some environment variables.
 
-The following is a real example of a **.travis.yml** file that will generate packages for Linux gcc (4.9, 5.4, 6.3), Linux Clang (3.9 and 4.0) and OSx with apple-clang (8.0, 8.1 and 9.0).
+The following is a real example of a **.travis.yml** file that will generate packages for Linux gcc (4.9, 5, 6), Linux Clang (3.9 and 4.0) and OSx with apple-clang (8.0, 8.1 and 9.0).
 
 Remember, you can use `conan new` command to generate the base files for appveyor, travis etc. Check `conan new --help`.
 
@@ -397,9 +397,11 @@ Remember, you can use `conan new` command to generate the base files for appveyo
           - <<: *linux
             env: CONAN_GCC_VERSIONS=4.9 CONAN_DOCKER_IMAGE=lasote/conangcc49
           - <<: *linux
-            env: CONAN_GCC_VERSIONS=5.4 CONAN_DOCKER_IMAGE=lasote/conangcc54
+            env: CONAN_GCC_VERSIONS=5 CONAN_DOCKER_IMAGE=lasote/conangcc5
           - <<: *linux
-            env: CONAN_GCC_VERSIONS=6.3 CONAN_DOCKER_IMAGE=lasote/conangcc63
+            env: CONAN_GCC_VERSIONS=6 CONAN_DOCKER_IMAGE=lasote/conangcc6
+          - <<: *linux
+            env: CONAN_GCC_VERSIONS=7 CONAN_DOCKER_IMAGE=lasote/conangcc7
           - <<: *linux
             env: CONAN_CLANG_VERSIONS=3.9 CONAN_DOCKER_IMAGE=lasote/conanclang39
           - <<: *linux
@@ -459,16 +461,16 @@ You can also use multiples "pages" to split the builds in different jobs (Check 
             env: CONAN_GCC_VERSIONS=4.9 CONAN_DOCKER_IMAGE=lasote/conangcc49 CONAN_CURRENT_PAGE=2
 
           - <<: *linux
-            env: CONAN_GCC_VERSIONS=5.4 CONAN_DOCKER_IMAGE=lasote/conangcc54 CONAN_CURRENT_PAGE=1
+            env: CONAN_GCC_VERSIONS=5 CONAN_DOCKER_IMAGE=lasote/conangcc5 CONAN_CURRENT_PAGE=1
 
            - <<: *linux
-            env: CONAN_GCC_VERSIONS=5.4 CONAN_DOCKER_IMAGE=lasote/conangcc54 CONAN_CURRENT_PAGE=2
+            env: CONAN_GCC_VERSIONS=5 CONAN_DOCKER_IMAGE=lasote/conangcc5 CONAN_CURRENT_PAGE=2
 
           - <<: *linux
-            env: CONAN_GCC_VERSIONS=6.3 CONAN_DOCKER_IMAGE=lasote/conangcc63 CONAN_CURRENT_PAGE=1
+            env: CONAN_GCC_VERSIONS=6 CONAN_DOCKER_IMAGE=lasote/conangcc6 CONAN_CURRENT_PAGE=1
 
           - <<: *linux
-            env: CONAN_GCC_VERSIONS=6.3 CONAN_DOCKER_IMAGE=lasote/conangcc63 CONAN_CURRENT_PAGE=2
+            env: CONAN_GCC_VERSIONS=6 CONAN_DOCKER_IMAGE=lasote/conangcc6 CONAN_CURRENT_PAGE=2
 
           - <<: *linux
             env: CONAN_CLANG_VERSIONS=3.9 CONAN_DOCKER_IMAGE=lasote/conanclang39 CONAN_CURRENT_PAGE=1
@@ -796,7 +798,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 
 - **args**: List with the parameters that will be passed to "conan test" command. e.j: args=['--build', 'all']. Default sys.argv[1:]
 - **username**: Your conan username
-- **gcc_versions**: List with a subset of gcc_versions. Default ["4.6", "4.8", "4.9", "5.2", "5.3", "5.4", "6.2", "6.3"]
+- **gcc_versions**: List with a subset of gcc_versions. Default ["4.9", "5", "6", "7"]
 - **clang_versions**: List with a subset of clang_versions. Default ["3.8", "3.9", "4.0"]
 - **apple_clang_versions**: List with a subset of apple-clang versions. Default ["6.1", "7.3", "8.0"]
 - **visual_versions**: List with a subset of Visual Studio versions. Default [10, 12, 14]
@@ -813,6 +815,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **upload_only_when_stable**: Will try to upload only if the channel is the stable channel
 - **build_types**: List containing specific build types. Default ["Release", "Debug"]
 - **skip_check_credentials**: Conan will check the user credentials before building the packages. Default [False]
+- **allow_gcc_minors** Declare this variable if you want to allow gcc >=5 versions with the minor (5.1, 6.3 etc).
 
 Upload related parameters:
 
@@ -858,7 +861,7 @@ This is especially useful for CI integration.
 - **CONAN_UPLOAD_RETRY**: If defined, in case of fail retries to upload again the specified times
 - **CONAN_UPLOAD_ONLY_WHEN_STABLE**: If defined, will try to upload the packages only when the current channel is the stable one.
 - **CONAN_SKIP_CHECK_CREDENTIALS**: Force to check user credentials before to build when upload is required. By default is False.
-- **CONAN_GCC_VERSIONS**: Gcc versions, comma separated, e.g. "4.6,4.8,5.2,6.3"
+- **CONAN_GCC_VERSIONS**: Gcc versions, comma separated, e.g. "4.6,4.8,5,6"
 - **CONAN_CLANG_VERSIONS**: Clang versions, comma separated, e.g. "3.8,3.9,4.0"
 - **CONAN_APPLE_CLANG_VERSIONS**: Apple clang versions, comma separated, e.g. "6.1,8.0"
 - **CONAN_ARCHS**: Architectures to build for, comma separated, e.g. "x86,x86_64"
@@ -879,7 +882,9 @@ This is especially useful for CI integration.
 - **CONAN_BASH_PATH**: Path to a bash executable. Used only in windows to help the tools.run_in_windows_bash() function to locate our Cygwin/MSYS2 bash.
   Set it with the bash executable path if it’s not in the PATH or you want to use a different one.
 - **CONAN_DOCKER_USE_SUDO** Force to use "sudo" when invoking conan. By default, only with Windows. "False" to deactivate.
+- **CONAN_ALLOW_GCC_MINORS** Declare this variable if you want to allow gcc >=5 versions with the minor (5.1, 6.3 etc).
 
 # Full example
 
 You can see the full zlib example [here](https://github.com/lasote/conan-zlib)
+
