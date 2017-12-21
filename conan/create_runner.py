@@ -82,7 +82,7 @@ class TestPackageRunner(object):
             path = "."
 
         ref = self._reference if self._reference else "%s/%s" % (self._username, self._channel)
-        command = "conan create %s %s --profile %s %s" % (path, ref, self.abs_profile_path,
+        command = "conan create %s %s --profile %s %s" % (path, str(ref), self.abs_profile_path,
                                                           self._args)
 
         if pre_command:
