@@ -40,7 +40,8 @@ class MockRunner(object):
             return Profile.loads(load(profile_path))
         else:
             from conans.client.profile_loader import read_profile
-            tools.replace_in_file(profile_path, "include", "#include")  # FIXME: Not able to load here the default
+            tools.replace_in_file(profile_path, "include", "#include")
+            # FIXME: Not able to load here the default
             return read_profile(profile_path, os.path.dirname(profile_path), None)[0]
 
     def assert_tests_for(self, numbers):
@@ -66,6 +67,10 @@ class AppTest(unittest.TestCase):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
                                            "lasote", "mychannel",
                                            runner=self.runner)
+        if "APPVEYOR" in os.environ:
+            del os.environ["APPVEYOR"]
+        if "TRAVIS" in os.environ:
+            del os.environ["TRAVIS"]
 
     def _add_build(self, number, compiler=None, version=None):
         self.packager.add({"os": "os%d" % number, "compiler": compiler or "compiler%d" % number,
@@ -336,7 +341,6 @@ class AppTest(unittest.TestCase):
             self.assertEquals(builder.clang_versions, ["4.8", "5"])
 
     def test_upload(self):
-
         runner = MockRunner()
         runner.output = "arepo: myurl"
         builder = ConanMultiPackager(username="pepe", channel="testing",
@@ -371,16 +375,9 @@ class AppTest(unittest.TestCase):
                                              'conan remote add upload_repo myurl --insert',
                                              'conan remote add remote2 otherurl --insert'])
 
-        if os.getenv("APPVEYOR", False) and os.getenv("APPVEYOR_REPO_BRANCH", "") == "master":
-            channel = "stable"
-        elif os.getenv("TRAVIS", False) and os.getenv("TRAVIS_BRANCH", "") == "master":
-            channel = "stable"
-        else:
-            channel = "testing"
-
         self.assertEqual(runner.calls[-1],
-                         'conan upload Hello/0.1@pepe/%s --retry 3 --all --force '
-                         '--confirm -r=upload_repo' % channel)
+                         'conan upload Hello/0.1@pepe/testing --retry 3 --all --force '
+                         '--confirm -r=upload_repo')
 
         runner = MockRunner()
         builder = ConanMultiPackager(username="pepe", channel="testing",
@@ -399,8 +396,8 @@ class AppTest(unittest.TestCase):
                           'conan remote add upload_repo myurl'])
 
         self.assertEqual(runner.calls[-1],
-                         'conan upload Hello/0.1@pepe/%s --retry 3 --all '
-                         '--force --confirm -r=upload_repo' % channel)
+                         'conan upload Hello/0.1@pepe/testing --retry 3 --all '
+                         '--force --confirm -r=upload_repo')
 
     def test_login(self):
         runner = MockRunner()
@@ -442,20 +439,12 @@ class AppTest(unittest.TestCase):
         # When activated, check credentials before to create the profiles
         self.assertEqual(runner.calls[0:2], ['conan remote add upload_repo myurl',
                                              'conan user pepe -p="password" -r=upload_repo'])
-
-        if os.getenv("APPVEYOR", False) and os.getenv("APPVEYOR_REPO_BRANCH", "") == "master":
-            channel = "stable"
-        elif os.getenv("TRAVIS", False) and os.getenv("TRAVIS_BRANCH", "") == "master":
-            channel = "stable"
-        else:
-            channel = "testing"
-
         self.assertEqual(runner.calls[1],
                          'conan user pepe -p="password" -r=upload_repo')
         self.assertIn("conan create", runner.calls[-2])  # Not login again before upload its cached
         self.assertEqual(runner.calls[-1],
-                         "conan upload Hello/0.1@pepe/%s --retry 3 --all --force --confirm "
-                         "-r=upload_repo" % channel)
+                         "conan upload Hello/0.1@pepe/testing --retry 3 --all --force --confirm "
+                         "-r=upload_repo")
 
         runner = MockRunner()
         builder = ConanMultiPackager(username="pepe", channel="testing",
@@ -470,7 +459,8 @@ class AppTest(unittest.TestCase):
 
         # When upload is not required, credentials verification must be avoided
         self.assertFalse('conan user pepe -p="password" -r=upload_repo' in runner.calls)
-        self.assertFalse('conan upload Hello/0.1@pepe/%s --retry 3 --all --force --confirm -r=upload_repo' % channel in runner.calls)
+        self.assertFalse('conan upload Hello/0.1@pepe/testing --retry 3 '
+                         '--all --force --confirm -r=upload_repo' in runner.calls)
 
         # If we skip the credentials check, the login will be performed just before the upload
         builder = ConanMultiPackager(username="pepe", channel="testing",
@@ -485,5 +475,5 @@ class AppTest(unittest.TestCase):
         self.assertEqual(runner.calls[-2],
                          'conan user pepe -p="password" -r=upload_repo')
         self.assertEqual(runner.calls[-1],
-                         "conan upload Hello/0.1@pepe/%s --retry 3 --all --force --confirm "
-                         "-r=upload_repo" % channel)
+                         "conan upload Hello/0.1@pepe/testing --retry 3 --all --force --confirm "
+                         "-r=upload_repo")

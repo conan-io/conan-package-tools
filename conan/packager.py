@@ -131,6 +131,9 @@ class ConanMultiPackager(object):
         self.stable_channel = stable_channel or os.getenv("CONAN_STABLE_CHANNEL", "stable")
         self.channel = self._get_channel(default_channel, self.stable_channel)
 
+        if self.reference:
+            self.reference = ConanFileReference.loads("%s@%s/%s" % (self.reference,
+                                                                    self.username, self.channel))
         self.upload_only_when_stable = upload_only_when_stable or \
                                        os.getenv("CONAN_UPLOAD_ONLY_WHEN_STABLE", False)
         self.skip_check_credentials = skip_check_credentials or \
@@ -366,6 +369,7 @@ won't be able to use them.
             profile = self._get_profile(build, profile_name)
             if self.use_docker:
                 build_runner = DockerTestPackageRunner(profile, self.username, self.channel,
+                                                       self.reference,
                                                        self.mingw_installer_reference, self.runner, self.args,
                                                        docker_image=self.docker_image)
 
@@ -373,7 +377,9 @@ won't be able to use them.
                 pulled_docker_images[build_runner.docker_image] = True
             else:
                 build_runner = TestPackageRunner(profile, self.username, self.channel,
-                                                 self.mingw_installer_reference, self.runner, self.args)
+                                                 self.reference,
+                                                 self.mingw_installer_reference, self.runner,
+                                                 self.args)
                 build_runner.run()
 
     def login(self, remote_name, user=None, password=None, force=False):
@@ -399,8 +405,8 @@ won't be able to use them.
 
         self.login("upload_repo")
 
-        command = "conan upload %s@%s/%s --retry %s --all --force --confirm -r=upload_repo" % (
-                self.reference, self.username, self.channel, self.upload_retry)
+        command = "conan upload %s --retry %s --all --force --confirm -r=upload_repo" % (
+                self.reference, self.upload_retry)
 
         logger.info("******** RUNNING UPLOAD COMMAND ********** \n%s" % command)
         if self._platform_info.system() == "Linux" and self.use_docker:
