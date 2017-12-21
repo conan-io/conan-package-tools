@@ -15,10 +15,12 @@ from conans.client.profile_loader import _load_profile
 from conans.model.version import Version
 from conans.tools import vcvars_command
 from conans.util.files import save, mkdir
+from conans import __version__ as client_version
 
 
 class TestPackageRunner(object):
-    def __init__(self, profile_text, username, channel, mingw_installer_reference=None, runner=None,
+    def __init__(self, profile_text, username, channel, reference,
+                 mingw_installer_reference=None, runner=None,
                  args=None, conan_pip_package=None):
 
         self._profile_text = profile_text
@@ -26,6 +28,7 @@ class TestPackageRunner(object):
         self._args = args
         self._username = username
         self._channel = channel
+        self._reference = reference
         self._conan_pip_package = conan_pip_package
         self._runner = runner or os.system
         self.runner = runner
@@ -73,8 +76,15 @@ class TestPackageRunner(object):
 
     def _run_create(self, pre_command=None):
 
-        command = "conan create %s/%s --profile %s %s" % (self._username, self._channel,
-                                                          self.abs_profile_path, self._args)
+        if Version(client_version) < Version("0.99"):  # Introduced in 1.0.0-beta.1
+            path = ""
+        else:
+            path = "."
+
+        ref = self._reference if self._reference else "%s/%s" % (self._username, self._channel)
+        command = "conan create %s %s --profile %s %s" % (path, ref, self.abs_profile_path,
+                                                          self._args)
+
         if pre_command:
             command = '%s && %s' % (pre_command, command)
 
@@ -98,10 +108,10 @@ def autodetect_docker_image(profile):
 
 
 class DockerTestPackageRunner(TestPackageRunner):
-    def __init__(self, profile_text, username, channel, mingw_ref=None, runner=None,
+    def __init__(self, profile_text, username, channel, reference, mingw_ref=None, runner=None,
                  args=None, conan_pip_package=None, docker_image=None):
 
-        super(DockerTestPackageRunner, self).__init__(profile_text, username, channel,
+        super(DockerTestPackageRunner, self).__init__(profile_text, username, channel, reference,
                                                       mingw_installer_reference=mingw_ref,
                                                       runner=runner, args=args,
                                                       conan_pip_package=conan_pip_package)
@@ -161,7 +171,8 @@ class DockerTestPackageRunner(TestPackageRunner):
                "username": self._username,
                "channel": self._channel,
                "profile": self._profile_text,
-               "conan_pip_package": self._conan_pip_package}
+               "conan_pip_package": self._conan_pip_package,
+               "reference": self._reference}
         return json.dumps(doc)
 
     @staticmethod
@@ -170,6 +181,7 @@ class DockerTestPackageRunner(TestPackageRunner):
         ret = TestPackageRunner(the_json["profile"],
                                 username=the_json["username"],
                                 channel=the_json["channel"],
+                                reference=the_json["reference"],
                                 args=the_json["args"],
                                 conan_pip_package=the_json["conan_pip_package"])
         return ret

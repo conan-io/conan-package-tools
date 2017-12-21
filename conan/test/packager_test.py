@@ -40,7 +40,8 @@ class MockRunner(object):
             return Profile.loads(load(profile_path))
         else:
             from conans.client.profile_loader import read_profile
-            tools.replace_in_file(profile_path, "include", "#include")  # FIXME: Not able to load here the default
+            tools.replace_in_file(profile_path, "include", "#include")
+            # FIXME: Not able to load here the default
             return read_profile(profile_path, os.path.dirname(profile_path), None)[0]
 
     def assert_tests_for(self, numbers):
@@ -470,7 +471,8 @@ class AppTest(unittest.TestCase):
 
         # When upload is not required, credentials verification must be avoided
         self.assertFalse('conan user pepe -p="password" -r=upload_repo' in runner.calls)
-        self.assertFalse('conan upload Hello/0.1@pepe/%s --retry 3 --all --force --confirm -r=upload_repo' % channel in runner.calls)
+        self.assertFalse('conan upload Hello/0.1@pepe/%s --retry 3 '
+                         '--all --force --confirm -r=upload_repo' % channel in runner.calls)
 
         # If we skip the credentials check, the login will be performed just before the upload
         builder = ConanMultiPackager(username="pepe", channel="testing",
