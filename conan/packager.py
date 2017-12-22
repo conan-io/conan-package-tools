@@ -1,8 +1,10 @@
 import os
+import platform
 import re
 import sys
 from collections import defaultdict
 
+from conan.tools import get_bool_from_env
 from conan.builds_generator import (get_linux_gcc_builds, get_linux_clang_builds, get_visual_builds,
                                     get_osx_apple_clang_builds, get_mingw_builds, BuildConf)
 from conan.create_runner import TestPackageRunner, DockerTestPackageRunner
@@ -89,6 +91,13 @@ class ConanMultiPackager(object):
                  build_types=None,
                  skip_check_credentials=False,
                  allow_gcc_minors=False):
+
+        self.sudo_command = ""
+        if "CONAN_DOCKER_USE_SUDO" in os.environ:
+            if get_bool_from_env("CONAN_DOCKER_USE_SUDO"):
+                self.sudo_command = "sudo"
+        elif platform.system() == "Linux":
+            self.sudo_command = "sudo"
 
         self.allow_gcc_minors = allow_gcc_minors or os.getenv("CONAN_ALLOW_GCC_MINORS", False)
         self._builds = []
@@ -391,7 +400,7 @@ won't be able to use them.
             logger.info("******** VERIFYING YOUR CREDENTIALS **********\n")
             if self._platform_info.system() == "Linux" and self.use_docker:
                 data_dir = os.path.expanduser(self.data_home)
-                self.runner("sudo chmod -R 777 %s" % data_dir)
+                self.runner("%schmod -R 777 %s" % (self.sudo_command, data_dir))
 
             ret = self.runner(user_command)
             if ret != 0:
@@ -406,12 +415,12 @@ won't be able to use them.
         self.login("upload_repo")
 
         command = "conan upload %s --retry %s --all --force --confirm -r=upload_repo" % (
-                self.reference, self.upload_retry)
+                str(self.reference), self.upload_retry)
 
         logger.info("******** RUNNING UPLOAD COMMAND ********** \n%s" % command)
         if self._platform_info.system() == "Linux" and self.use_docker:
             data_dir = os.path.expanduser(self.data_home)
-            self.runner("sudo chmod -R 777 %s" % data_dir)
+            self.runner("%schmod -R 777 %s" % (self.sudo_command, data_dir))
 
         ret = self.runner(command)
         if ret != 0:
@@ -449,8 +458,7 @@ won't be able to use them.
     def _pip_install(self):
 
         if self.conan_pip_package:
-            sudo = "sudo" if self._platform_info.system() != "Windows" else ""
-            self.runner('%s pip install %s' % (sudo, self.conan_pip_package))
+            self.runner('%s pip install %s' % (self.sudo_command, self.conan_pip_package))
 
     def _get_channel(self, default_channel, stable_channel):
 
