@@ -117,10 +117,12 @@ class DockerTestPackageRunner(TestPackageRunner):
                                                       conan_pip_package=conan_pip_package)
 
         self.docker_image = docker_image or autodetect_docker_image(self.profile)
-        if get_bool_from_env("CONAN_DOCKER_USE_SUDO") or platform.system() == "Linux":
+        self.sudo_command = ""
+        if "CONAN_DOCKER_USE_SUDO" in os.environ:
+            if get_bool_from_env("CONAN_DOCKER_USE_SUDO"):
+                self.sudo_command = "sudo"
+        elif platform.system() == "Linux":
             self.sudo_command = "sudo"
-        else:
-            self.sudo_command = ""
 
     def run(self, pull_image=True):
 
@@ -172,7 +174,7 @@ class DockerTestPackageRunner(TestPackageRunner):
                "channel": self._channel,
                "profile": self._profile_text,
                "conan_pip_package": self._conan_pip_package,
-               "reference": self._reference}
+               "reference": str(self._reference)}
         return json.dumps(doc)
 
     @staticmethod
