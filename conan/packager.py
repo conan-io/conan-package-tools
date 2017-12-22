@@ -400,7 +400,7 @@ won't be able to use them.
             logger.info("******** VERIFYING YOUR CREDENTIALS **********\n")
             if self._platform_info.system() == "Linux" and self.use_docker:
                 data_dir = os.path.expanduser(self.data_home)
-                self.runner("%schmod -R 777 %s" % (self.sudo_command, data_dir))
+                self.runner("%s chmod -R 777 %s" % (self.sudo_command, data_dir))
 
             ret = self.runner(user_command)
             if ret != 0:
@@ -420,7 +420,7 @@ won't be able to use them.
         logger.info("******** RUNNING UPLOAD COMMAND ********** \n%s" % command)
         if self._platform_info.system() == "Linux" and self.use_docker:
             data_dir = os.path.expanduser(self.data_home)
-            self.runner("%schmod -R 777 %s" % (self.sudo_command, data_dir))
+            self.runner("%s chmod -R 777 %s" % (self.sudo_command, data_dir))
 
         ret = self.runner(command)
         if ret != 0:
