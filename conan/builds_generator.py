@@ -153,7 +153,7 @@ def get_linux_gcc_builds(gcc_versions, archs, shared_option_name, pure_c, build_
                         if not pure_c:
                             ret.append(get_build("gcc", arch, build_type_it, gcc_version,
                                                  "libstdc++", shared_option_name, shared))
-                            if float(gcc_version) > 5:
+                            if float(gcc_version) >= 5:
                                 ret.append(get_build("gcc", arch, build_type_it, gcc_version,
                                                      "libstdc++11", shared_option_name, shared))
                         else:
@@ -164,7 +164,7 @@ def get_linux_gcc_builds(gcc_versions, archs, shared_option_name, pure_c, build_
                     if not pure_c:
                         ret.append(get_build("gcc", arch, build_type_it, gcc_version,
                                              "libstdc++"))
-                        if float(gcc_version) > 5:
+                        if float(gcc_version) >= 5:
                             ret.append(get_build("gcc", arch, build_type_it, gcc_version,
                                                  "libstdc++11"))
                     else:
