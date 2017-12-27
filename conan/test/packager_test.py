@@ -437,10 +437,8 @@ class AppTest(unittest.TestCase):
         builder.run()
 
         # When activated, check credentials before to create the profiles
-        self.assertEqual(runner.calls[0:2], ['conan remote add upload_repo myurl',
-                                             'conan user pepe -p="password" -r=upload_repo'])
-        self.assertEqual(runner.calls[1],
-                         'conan user pepe -p="password" -r=upload_repo')
+        self.assertEqual(runner.calls[0], 'conan remote add upload_repo myurl')
+        self.assertEqual(runner.calls[2], 'conan user pepe -p="password" -r=upload_repo')
         self.assertIn("conan create", runner.calls[-2])  # Not login again before upload its cached
         self.assertEqual(runner.calls[-1],
                          "conan upload Hello/0.1@pepe/testing --retry 3 --all --force --confirm "
