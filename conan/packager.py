@@ -13,6 +13,7 @@ from conans.client.conan_api import Conan
 from conans.client.runner import ConanRunner
 from conans.model.ref import ConanFileReference
 from conans.model.version import Version
+from conans import __version__ as client_version
 
 
 def get_mingw_config_from_env():
@@ -232,7 +233,7 @@ won't be able to use them.
         if self.password:
             self.password = self.password.replace('"', '\\"')
 
-        self.conan_pip_package = os.getenv("CONAN_PIP_PACKAGE", None)
+        self.conan_pip_package = os.getenv("CONAN_PIP_PACKAGE", "conan==%s" % client_version)
         self.vs10_x86_64_enabled = vs10_x86_64_enabled
 
         # Set the remotes
@@ -343,7 +344,8 @@ won't be able to use them.
         self.builds.append(BuildConf(settings, options, env_vars, build_requires))
 
     def run(self, profile_name=None):
-        self._pip_install()
+        if self.conan_pip_package:
+            self.runner('%s pip install %s' % (self.sudo_command, self.conan_pip_package))
         if not self.skip_check_credentials and self._upload_enabled():
             self.login("upload_repo")
         self.run_builds(profile_name=profile_name)
@@ -380,7 +382,8 @@ won't be able to use them.
                 build_runner = DockerTestPackageRunner(profile, self.username, self.channel,
                                                        self.reference,
                                                        self.mingw_installer_reference, self.runner, self.args,
-                                                       docker_image=self.docker_image)
+                                                       docker_image=self.docker_image,
+                                                       conan_pip_package=self.conan_pip_package)
 
                 build_runner.run(pull_image=not pulled_docker_images[build_runner.docker_image])
                 pulled_docker_images[build_runner.docker_image] = True
@@ -388,7 +391,8 @@ won't be able to use them.
                 build_runner = TestPackageRunner(profile, self.username, self.channel,
                                                  self.reference,
                                                  self.mingw_installer_reference, self.runner,
-                                                 self.args)
+                                                 self.args,
+                                                 conan_pip_package=self.conan_pip_package)
                 build_runner.run()
 
     def login(self, remote_name, user=None, password=None, force=False):
@@ -454,11 +458,6 @@ won't be able to use them.
             raise_error("username")
 
         return True
-
-    def _pip_install(self):
-
-        if self.conan_pip_package:
-            self.runner('%s pip install %s' % (self.sudo_command, self.conan_pip_package))
 
     def _get_channel(self, default_channel, stable_channel):
 
