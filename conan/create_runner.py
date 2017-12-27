@@ -151,8 +151,8 @@ class DockerTestPackageRunner(TestPackageRunner):
         command = "%s docker run --rm -v %s:/home/conan/project -v " \
                   "%s:/home/conan/.conan %s %s /bin/sh -c \"" \
                   "rm -f /home/conan/.conan/conan.conf && cd project && " \
-                  "rm -r /home/conan/.conan/profiles/default && " \
-                  "conan profile new default --detect && " \
+                  "rm -f /home/conan/.conan/profiles/default && " \
+                  "(conan profile new default --detect || true) && " \
                   "run_create_in_docker\"" % (self.sudo_command, os.getcwd(), self.conan_home,
                                               env_vars, self.docker_image)
         ret = self._runner(command)
