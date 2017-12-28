@@ -279,8 +279,16 @@ won't be able to use them.
         self.runner("conan remote add %s %s" % (name, url))  # Retrocompatibility
 
     @property
-    def builds(self):
+    def items(self):
         return self._builds
+
+    @property
+    def builds(self):
+        # Retrocompatibility iterating
+        logger.warn("\n\n\n******** ITERATING THE CONAN_PACKAGE_TOOLS BUILDS WITH "
+                    ".builds is deprecated use .items() instead (unpack 5 elements: "
+                    "settings, options, env_vars, build_requires, reference  **********\n\n\n")
+        return [elem[0:4] for elem in self._builds]
 
     @builds.setter
     def builds(self, confs):
@@ -289,10 +297,13 @@ won't be able to use them.
         self._builds = []
         for values in confs:
             if len(values) == 2:
-                self._builds.append(BuildConf(values[0], values[1], {}, {}))
-            elif len(values) != 4:
+                self._builds.append(BuildConf(values[0], values[1], {}, {}, self.reference))
+            elif len(values) == 4:
+                self._builds.append(BuildConf(values[0], values[1], values[2], values[3],
+                                              self.reference))
+            elif len(values) != 5:
                 raise Exception("Invalid build configuration, has to be a tuple of "
-                                "(settings, options, env_vars, build_requires)")
+                                "(settings, options, env_vars, build_requires, reference)")
             else:
                 self._builds.append(BuildConf(*values))
 
@@ -307,41 +318,66 @@ won't be able to use them.
         for key, pages in confs.items():
             for values in pages:
                 if len(values) == 2:
-                    self._named_builds.setdefault(key,[]).append(BuildConf(values[0], values[1], {}, {}))
-                elif len(values) != 4:
+                    bc = BuildConf(values[0], values[1], {}, {}, self.reference)
+                    self._named_builds.setdefault(key, []).append(bc)
+                elif len(values) == 4:
+                    bc = BuildConf(values[0], values[1], values[2], values[3], self.reference)
+                    self._named_builds.setdefault(key, []).append(bc)
+                elif len(values) != 5:
                     raise Exception("Invalid build configuration, has to be a tuple of "
-                                    "(settings, options, env_vars, build_requires)")
+                                    "(settings, options, env_vars, build_requires, reference)")
                 else:
-                    self._named_builds.setdefault(key,[]).append(BuildConf(*values))
+                    self._named_builds.setdefault(key, []).append(BuildConf(*values))
 
-    def add_common_builds(self, shared_option_name=None, pure_c=True, dll_with_static_runtime=False):
+    def add_common_builds(self, shared_option_name=None, pure_c=True,
+                          dll_with_static_runtime=False, reference=None):
+
+        reference = reference or self.reference
         builds = []
         if self.use_docker:
-            builds = get_linux_gcc_builds(self.gcc_versions, self.archs, shared_option_name, pure_c, self.build_types)
-            builds.extend(get_linux_clang_builds(self.clang_versions, self.archs, shared_option_name, pure_c, self.build_types))
+            builds = get_linux_gcc_builds(self.gcc_versions, self.archs, shared_option_name,
+                                          pure_c, self.build_types, reference)
+            builds.extend(get_linux_clang_builds(self.clang_versions, self.archs,
+                                                 shared_option_name, pure_c, self.build_types,
+                                                 reference))
         else:
             if self._platform_info.system() == "Windows":
                 if self.mingw_configurations:
-                    builds = get_mingw_builds(self.mingw_configurations, self.mingw_installer_reference, self.archs,
-                                              shared_option_name, self.build_types)
-                builds.extend(get_visual_builds(self.visual_versions, self.archs, self.visual_runtimes,
-                                                shared_option_name, dll_with_static_runtime, self.vs10_x86_64_enabled, self.build_types))
+                    builds = get_mingw_builds(self.mingw_configurations,
+                                              self.mingw_installer_reference, self.archs,
+                                              shared_option_name, self.build_types, reference)
+                builds.extend(get_visual_builds(self.visual_versions, self.archs,
+                                                self.visual_runtimes,
+                                                shared_option_name, dll_with_static_runtime,
+                                                self.vs10_x86_64_enabled, self.build_types,
+                                                reference))
             elif self._platform_info.system() == "Linux":
-                builds = get_linux_gcc_builds(self.gcc_versions, self.archs, shared_option_name, pure_c, self.build_types)
-                builds.extend(get_linux_clang_builds(self.clang_versions, self.archs, shared_option_name, pure_c, self.build_types))
+                builds = get_linux_gcc_builds(self.gcc_versions, self.archs, shared_option_name,
+                                              pure_c, self.build_types, reference)
+                builds.extend(get_linux_clang_builds(self.clang_versions, self.archs,
+                                                     shared_option_name, pure_c,
+                                                     self.build_types, reference))
             elif self._platform_info.system() == "Darwin":
-                builds = get_osx_apple_clang_builds(self.apple_clang_versions, self.archs, shared_option_name, pure_c, self.build_types)
+                builds = get_osx_apple_clang_builds(self.apple_clang_versions, self.archs,
+                                                    shared_option_name, pure_c, self.build_types,
+                                                    reference)
             elif self._platform_info.system() == "FreeBSD":
-                builds = get_linux_clang_builds(self.clang_versions, self.archs, shared_option_name, pure_c, self.build_types)
+                builds = get_linux_clang_builds(self.clang_versions, self.archs,
+                                                shared_option_name, pure_c, self.build_types,
+                                                reference)
 
-        self.builds.extend(builds)
+        self._builds.extend(builds)
 
-    def add(self, settings=None, options=None, env_vars=None, build_requires=None):
+    def add(self, settings=None, options=None, env_vars=None, build_requires=None, reference=None):
         settings = settings or {}
         options = options or {}
         env_vars = env_vars or {}
         build_requires = build_requires or {}
-        self.builds.append(BuildConf(settings, options, env_vars, build_requires))
+        if reference:
+            reference = ConanFileReference.loads("%s@%s/%s" % (reference,
+                                                               self.username, self.channel))
+        reference = reference or self.reference
+        self._builds.append(BuildConf(settings, options, env_vars, build_requires, reference))
 
     def run(self, profile_name=None):
         if self.conan_pip_package:
@@ -352,16 +388,16 @@ won't be able to use them.
         self.upload_packages()
 
     def run_builds(self, curpage=None, total_pages=None, profile_name=None):
-        if len(self.named_builds) > 0 and len(self.builds) > 0:
+        if len(self.named_builds) > 0 and len(self.items) > 0:
             raise Exception("Both bulk and named builds are set. Only one is allowed.")
 
         # self.runner('conan export %s/%s' % (self.username, self.channel))
 
         builds_in_current_page = []
-        if len(self.builds) > 0:
+        if len(self.items) > 0:
             curpage = curpage or int(self.curpage)
             total_pages = total_pages or int(self.total_pages)
-            for index, build in enumerate(self.builds):
+            for index, build in enumerate(self.items):
                 if curpage is None or total_pages is None or (index % total_pages) + 1 == curpage:
                     builds_in_current_page.append(build)
         elif len(self.named_builds) > 0:
@@ -373,15 +409,17 @@ won't be able to use them.
 
         print("Page       : ", curpage)
         print("Builds list:")
-        for p in builds_in_current_page: print(list(p._asdict().items()))
+        for p in builds_in_current_page:
+            print(list(p._asdict().items()))
 
         pulled_docker_images = defaultdict(lambda: False)
         for build in builds_in_current_page:
             profile = self._get_profile(build, profile_name)
             if self.use_docker:
                 build_runner = DockerTestPackageRunner(profile, self.username, self.channel,
-                                                       self.reference,
-                                                       self.mingw_installer_reference, self.runner, self.args,
+                                                       build.reference,
+                                                       self.mingw_installer_reference, self.runner,
+                                                       self.args,
                                                        docker_image=self.docker_image,
                                                        conan_pip_package=self.conan_pip_package)
 
@@ -389,7 +427,7 @@ won't be able to use them.
                 pulled_docker_images[build_runner.docker_image] = True
             else:
                 build_runner = TestPackageRunner(profile, self.username, self.channel,
-                                                 self.reference,
+                                                 build.reference,
                                                  self.mingw_installer_reference, self.runner,
                                                  self.args,
                                                  conan_pip_package=self.conan_pip_package)
@@ -441,15 +479,14 @@ won't be able to use them.
 
         if not os.getenv("CONAN_TEST_SUITE", False):
             if os.getenv("TRAVIS_PULL_REQUEST", "false") != "false" or \
-               os.getenv("APPVEYOR_PULL_REQUEST_NUMBER"):  # PENDING! can't found info for gitlab/bamboo
+               os.getenv("APPVEYOR_PULL_REQUEST_NUMBER"):
+                # PENDING! can't found info for gitlab/bamboo
                 print("Skipping upload, this is a Pull Request")
                 return False
 
         def raise_error(field):
             raise Exception("Upload not possible, '%s' is missing!" % field)
 
-        if not self.reference:
-            raise_error("reference")
         if not self.password:
             raise_error("password")
         if not self.channel:
@@ -473,7 +510,8 @@ won't be able to use them.
         jenkins = os.getenv("JENKINS_URL", False)
         jenkins_branch = os.getenv("BRANCH_NAME", None)
         gitlab = os.getenv("GITLAB_CI", False)  # Mark that job is executed in GitLab CI environment
-        gitlab_branch = os.getenv("CI_BUILD_REF_NAME", None)  # The branch or tag name for which project is built
+        gitlab_branch = os.getenv("CI_BUILD_REF_NAME", None)
+        # The branch or tag name for which project is built
 
         channel = stable_channel if travis and prog.match(travis_branch) else None
         channel = stable_channel if appveyor and prog.match(appveyor_branch) and \
