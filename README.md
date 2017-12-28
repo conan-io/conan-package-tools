@@ -274,7 +274,7 @@ You can use **builder.add_common_builds** method and remove then some configurat
         builder = ConanMultiPackager(username="myuser")
         builder.add_common_builds()
         filtered_builds = []
-        for settings, options, env_vars, build_requires in builder.builds:
+        for settings, options, env_vars, build_requires, reference in builder.items:
             if settings["compiler.version"] != "4.6" and settings["build_type"] != "Debug":
                  filtered_builds.append([settings, options, env_vars, build_requires])
         builder.builds = filtered_builds
@@ -704,8 +704,8 @@ By adding builds to the **named_builds** dictionary, and passing **curpage** wit
         builder = ConanMultiPackager(curpage="x86", total_pages=2)
         named_builds = defaultdict(list)
         builder.add_common_builds(shared_option_name="bzip2:shared", pure_c=True)
-        for settings, options, env_vars, build_requires in builder.builds:
-            named_builds[settings['arch']].append([settings, options, env_vars, build_requires])
+        for settings, options, env_vars, build_requires, reference in builder.items:
+            named_builds[settings['arch']].append([settings, options, env_vars, build_requires, reference])
         builder.named_builds = named_builds
         builder.run()
 
@@ -713,6 +713,22 @@ named_builds not have a dictionary entry for x86 and another for x86_64:
 
 - for **CONAN_CURRENT_PAGE="x86"** it would do all x86 builds
 - for **CONAN_CURRENT_PAGE="x86_64"** it would do all x86_64 builds
+
+
+
+### Generating multiple references for the same recipe
+
+You can add a different reference in the builds tuple, so for example, if your recipe has no "version"
+field, you could generate several versions in the same build script. Conan package tools will export
+the recipe using the different reference automatically:
+
+    from conan.packager import ConanMultiPackager
+    
+    if __name__ == '__main__':
+        builder = ConanMultiPackager()
+        builder.add_common_builds(reference="mylib/1.0@conan/stable")
+        builder.add_common_builds(reference="mylib/2.0@conan/stable")
+        builder.run()
 
 
 <a name="bintray"></a>

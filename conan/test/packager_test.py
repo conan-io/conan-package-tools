@@ -222,15 +222,17 @@ class AppTest(unittest.TestCase):
                                            use_docker=True)
         self.packager.add_common_builds()
         self.packager.builds = [({"os": "Windows"}, {"option": "value"})]
-        self.assertEquals(self.packager.builds, [BuildConf(settings={'os': 'Windows'},
-                                                           options={'option': 'value'},
-                                                           env_vars={}, build_requires={})])
+        self.assertEquals(self.packager.items, [BuildConf(settings={'os': 'Windows'},
+                                                          options={'option': 'value'},
+                                                          env_vars={}, build_requires={},
+                                                          reference=None)])
 
     def test_only_mingw(self):
 
         mingw_configurations = [("4.9", "x86_64", "seh", "posix")]
         builder = ConanMultiPackager(mingw_configurations=mingw_configurations, visual_versions=[],
-                                     username="Pepe", platform_info=platform_mock_for("Windows"))
+                                     username="Pepe", platform_info=platform_mock_for("Windows"),
+                                     reference="lib/1.0")
         builder.add_common_builds(shared_option_name="zlib:shared", pure_c=True)
         expected = [({'compiler.exception': 'seh', 'compiler.libcxx': "libstdc++",
                       'compiler.threads': 'posix', 'compiler.version': '4.9', 'arch': 'x86_64',
