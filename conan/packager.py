@@ -254,6 +254,7 @@ won't be able to use them.
 
         _, client_cache, _ = Conan.factory()
         self.data_home = client_cache.store
+        self.builds_in_current_page = []
 
     def get_remote_name(self, remote_url):
         # FIXME: Use conan api when prepared to return the list
@@ -398,27 +399,27 @@ won't be able to use them.
 
         # self.runner('conan export %s/%s' % (self.username, self.channel))
 
-        builds_in_current_page = []
+        self.builds_in_current_page = []
         if len(self.items) > 0:
             curpage = curpage or int(self.curpage)
             total_pages = total_pages or int(self.total_pages)
             for index, build in enumerate(self.items):
                 if curpage is None or total_pages is None or (index % total_pages) + 1 == curpage:
-                    builds_in_current_page.append(build)
+                    self.builds_in_current_page.append(build)
         elif len(self.named_builds) > 0:
             curpage = curpage or self.curpage
             if curpage not in self.named_builds:
                 raise Exception("No builds set for page %s" % curpage)
             for build in self.named_builds[curpage]:
-                builds_in_current_page.append(build)
+                self.builds_in_current_page.append(build)
 
         print("Page       : ", curpage)
         print("Builds list:")
-        for p in builds_in_current_page:
+        for p in self.builds_in_current_page:
             print(list(p._asdict().items()))
 
         pulled_docker_images = defaultdict(lambda: False)
-        for build in builds_in_current_page:
+        for build in self.builds_in_current_page:
             profile = self._get_profile(build, profile_name)
             if self.use_docker:
                 build_runner = DockerTestPackageRunner(profile, self.username, self.channel,
@@ -461,7 +462,7 @@ won't be able to use them.
 
         self.login("upload_repo")
 
-        all_refs = set([ref for _, _, _, _, ref in self.items])
+        all_refs = set([ref for _, _, _, _, ref in self.builds_in_current_page])
 
         if not all_refs:
             all_refs = [self.reference]
