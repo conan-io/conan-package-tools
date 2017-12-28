@@ -461,17 +461,26 @@ won't be able to use them.
 
         self.login("upload_repo")
 
-        command = "conan upload %s --retry %s --all --force --confirm -r=upload_repo" % (
-                str(self.reference), self.upload_retry)
+        all_refs = [ref for _, _, _, _, ref in self.items]
 
-        logger.info("******** RUNNING UPLOAD COMMAND ********** \n%s" % command)
+        if not all_refs:
+            all_refs = [self.reference]
+
+        if not all_refs:
+            logger.error("******** NOT REFERENCES TO UPLOAD!! ********** \n")
+
         if self._platform_info.system() == "Linux" and self.use_docker:
             data_dir = os.path.expanduser(self.data_home)
             self.runner("%s chmod -R 777 %s" % (self.sudo_command, data_dir))
 
-        ret = self.runner(command)
-        if ret != 0:
-            raise Exception("Error uploading")
+        for ref in all_refs:
+            command = "conan upload %s --retry %s --all --force --confirm -r=upload_repo" % (
+                    str(ref), self.upload_retry)
+
+            logger.info("******** RUNNING UPLOAD COMMAND ********** \n%s" % command)
+            ret = self.runner(command)
+            if ret != 0:
+                raise Exception("Error uploading")
 
     def _upload_enabled(self):
         if not self.upload:
