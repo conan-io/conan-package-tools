@@ -461,7 +461,7 @@ won't be able to use them.
 
         self.login("upload_repo")
 
-        all_refs = [ref for _, _, _, _, ref in self.items]
+        all_refs = set([ref for _, _, _, _, ref in self.items])
 
         if not all_refs:
             all_refs = [self.reference]
