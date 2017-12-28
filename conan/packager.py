@@ -282,6 +282,10 @@ won't be able to use them.
     def items(self):
         return self._builds
 
+    @items.setter
+    def items(self, confs):
+        self.builds = confs
+
     @property
     def builds(self):
         # Retrocompatibility iterating
@@ -333,6 +337,7 @@ won't be able to use them.
                           dll_with_static_runtime=False, reference=None):
 
         reference = reference or self.reference
+
         builds = []
         if self.use_docker:
             builds = get_linux_gcc_builds(self.gcc_versions, self.archs, shared_option_name,
