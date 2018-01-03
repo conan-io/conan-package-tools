@@ -203,6 +203,29 @@ class AppTest(unittest.TestCase):
         self.assertIn('os=os4', self.runner.calls[20])
         self.assertIn('os=os6', self.runner.calls[21])
 
+    def test_msvc(self):
+        self.packager = ConanMultiPackager("--build missing -r conan.io",
+                                           "lasote", "mychannel",
+                                           runner=self.runner,
+                                           visual_versions=[15])
+        self.packager.add_common_builds()                                           
+        self.packager.run()
+
+        self.assertIn("vcvarsall.bat", self.runner.calls[1])
+        self.assertIn("vcvarsall.bat", self.runner.calls[2])
+
+    def test_msvc_no_precommand(self):
+        self.packager = ConanMultiPackager("--build missing -r conan.io",
+                                           "lasote", "mychannel",
+                                           runner=self.runner,
+                                           visual_versions=[15],
+                                           exclude_precommand=True)
+        self.packager.add_common_builds()                                           
+        self.packager.run()
+
+        self.assertNotIn("vcvarsall.bat", self.runner.calls[1])
+        self.assertNotIn("vcvarsall.bat", self.runner.calls[2])
+
     def test_docker_invalid(self):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
                                            "lasote", "mychannel",
