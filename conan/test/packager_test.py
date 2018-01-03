@@ -1,4 +1,5 @@
 import os
+import sys
 import unittest
 
 from collections import defaultdict
@@ -203,6 +204,7 @@ class AppTest(unittest.TestCase):
         self.assertIn('os=os4', self.runner.calls[20])
         self.assertIn('os=os6', self.runner.calls[21])
 
+    @unittest.skipUnless(sys.platform.startswith("win"), "Requires Windows")
     def test_msvc(self):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
                                            "lasote", "mychannel",
@@ -210,10 +212,11 @@ class AppTest(unittest.TestCase):
                                            visual_versions=[15])
         self.packager.add_common_builds()                                           
         self.packager.run()
-
+        
         self.assertIn("vcvarsall.bat", self.runner.calls[1])
         self.assertIn("vcvarsall.bat", self.runner.calls[2])
 
+    @unittest.skipUnless(sys.platform.startswith("win"), "Requires Windows")
     def test_msvc_no_precommand(self):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
                                            "lasote", "mychannel",
