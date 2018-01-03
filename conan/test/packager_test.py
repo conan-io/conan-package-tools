@@ -210,11 +210,12 @@ class AppTest(unittest.TestCase):
                                            "lasote", "mychannel",
                                            runner=self.runner,
                                            visual_versions=[15])
-        self.packager.add_common_builds()                                           
-        self.packager.run()
+        self.packager.add_common_builds()      
+
+        with tools.environment_append({"VisualStudioVersion": "15.0"}):
+            self.packager.run_builds(1, 1)
         
-        self.assertIn("vcvarsall.bat", self.runner.calls[1])
-        self.assertIn("vcvarsall.bat", self.runner.calls[2])
+        self.assertIn("vcvars", self.runner.calls[1])
 
     @unittest.skipUnless(sys.platform.startswith("win"), "Requires Windows")
     def test_msvc_no_precommand(self):
@@ -224,10 +225,9 @@ class AppTest(unittest.TestCase):
                                            visual_versions=[15],
                                            exclude_precommand=True)
         self.packager.add_common_builds()                                           
-        self.packager.run()
+        self.packager.run_builds(1, 1)
 
-        self.assertNotIn("vcvarsall.bat", self.runner.calls[1])
-        self.assertNotIn("vcvarsall.bat", self.runner.calls[2])
+        self.assertNotIn("vcvars", self.runner.calls[1])
 
     def test_docker_invalid(self):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
