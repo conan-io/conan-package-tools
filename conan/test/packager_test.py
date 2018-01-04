@@ -223,7 +223,7 @@ class AppTest(unittest.TestCase):
                                            "lasote", "mychannel",
                                            runner=self.runner,
                                            visual_versions=[15],
-                                           exclude_precommand=True)
+                                           exclude_vcvars_precommand=True)
         self.packager.add_common_builds()                                           
         self.packager.run_builds(1, 1)
 
