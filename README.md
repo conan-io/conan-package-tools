@@ -888,6 +888,7 @@ This is especially useful for CI integration.
 - **CONAN_CURRENT_PAGE**:  Current page of packages to create
 - **CONAN_TOTAL_PAGES**: Total number of pages
 - **CONAN_DOCKER_IMAGE**: If defined and docker is being used, it will use this dockerimage instead of the default images, e.g. "lasote/conangcc63"
+- **CONAN_DOCKER_IMAGE_SKIP_UPDATE**: If defined, it will skip the initialisation update of "conan package tools" and "conan" in the docker image. By default is False.
 - **CONAN_STABLE_BRANCH_PATTERN**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *CONAN_STABLE_CHANNEL* channel. Default "master". E.j: "release/*"
 - **CONAN_STABLE_CHANNEL**: Stable channel name, default "stable"
 - **CONAN_STABLE_USERNAME**: Your conan username in case the `CONAN_STABLE_BRANCH_PATTERN` matches. Optional. If not defined `CONAN_USERNAME` is used.
