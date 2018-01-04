@@ -91,7 +91,8 @@ class ConanMultiPackager(object):
                  upload_only_when_stable=False,
                  build_types=None,
                  skip_check_credentials=False,
-                 allow_gcc_minors=False):
+                 allow_gcc_minors=False,
+                 exclude_precommand=False):
 
         self.sudo_command = ""
         if "CONAN_DOCKER_USE_SUDO" in os.environ:
@@ -100,6 +101,7 @@ class ConanMultiPackager(object):
         elif platform.system() == "Linux":
             self.sudo_command = "sudo"
 
+        self.exclude_precommand = exclude_precommand
         self.allow_gcc_minors = allow_gcc_minors or os.getenv("CONAN_ALLOW_GCC_MINORS", False)
         self._builds = []
         self._named_builds = {}
@@ -436,7 +438,8 @@ won't be able to use them.
                                                  build.reference,
                                                  self.mingw_installer_reference, self.runner,
                                                  self.args,
-                                                 conan_pip_package=self.conan_pip_package)
+                                                 conan_pip_package=self.conan_pip_package,
+                                                 exclude_precommand=self.exclude_precommand)
                 build_runner.run()
 
     def login(self, remote_name, user=None, password=None, force=False):

@@ -21,7 +21,8 @@ from conans import __version__ as client_version
 class TestPackageRunner(object):
     def __init__(self, profile_text, username, channel, reference,
                  mingw_installer_reference=None, runner=None,
-                 args=None, conan_pip_package=None):
+                 args=None, conan_pip_package=None,
+                 exclude_precommand=False):
 
         self._profile_text = profile_text
         self._mingw_installer_reference = mingw_installer_reference
@@ -35,6 +36,7 @@ class TestPackageRunner(object):
         self.conan_api, self.client_cache, self.user_io = Conan.factory()
         self.conan_home = os.path.realpath(self.client_cache.conan_folder)
         self.data_home = os.path.realpath(self.client_cache.store)
+        self._exclude_precommand = exclude_precommand
 
         if "default" in self._profile_text:  # User didn't specified a custom profile
             default_profile_name = os.path.basename(self.client_cache.default_profile_path)
@@ -65,12 +67,13 @@ class TestPackageRunner(object):
     def run(self):
         pre_command = None
         compiler = self.settings.get("compiler", None)
-        if compiler == "Visual Studio" and "compiler.version" in self.settings:
-            compiler_set = namedtuple("compiler", "version")(self.settings["compiler.version"])
-            mock_sets = namedtuple("mock_settings",
-                                   "arch compiler get_safe")(self.settings["arch"], compiler_set,
-                                                             lambda x: self.settings.get(x, None))
-            pre_command = vcvars_command(mock_sets)
+        if not self._exclude_precommand:
+            if compiler == "Visual Studio" and "compiler.version" in self.settings:
+                compiler_set = namedtuple("compiler", "version")(self.settings["compiler.version"])
+                mock_sets = namedtuple("mock_settings",
+                                    "arch compiler get_safe")(self.settings["arch"], compiler_set,
+                                                                lambda x: self.settings.get(x, None))
+                pre_command = vcvars_command(mock_sets)
 
         self._run_create(pre_command=pre_command)
 
