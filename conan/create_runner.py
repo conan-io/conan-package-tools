@@ -112,7 +112,8 @@ def autodetect_docker_image(profile):
 
 class DockerTestPackageRunner(TestPackageRunner):
     def __init__(self, profile_text, username, channel, reference, mingw_ref=None, runner=None,
-                 args=None, conan_pip_package=None, docker_image=None):
+                 args=None, conan_pip_package=None, docker_image=None,
+                 docker_image_skip_update=False):
 
         super(DockerTestPackageRunner, self).__init__(profile_text, username, channel, reference,
                                                       mingw_installer_reference=mingw_ref,
@@ -120,6 +121,7 @@ class DockerTestPackageRunner(TestPackageRunner):
                                                       conan_pip_package=conan_pip_package)
 
         self.docker_image = docker_image or autodetect_docker_image(self.profile)
+        self.docker_image_skip_update = docker_image_skip_update
         self.sudo_command = ""
         if "CONAN_DOCKER_USE_SUDO" in os.environ:
             if get_bool_from_env("CONAN_DOCKER_USE_SUDO"):
@@ -131,7 +133,7 @@ class DockerTestPackageRunner(TestPackageRunner):
 
         if pull_image:
             self.pull_image()
-            if not os.getenv("CONAN_DOCKER_IMAGE_SKIP_UPDATE", False):
+            if not self.docker_image_skip_update:
                 # Update the downloaded image
                 command = "%s docker run --name conan_runner %s /bin/sh -c " \
                         "\"sudo pip install conan_package_tools==%s " \
