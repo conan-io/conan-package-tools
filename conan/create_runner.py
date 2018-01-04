@@ -131,20 +131,21 @@ class DockerTestPackageRunner(TestPackageRunner):
 
         if pull_image:
             self.pull_image()
-            # Update the downloaded image
-            command = "%s docker run --name conan_runner %s /bin/sh -c " \
-                      "\"sudo pip install conan_package_tools==%s " \
-                      "--upgrade" % (self.sudo_command, self.docker_image, package_tools_version)
-            if self._conan_pip_package:
-                command += " && sudo pip install %s\"" % self._conan_pip_package
-            else:
-                command += " && sudo pip install conan --upgrade\""
+            if not os.getenv("CONAN_DOCKER_IMAGE_SKIP_UPDATE", False):
+                # Update the downloaded image
+                command = "%s docker run --name conan_runner %s /bin/sh -c " \
+                        "\"sudo pip install conan_package_tools==%s " \
+                        "--upgrade" % (self.sudo_command, self.docker_image, package_tools_version)
+                if self._conan_pip_package:
+                    command += " && sudo pip install %s\"" % self._conan_pip_package
+                else:
+                    command += " && sudo pip install conan --upgrade\""
 
-            self._runner(command)
-            # Save the image with the updated installed
-            # packages and remove the intermediate container
-            self._runner("%s docker commit conan_runner %s" % (self.sudo_command, self.docker_image))
-            self._runner("%s docker rm conan_runner" % self.sudo_command)
+                self._runner(command)
+                # Save the image with the updated installed
+                # packages and remove the intermediate container
+                self._runner("%s docker commit conan_runner %s" % (self.sudo_command, self.docker_image))
+                self._runner("%s docker rm conan_runner" % self.sudo_command)
 
         # Run the build
         serial = pipes.quote(self.serialize())
