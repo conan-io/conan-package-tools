@@ -92,7 +92,7 @@ class ConanMultiPackager(object):
                  build_types=None,
                  skip_check_credentials=False,
                  allow_gcc_minors=False,
-                 exclude_precommand=False,
+                 exclude_vcvars_precommand=False,
                  docker_image_skip_update=False):
 
         self.sudo_command = ""
@@ -102,7 +102,7 @@ class ConanMultiPackager(object):
         elif platform.system() == "Linux":
             self.sudo_command = "sudo"
 
-        self.exclude_precommand = exclude_precommand or os.getenv("CONAN_EXCLUDE_PRECOMMAND", False)
+        self.exclude_vcvars_precommand = exclude_vcvars_precommand or os.getenv("CONAN_EXCLUDE_VCVARS_PRECOMMAND", False)
         self.docker_image_skip_update = docker_image_skip_update or os.getenv("CONAN_DOCKER_IMAGE_SKIP_UPDATE", False)
         self.allow_gcc_minors = allow_gcc_minors or os.getenv("CONAN_ALLOW_GCC_MINORS", False)
         self._builds = []
@@ -442,7 +442,7 @@ won't be able to use them.
                                                  self.mingw_installer_reference, self.runner,
                                                  self.args,
                                                  conan_pip_package=self.conan_pip_package,
-                                                 exclude_precommand=self.exclude_precommand)
+                                                 exclude_vcvars_precommand=self.exclude_vcvars_precommand)
                 build_runner.run()
 
     def login(self, remote_name, user=None, password=None, force=False):

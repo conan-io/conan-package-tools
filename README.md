@@ -833,7 +833,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **build_types**: List containing specific build types. Default ["Release", "Debug"]
 - **skip_check_credentials**: Conan will check the user credentials before building the packages. Default [False]
 - **allow_gcc_minors** Declare this variable if you want to allow gcc >=5 versions with the minor (5.1, 6.3 etc).
-- **exclude_precommmand** For Visual Studio builds, it exclude the vcvars call to set the environment.
+- **exclude_vcvars_precommand** For Visual Studio builds, it exclude the vcvars call to set the environment.
 
 Upload related parameters:
 
@@ -902,7 +902,7 @@ This is especially useful for CI integration.
   Set it with the bash executable path if it’s not in the PATH or you want to use a different one.
 - **CONAN_DOCKER_USE_SUDO** Force to use "sudo" when invoking conan. By default, only with Windows. "False" to deactivate.
 - **CONAN_ALLOW_GCC_MINORS** Declare this variable if you want to allow gcc >=5 versions with the minor (5.1, 6.3 etc).
-- **CONAN_EXCLUDE_PRECOMMAND** For Visual Studio builds, it exclude the vcvars call to set the environment.
+- **CONAN_EXCLUDE_VCVARS_PRECOMMAND** For Visual Studio builds, it exclude the vcvars call to set the environment.
 
 # Full example
 
