@@ -21,7 +21,8 @@ from conans import __version__ as client_version
 class TestPackageRunner(object):
     def __init__(self, profile_text, username, channel, reference,
                  mingw_installer_reference=None, runner=None,
-                 args=None, conan_pip_package=None):
+                 args=None, conan_pip_package=None,
+                 exclude_vcvars_precommand=False):
 
         self._profile_text = profile_text
         self._mingw_installer_reference = mingw_installer_reference
@@ -35,6 +36,7 @@ class TestPackageRunner(object):
         self.conan_api, self.client_cache, self.user_io = Conan.factory()
         self.conan_home = os.path.realpath(self.client_cache.conan_folder)
         self.data_home = os.path.realpath(self.client_cache.store)
+        self._exclude_vcvars_precommand = exclude_vcvars_precommand
 
         if "default" in self._profile_text:  # User didn't specified a custom profile
             default_profile_name = os.path.basename(self.client_cache.default_profile_path)
@@ -65,12 +67,13 @@ class TestPackageRunner(object):
     def run(self):
         pre_command = None
         compiler = self.settings.get("compiler", None)
-        if compiler == "Visual Studio" and "compiler.version" in self.settings:
-            compiler_set = namedtuple("compiler", "version")(self.settings["compiler.version"])
-            mock_sets = namedtuple("mock_settings",
-                                   "arch compiler get_safe")(self.settings["arch"], compiler_set,
-                                                             lambda x: self.settings.get(x, None))
-            pre_command = vcvars_command(mock_sets)
+        if not self._exclude_vcvars_precommand:
+            if compiler == "Visual Studio" and "compiler.version" in self.settings:
+                compiler_set = namedtuple("compiler", "version")(self.settings["compiler.version"])
+                mock_sets = namedtuple("mock_settings",
+                                       "arch compiler get_safe")(self.settings["arch"], compiler_set,
+                                                                 lambda x: self.settings.get(x, None))
+                pre_command = vcvars_command(mock_sets)
 
         self._run_create(pre_command=pre_command)
 
@@ -109,7 +112,8 @@ def autodetect_docker_image(profile):
 
 class DockerTestPackageRunner(TestPackageRunner):
     def __init__(self, profile_text, username, channel, reference, mingw_ref=None, runner=None,
-                 args=None, conan_pip_package=None, docker_image=None):
+                 args=None, conan_pip_package=None, docker_image=None,
+                 docker_image_skip_update=False):
 
         super(DockerTestPackageRunner, self).__init__(profile_text, username, channel, reference,
                                                       mingw_installer_reference=mingw_ref,
@@ -117,6 +121,7 @@ class DockerTestPackageRunner(TestPackageRunner):
                                                       conan_pip_package=conan_pip_package)
 
         self.docker_image = docker_image or autodetect_docker_image(self.profile)
+        self.docker_image_skip_update = docker_image_skip_update
         self.sudo_command = ""
         if "CONAN_DOCKER_USE_SUDO" in os.environ:
             if get_bool_from_env("CONAN_DOCKER_USE_SUDO"):
@@ -128,20 +133,21 @@ class DockerTestPackageRunner(TestPackageRunner):
 
         if pull_image:
             self.pull_image()
-            # Update the downloaded image
-            command = "%s docker run --name conan_runner %s /bin/sh -c " \
-                      "\"sudo pip install conan_package_tools==%s " \
-                      "--upgrade" % (self.sudo_command, self.docker_image, package_tools_version)
-            if self._conan_pip_package:
-                command += " && sudo pip install %s\"" % self._conan_pip_package
-            else:
-                command += " && sudo pip install conan --upgrade\""
+            if not self.docker_image_skip_update:
+                # Update the downloaded image
+                command = "%s docker run --name conan_runner %s /bin/sh -c " \
+                        "\"sudo pip install conan_package_tools==%s " \
+                        "--upgrade" % (self.sudo_command, self.docker_image, package_tools_version)
+                if self._conan_pip_package:
+                    command += " && sudo pip install %s\"" % self._conan_pip_package
+                else:
+                    command += " && sudo pip install conan --upgrade\""
 
-            self._runner(command)
-            # Save the image with the updated installed
-            # packages and remove the intermediate container
-            self._runner("%s docker commit conan_runner %s" % (self.sudo_command, self.docker_image))
-            self._runner("%s docker rm conan_runner" % self.sudo_command)
+                self._runner(command)
+                # Save the image with the updated installed
+                # packages and remove the intermediate container
+                self._runner("%s docker commit conan_runner %s" % (self.sudo_command, self.docker_image))
+                self._runner("%s docker rm conan_runner" % self.sudo_command)
 
         # Run the build
         serial = pipes.quote(self.serialize())

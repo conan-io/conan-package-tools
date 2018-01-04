@@ -1,4 +1,5 @@
 import os
+import sys
 import unittest
 
 from collections import defaultdict
@@ -202,6 +203,31 @@ class AppTest(unittest.TestCase):
         self.assertIn('docker run ', self.runner.calls[17])
         self.assertIn('os=os4', self.runner.calls[20])
         self.assertIn('os=os6', self.runner.calls[21])
+
+    @unittest.skipUnless(sys.platform.startswith("win"), "Requires Windows")
+    def test_msvc(self):
+        self.packager = ConanMultiPackager("--build missing -r conan.io",
+                                           "lasote", "mychannel",
+                                           runner=self.runner,
+                                           visual_versions=[15])
+        self.packager.add_common_builds()      
+
+        with tools.environment_append({"VisualStudioVersion": "15.0"}):
+            self.packager.run_builds(1, 1)
+        
+        self.assertIn("vcvars", self.runner.calls[1])
+
+    @unittest.skipUnless(sys.platform.startswith("win"), "Requires Windows")
+    def test_msvc_no_precommand(self):
+        self.packager = ConanMultiPackager("--build missing -r conan.io",
+                                           "lasote", "mychannel",
+                                           runner=self.runner,
+                                           visual_versions=[15],
+                                           exclude_vcvars_precommand=True)
+        self.packager.add_common_builds()                                           
+        self.packager.run_builds(1, 1)
+
+        self.assertNotIn("vcvars", self.runner.calls[1])
 
     def test_docker_invalid(self):
         self.packager = ConanMultiPackager("--build missing -r conan.io",

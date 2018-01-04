@@ -91,7 +91,9 @@ class ConanMultiPackager(object):
                  upload_only_when_stable=False,
                  build_types=None,
                  skip_check_credentials=False,
-                 allow_gcc_minors=False):
+                 allow_gcc_minors=False,
+                 exclude_vcvars_precommand=False,
+                 docker_image_skip_update=False):
 
         self.sudo_command = ""
         if "CONAN_DOCKER_USE_SUDO" in os.environ:
@@ -100,6 +102,8 @@ class ConanMultiPackager(object):
         elif platform.system() == "Linux":
             self.sudo_command = "sudo"
 
+        self.exclude_vcvars_precommand = exclude_vcvars_precommand or os.getenv("CONAN_EXCLUDE_VCVARS_PRECOMMAND", False)
+        self.docker_image_skip_update = docker_image_skip_update or os.getenv("CONAN_DOCKER_IMAGE_SKIP_UPDATE", False)
         self.allow_gcc_minors = allow_gcc_minors or os.getenv("CONAN_ALLOW_GCC_MINORS", False)
         self._builds = []
         self._named_builds = {}
@@ -423,11 +427,12 @@ won't be able to use them.
             profile = self._get_profile(build, profile_name)
             if self.use_docker:
                 build_runner = DockerTestPackageRunner(profile, self.username, self.channel,
-                                                       build.reference,
-                                                       self.mingw_installer_reference, self.runner,
-                                                       self.args,
-                                                       docker_image=self.docker_image,
-                                                       conan_pip_package=self.conan_pip_package)
+                                   build.reference,
+                                   self.mingw_installer_reference, self.runner,
+                                   self.args,
+                                   docker_image=self.docker_image,
+                                   conan_pip_package=self.conan_pip_package,
+                                   docker_image_skip_update=self.docker_image_skip_update)
 
                 build_runner.run(pull_image=not pulled_docker_images[build_runner.docker_image])
                 pulled_docker_images[build_runner.docker_image] = True
@@ -436,7 +441,8 @@ won't be able to use them.
                                                  build.reference,
                                                  self.mingw_installer_reference, self.runner,
                                                  self.args,
-                                                 conan_pip_package=self.conan_pip_package)
+                                                 conan_pip_package=self.conan_pip_package,
+                                                 exclude_vcvars_precommand=self.exclude_vcvars_precommand)
                 build_runner.run()
 
     def login(self, remote_name, user=None, password=None, force=False):
