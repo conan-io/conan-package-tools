@@ -138,6 +138,14 @@ class ConanMultiPackager(object):
 
         self.remotes = remotes or os.getenv("CONAN_REMOTES", [])
         self.upload = upload or os.getenv("CONAN_UPLOAD", None)
+        # The username portion of the remote URLs must be all lowercase to work
+        if self.remotes:
+            if isinstance(self.remotes,list):
+                self.remotes = [remote.lower() for remote in self.remotes]
+            else:
+                self.remotes = self.remotes.lower()
+        if self.upload:
+            self.upload = self.upload.lower()
 
         self.stable_branch_pattern = stable_branch_pattern or \
                                      os.getenv("CONAN_STABLE_BRANCH_PATTERN", None)
