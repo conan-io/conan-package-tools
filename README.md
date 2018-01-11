@@ -311,10 +311,37 @@ And run the build.py:
 
 It will generate a set of build configurations (profiles) for gcc 4.9 and will run it inside a container of the ``lasote/conangcc49`` image.
 
+### Running scripts and executing commands before to build on Docker
+
+When Conan Package Tools uses Docker to build your packages, sometimes you need to execute a "before build" step. If
+you need to install packages, change files or create a setup, there is an option for that: **docker_entry_script**
+
+**Example**:
+
+This example shows how to install *tzdata* package by apt-get, before to build the Conan package.
+
+    from conan.packager import ConanMultiPackager
+
+	if __name__ == "__main__":
+        command = "sudo apt-get -qq update && sudo apt-get -qq install -y tzdata"
+	    builder = ConanMultiPackager(use_docker=True, docker_image='lasote/conangcc7', docker_entry_script=command)
+	    builder.add_common_builds()
+	    builder.run()
+
+Also, it's possible to run some internal script, before to build the package:
+
+    from conan.packager import ConanMultiPackager
+
+    if __name__ == "__main__":
+        command = "python bootstrap.py"
+        builder = ConanMultiPackager(use_docker=True, docker_image='lasote/conangcc7', docker_entry_script=command)
+        builder.add_common_builds()
+        builder.run()
+
 
 ## Specifying a different base profile
 
-The options, settings and environment variables that the ``add_common_builds()`` method generate, are applied into the default profile 
+The options, settings and environment variables that the ``add_common_builds()`` method generate, are applied into the default profile
 of the conan installation. If you want to use a different default profile you can pass the name of the profile in the ``run()`` method.
 
 
@@ -723,7 +750,7 @@ field, you could generate several versions in the same build script. Conan packa
 the recipe using the different reference automatically:
 
     from conan.packager import ConanMultiPackager
-    
+
     if __name__ == '__main__':
         builder = ConanMultiPackager()
         builder.add_common_builds(reference="mylib/1.0@conan/stable")
@@ -822,7 +849,8 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **mingw_configurations**: Configurations for MinGW
 - **archs**: List containing specific architectures to build for. Default ["x86", "x86_64"]
 - **use_docker**: Use docker for package creation in Linux systems.
-- **docker_image_skip_update**: If defined, it will skip the initialisation update of "conan package tools" and "conan" in the docker image. By default is False.
+- **docker_image_skip_update**: If defined, it will skip the initialization update of "conan package tools" and "conan" in the docker image. By default is False.
+- **docker_entry_script**: Command to be executed before to build when running Docker.
 - **curpage**: Current page of packages to create
 - **total_pages**: Total number of pages
 - **vs10_x86_64_enabled**: Flag indicating whether or not to build for VS10 64bits. Default [False]
@@ -879,6 +907,7 @@ This is especially useful for CI integration.
 - **CONAN_UPLOAD_RETRY**: If defined, in case of fail retries to upload again the specified times
 - **CONAN_UPLOAD_ONLY_WHEN_STABLE**: If defined, will try to upload the packages only when the current channel is the stable one.
 - **CONAN_SKIP_CHECK_CREDENTIALS**: Force to check user credentials before to build when upload is required. By default is False.
+- **CONAN_DOCKER_ENTRY_SCRIPT**: Command to be executed before to build when running Docker.
 - **CONAN_GCC_VERSIONS**: Gcc versions, comma separated, e.g. "4.6,4.8,5,6"
 - **CONAN_CLANG_VERSIONS**: Clang versions, comma separated, e.g. "3.8,3.9,4.0"
 - **CONAN_APPLE_CLANG_VERSIONS**: Apple clang versions, comma separated, e.g. "6.1,8.0"
@@ -890,7 +919,7 @@ This is especially useful for CI integration.
 - **CONAN_CURRENT_PAGE**:  Current page of packages to create
 - **CONAN_TOTAL_PAGES**: Total number of pages
 - **CONAN_DOCKER_IMAGE**: If defined and docker is being used, it will use this dockerimage instead of the default images, e.g. "lasote/conangcc63"
-- **CONAN_DOCKER_IMAGE_SKIP_UPDATE**: If defined, it will skip the initialisation update of "conan package tools" and "conan" in the docker image. By default is False.
+- **CONAN_DOCKER_IMAGE_SKIP_UPDATE**: If defined, it will skip the initialization update of "conan package tools" and "conan" in the docker image. By default is False.
 - **CONAN_STABLE_BRANCH_PATTERN**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *CONAN_STABLE_CHANNEL* channel. Default "master". E.j: "release/*"
 - **CONAN_STABLE_CHANNEL**: Stable channel name, default "stable"
 - **CONAN_STABLE_USERNAME**: Your conan username in case the `CONAN_STABLE_BRANCH_PATTERN` matches. Optional. If not defined `CONAN_USERNAME` is used.
@@ -907,4 +936,3 @@ This is especially useful for CI integration.
 # Full example
 
 You can see the full zlib example [here](https://github.com/lasote/conan-zlib)
-
