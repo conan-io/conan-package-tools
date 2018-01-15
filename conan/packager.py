@@ -93,7 +93,8 @@ class ConanMultiPackager(object):
                  skip_check_credentials=False,
                  allow_gcc_minors=False,
                  exclude_vcvars_precommand=False,
-                 docker_image_skip_update=False):
+                 docker_image_skip_update=False,
+                 docker_entry_script=None):
 
         self.sudo_command = ""
         if "CONAN_DOCKER_USE_SUDO" in os.environ:
@@ -161,6 +162,9 @@ class ConanMultiPackager(object):
         self.skip_check_credentials = skip_check_credentials or \
                                       os.getenv("CONAN_SKIP_CHECK_CREDENTIALS", False)
 
+        self.docker_entry_script = docker_entry_script or \
+                                      os.getenv("CONAN_DOCKER_ENTRT_SCRIPT", None)
+
         if self.upload:
             if self.upload in ("0", "None", "False"):
                 self.upload = None
@@ -189,17 +193,17 @@ class ConanMultiPackager(object):
             for a_version in self.gcc_versions:
                 if Version(a_version) >= Version("5") and "." in a_version:
                     raise Exception("""
-******************* DEPRECATED GCC MINOR VERSIONS! ***************************************                    
-                    
+******************* DEPRECATED GCC MINOR VERSIONS! ***************************************
+
 - The use of gcc versions >= 5 and specifying the minor version (e.j "5.4") is deprecated.
 - The ABI of gcc >= 5 (5, 6, and 7) is compatible between minor versions (e.j 5.3 is compatible with 5.4)
-- Specify only the major in your script: 
+- Specify only the major in your script:
    - CONAN_GCC_VERSIONS="5,6,7" if you are using environment variables.
    - gcc_versions=["5", "6", "7"] if you are using the constructor parameter.
-   
+
 You can still keep using the same docker images, or use the new "lasote/conangcc5", "lasote/conangcc6", "lasote/conangcc7"
 
-If you still want to keep the old behavior, set the environment var CONAN_ALLOW_GCC_MINORS or pass the 
+If you still want to keep the old behavior, set the environment var CONAN_ALLOW_GCC_MINORS or pass the
 "allow_gcc_minors=True" parameter. But it is not recommended, if your packages are public most users
 won't be able to use them.
 
@@ -442,7 +446,8 @@ won't be able to use them.
                                    conan_pip_package=self.conan_pip_package,
                                    docker_image_skip_update=self.docker_image_skip_update)
 
-                build_runner.run(pull_image=not pulled_docker_images[build_runner.docker_image])
+                build_runner.run(pull_image=not pulled_docker_images[build_runner.docker_image],
+                                 docker_entry_script=self.docker_entry_script)
                 pulled_docker_images[build_runner.docker_image] = True
             else:
                 build_runner = TestPackageRunner(profile, self.username, self.channel,

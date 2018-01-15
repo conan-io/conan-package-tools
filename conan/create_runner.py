@@ -129,8 +129,8 @@ class DockerTestPackageRunner(TestPackageRunner):
         elif platform.system() == "Linux":
             self.sudo_command = "sudo"
 
-    def run(self, pull_image=True):
 
+    def run(self, pull_image=True, docker_entry_script=None):
         if pull_image:
             self.pull_image()
             if not self.docker_image_skip_update:
@@ -161,6 +161,11 @@ class DockerTestPackageRunner(TestPackageRunner):
                   "(conan profile new default --detect || true) && " \
                   "run_create_in_docker\"" % (self.sudo_command, os.getcwd(), self.conan_home,
                                               env_vars, self.docker_image)
+
+        # Push entry command before to build
+        if docker_entry_script:
+            command = command.replace("run_create_in_docker", "%s && run_create_in_docker" % docker_entry_script)
+
         ret = self._runner(command)
         if ret != 0:
             raise Exception("Error building: %s" % command)
