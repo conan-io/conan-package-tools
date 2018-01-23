@@ -163,7 +163,7 @@ class ConanMultiPackager(object):
                                       os.getenv("CONAN_SKIP_CHECK_CREDENTIALS", False)
 
         self.docker_entry_script = docker_entry_script or \
-                                      os.getenv("CONAN_DOCKER_ENTRT_SCRIPT", None)
+                                      os.getenv("CONAN_DOCKER_ENTRY_SCRIPT", None)
 
         if self.upload:
             if self.upload in ("0", "None", "False"):
@@ -513,7 +513,8 @@ won't be able to use them.
 
         if not os.getenv("CONAN_TEST_SUITE", False):
             if os.getenv("TRAVIS_PULL_REQUEST", "false") != "false" or \
-               os.getenv("APPVEYOR_PULL_REQUEST_NUMBER"):
+               os.getenv("APPVEYOR_PULL_REQUEST_NUMBER") or \
+               os.getenv("CIRCLE_PULL_REQUEST"):
                 # PENDING! can't found info for gitlab/bamboo
                 print("Skipping upload, this is a Pull Request")
                 return False
@@ -545,6 +546,8 @@ won't be able to use them.
         jenkins_branch = os.getenv("BRANCH_NAME", None)
         gitlab = os.getenv("GITLAB_CI", False)  # Mark that job is executed in GitLab CI environment
         gitlab_branch = os.getenv("CI_BUILD_REF_NAME", None)
+        circleci = os.getenv("CIRCLECI", False)
+        circleci_branch = os.getenv("CIRCLE_BRANCH", None)
         # The branch or tag name for which project is built
 
         channel = stable_channel if travis and prog.match(travis_branch) else None
@@ -553,6 +556,7 @@ won't be able to use them.
         channel = stable_channel if bamboo and prog.match(bamboo_branch) else channel
         channel = stable_channel if jenkins and jenkins_branch and prog.match(jenkins_branch) else channel
         channel = stable_channel if gitlab and gitlab_branch and prog.match(gitlab_branch) else channel
+        channel = stable_channel if circleci and circleci_branch and prog.match(circleci_branch) else channel
 
         if channel:
             logger.warning("Redefined channel by CI branch matching with '%s', "
