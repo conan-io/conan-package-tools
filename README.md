@@ -251,7 +251,17 @@ So, if we want to generate packages for ``x86_64`` and ``armv8`` but only for ``
 
 There are also two additional parameters of the ``add_common_builds``:
 
-- **pure_c**: (Default True) If your project is C++, pass the **pure_c=False**, it will add new build combinations using **libstdc** and **libstdc++11** in the setting **compiler.libcxx**.
+- **pure_c**: (Default True) If your project is C++, pass the **pure_c=False** to add both 
+              combinations using **libstdc** and **libstdc++11** for the setting **compiler.libcxx**. 
+              When True, the default profile value of ``libcxx`` will be applied.
+              If you don't want ``libcxx`` value to apply 
+              to your binary packages you have to use the ``configure`` method to remove it:
+              
+```
+    def configure(self):
+        del self.settings.compiler.libcxx
+```
+
 - **shared_option_name**: If your conanfile.py have an option to specify **shared**/**static** packages, you can add new build combinations for static/shared packages.
 - **dll_with_static_runtime**: Will add also the combination of runtime MT with shared libraries.
 
