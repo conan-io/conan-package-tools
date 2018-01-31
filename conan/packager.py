@@ -586,13 +586,20 @@ include(%s)
 %s
 [build_requires]
 %s
-    """
+"""
         settings = "\n".join(["%s=%s" % (k, v) for k, v in sorted(build_conf.settings.items())])
         options = "\n".join(["%s=%s" % (k, v) for k, v in build_conf.options.items()])
         env_vars = "\n".join(["%s=%s" % (k, v) for k, v in build_conf.env_vars.items()])
         br_lines = ""
         for pattern, build_requires in build_conf.build_requires.items():
             br_lines += "\n".join(["%s:%s" % (pattern, br) for br in build_requires])
+
+        if os.getenv("CONAN_BUILD_REQUIRES"):
+            brs = os.getenv("CONAN_BUILD_REQUIRES").split(",")
+            brs = ['*:%s' % br.strip() if ":" not in br else br for br in brs]
+            if br_lines:
+                br_lines += "\n"
+            br_lines += "\n".join(brs)
 
         profile_text = tmp % (profile_name, settings, options, env_vars, br_lines)
         return profile_text
