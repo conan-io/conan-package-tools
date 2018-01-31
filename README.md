@@ -942,6 +942,8 @@ This is especially useful for CI integration.
 - **CONAN_DOCKER_USE_SUDO** Force to use "sudo" when invoking conan. By default, only with Windows. "False" to deactivate.
 - **CONAN_ALLOW_GCC_MINORS** Declare this variable if you want to allow gcc >=5 versions with the minor (5.1, 6.3 etc).
 - **CONAN_EXCLUDE_VCVARS_PRECOMMAND** For Visual Studio builds, it exclude the vcvars call to set the environment.
+- **CONAN_BUILD_REQUIRES** You can specify additional build requires for the generated profile with an environment variable following the same profile syntax and separated by ","
+  i.e ``CONAN_BUILD_REQUIRES: mingw-installer/7.1@conan/stable, pattern: other/1.0@conan/stable`` 
 
 # Full example
 

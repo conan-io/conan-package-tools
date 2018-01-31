@@ -95,6 +95,19 @@ class AppTest(unittest.TestCase):
         self.assertEquals(profile.build_requires["*"],
                           [ConanFileReference.loads("myreference/1.0@lasote/testing")])
 
+    def test_profile_environ(self):
+        self.packager.add({"os": "Windows", "compiler": "gcc"},
+                          {"option1": "One"},
+                          {"VAR_1": "ONE",
+                           "VAR_2": "TWO"},
+                          {"*": ["myreference/1.0@lasote/testing"]})
+        with tools.environment_append({"CONAN_BUILD_REQUIRES": "br1/1.0@conan/testing"}):
+            self.packager.run_builds(1, 1)
+            profile = self.runner.get_profile_from_trace(0)
+            self.assertEquals(profile.build_requires["*"],
+                              [ConanFileReference.loads("myreference/1.0@lasote/testing"),
+                               ConanFileReference.loads("br1/1.0@conan/testing")])
+
     def test_pages(self):
         for number in range(10):
             self._add_build(number)
