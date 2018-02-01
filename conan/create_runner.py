@@ -22,8 +22,10 @@ class TestPackageRunner(object):
     def __init__(self, profile_text, username, channel, reference,
                  mingw_installer_reference=None, runner=None,
                  args=None, conan_pip_package=None,
-                 exclude_vcvars_precommand=False):
+                 exclude_vcvars_precommand=False,
+                 conan_vars=None):
 
+        self._conan_vars = conan_vars or {}
         self._profile_text = profile_text
         self._mingw_installer_reference = mingw_installer_reference
         self._args = args
@@ -129,7 +131,6 @@ class DockerTestPackageRunner(TestPackageRunner):
         elif platform.system() == "Linux":
             self.sudo_command = "sudo"
 
-
     def run(self, pull_image=True, docker_entry_script=None):
         if pull_image:
             self.pull_image()
@@ -153,6 +154,9 @@ class DockerTestPackageRunner(TestPackageRunner):
         serial = pipes.quote(self.serialize())
         env_vars = "-e CONAN_RUNNER_ENCODED=%s -e CONAN_USERNAME=%s " \
                    "-e CONAN_CHANNEL=%s" % (serial, self._username, self._channel)
+
+        conan_env_vars = {key: value for key, value in os.environ.items() if key.startswith("CONAN_") and key not in ["CONAN_CHANNEL", "CONAN_USERNAME"]}
+        env_vars += " ".join(["-e %s=%s" % (key, value) for key, value in conan_env_vars.items()])
 
         command = "%s docker run --rm -v %s:/home/conan/project -v " \
                   "%s:/home/conan/.conan %s %s /bin/sh -c \"" \

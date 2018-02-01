@@ -208,6 +208,7 @@ class AppTest(unittest.TestCase):
         self.packager.run_builds(1, 2)
         self.assertIn("docker pull lasote/conangcc5", self.runner.calls[0])
         self.assertIn('docker run ', self.runner.calls[1])
+
         self.assertIn('os=os1', self.runner.calls[4])
         self.assertIn('os=os3', self.runner.calls[5])
 
@@ -216,6 +217,19 @@ class AppTest(unittest.TestCase):
         self.assertIn('docker run ', self.runner.calls[17])
         self.assertIn('os=os4', self.runner.calls[20])
         self.assertIn('os=os6', self.runner.calls[21])
+
+    def test_docker_env_propagated(self):
+        # test env
+        with tools.environment_append({"CONAN_FAKE_VAR": "32"}):
+            self.packager = ConanMultiPackager("--build missing -r conan.io",
+                                               "lasote", "mychannel",
+                                               runner=self.runner,
+                                               gcc_versions=["5", "6"],
+                                               clang_versions=["3.9", "4.0"],
+                                               use_docker=True)
+            self._add_build(1, "gcc", "5")
+            self.packager.run_builds(1, 1)
+            self.assertIn('-e CONAN_FAKE_VAR=32', self.runner.calls[-1])
 
     @unittest.skipUnless(sys.platform.startswith("win"), "Requires Windows")
     def test_msvc(self):
