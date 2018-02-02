@@ -218,6 +218,11 @@ class AppTest(unittest.TestCase):
         self.assertIn('os=os4', self.runner.calls[20])
         self.assertIn('os=os6', self.runner.calls[21])
 
+    def test_upload_false(self):
+        packager = ConanMultiPackager("--build missing -r conan.io",
+                                           "lasote", "mychannel", upload=False)
+        self.assertFalse(packager._upload_enabled())
+
     def test_docker_env_propagated(self):
         # test env
         with tools.environment_append({"CONAN_FAKE_VAR": "32"}):
