@@ -94,7 +94,8 @@ class ConanMultiPackager(object):
                  allow_gcc_minors=False,
                  exclude_vcvars_precommand=False,
                  docker_image_skip_update=False,
-                 docker_entry_script=None):
+                 docker_entry_script=None,
+                 docker_32_images=None):
 
         self.sudo_command = ""
         if "CONAN_DOCKER_USE_SUDO" in os.environ:
@@ -241,6 +242,11 @@ won't be able to use them.
         # If CONAN_DOCKER_IMAGE is speified, then use docker is True
         self.use_docker = use_docker or os.getenv("CONAN_USE_DOCKER", False) or \
                           (os.getenv("CONAN_DOCKER_IMAGE", None) is not None)
+
+        if docker_32_images is not None:
+            self.docker_32_images = docker_32_images
+        else:
+            self.docker_32_images = os.getenv("CONAN_DOCKER_32_IMAGES", False)
 
         self.curpage = curpage or os.getenv("CONAN_CURRENT_PAGE", 1)
         self.total_pages = total_pages or os.getenv("CONAN_TOTAL_PAGES", 1)
@@ -438,13 +444,15 @@ won't be able to use them.
         for build in self.builds_in_current_page:
             profile = self._get_profile(build, profile_name)
             if self.use_docker:
+                use_docker_32 = (build.settings.get("arch", "") == "x86" and self.docker_32_images)
                 build_runner = DockerTestPackageRunner(profile, self.username, self.channel,
-                                   build.reference,
-                                   self.mingw_installer_reference, self.runner,
-                                   self.args,
-                                   docker_image=self.docker_image,
-                                   conan_pip_package=self.conan_pip_package,
-                                   docker_image_skip_update=self.docker_image_skip_update)
+                                                       build.reference,
+                                                       self.mingw_installer_reference, self.runner,
+                                                       self.args,
+                                                       docker_image=self.docker_image,
+                                                       conan_pip_package=self.conan_pip_package,
+                                                       docker_image_skip_update=self.docker_image_skip_update,
+                                                       docker_32_images=use_docker_32)
 
                 build_runner.run(pull_image=not pulled_docker_images[build_runner.docker_image],
                                  docker_entry_script=self.docker_entry_script)
@@ -457,7 +465,6 @@ won't be able to use them.
                                                  conan_pip_package=self.conan_pip_package,
                                                  exclude_vcvars_precommand=self.exclude_vcvars_precommand)
                 build_runner.run()
-
 
     def login(self, remote_name, user=None, password=None, force=False):
         if force or not self._logged_user_in_remote[remote_name]:
