@@ -442,9 +442,12 @@ won't be able to use them.
 
         pulled_docker_images = defaultdict(lambda: False)
         for build in self.builds_in_current_page:
-            profile = self._get_profile(build, profile_name)
+
             if self.use_docker:
                 use_docker_32 = (build.settings.get("arch", "") == "x86" and self.docker_32_images)
+                if use_docker_32:
+                    build.settings["arch_build"] = "x86"
+                profile = self._get_profile(build, profile_name)
                 build_runner = DockerTestPackageRunner(profile, self.username, self.channel,
                                                        build.reference,
                                                        self.mingw_installer_reference, self.runner,
@@ -458,6 +461,7 @@ won't be able to use them.
                                  docker_entry_script=self.docker_entry_script)
                 pulled_docker_images[build_runner.docker_image] = True
             else:
+                profile = self._get_profile(build, profile_name)
                 build_runner = TestPackageRunner(profile, self.username, self.channel,
                                                  build.reference,
                                                  self.mingw_installer_reference, self.runner,

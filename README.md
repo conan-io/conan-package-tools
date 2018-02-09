@@ -321,6 +321,13 @@ And run the build.py:
 
 It will generate a set of build configurations (profiles) for gcc 4.9 and will run it inside a container of the ``lasote/conangcc49`` image.
 
+If you want to run the arch="x86" build inside a docker container of 32 bits you can set the parameter ``docker_32_images`` in the 
+ConanMultiPackager constructor or set the environment variable ``CONAN_DOCKER_32_IMAGES``. In this case, the docker image name to use
+will be appended with ``-i386``. 
+
+The Docker images used by default both for 64 and 32 bits are pushed to dockerhub and its Dockerfiles are  available in the 
+[conan-docker-tools](https://github.com/conan-io/conan-docker-tools) repository.
+
 ### Running scripts and executing commands before to build on Docker
 
 When Conan Package Tools uses Docker to build your packages, sometimes you need to execute a "before build" step. If
@@ -390,14 +397,6 @@ For example, if you declare the following environment variables:
     CONAN_DOCKER_IMAGE=lasote/conangcc49
 
 the ``add_common_builds()`` method will only add different build configurations for GCC=4.9 and will run them in a docker container.
-
-If you want to run the arch="x86" build inside a docker container of 32 bits you can set the parameter ``docker_32_images`` in the 
-ConanMultiPackager constructor or set the environment variable ``CONAN_DOCKER_32_IMAGES``. In this case, the docker image name to use
-will be appended with ``-i386``. 
-
-The Docker images used by default both for 64 and 32 bits are pushed to dockerhub and its Dockerfiles are  available in the 
-[conan-docker-tools](https://github.com/conan-io/conan-docker-tools) repository.
-
 
 You can see working integrations with Travis and Appveyor in the zlib repository [here](https://github.com/lasote/conan-zlib)
 
