@@ -179,6 +179,7 @@ class AppTest(unittest.TestCase):
             packager.add({"arch": "x86", "compiler": "gcc", "compiler.version": "6"})
             packager.run_builds(1, 1)
             self.assertIn("docker pull lasote/conangcc6-i386", self.runner.calls[0])
+            self.assertIn("arch_build=x86\\", self.runner.calls[-1])
 
     def test_docker_gcc(self):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
