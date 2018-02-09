@@ -147,6 +147,39 @@ class AppTest(unittest.TestCase):
                                gcc_versions=["4.3", "5.4"],
                                use_docker=True)
 
+    def test_32bits_images(self):
+        packager = ConanMultiPackager("--build missing -r conan.io",
+                                      "lasote", "mychannel",
+                                      runner=self.runner,
+                                      use_docker=True,
+                                      docker_32_images=True)
+
+        packager.add({"arch": "x86", "compiler": "gcc", "compiler.version": "6"})
+        packager.run_builds(1, 1)
+        self.assertIn("docker pull lasote/conangcc6-i386", self.runner.calls[0])
+
+        self.runner.reset()
+        packager = ConanMultiPackager("--build missing -r conan.io",
+                                      "lasote", "mychannel",
+                                      runner=self.runner,
+                                      use_docker=True,
+                                      docker_32_images=False)
+
+        packager.add({"arch": "x86", "compiler": "gcc", "compiler.version": "6"})
+        packager.run_builds(1, 1)
+        self.assertNotIn("docker pull lasote/conangcc6-i386", self.runner.calls[0])
+
+        self.runner.reset()
+        with tools.environment_append({"CONAN_DOCKER_32_IMAGES": "1"}):
+            packager = ConanMultiPackager("--build missing -r conan.io",
+                                          "lasote", "mychannel",
+                                          runner=self.runner,
+                                          use_docker=True)
+
+            packager.add({"arch": "x86", "compiler": "gcc", "compiler.version": "6"})
+            packager.run_builds(1, 1)
+            self.assertIn("docker pull lasote/conangcc6-i386", self.runner.calls[0])
+
     def test_docker_gcc(self):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
                                            "lasote", "mychannel",
