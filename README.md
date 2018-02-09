@@ -391,6 +391,13 @@ For example, if you declare the following environment variables:
 
 the ``add_common_builds()`` method will only add different build configurations for GCC=4.9 and will run them in a docker container.
 
+If you want to run the arch="x86" build inside a docker container of 32 bits you can set the parameter ``docker_32_images`` in the 
+ConanMultiPackager constructor or set the environment variable ``CONAN_DOCKER_32_IMAGES``. In this case, the docker image name to use
+will be appended with ``-i386``. 
+
+The Docker images used by default both for 64 and 32 bits are pushed to dockerhub and its Dockerfiles are  available in the 
+[conan-docker-tools](https://github.com/conan-io/conan-docker-tools) repository.
+
 
 You can see working integrations with Travis and Appveyor in the zlib repository [here](https://github.com/lasote/conan-zlib)
 
@@ -861,6 +868,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **use_docker**: Use docker for package creation in Linux systems.
 - **docker_image_skip_update**: If defined, it will skip the initialization update of "conan package tools" and "conan" in the docker image. By default is False.
 - **docker_entry_script**: Command to be executed before to build when running Docker.
+- **docker_32_images**: If defined, and the current build is arch="x86" the docker image name will be appended with "-i386". e.j: "lasote/conangcc63-i386"
 - **curpage**: Current page of packages to create
 - **total_pages**: Total number of pages
 - **vs10_x86_64_enabled**: Flag indicating whether or not to build for VS10 64bits. Default [False]
@@ -930,6 +938,7 @@ This is especially useful for CI integration.
 - **CONAN_TOTAL_PAGES**: Total number of pages
 - **CONAN_DOCKER_IMAGE**: If defined and docker is being used, it will use this dockerimage instead of the default images, e.g. "lasote/conangcc63"
 - **CONAN_DOCKER_IMAGE_SKIP_UPDATE**: If defined, it will skip the initialization update of "conan package tools" and "conan" in the docker image. By default is False.
+- **CONAN_DOCKER_32_IMAGES**: If defined, and the current build is arch="x86" the docker image name will be appended with "-i386". e.j: "lasote/conangcc63-i386"
 - **CONAN_STABLE_BRANCH_PATTERN**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *CONAN_STABLE_CHANNEL* channel. Default "master". E.j: "release/*"
 - **CONAN_STABLE_CHANNEL**: Stable channel name, default "stable"
 - **CONAN_STABLE_USERNAME**: Your conan username in case the `CONAN_STABLE_BRANCH_PATTERN` matches. Optional. If not defined `CONAN_USERNAME` is used.
