@@ -1,4 +1,5 @@
 import os
+import platform
 import sys
 import unittest
 
@@ -363,9 +364,14 @@ class AppTest(unittest.TestCase):
         builder.named_builds = named_builds
 
         self.assertEquals(builder.builds, [])
-        self.assertEquals(len(builder.named_builds), 2)
-        self.assertTrue("x86" in builder.named_builds)
-        self.assertTrue("x86_64" in builder.named_builds)
+        if platform.system() == "Darwin":  # Not default x86 in Macos
+            self.assertEquals(len(builder.named_builds), 1)
+            self.assertFalse("x86" in builder.named_builds)
+            self.assertTrue("x86_64" in builder.named_builds)
+        else:
+            self.assertEquals(len(builder.named_builds), 2)
+            self.assertTrue("x86" in builder.named_builds)
+            self.assertTrue("x86_64" in builder.named_builds)
 
     # Conan remote URLs require the username the be in all lowercase
     def test_url_handling(self):

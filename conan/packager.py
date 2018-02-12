@@ -234,6 +234,9 @@ won't be able to use them.
                                                                   "mingw_installer/1.0"
                                                                   "@conan/stable")
 
+        if not archs and not os.getenv("CONAN_ARCHS") and platform.system() == "Darwin":
+            self.default_archs = ["x86_64"]  # No longer supported (by default) x86 macos
+
         self.archs = archs or split_colon_env("CONAN_ARCHS") or self.default_archs
 
         self.build_types = build_types or split_colon_env("CONAN_BUILD_TYPES") or \
