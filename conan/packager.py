@@ -447,7 +447,8 @@ won't be able to use them.
         for build in self.builds_in_current_page:
 
             if self.use_docker:
-                use_docker_32 = (build.settings.get("arch", "") == "x86" and self.docker_32_images)
+                arch = build.settings.get("arch", "") or build.settings.get("arch_build", "")
+                use_docker_32 = arch == "x86" and self.docker_32_images
                 if use_docker_32:
                     build.settings["arch_build"] = "x86"
                 profile = self._get_profile(build, profile_name)
