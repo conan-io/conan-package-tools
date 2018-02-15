@@ -269,7 +269,7 @@ class AppTest(unittest.TestCase):
                                                use_docker=True)
             self._add_build(1, "gcc", "5")
             self.packager.run_builds(1, 1)
-            self.assertIn('-e CONAN_FAKE_VAR=32', self.runner.calls[-1])
+            self.assertIn('-e CONAN_FAKE_VAR="32"', self.runner.calls[-1])
 
     @unittest.skipUnless(sys.platform.startswith("win"), "Requires Windows")
     def test_msvc(self):
