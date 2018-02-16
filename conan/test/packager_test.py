@@ -153,7 +153,8 @@ class AppTest(unittest.TestCase):
                                       "lasote", "mychannel",
                                       runner=self.runner,
                                       use_docker=True,
-                                      docker_32_images=True)
+                                      docker_32_images=True,
+                                      reference="zlib/1.2.11")
 
         packager.add({"arch": "x86", "compiler": "gcc", "compiler.version": "6"})
         packager.run_builds(1, 1)

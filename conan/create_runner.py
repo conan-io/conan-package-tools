@@ -7,6 +7,8 @@ from collections import namedtuple
 
 import sys
 
+import shutil
+
 from conan import __version__ as package_tools_version
 from conan.log import logger
 from conan.tools import get_bool_from_env
@@ -133,6 +135,13 @@ class DockerTestPackageRunner(TestPackageRunner):
         elif platform.system() == "Linux":
             self.sudo_command = "sudo"
 
+    def clear_system_requirements(self):
+        if self._reference:
+            the_path = self.client_cache.system_reqs(self._reference)
+            if os.path.exists(the_path):
+                logger.info("Removing system_requirements: %s" % the_path)
+                shutil.rmtree(os.path.dirname(the_path), ignore_errors=True)
+
     def run(self, pull_image=True, docker_entry_script=None):
         if pull_image:
             self.pull_image()
@@ -172,6 +181,7 @@ class DockerTestPackageRunner(TestPackageRunner):
         if docker_entry_script:
             command = command.replace("run_create_in_docker", "%s && run_create_in_docker" % docker_entry_script)
 
+        self.clear_system_requirements()
         ret = self._runner(command)
         if ret != 0:
             raise Exception("Error building: %s" % command)
