@@ -166,7 +166,9 @@ class DockerTestPackageRunner(TestPackageRunner):
         env_vars = "-e CONAN_RUNNER_ENCODED=%s -e CONAN_USERNAME=%s " \
                    "-e CONAN_CHANNEL=%s" % (serial, self._username, self._channel)
 
-        conan_env_vars = {key: value for key, value in os.environ.items() if key.startswith("CONAN_") and key not in ["CONAN_CHANNEL", "CONAN_USERNAME"]}
+        conan_env_vars = {key: value for key, value in os.environ.items()
+                          if key.startswith("CONAN_") and key not in
+                          ["CONAN_CHANNEL", "CONAN_USERNAME", "CONAN_USER_HOME"]}
         env_vars += " " + " ".join(['-e %s="%s"' % (key, value) for key, value in conan_env_vars.items()])
 
         command = "%s docker run --rm -v %s:/home/conan/project -v " \
