@@ -879,6 +879,11 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **skip_check_credentials**: Conan will check the user credentials before building the packages. Default [False]
 - **allow_gcc_minors** Declare this variable if you want to allow gcc >=5 versions with the minor (5.1, 6.3 etc).
 - **exclude_vcvars_precommand** For Visual Studio builds, it exclude the vcvars call to set the environment.
+- **build_policy**: Default None.
+    - "never": No build from sources, only download packages. 
+    - "missing": Build only missing packages.
+    - "outdated": Build only missing or if the available package is not built with the current recipe. Useful to upload new configurations, e.j packages for a new compiler without
+      rebuild all packages.
 
 Upload related parameters:
 
@@ -952,6 +957,11 @@ This is especially useful for CI integration.
 - **CONAN_EXCLUDE_VCVARS_PRECOMMAND** For Visual Studio builds, it exclude the vcvars call to set the environment.
 - **CONAN_BUILD_REQUIRES** You can specify additional build requires for the generated profile with an environment variable following the same profile syntax and separated by ","
   i.e ``CONAN_BUILD_REQUIRES: mingw-installer/7.1@conan/stable, pattern: other/1.0@conan/stable`` 
+- **CONAN_BUILD_POLICY**:  Default None.
+    - "never": No build from sources, only download packages. 
+    - "missing": Build only missing packages.
+    - "outdated": Build only missing or if the available package is not built with the current recipe. Useful to upload new configurations, e.j packages for a new compiler without
+      rebuild all packages.
 
 # Full example
 

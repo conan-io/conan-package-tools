@@ -95,7 +95,15 @@ class ConanMultiPackager(object):
                  exclude_vcvars_precommand=False,
                  docker_image_skip_update=False,
                  docker_entry_script=None,
-                 docker_32_images=None):
+                 docker_32_images=None,
+                 build_policy=None):
+
+        build_policy = build_policy or os.getenv("CONAN_BUILD_POLICY", None)
+        if build_policy:
+            if build_policy.lower() not in ("never", "outdated", "missing"):
+                raise Exception("Invalid build policy, valid values: never, outdated, missing")
+
+        self.build_policy = build_policy
 
         self.sudo_command = ""
         if "CONAN_DOCKER_USE_SUDO" in os.environ:
@@ -459,7 +467,8 @@ won't be able to use them.
                                                        docker_image=self.docker_image,
                                                        conan_pip_package=self.conan_pip_package,
                                                        docker_image_skip_update=self.docker_image_skip_update,
-                                                       docker_32_images=use_docker_32)
+                                                       docker_32_images=use_docker_32,
+                                                       build_policy=self.build_policy)
 
                 build_runner.run(pull_image=not pulled_docker_images[build_runner.docker_image],
                                  docker_entry_script=self.docker_entry_script)
@@ -471,7 +480,8 @@ won't be able to use them.
                                                  self.mingw_installer_reference, self.runner,
                                                  self.args,
                                                  conan_pip_package=self.conan_pip_package,
-                                                 exclude_vcvars_precommand=self.exclude_vcvars_precommand)
+                                                 exclude_vcvars_precommand=self.exclude_vcvars_precommand,
+                                                 build_policy=self.build_policy)
                 build_runner.run()
 
     def login(self, remote_name, user=None, password=None, force=False):
