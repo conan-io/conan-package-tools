@@ -25,12 +25,13 @@ class TestPackageRunner(object):
                  mingw_installer_reference=None, runner=None,
                  args=None, conan_pip_package=None,
                  exclude_vcvars_precommand=False,
-                 conan_vars=None):
+                 conan_vars=None, build_policy=None):
 
         self._conan_vars = conan_vars or {}
         self._profile_text = profile_text
         self._mingw_installer_reference = mingw_installer_reference
         self._args = args
+        self._args += " --build=%s" % build_policy if build_policy else ""
         self._username = username
         self._channel = channel
         self._reference = reference
@@ -117,12 +118,13 @@ def autodetect_docker_image(profile):
 class DockerTestPackageRunner(TestPackageRunner):
     def __init__(self, profile_text, username, channel, reference, mingw_ref=None, runner=None,
                  args=None, conan_pip_package=None, docker_image=None,
-                 docker_image_skip_update=False, docker_32_images=False):
+                 docker_image_skip_update=False, docker_32_images=False, build_policy=None):
 
         super(DockerTestPackageRunner, self).__init__(profile_text, username, channel, reference,
                                                       mingw_installer_reference=mingw_ref,
                                                       runner=runner, args=args,
-                                                      conan_pip_package=conan_pip_package)
+                                                      conan_pip_package=conan_pip_package,
+                                                      build_policy=build_policy)
 
         self.docker_image = docker_image or autodetect_docker_image(self.profile)
         if docker_32_images:
