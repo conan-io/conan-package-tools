@@ -559,6 +559,33 @@ class AppTest(unittest.TestCase):
         builder.login("Myremote2")
         self.assertIn('conan user pepe -p="password" -r=Myremote2', runner.calls[-1])
 
+    def test_build_policy(self):
+        runner = MockRunner()
+        builder = ConanMultiPackager(username="pepe", channel="testing",
+                                     reference="Hello/0.1", password="password",
+                                     visual_versions=[], gcc_versions=[],
+                                     apple_clang_versions=[],
+                                     runner=runner,
+                                     remotes="otherurl",
+                                     platform_info=platform_mock_for("Darwin"),
+                                     build_policy="outdated")
+        builder.add_common_builds()
+        builder.run()
+        self.assertIn(" --build=outdated", runner.calls[-1])
+
+        with tools.environment_append({"CONAN_BUILD_POLICY": "missing"}):
+            builder = ConanMultiPackager(username="pepe", channel="testing",
+                                         reference="Hello/0.1", password="password",
+                                         visual_versions=[], gcc_versions=[],
+                                         apple_clang_versions=[],
+                                         runner=runner,
+                                         remotes="otherurl",
+                                         platform_info=platform_mock_for("Darwin"),
+                                         build_policy="missing")
+            builder.add_common_builds()
+            builder.run()
+            self.assertIn(" --build=missing", runner.calls[-1])
+
     def test_check_credentials(self):
 
         runner = MockRunner()
