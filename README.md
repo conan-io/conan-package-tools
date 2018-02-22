@@ -216,6 +216,7 @@ You can adjust other constructor parameters to control the build configurations 
 - **gcc_versions**: Generate only build configurations for the specified gcc versions (Ignored if the current machine is not Linux)
 - **visual_versions**: Generate only build configurations for the specified Visual Studio versions (Ignore if the current machine is not Windows)
 - **visual_runtimes**: Generate only build configurations for the specified runtimes, (only for Visual Studio)
+- **visual_toolsets**: Override default toolsets per Visual Studio version
 - **apple_clang_versions**: Generate only build configurations for the specified apple clang versions (Ignored if the current machine is not OSX)
 - **archs**: Generate build configurations for the specified architectures, by default, ["x86", "x86_64"].
 - **build_types**: Generate build configurations for the specified build_types, by default ["Debug", "Release"].
@@ -225,6 +226,7 @@ Or you can adjust environment variables:
 - **CONAN_GCC_VERSIONS**
 - **CONAN_VISUAL_VERSIONS**
 - **CONAN_VISUAL_RUNTIMES**
+- **CONAN_VISUAL_TOOLSETS**
 - **CONAN_APPLE_CLANG_VERSIONS**
 - **CONAN_CLANG_VERSIONS**
 - **CONAN_ARCHS**
@@ -251,12 +253,12 @@ So, if we want to generate packages for ``x86_64`` and ``armv8`` but only for ``
 
 There are also two additional parameters of the ``add_common_builds``:
 
-- **pure_c**: (Default True) If your project is C++, pass the **pure_c=False** to add both 
-              combinations using **libstdc** and **libstdc++11** for the setting **compiler.libcxx**. 
+- **pure_c**: (Default True) If your project is C++, pass the **pure_c=False** to add both
+              combinations using **libstdc** and **libstdc++11** for the setting **compiler.libcxx**.
               When True, the default profile value of ``libcxx`` will be applied.
-              If you don't want ``libcxx`` value to apply 
+              If you don't want ``libcxx`` value to apply
               to your binary packages you have to use the ``configure`` method to remove it:
-              
+
 ```
     def configure(self):
         del self.settings.compiler.libcxx
@@ -321,11 +323,11 @@ And run the build.py:
 
 It will generate a set of build configurations (profiles) for gcc 4.9 and will run it inside a container of the ``lasote/conangcc49`` image.
 
-If you want to run the arch="x86" build inside a docker container of 32 bits you can set the parameter ``docker_32_images`` in the 
+If you want to run the arch="x86" build inside a docker container of 32 bits you can set the parameter ``docker_32_images`` in the
 ConanMultiPackager constructor or set the environment variable ``CONAN_DOCKER_32_IMAGES``. In this case, the docker image name to use
-will be appended with ``-i386``. 
+will be appended with ``-i386``.
 
-The Docker images used by default both for 64 and 32 bits are pushed to dockerhub and its Dockerfiles are  available in the 
+The Docker images used by default both for 64 and 32 bits are pushed to dockerhub and its Dockerfiles are  available in the
 [conan-docker-tools](https://github.com/conan-io/conan-docker-tools) repository.
 
 ### Running scripts and executing commands before to build on Docker
@@ -855,13 +857,14 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 
 ## ConanMultiPackager parameters reference
 
-- **args**: List with the parameters that will be passed to "conan test" command. e.j: args=['--build', 'all']. Default sys.argv[1:]
+- **args**: List with the parameters that will be passed to "conan test" command. e.j: `args=['--build', 'all']`. Default `sys.argv[1:]`
 - **username**: Your conan username
-- **gcc_versions**: List with a subset of gcc_versions. Default ["4.9", "5", "6", "7"]
-- **clang_versions**: List with a subset of clang_versions. Default ["3.8", "3.9", "4.0"]
-- **apple_clang_versions**: List with a subset of apple-clang versions. Default ["6.1", "7.3", "8.0"]
-- **visual_versions**: List with a subset of Visual Studio versions. Default [10, 12, 14]
-- **visual_runtimes**: List containing Visual Studio runtimes to use in builds. Default ["MT", "MD", "MTd", "MDd"]
+- **gcc_versions**: List with a subset of gcc_versions. Default `["4.9", "5", "6", "7"]`
+- **clang_versions**: List with a subset of clang_versions. Default `["3.8", "3.9", "4.0"]`
+- **apple_clang_versions**: List with a subset of apple-clang versions. Default `["6.1", "7.3", "8.0"]`
+- **visual_versions**: List with a subset of Visual Studio versions. Default `[10, 12, 14]`
+- **visual_runtimes**: List containing Visual Studio runtimes to use in builds. Default `["MT", "MD", "MTd", "MDd"]`
+- **visual_toolsets**: Dict mapping Visual Studio versions to lists of Visual Studio toolsets. Default `{"9": ["v90"], "10": ["v100"], "11": ["v110"], "12": ["v120"], "14": ["v140"], "15": ["v141"]}`. Pass in an Dict to override default values. If a version is unspecified, the default will be used.
 - **mingw_configurations**: Configurations for MinGW
 - **archs**: List containing specific architectures to build for. Default ["x86", "x86_64"]
 - **use_docker**: Use docker for package creation in Linux systems.
@@ -880,7 +883,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **allow_gcc_minors** Declare this variable if you want to allow gcc >=5 versions with the minor (5.1, 6.3 etc).
 - **exclude_vcvars_precommand** For Visual Studio builds, it exclude the vcvars call to set the environment.
 - **build_policy**: Default None.
-    - "never": No build from sources, only download packages. 
+    - "never": No build from sources, only download packages.
     - "missing": Build only missing packages.
     - "outdated": Build only missing or if the available package is not built with the current recipe. Useful to upload new configurations, e.j packages for a new compiler without
       rebuild all packages.
@@ -930,13 +933,14 @@ This is especially useful for CI integration.
 - **CONAN_UPLOAD_ONLY_WHEN_STABLE**: If defined, will try to upload the packages only when the current channel is the stable one.
 - **CONAN_SKIP_CHECK_CREDENTIALS**: Force to check user credentials before to build when upload is required. By default is False.
 - **CONAN_DOCKER_ENTRY_SCRIPT**: Command to be executed before to build when running Docker.
-- **CONAN_GCC_VERSIONS**: Gcc versions, comma separated, e.g. "4.6,4.8,5,6"
-- **CONAN_CLANG_VERSIONS**: Clang versions, comma separated, e.g. "3.8,3.9,4.0"
-- **CONAN_APPLE_CLANG_VERSIONS**: Apple clang versions, comma separated, e.g. "6.1,8.0"
-- **CONAN_ARCHS**: Architectures to build for, comma separated, e.g. "x86,x86_64"
-- **CONAN_BUILD_TYPES**: Build types to build for, comma separated, e.g. "Release,Debug"
-- **CONAN_VISUAL_VERSIONS**: Visual versions, comma separated, e.g. "12,14"
-- **CONAN_VISUAL_RUNTIMES**: Visual runtimes, comma separated, e.g. "MT,MD"
+- **CONAN_GCC_VERSIONS**: Gcc versions, comma separated, e.g. `"4.6,4.8,5,6"`
+- **CONAN_CLANG_VERSIONS**: Clang versions, comma separated, e.g. `"3.8,3.9,4.0"`
+- **CONAN_APPLE_CLANG_VERSIONS**: Apple clang versions, comma separated, e.g. `"6.1,8.0"`
+- **CONAN_ARCHS**: Architectures to build for, comma separated, e.g. `"x86,x86_64"`
+- **CONAN_BUILD_TYPES**: Build types to build for, comma separated, e.g. `"Release,Debug"`
+- **CONAN_VISUAL_VERSIONS**: Visual versions, comma separated, e.g. `"12,14"`
+- **CONAN_VISUAL_RUNTIMES**: Visual runtimes, comma separated, e.g. `"MT,MD"`
+- **CONAN_VISUAL_TOOLSETS**: Map Visual versions to toolsets, e.g. `14=v140;v140_xp,12=v120_xp`
 - **CONAN_USE_DOCKER**: If defined will use docker
 - **CONAN_CURRENT_PAGE**:  Current page of packages to create
 - **CONAN_TOTAL_PAGES**: Total number of pages
@@ -956,9 +960,9 @@ This is especially useful for CI integration.
 - **CONAN_ALLOW_GCC_MINORS** Declare this variable if you want to allow gcc >=5 versions with the minor (5.1, 6.3 etc).
 - **CONAN_EXCLUDE_VCVARS_PRECOMMAND** For Visual Studio builds, it exclude the vcvars call to set the environment.
 - **CONAN_BUILD_REQUIRES** You can specify additional build requires for the generated profile with an environment variable following the same profile syntax and separated by ","
-  i.e ``CONAN_BUILD_REQUIRES: mingw-installer/7.1@conan/stable, pattern: other/1.0@conan/stable`` 
+  i.e ``CONAN_BUILD_REQUIRES: mingw-installer/7.1@conan/stable, pattern: other/1.0@conan/stable``
 - **CONAN_BUILD_POLICY**:  Default None.
-    - "never": No build from sources, only download packages. 
+    - "never": No build from sources, only download packages.
     - "missing": Build only missing packages.
     - "outdated": Build only missing or if the available package is not built with the current recipe. Useful to upload new configurations, e.j packages for a new compiler without
       rebuild all packages.

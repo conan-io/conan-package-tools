@@ -63,7 +63,7 @@ def _make_mingw_builds(settings, options, build_requires, build_types, reference
     return builds
 
 
-def get_visual_builds(visual_versions, archs, visual_runtimes, shared_option_name,
+def get_visual_builds(visual_versions, archs, visual_runtimes, visual_toolsets, shared_option_name,
                       dll_with_static_runtime, vs10_x86_64_enabled, build_types, reference=None):
     ret = []
     for visual_version in visual_versions:
@@ -71,8 +71,8 @@ def get_visual_builds(visual_versions, archs, visual_runtimes, shared_option_nam
         for arch in archs:
             if not vs10_x86_64_enabled and arch == "x86_64" and visual_version == "10":
                 continue
-            visual_builds = get_visual_builds_for_version(visual_runtimes, visual_version, arch,
-                                                          shared_option_name,
+            visual_builds = get_visual_builds_for_version(visual_runtimes, visual_version, visual_toolsets,
+                                                          arch, shared_option_name,
                                                           dll_with_static_runtime, build_types,
                                                           reference)
 
@@ -80,7 +80,7 @@ def get_visual_builds(visual_versions, archs, visual_runtimes, shared_option_nam
     return ret
 
 
-def get_visual_builds_for_version(visual_runtimes, visual_version, arch, shared_option_name,
+def get_visual_builds_for_version(visual_runtimes, visual_version, visual_toolsets, arch, shared_option_name,
                                   dll_with_static_runtime, build_types, reference=None):
     base_set = {"compiler": "Visual Studio",
                 "compiler.version": visual_version,
@@ -123,9 +123,11 @@ def get_visual_builds_for_version(visual_runtimes, visual_version, arch, shared_
 
     ret = []
     for setting, options, env_vars, build_requires in sets:
-        tmp = copy.copy(base_set)
-        tmp.update(setting)
-        ret.append(BuildConf(tmp, options, env_vars, build_requires, reference))
+        for toolset in visual_toolsets.get(visual_version, [None]):
+            tmp = copy.copy(base_set)
+            tmp.update(setting)
+            tmp.update({"compiler.toolset": toolset})
+            ret.append(BuildConf(tmp, options, env_vars, build_requires, reference))
 
     return ret
 

@@ -287,7 +287,10 @@ class GeneratorsTest(unittest.TestCase):
 
     def test_visual_build_generator(self):
         ref = ConanFileReference.loads("lib/1.0@conan/stable")
-        builds = get_visual_builds(visual_versions=["10", "14"], archs=["x86"], visual_runtimes=["MDd", "MTd"],
+        builds = get_visual_builds(archs=["x86"],
+                                   visual_versions=["10", "14"],
+                                   visual_runtimes=["MDd", "MTd"],
+                                   visual_toolsets={"10": ["v100"], "14": ["v140", "v140_xp"]},
                                    shared_option_name=None,
                                    dll_with_static_runtime=False,
                                    vs10_x86_64_enabled=True,
@@ -295,74 +298,81 @@ class GeneratorsTest(unittest.TestCase):
                                    reference=ref)
 
         expected = [
-        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.runtime': 'MTd'}, {}, {}, {}, ref),
-        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.runtime': 'MDd'}, {}, {}, {}, ref),
-        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.runtime': 'MTd'}, {}, {}, {}, ref),
-        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.runtime': 'MDd'}, {}, {}, {}, ref)]
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.runtime': 'MTd', 'compiler.toolset': 'v100'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.runtime': 'MDd', 'compiler.toolset': 'v100'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.runtime': 'MTd', 'compiler.toolset': 'v140'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.runtime': 'MTd', 'compiler.toolset': 'v140_xp'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.runtime': 'MDd', 'compiler.toolset': 'v140'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.runtime': 'MDd', 'compiler.toolset': 'v140_xp'}, {}, {}, {}, ref)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MDd"],
+                                   visual_toolsets={"10": ["v100"], "14": ["v140", "v140_xp"]},
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=True,
                                    vs10_x86_64_enabled=True,
                                    build_types=["Debug", "Release"])
 
         expected = [
-            ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10'},
+            ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.toolset': 'v100'},
              {'libpng:shared': False}, {}, {}, None),
-            ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10'},
+            ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.toolset': 'v100'},
              {'libpng:shared': True}, {}, {}, None),
-            ({'compiler.runtime': 'MDd', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10'},
+            ({'compiler.runtime': 'MDd', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.toolset': 'v100'},
              {'libpng:shared': False}, {}, {}, None),
-            ({'compiler.runtime': 'MDd', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10'},
+            ({'compiler.runtime': 'MDd', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.toolset': 'v100'},
              {'libpng:shared': True}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MDd"],
+                                   visual_toolsets={"10": ["v100"], "14": ["v140", "v140_xp"]},
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=True,
                                    vs10_x86_64_enabled=False,
                                    build_types=["Debug", "Release"])
         expected = [
-        ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10'},
+        ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.toolset': 'v100'},
           {'libpng:shared': False}, {}, {}, None),
-        ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10'},
+        ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.toolset': 'v100'},
           {'libpng:shared': True}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MTd"],
+                                   visual_toolsets={"10": ["v100"], "14": ["v140", "v140_xp"]},
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=False,
                                    vs10_x86_64_enabled=False,
                                    build_types=["Debug", "Release"])
         expected = [
-            ({'compiler': 'Visual Studio', 'compiler.runtime': 'MTd', 'compiler.version': '10', 'arch': 'x86', 'build_type': 'Debug'},
+            ({'compiler': 'Visual Studio', 'compiler.runtime': 'MTd', 'compiler.version': '10', 'compiler.toolset': 'v100', 'arch': 'x86', 'build_type': 'Debug'},
              {'libpng:shared': False}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_visual_builds(visual_versions=["10", "14"], archs=["x86"], visual_runtimes=["MDd", "MTd"],
+                                   visual_toolsets={"10": ["v100"], "14": ["v140"]},
                                    shared_option_name=None,
                                    dll_with_static_runtime=False,
                                    vs10_x86_64_enabled=True,
                                    build_types=["Debug"])
 
         expected = [
-            ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10',
+            ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.toolset': 'v100',
               'compiler.runtime': 'MTd'}, {}, {}, {}, None),
-            ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10',
+            ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.toolset': 'v100',
               'compiler.runtime': 'MDd'}, {}, {}, {}, None),
-            ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14',
+            ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.toolset': 'v140',
               'compiler.runtime': 'MTd'}, {}, {}, {}, None),
-            ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14',
+            ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.toolset': 'v140',
               'compiler.runtime': 'MDd'}, {}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MDd"],
+                                   visual_toolsets={"10": ["v100"], "14": ["v140", "v140_xp"]},
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=True,
                                    vs10_x86_64_enabled=True,
@@ -370,42 +380,44 @@ class GeneratorsTest(unittest.TestCase):
 
         expected = [
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'compiler.toolset': 'v100'},
              {'libpng:shared': False}, {}, {}, None),
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'compiler.toolset': 'v100'},
              {'libpng:shared': True}, {}, {}, None),
             ({'compiler.runtime': 'MDd', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'compiler.toolset': 'v100'},
              {'libpng:shared': False}, {}, {}, None),
             ({'compiler.runtime': 'MDd', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'compiler.toolset': 'v100'},
              {'libpng:shared': True}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MDd"],
+                                   visual_toolsets={"10": ["v100"], "14": ["v140", "v140_xp"]},
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=True,
                                    vs10_x86_64_enabled=False,
                                    build_types=["Debug"])
         expected = [
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'compiler.toolset': 'v100'},
              {'libpng:shared': False}, {}, {}, None),
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'compiler.toolset': 'v100'},
              {'libpng:shared': True}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MTd"],
+                                   visual_toolsets={"10": ["v100"], "14": ["v140", "v140_xp"]},
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=False,
                                    vs10_x86_64_enabled=False,
                                    build_types=["Debug"])
         expected = [
-            ({'compiler': 'Visual Studio', 'compiler.runtime': 'MTd', 'compiler.version': '10', 'arch': 'x86',
+            ({'compiler': 'Visual Studio', 'compiler.runtime': 'MTd', 'compiler.version': '10', 'compiler.toolset': 'v100', 'arch': 'x86',
               'build_type': 'Debug'},
              {'libpng:shared': False}, {}, {}, None)]
 
@@ -414,24 +426,26 @@ class GeneratorsTest(unittest.TestCase):
         #############
 
         builds = get_visual_builds(visual_versions=["10", "14"], archs=["x86_64"], visual_runtimes=["MD", "MT"],
+                                   visual_toolsets={"10": ["v100"], "14": ["v140_xp"]},
                                    shared_option_name=None,
                                    dll_with_static_runtime=False,
                                    vs10_x86_64_enabled=True,
                                    build_types=["Release"])
 
         expected = [
-            ({'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'Visual Studio', 'compiler.version': '10',
+            ({'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.toolset': 'v100',
               'compiler.runtime': 'MT'}, {}, {}, {}, None),
-            ({'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'Visual Studio', 'compiler.version': '10',
+            ({'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.toolset': 'v100',
               'compiler.runtime': 'MD'}, {}, {}, {}, None),
-            ({'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'Visual Studio', 'compiler.version': '14',
+            ({'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.toolset': 'v140_xp',
               'compiler.runtime': 'MT'}, {}, {}, {}, None),
-            ({'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'Visual Studio', 'compiler.version': '14',
+            ({'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.toolset': 'v140_xp',
               'compiler.runtime': 'MD'}, {}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MD"],
+                                   visual_toolsets={"10": ["v100"], "14": ["v140", "v140_xp"]},
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=True,
                                    vs10_x86_64_enabled=True,
@@ -439,42 +453,44 @@ class GeneratorsTest(unittest.TestCase):
 
         expected = [
             ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'Release', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'compiler.toolset': 'v100'},
              {'libpng:shared': False}, {}, {}, None),
             ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'Release', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'compiler.toolset': 'v100'},
              {'libpng:shared': True}, {}, {}, None),
             ({'compiler.runtime': 'MD', 'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'compiler.toolset': 'v100'},
              {'libpng:shared': False}, {}, {}, None),
             ({'compiler.runtime': 'MD', 'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'compiler.toolset': 'v100'},
              {'libpng:shared': True}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MD"],
+                                   visual_toolsets={"10": ["v100"], "14": ["v140", "v140_xp"]},
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=True,
                                    vs10_x86_64_enabled=False,
                                    build_types=["Release"])
         expected = [
             ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'Release', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'compiler.toolset': 'v100'},
              {'libpng:shared': False}, {}, {}, None),
             ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'Release', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'compiler.toolset': 'v100'},
              {'libpng:shared': True}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MT"],
+                                   visual_toolsets={"10": ["v100"], "14": ["v140", "v140_xp"]},
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=False,
                                    vs10_x86_64_enabled=False,
                                    build_types=["Release"])
         expected = [
-            ({'compiler': 'Visual Studio', 'compiler.runtime': 'MT', 'compiler.version': '10', 'arch': 'x86',
+            ({'compiler': 'Visual Studio', 'compiler.runtime': 'MT', 'compiler.version': '10', 'compiler.toolset': 'v100', 'arch': 'x86',
               'build_type': 'Release'},
              {'libpng:shared': False}, {}, {}, None)]
 

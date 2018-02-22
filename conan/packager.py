@@ -1,3 +1,4 @@
+import copy
 import os
 import platform
 import re
@@ -39,6 +40,9 @@ class PlatformInfo(object):
 def split_colon_env(varname):
     return [a.strip() for a in list(filter(None, os.getenv(varname, "").split(",")))]
 
+def parse_dict_env(varname):
+    l = [a.split("=") for a in split_colon_env(varname)]
+    return dict([(k, v.split(";")) for k, v in l])
 
 class ConanOutputRunner(ConanRunner):
 
@@ -70,12 +74,21 @@ class ConanMultiPackager(object):
     default_clang_versions = ["3.8", "3.9", "4.0"]
     default_visual_versions = ["10", "12", "14"]
     default_visual_runtimes = ["MT", "MD", "MTd", "MDd"]
+    default_visual_toolsets = {
+        "9": ["v90"],
+        "10": ["v100"],
+        "11": ["v110"],
+        "12": ["v120"],
+        "14": ["v140"],
+        "15": ["v141"],
+    }
     default_apple_clang_versions = ["7.3", "8.0", "8.1"]
     default_archs = ["x86", "x86_64"]
     default_build_types = ["Release", "Debug"]
 
     def __init__(self, args=None, username=None, channel=None, runner=None,
                  gcc_versions=None, visual_versions=None, visual_runtimes=None,
+                 visual_toolsets=None,
                  apple_clang_versions=None, archs=None,
                  use_docker=None, curpage=None, total_pages=None,
                  docker_image=None, reference=None, password=None, remote=None,
@@ -232,6 +245,9 @@ won't be able to use them.
         self.visual_runtimes = visual_runtimes or split_colon_env("CONAN_VISUAL_RUNTIMES") or \
                                self.default_visual_runtimes
 
+        self.visual_toolsets = copy.copy(self.default_visual_toolsets)
+        self.visual_toolsets.update(visual_toolsets or parse_dict_env("CONAN_VISUAL_TOOLSETS") or {})
+
         self.apple_clang_versions = apple_clang_versions or \
                                     split_colon_env("CONAN_APPLE_CLANG_VERSIONS") or \
                                     self.default_apple_clang_versions
@@ -386,7 +402,7 @@ won't be able to use them.
                                               self.mingw_installer_reference, self.archs,
                                               shared_option_name, self.build_types, reference)
                 builds.extend(get_visual_builds(self.visual_versions, self.archs,
-                                                self.visual_runtimes,
+                                                self.visual_runtimes, self.visual_toolsets,
                                                 shared_option_name, dll_with_static_runtime,
                                                 self.vs10_x86_64_enabled, self.build_types,
                                                 reference))
