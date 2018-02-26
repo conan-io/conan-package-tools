@@ -602,3 +602,45 @@ class GeneratorsTest(unittest.TestCase):
         single_expanded_option = (("shared", True))
         option_dict = _option_dict_from_combination(single_expanded_option)
         self.assertEqual(option_dict, {"shared": True})
+
+    def functional_options_test(self):
+        ref = ConanFileReference.loads("lib/1.0@conan/stable")
+        builds = get_visual_builds(visual_versions=["14"],
+                                   archs=["x86"],
+                                   visual_runtimes=["MDd"],
+                                   dll_with_static_runtime=False,
+                                   vs10_x86_64_enabled=True,
+                                   build_types=["Debug"],
+                                   common_options={"opt1":[True, False], "opt2":["value1", "value2"]},
+                                   reference=ref)
+
+        expected = [
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.runtime': 'MDd'}, {"opt1":True, "opt2":"value1"}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.runtime': 'MDd'}, {"opt1":True, "opt2":"value2"}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.runtime': 'MDd'}, {"opt1":False, "opt2":"value1"}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.runtime': 'MDd'}, {"opt1":False, "opt2":"value2"}, {}, {}, ref)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+
+        ref = ConanFileReference.loads("lib/2.3@conan/stable")
+        builds = get_linux_clang_builds(clang_versions=["4.0"],
+                                        archs=["x86_64"],
+                                        pure_c=True,
+                                        build_types=["Debug"],
+                                        common_options={"pack:shared":[True, False], "my_option":[True, False, "other"]},
+                                        reference=ref)
+        expected = [({'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'clang', 'compiler.version': '4.0'},
+                     {'pack:shared': True, "my_option":True}, {}, {}, ref),
+                    ({'arch': 'x86_64', 'build_type': 'Debug','compiler': 'clang', 'compiler.version': '4.0'},
+                     {'pack:shared': True, "my_option":False}, {}, {}, ref),
+                    ({'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'clang', 'compiler.version': '4.0'},
+                     {'pack:shared': True, "my_option":"other"}, {}, {}, ref),
+                    ({'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'clang', 'compiler.version': '4.0'},
+                     {'pack:shared': False, "my_option":True}, {}, {}, ref),
+                    ({'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'clang', 'compiler.version': '4.0'},
+                     {'pack:shared': False, "my_option":False}, {}, {}, ref),
+                    ({'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'clang', 'compiler.version': '4.0'},
+                     {'pack:shared': False, "my_option":"other"}, {}, {}, ref)]
+        b = [tuple(a) for a in builds]
+        self.assertEquals(b, expected)

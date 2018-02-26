@@ -97,11 +97,10 @@ def get_visual_builds_for_version(visual_runtimes, visual_version, arch, dll_wit
     sets = []
     shared_option_name = ""
 
-    common_options_without_shared = dict()
-    for key in common_options.keys():
+    common_options_without_shared = copy.copy(common_options)
+    for key in common_options_without_shared.keys():
         if "shared" in key.lower():
             shared_option_name = key
-            common_options_without_shared = copy.copy(common_options)
             del common_options_without_shared[key]
             break
 
