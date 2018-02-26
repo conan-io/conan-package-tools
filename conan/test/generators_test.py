@@ -581,14 +581,16 @@ class GeneratorsTest(unittest.TestCase):
     def options_test(self):
         options = {"shared": [True, False], "opt": [True, False]}
         combinations = _combine_common_options(options)
-        self.assertEquals(combinations, [(("shared", True), ("opt", True)),
-                                         (("shared", True), ("opt", False)),
-                                         (("shared", False), ("opt", True)),
-                                         (("shared", False), ("opt", False))])
+        output = [set(comb) for comb in combinations]
+        expected = [{("opt", True), ("shared", True)}, {("opt", False), ("shared", True)},
+                    {("opt", True), ("shared", False)}, {("opt", False), ("shared", False)}]
+        self.assertEquals(output, expected)
 
         options = {"shared": [True, False]}
         combinations = _combine_common_options(options)
-        self.assertEquals(combinations, [(("shared", True)), (("shared", False))])
+        output = [comb for comb in combinations]
+        expected = [("shared", True), ("shared", False)]
+        self.assertEquals(output, expected)
 
 
         expanded_option1 = (("shared", True), ("opt", True))
