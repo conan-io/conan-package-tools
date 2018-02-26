@@ -368,43 +368,72 @@ won't be able to use them.
                     self._named_builds.setdefault(key, []).append(BuildConf(*values))
 
     def add_common_builds(self, shared_option_name=None, pure_c=True,
-                          dll_with_static_runtime=False, reference=None):
+                          dll_with_static_runtime=False, reference=None, common_options=None):
 
         reference = reference or self.reference
+        common_options = common_options or {}
+
+        if shared_option_name:
+            common_options[shared_option_name] = [True, False]
 
         builds = []
         if self.use_docker:
-            builds = get_linux_gcc_builds(self.gcc_versions, self.archs, shared_option_name,
-                                          pure_c, self.build_types, reference)
-            builds.extend(get_linux_clang_builds(self.clang_versions, self.archs,
-                                                 shared_option_name, pure_c, self.build_types,
-                                                 reference))
+            builds = get_linux_gcc_builds(gcc_versions=self.gcc_versions,
+                                          archs=self.archs,
+                                          pure_c=pure_c,
+                                          build_types=self.build_types,
+                                          common_options=common_options,
+                                          reference=reference)
+            builds.extend(get_linux_clang_builds(clang_versions=self.clang_versions,
+                                                 archs=self.archs,
+                                                 pure_c=pure_c,
+                                                 build_types=self.build_types,
+                                                 common_options=common_options,
+                                                 reference=reference))
         else:
             if self._platform_info.system() == "Windows":
                 if self.mingw_configurations:
-                    builds = get_mingw_builds(self.mingw_configurations,
-                                              self.mingw_installer_reference, self.archs,
-                                              shared_option_name, self.build_types, reference)
-                builds.extend(get_visual_builds(self.visual_versions, self.archs,
-                                                self.visual_runtimes,
-                                                shared_option_name, dll_with_static_runtime,
-                                                self.vs10_x86_64_enabled, self.build_types,
-                                                reference))
+                    builds = get_mingw_builds(mingw_configurations=self.mingw_configurations,
+                                              mingw_installer_reference=self.mingw_installer_reference,
+                                              archs=self.archs,
+                                              build_types=self.build_types,
+                                              common_options=common_options,
+                                              reference=reference)
+                builds.extend(get_visual_builds(visual_versions=self.visual_versions,
+                                                archs=self.archs,
+                                                visual_runtimes=self.visual_runtimes,
+                                                dll_with_static_runtime=dll_with_static_runtime,
+                                                vs10_x86_64_enabled=self.vs10_x86_64_enabled,
+                                                build_types=self.build_types,
+                                                common_options=common_options,
+                                                reference=reference))
             elif self._platform_info.system() == "Linux":
-                builds = get_linux_gcc_builds(self.gcc_versions, self.archs, shared_option_name,
-                                              pure_c, self.build_types, reference)
-                builds.extend(get_linux_clang_builds(self.clang_versions, self.archs,
-                                                     shared_option_name, pure_c,
-                                                     self.build_types, reference))
+                builds = get_linux_gcc_builds(gcc_versions=self.gcc_versions,
+                                              archs=self.archs,
+                                              pure_c=pure_c,
+                                              build_types=self.build_types,
+                                              common_options=common_options,
+                                              reference=reference)
+                builds.extend(get_linux_clang_builds(clang_versions=self.clang_versions,
+                                                     archs=self.archs,
+                                                     pure_c=pure_c,
+                                                     build_types=self.build_types,
+                                                     common_options=common_options,
+                                                     reference=reference))
             elif self._platform_info.system() == "Darwin":
-                builds = get_osx_apple_clang_builds(self.apple_clang_versions, self.archs,
-                                                    shared_option_name, pure_c, self.build_types,
-                                                    reference)
+                builds = get_osx_apple_clang_builds(apple_clang_versions=self.apple_clang_versions,
+                                                    archs=self.archs,
+                                                    pure_c=pure_c,
+                                                    build_types=self.build_types,
+                                                    common_options=common_options,
+                                                    reference=reference)
             elif self._platform_info.system() == "FreeBSD":
-                builds = get_linux_clang_builds(self.clang_versions, self.archs,
-                                                shared_option_name, pure_c, self.build_types,
-                                                reference)
-
+                builds = get_linux_clang_builds(clang_versions=self.clang_versions,
+                                                archs=self.archs,
+                                                pure_c=pure_c,
+                                                build_types=self.build_types,
+                                                common_options=common_options,
+                                                reference=reference)
         self._builds.extend(builds)
 
     def add(self, settings=None, options=None, env_vars=None, build_requires=None, reference=None):
