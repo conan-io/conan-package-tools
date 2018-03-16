@@ -596,6 +596,7 @@ won't be able to use them.
 
     @staticmethod
     def _get_profile(build_conf, profile_name):
+        profile_name = profile_name or os.getenv("CONAN_BASE_PROFILE")
         if profile_name:
             print("**************************************************")
             print("Using specified default base profile: %s" % profile_name)
