@@ -374,41 +374,6 @@ class AppTest(unittest.TestCase):
             self.assertTrue("x86" in builder.named_builds)
             self.assertTrue("x86_64" in builder.named_builds)
 
-    # Conan remote URLs require the username the be in all lowercase
-    def test_url_handling(self):
-        runner = MockRunner()
-        builder = ConanMultiPackager(username="Pepe",
-                                     remotes=["URL1", "URL2"],
-                                     upload="URL",
-                                     runner=runner)
-        builder.add({}, {}, {}, {})
-        builder.run_builds()
-        print(runner.calls)
-        self.assertIn('conan remote add remote0 url2 --insert', runner.calls)
-        self.assertIn('conan remote add remote1 url1 --insert', runner.calls)
-        self.assertIn('conan remote add upload_repo url', runner.calls)
-
-        runner = MockRunner()
-        builder = ConanMultiPackager(username="Pepe",
-                                     remotes="URL1, URL2",
-                                     upload="URL",
-                                     runner=runner)
-        builder.add({}, {}, {}, {})
-        builder.run_builds()
-        self.assertIn('conan remote add remote0 url2 --insert', runner.calls)
-        self.assertIn('conan remote add remote1 url1 --insert', runner.calls)
-        self.assertIn('conan remote add upload_repo url', runner.calls)
-
-        runner = MockRunner()
-        builder = ConanMultiPackager(username="Pepe",
-                                     remotes="URL1",
-                                     upload="URL",
-                                     runner=runner)
-        builder.add({}, {}, {}, {})
-        builder.run_builds()
-        self.assertIn('conan remote add remote0 url1 --insert', runner.calls)
-        self.assertIn('conan remote add upload_repo url', runner.calls)
-
     def test_remotes(self):
         runner = MockRunner()
         builder = ConanMultiPackager(username="Pepe",
