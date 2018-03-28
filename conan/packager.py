@@ -148,15 +148,6 @@ class ConanMultiPackager(object):
 
         self.remotes = remotes or os.getenv("CONAN_REMOTES", [])
         self.upload = upload if upload is not None else os.getenv("CONAN_UPLOAD", None)
-        # The username portion of the remote URLs must be all lowercase to work
-        if self.remotes:
-            if isinstance(self.remotes,list):
-                self.remotes = [remote.lower() for remote in self.remotes]
-            else:
-                self.remotes = self.remotes.lower()
-        if self.upload:
-            self.upload = self.upload.lower()
-
         self.stable_branch_pattern = stable_branch_pattern or \
                                      os.getenv("CONAN_STABLE_BRANCH_PATTERN", None)
         default_channel = channel or os.getenv("CONAN_CHANNEL", "testing")
@@ -459,6 +450,9 @@ won't be able to use them.
                 use_docker_32 = arch == "x86" and self.docker_32_images
                 if use_docker_32:
                     build.settings["arch_build"] = "x86"
+                docker_arch_suffix = "i386" if use_docker_32 else arch
+                if docker_arch_suffix == "x86_64":
+                    docker_arch_suffix = None
                 profile = self._get_profile(build, profile_name)
                 build_runner = DockerTestPackageRunner(profile, self.username, self.channel,
                                                        build.reference,
@@ -467,7 +461,7 @@ won't be able to use them.
                                                        docker_image=self.docker_image,
                                                        conan_pip_package=self.conan_pip_package,
                                                        docker_image_skip_update=self.docker_image_skip_update,
-                                                       docker_32_images=use_docker_32,
+                                                       docker_arch_suffix=docker_arch_suffix,
                                                        build_policy=self.build_policy)
 
                 build_runner.run(pull_image=not pulled_docker_images[build_runner.docker_image],
