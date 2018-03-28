@@ -358,8 +358,8 @@ Also, it's possible to run some internal script, before to build the package:
 
 ## Specifying a different base profile
 
-The options, settings and environment variables that the ``add_common_builds()`` method generate, are applied into the default profile
-of the conan installation. If you want to use a different default profile you can pass the name of the profile in the ``run()`` method.
+The options, settings and environment variables that the ``add_common_builds()`` method generate, are applied into the `default` profile
+of the conan installation. If you want to use a different profile you can pass the name of the profile in the ``run()`` method.
 
 
  **Example**:
@@ -372,6 +372,9 @@ of the conan installation. If you want to use a different default profile you ca
 	    builder.add_common_builds(clang_versions=["3.8", "3.9"])
 	    builder.run("myclang")
 
+Alternatively you can use the `CONAN_BASE_PROFILE` environment variable to choose a different base profile:
+
+    CONAN_BASE_PROFILE=myclang
 
 # The CI integration
 
@@ -962,6 +965,8 @@ This is especially useful for CI integration.
     - "missing": Build only missing packages.
     - "outdated": Build only missing or if the available package is not built with the current recipe. Useful to upload new configurations, e.j packages for a new compiler without
       rebuild all packages.
+- **CONAN_BASE_PROFILE**: Apply options, settings, etc. to this profile instead of `default`.
+
 
 # Full example
 
