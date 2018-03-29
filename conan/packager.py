@@ -447,7 +447,7 @@ won't be able to use them.
 
             if self.use_docker:
                 arch = build.settings.get("arch", "") or build.settings.get("arch_build", "")
-                use_docker_32 = arch == "x86" and self.docker_32_images
+                use_docker_32 = arch == "x86" or self.docker_32_images
                 if use_docker_32:
                     build.settings["arch_build"] = "x86"
                 docker_arch_suffix = "i386" if use_docker_32 else arch
