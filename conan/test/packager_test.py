@@ -158,7 +158,7 @@ class AppTest(unittest.TestCase):
 
         packager.add({"arch": "x86", "compiler": "gcc", "compiler.version": "6"})
         packager.run_builds(1, 1)
-        self.assertIn("docker pull lasote/conangcc6-i386", self.runner.calls[0])
+        self.assertIn("docker pull lasote/conangcc6-x86", self.runner.calls[0])
 
         self.runner.reset()
         packager = ConanMultiPackager("--build missing -r conan.io",
@@ -182,6 +182,18 @@ class AppTest(unittest.TestCase):
             packager.run_builds(1, 1)
             self.assertIn("docker pull lasote/conangcc6-i386", self.runner.calls[0])
             self.assertIn("arch_build=x86\\", self.runner.calls[-1])
+
+        # Test the opossite
+        packager = ConanMultiPackager("--build missing -r conan.io",
+                                      "lasote", "mychannel",
+                                      runner=self.runner,
+                                      use_docker=True,
+                                      docker_32_images=False,
+                                      reference="zlib/1.2.11")
+
+        packager.add({"arch": "x86", "compiler": "gcc", "compiler.version": "6"})
+        packager.run_builds(1, 1)
+        self.assertIn("docker pull lasote/conangcc6", self.runner.calls[0])
 
     def test_docker_gcc(self):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
