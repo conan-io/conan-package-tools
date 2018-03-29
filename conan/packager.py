@@ -447,12 +447,15 @@ won't be able to use them.
 
             if self.use_docker:
                 arch = build.settings.get("arch", "") or build.settings.get("arch_build", "")
-                use_docker_32 = arch == "x86" and self.docker_32_images
-                if use_docker_32:
+
+                if self.docker_32_images and arch == "x86":
                     build.settings["arch_build"] = "x86"
-                docker_arch_suffix = "i386" if use_docker_32 else arch
-                if docker_arch_suffix == "x86_64":
+                    docker_arch_suffix = "x86"
+                elif arch != "x86" and arch != "x86_64":
+                    docker_arch_suffix = arch
+                else:
                     docker_arch_suffix = None
+
                 profile = self._get_profile(build, profile_name)
                 build_runner = DockerTestPackageRunner(profile, self.username, self.channel,
                                                        build.reference,
