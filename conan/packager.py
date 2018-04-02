@@ -5,6 +5,7 @@ import sys
 from collections import defaultdict
 
 from conan.ci_manager import CIManager
+from conan.printer import print_jobs, print_current_page, print_rule, print_ascci_art, print_message
 from conan.tools import get_bool_from_env
 from conan.builds_generator import (get_linux_gcc_builds, get_linux_clang_builds, get_visual_builds,
                                     get_osx_apple_clang_builds, get_mingw_builds, BuildConf)
@@ -423,6 +424,9 @@ won't be able to use them.
             self.runner('%s pip install %s' % (self.sudo_command, self.conan_pip_package))
         if not self.skip_check_credentials and self._upload_enabled():
             self.login("upload_repo")
+
+
+
         self.run_builds(profile_name=profile_name)
         self.upload_packages()
 
@@ -446,10 +450,11 @@ won't be able to use them.
             for build in self.named_builds[curpage]:
                 self.builds_in_current_page.append(build)
 
-        print("Page       : ", curpage)
-        print("Builds list:")
-        for p in self.builds_in_current_page:
-            print(list(p._asdict().items()))
+        print_rule()
+        print_ascci_art()
+        print_current_page(curpage, total_pages)
+        print_jobs(self.builds_in_current_page)
+
 
         pulled_docker_images = defaultdict(lambda: False)
         for build in self.builds_in_current_page:
@@ -496,7 +501,7 @@ won't be able to use them.
                                                             password or self.password,
                                                             remote_name)
 
-            logger.info("******** VERIFYING YOUR CREDENTIALS **********\n")
+            print_message("VERIFYING YOUR CREDENTIALS")
             if self._platform_info.system() == "Linux" and self.use_docker:
                 data_dir = os.path.expanduser(self.data_home)
                 self.runner("%s chmod -R 777 %s" % (self.sudo_command, data_dir))
@@ -519,7 +524,7 @@ won't be able to use them.
             all_refs = [self.reference]
 
         if not all_refs:
-            logger.error("******** NOT REFERENCES TO UPLOAD!! ********** \n")
+            print_message("NOT REFERENCES TO UPLOAD!!")
 
         if self._platform_info.system() == "Linux" and self.use_docker:
             data_dir = os.path.expanduser(self.data_home)
@@ -529,7 +534,7 @@ won't be able to use them.
             command = "conan upload %s --retry %s --all --force --confirm -r=upload_repo" % (
                     str(ref), self.upload_retry)
 
-            logger.info("******** RUNNING UPLOAD COMMAND ********** \n%s" % command)
+            print_message("RUNNING UPLOAD COMMAND", "$ %s" % command)
             ret = self.runner(command)
             if ret != 0:
                 raise Exception("Error uploading")
