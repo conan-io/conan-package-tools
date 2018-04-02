@@ -131,4 +131,4 @@ class CIManagerTest(unittest.TestCase):
                                        "APPVEYOR_REPO_BRANCH": "mybranch",
                                        }):
             manager = CIManager()
-            self.assertRaises(manager.get_commit_build_policy)
+            self.assertRaises(Exception, manager.get_commit_build_policy)
