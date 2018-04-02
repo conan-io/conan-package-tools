@@ -1,4 +1,5 @@
 import unittest
+import os
 
 from conan.packager import ConanMultiPackager
 from conan.ci_manager import CIManager
@@ -6,6 +7,17 @@ from conans import tools
 
 
 class CIManagerTest(unittest.TestCase):
+
+    def setUp(self):
+        # Clean env first
+        new_env = {}
+        for var, value in os.environ.items():
+            if "travis" not in var.lower() and \
+               "appveyor" not in var.lower() and \
+               "bamboo" not in var.lower():
+                new_env[var] = value
+
+        os.environ = new_env
 
     def test_skip(self):
         with tools.environment_append({"TRAVIS": "1",
@@ -119,4 +131,4 @@ class CIManagerTest(unittest.TestCase):
                                        "APPVEYOR_REPO_BRANCH": "mybranch",
                                        }):
             manager = CIManager()
-            self.assertRaises(manager.get_commit_build_policy)
+            self.assertRaises(Exception, manager.get_commit_build_policy)
