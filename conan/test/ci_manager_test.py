@@ -1,10 +1,21 @@
 import unittest
 
+from conan.packager import ConanMultiPackager
 from conan.ci_manager import CIManager
 from conans import tools
 
 
 class CIManagerTest(unittest.TestCase):
+
+    def test_skip(self):
+        with tools.environment_append({"TRAVIS": "1",
+                                       "TRAVIS_COMMIT_MESSAGE": "[skip ci]",
+                                       "TRAVIS_BRANCH": "mybranch",
+                                       }):
+            packager = ConanMultiPackager(username="dori")
+            # Constructor skipped
+            ret = packager.run()
+            self.assertEquals(ret, 99)
 
     def test_instance_correct(self):
         # Bamboo

@@ -59,6 +59,12 @@ class CIManager(object):
             return build_policy
         return None
 
+    def skip_builds(self):
+        pattern = "^.*\[skip ci\].*$"
+        prog = re.compile(pattern)
+        msg = self.get_commit_msg()
+        return prog.match(msg)
+
     def get_branch(self):
         return self.manager.get_branch()
 

@@ -416,6 +416,9 @@ won't be able to use them.
         self._builds.append(BuildConf(settings, options, env_vars, build_requires, reference))
 
     def run(self, profile_name=None):
+        if self.ci_manager.skip_builds():
+            print("Skipped builds due [skip ci] commit message")
+            return 99
         if self.conan_pip_package:
             self.runner('%s pip install %s' % (self.sudo_command, self.conan_pip_package))
         if not self.skip_check_credentials and self._upload_enabled():
