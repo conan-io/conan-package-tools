@@ -856,6 +856,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 
 # FULL REFERENCE
 
+
 ## ConanMultiPackager parameters reference
 
 - **args**: List with the parameters that will be passed to "conan test" command. e.j: args=['--build', 'all']. Default sys.argv[1:]
@@ -897,6 +898,14 @@ Upload related parameters:
 - **stable_branch_pattern**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *stable* channel. Default "master"
 - **stable_channel**: Stable channel, default "stable".
 - **channel**: Channel where your packages will be uploaded if previous parameter doesn't match
+
+
+## Commit messages reference
+
+The current commit message can contain special messages:
+
+- **[skip ci]**: git sWill skip the building of any package.
+- **[build=XXX]**: Being XXX a build policy (see build_policy parameter reference)
 
 
 ## Complete ConanMultiPackager methods reference:
