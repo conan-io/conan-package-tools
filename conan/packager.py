@@ -4,6 +4,7 @@ import re
 import sys
 from collections import defaultdict
 
+from conan.ci_manager import CIManager
 from conan.tools import get_bool_from_env
 from conan.builds_generator import (get_linux_gcc_builds, get_linux_clang_builds, get_visual_builds,
                                     get_osx_apple_clang_builds, get_mingw_builds, BuildConf)
@@ -98,7 +99,12 @@ class ConanMultiPackager(object):
                  docker_32_images=None,
                  build_policy=None):
 
-        build_policy = build_policy or os.getenv("CONAN_BUILD_POLICY", None)
+        self.ci_manager = CIManager()
+
+        build_policy = build_policy or \
+                       self.ci_manager.get_commit_build_policy() or \
+                       os.getenv("CONAN_BUILD_POLICY", None)
+
         if build_policy:
             if build_policy.lower() not in ("never", "outdated", "missing"):
                 raise Exception("Invalid build policy, valid values: never, outdated, missing")
@@ -535,9 +541,7 @@ won't be able to use them.
             return False
 
         if not os.getenv("CONAN_TEST_SUITE", False):
-            if os.getenv("TRAVIS_PULL_REQUEST", "false") != "false" or \
-               os.getenv("APPVEYOR_PULL_REQUEST_NUMBER") or \
-               os.getenv("CIRCLE_PULL_REQUEST"):
+            if self.ci_manager.is_pull_request():
                 # PENDING! can't found info for gitlab/bamboo
                 print("Skipping upload, this is a Pull Request")
                 return False
@@ -558,38 +562,16 @@ won't be able to use them.
 
         pattern = self.stable_branch_pattern or "master"
         prog = re.compile(pattern)
+        branch = self.ci_manager.get_branch()
 
-        travis = os.getenv("TRAVIS", False)
-        travis_branch = os.getenv("TRAVIS_BRANCH", None)
-        appveyor = os.getenv("APPVEYOR", False)
-        appveyor_branch = os.getenv("APPVEYOR_REPO_BRANCH", None)
-        bamboo = os.getenv("bamboo_buildNumber", False)
-        bamboo_branch = os.getenv("bamboo_planRepository_branch", None)
-        jenkins = os.getenv("JENKINS_URL", False)
-        jenkins_branch = os.getenv("BRANCH_NAME", None)
-        gitlab = os.getenv("GITLAB_CI", False)  # Mark that job is executed in GitLab CI environment
-        gitlab_branch = os.getenv("CI_BUILD_REF_NAME", None)
-        circleci = os.getenv("CIRCLECI", False)
-        circleci_branch = os.getenv("CIRCLE_BRANCH", None)
-        # The branch or tag name for which project is built
-
-        channel = stable_channel if travis and prog.match(travis_branch) else None
-        channel = stable_channel if appveyor and prog.match(appveyor_branch) and \
-            not os.getenv("APPVEYOR_PULL_REQUEST_NUMBER") else channel
-        channel = stable_channel if bamboo and prog.match(bamboo_branch) else channel
-        channel = stable_channel if jenkins and jenkins_branch and prog.match(jenkins_branch) else channel
-        channel = stable_channel if gitlab and gitlab_branch and prog.match(gitlab_branch) else channel
-        channel = stable_channel if circleci and circleci_branch and prog.match(circleci_branch) else channel
-
-        if channel:
+        if branch and prog.match(branch):
             logger.warning("Redefined channel by CI branch matching with '%s', "
-                           "setting CONAN_CHANNEL to '%s'" % (pattern, channel))
+                           "setting CONAN_CHANNEL to '%s'" % (pattern, stable_channel))
             self.username = os.getenv("CONAN_STABLE_USERNAME", self.username)
             self.password = os.getenv("CONAN_STABLE_PASSWORD", self.password)
+            return stable_channel
 
-        ret = channel or default_channel
-
-        return ret
+        return default_channel
 
     @staticmethod
     def _get_profile(build_conf, profile_name):
