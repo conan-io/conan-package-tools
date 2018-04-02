@@ -11,6 +11,7 @@ import shutil
 
 from conan import __version__ as package_tools_version
 from conan.log import logger
+from conan.printer import print_message, print_profile, print_rule
 from conan.tools import get_bool_from_env
 from conans.client.conan_api import Conan
 from conans.client.profile_loader import _load_profile
@@ -96,7 +97,9 @@ class TestPackageRunner(object):
         if pre_command:
             command = '%s && %s' % (pre_command, command)
 
-        print("******** RUNNING BUILD ********** \n%s\n\n%s" % (command, self._profile_text))
+        print_rule()
+        print_message("Running build", "$ %s" % command)
+        print_profile(self._profile_text)
         sys.stdout.flush()
         retcode = self._runner(command)
         if retcode != 0:
