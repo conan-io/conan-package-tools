@@ -234,7 +234,7 @@ Check the **REFERENCE** section to see all the parameters and **ENVIRONMENT VARI
 
 
 ---
-**IMPORTANT!** Both the constructor parameters and the corresponding environment variables of the previous list ONLY has effect when using `builder.add_common_builds()`.
+**IMPORTANT!** Both the constructor parameters and the corresponding environment variables of the previous list ONLY have effect when using `builder.add_common_builds()`.
 
 ---
 
