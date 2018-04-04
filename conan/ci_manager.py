@@ -108,7 +108,7 @@ class TravisManager(GenericManager):
         return os.getenv("TRAVIS_BRANCH", None)
 
     def is_pull_request(self):
-        return os.getenv("TRAVIS_PULL_REQUEST", None)
+        return os.getenv("TRAVIS_PULL_REQUEST", "false") != "false"
 
 
 class AppveyorManager(GenericManager):
