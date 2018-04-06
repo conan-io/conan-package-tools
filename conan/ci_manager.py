@@ -51,6 +51,8 @@ class CIManager(object):
         pattern = "^.*\[build=(\w*)\].*$"
         prog = re.compile(pattern)
         msg = self.get_commit_msg()
+        if not msg:
+            return
         matches = prog.match(msg)
         if matches:
             build_policy = matches.groups()[0]
