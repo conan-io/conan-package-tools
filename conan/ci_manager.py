@@ -81,7 +81,7 @@ class GenericManager(object):
         try:
             msg = subprocess.check_output("git log -1 --format=%s%n%b", shell=True).decode().strip()
             return msg
-        except subprocess.CalledProcessError:
+        except Exception:
             pass
 
     def get_branch(self):
@@ -90,7 +90,7 @@ class GenericManager(object):
             if " (HEAD detached" not in msg:
                 return msg
             return None
-        except subprocess.CalledProcessError:
+        except Exception:
             pass
 
         return None
