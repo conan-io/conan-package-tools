@@ -52,7 +52,7 @@ class CIManager(object):
         prog = re.compile(pattern)
         msg = self.get_commit_msg()
         if not msg:
-            return
+            return None
         matches = prog.match(msg)
         if matches:
             build_policy = matches.groups()[0]
@@ -65,6 +65,8 @@ class CIManager(object):
         pattern = "^.*\[skip ci\].*$"
         prog = re.compile(pattern)
         msg = self.get_commit_msg()
+        if not msg:
+            return False
         return prog.match(msg)
 
     def get_branch(self):
