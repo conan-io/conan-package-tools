@@ -4,13 +4,15 @@ import re
 import sys
 from collections import defaultdict
 
+import six
+
 from conan.ci_manager import CIManager
-from conan.printer import print_jobs, print_current_page, print_rule, print_ascci_art, print_message
+from conan.printer import print_jobs, print_current_page, print_rule, print_ascci_art, print_message, \
+    print_dict, foldable_output
 from conan.tools import get_bool_from_env
 from conan.builds_generator import (get_linux_gcc_builds, get_linux_clang_builds, get_visual_builds,
                                     get_osx_apple_clang_builds, get_mingw_builds, BuildConf)
 from conan.create_runner import TestPackageRunner, DockerTestPackageRunner
-from conan.log import logger
 from conans.client.conan_api import Conan
 from conans.client.runner import ConanRunner
 from conans.model.ref import ConanFileReference
@@ -100,6 +102,9 @@ class ConanMultiPackager(object):
                  docker_32_images=None,
                  build_policy=None):
 
+        print_rule()
+        print_ascci_art()
+
         self.ci_manager = CIManager()
 
         build_policy = build_policy or \
@@ -159,6 +164,7 @@ class ConanMultiPackager(object):
                                      os.getenv("CONAN_STABLE_BRANCH_PATTERN", None)
         default_channel = channel or os.getenv("CONAN_CHANNEL", "testing")
         self.stable_channel = stable_channel or os.getenv("CONAN_STABLE_CHANNEL", "stable")
+        self.stable_channel = self.stable_channel.replace("\n", "")
         self.channel = self._get_channel(default_channel, self.stable_channel)
 
         if self.reference:
@@ -276,7 +282,7 @@ won't be able to use them.
                 self.add_remote_safe(remote_name, remote, insert=True)
             self.runner("conan remote list")
         else:
-            logger.info("Not additional remotes declared...")
+            print_message("Info", "Not additional remotes declared...")
 
         if self.upload and self.upload not in self.remotes:
             # If you specify the upload as a remote, put it first
@@ -286,6 +292,13 @@ won't be able to use them.
         _, client_cache, _ = Conan.factory()
         self.data_home = client_cache.store
         self.builds_in_current_page = []
+
+        def valid_pair(var, value):
+            return (isinstance(value, six.string_types) or
+                    isinstance(value, bool) or
+                    isinstance(value, list)) and not var.startswith("_") and "password" not in var
+        with foldable_output("local_vars"):
+            print_dict({var: value for var, value in self.__dict__.items() if valid_pair(var, value)})
 
     def get_remote_name(self, remote_url):
         # FIXME: Use conan api when prepared to return the list
@@ -305,7 +318,7 @@ won't be able to use them.
 
         if insert:
             if self.runner("conan remote add %s %s --insert" % (name, url)) != 0:
-                logger.info("Remote add with insert failed... trying to add at the end")
+                print_message("Info", "Remote add with insert failed... trying to add at the end")
             else:
                 return 0
         self.runner("conan remote add %s %s" % (name, url))  # Retrocompatibility
@@ -321,9 +334,9 @@ won't be able to use them.
     @property
     def builds(self):
         # Retrocompatibility iterating
-        logger.warn("\n\n\n******** ITERATING THE CONAN_PACKAGE_TOOLS BUILDS WITH "
-                    ".builds is deprecated use .items() instead (unpack 5 elements: "
-                    "settings, options, env_vars, build_requires, reference  **********\n\n\n")
+        print_message("WARNING", "\n\n\n******** ITERATING THE CONAN_PACKAGE_TOOLS BUILDS WITH "
+                      ".builds is deprecated use .items() instead (unpack 5 elements: "
+                      "settings, options, env_vars, build_requires, reference  **********\n\n\n")
         return [elem[0:4] for elem in self._builds]
 
     @builds.setter
@@ -417,15 +430,15 @@ won't be able to use them.
         self._builds.append(BuildConf(settings, options, env_vars, build_requires, reference))
 
     def run(self, profile_name=None):
+        print_message("Running builds...")
         if self.ci_manager.skip_builds():
             print("Skipped builds due [skip ci] commit message")
             return 99
         if self.conan_pip_package:
-            self.runner('%s pip install %s' % (self.sudo_command, self.conan_pip_package))
+            with foldable_output("pip_update"):
+                self.runner('%s pip install %s' % (self.sudo_command, self.conan_pip_package))
         if not self.skip_check_credentials and self._upload_enabled():
             self.login("upload_repo")
-
-
 
         self.run_builds(profile_name=profile_name)
         self.upload_packages()
@@ -450,11 +463,8 @@ won't be able to use them.
             for build in self.named_builds[curpage]:
                 self.builds_in_current_page.append(build)
 
-        print_rule()
-        print_ascci_art()
         print_current_page(curpage, total_pages)
         print_jobs(self.builds_in_current_page)
-
 
         pulled_docker_images = defaultdict(lambda: False)
         for build in self.builds_in_current_page:
@@ -497,11 +507,12 @@ won't be able to use them.
 
     def login(self, remote_name, user=None, password=None, force=False):
         if force or not self._logged_user_in_remote[remote_name]:
+            the_user = user or self.login_username
             user_command = 'conan user %s -p="%s" -r=%s' % (user or self.login_username,
                                                             password or self.password,
                                                             remote_name)
 
-            print_message("VERIFYING YOUR CREDENTIALS")
+            print_message("VERIFYING YOUR CREDENTIALS...")
             if self._platform_info.system() == "Linux" and self.use_docker:
                 data_dir = os.path.expanduser(self.data_home)
                 self.runner("%s chmod -R 777 %s" % (self.sudo_command, data_dir))
@@ -509,6 +520,7 @@ won't be able to use them.
             ret = self.runner(user_command)
             if ret != 0:
                 raise Exception("Error with user credentials for remote %s" % remote_name)
+            print_message("OK! '%s' user logged in '%s' " % (the_user, remote_name))
 
         self._logged_user_in_remote[remote_name] = True
 
@@ -573,8 +585,8 @@ won't be able to use them.
         branch = self.ci_manager.get_branch()
 
         if branch and prog.match(branch):
-            logger.warning("Redefined channel by CI branch matching with '%s', "
-                           "setting CONAN_CHANNEL to '%s'" % (pattern, stable_channel))
+            print_message("Info", "Redefined channel by CI branch matching with '%s', "
+                                  "setting CONAN_CHANNEL to '%s'" % (pattern, stable_channel))
             self.username = os.getenv("CONAN_STABLE_USERNAME", self.username)
             self.password = os.getenv("CONAN_STABLE_PASSWORD", self.password)
             return stable_channel

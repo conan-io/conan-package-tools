@@ -2,6 +2,8 @@ import re
 import os
 import subprocess
 
+from conan.printer import print_message
+
 
 def is_travis():
     return os.getenv("TRAVIS", False)
@@ -105,6 +107,9 @@ class GenericManager(object):
 
 class TravisManager(GenericManager):
 
+    def __init__(self):
+        print_message("- CI detected: Travis CI")
+
     def get_commit_msg(self):
         return os.getenv("TRAVIS_COMMIT_MESSAGE", None)
 
@@ -116,6 +121,9 @@ class TravisManager(GenericManager):
 
 
 class AppveyorManager(GenericManager):
+
+    def __init__(self):
+        print_message("- CI detected: Appveyor")
 
     def get_commit_msg(self):
         commit = os.getenv("APPVEYOR_REPO_COMMIT_MESSAGE", None)
@@ -137,11 +145,17 @@ class AppveyorManager(GenericManager):
 
 class BambooManager(GenericManager):
 
+    def __init__(self):
+        print_message("- CI detected: Bamboo")
+
     def get_branch(self):
         return os.getenv("bamboo_planRepository_branch", None)
 
 
 class CircleCiManager(GenericManager):
+
+    def __init__(self):
+        print_message("- CI detected: Circle CI")
 
     def get_branch(self):
         return os.getenv("CIRCLE_BRANCH", None)
@@ -152,11 +166,17 @@ class CircleCiManager(GenericManager):
 
 class GitlabManager(GenericManager):
 
+    def __init__(self):
+        print_message("- CI detected: Gitlab")
+
     def get_branch(self):
         return os.getenv("CI_BUILD_REF_NAME", None)
 
 
 class JenkinsManager(GenericManager):
+
+    def __init__(self):
+        print_message("- CI detected: Jenkins")
 
     def get_branch(self):
         return os.getenv("BRANCH_NAME", None)

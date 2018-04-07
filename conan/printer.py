@@ -1,6 +1,6 @@
 import sys
 from tabulate import tabulate
-
+from contextlib import contextmanager
 
 def print_ascci_art(printer=sys.stdout.write):
     text = """
@@ -17,11 +17,34 @@ def print_ascci_art(printer=sys.stdout.write):
     printer(text)
 
 
+@contextmanager
+def foldable_output(name):
+    start_fold(name)
+    yield
+    end_fold(name)
+    sys.stdout.flush()
+
+
+def start_fold(name, printer=sys.stdout.write):
+    from conan.ci_manager import is_travis
+    if is_travis():
+        printer("travis_fold:start:%s" % name)
+    else:
+        printer("[%s]\n" % name)
+
+
+def end_fold(name, printer=sys.stdout.write):
+    from conan.ci_manager import is_travis
+    if is_travis():
+        printer("travis_fold:end:%s" % name)
+
+
 def print_message(title, body="", printer=sys.stdout.write):
     printer("\n >> %s" % title.upper())
     printer("\n")
-    printer(" >> %s" % body)
-    printer("\n")
+    if body:
+        printer(" >> %s" % body)
+        printer("\n")
 
 
 def print_profile(text, printer=sys.stdout.write):
@@ -37,6 +60,14 @@ def print_rule(printer=sys.stdout.write, char="*"):
 
 def print_current_page(current_page, total_pages, printer=sys.stdout.write):
     printer("Page: %s/%s" % (current_page, total_pages))
+    printer("\n")
+
+
+def print_dict(data, printer=sys.stdout.write):
+    table = [("Configuration", "value")]
+    for name, value in data.items():
+        table.append((name, value))
+    printer(tabulate(table, headers="firstrow", tablefmt='psql'))
     printer("\n")
 
 
