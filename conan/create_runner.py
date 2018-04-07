@@ -9,7 +9,7 @@ import shutil
 
 from conan import __version__ as package_tools_version
 from conan.log import logger
-from conan.printer import print_message, print_profile, print_rule, foldable_output
+from conan.printer import print_message, print_profile, print_rule, foldable_output, print_command
 from conan.tools import get_bool_from_env
 from conans.client.conan_api import Conan
 from conans.client.profile_loader import _load_profile
@@ -95,7 +95,7 @@ class TestPackageRunner(object):
         if pre_command:
             command = '%s && %s' % (pre_command, command)
         with foldable_output("conan_create"):
-            print_message(command)
+            print_command(command)
             print_rule()
             print_profile(self._profile_text)
             retcode = self._runner(command)
@@ -159,7 +159,7 @@ class DockerTestPackageRunner(TestPackageRunner):
                     else:
                         command += " && sudo pip install conan --upgrade\""
 
-                    print_message(command)
+                    print_command(command)
                     self._runner(command)
                     # Save the image with the updated installed
                     # packages and remove the intermediate container
@@ -168,7 +168,7 @@ class DockerTestPackageRunner(TestPackageRunner):
                     self._runner(command)
 
                     command = "%s docker rm conan_runner" % self.sudo_command
-                    print_message(command)
+                    print_command(command)
                     self._runner(command)
 
         # Run the build

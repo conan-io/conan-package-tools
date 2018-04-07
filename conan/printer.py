@@ -28,7 +28,7 @@ def foldable_output(name):
 def start_fold(name, printer=sys.stdout.write):
     from conan.ci_manager import is_travis
     if is_travis():
-        printer("travis_fold:start:%s" % name)
+        printer("travis_fold:start:%s\n" % name)
     else:
         printer("[%s]\n" % name)
 
@@ -36,7 +36,11 @@ def start_fold(name, printer=sys.stdout.write):
 def end_fold(name, printer=sys.stdout.write):
     from conan.ci_manager import is_travis
     if is_travis():
-        printer("travis_fold:end:%s" % name)
+        printer("travis_fold:end:%s\n" % name)
+
+
+def print_command(command, printer=sys.stdout.write):
+    printer("\n >> %s" % command)
 
 
 def print_message(title, body="", printer=sys.stdout.write):
