@@ -5,13 +5,11 @@ import platform
 import tempfile
 from collections import namedtuple
 
-import sys
-
 import shutil
 
 from conan import __version__ as package_tools_version
 from conan.log import logger
-from conan.printer import print_message, print_profile, print_rule
+from conan.printer import print_message, print_profile, print_rule, foldable_output
 from conan.tools import get_bool_from_env
 from conans.client.conan_api import Conan
 from conans.client.profile_loader import _load_profile
@@ -96,14 +94,13 @@ class TestPackageRunner(object):
 
         if pre_command:
             command = '%s && %s' % (pre_command, command)
-
-        print_rule()
-        print_message("Running build", "$ %s" % command)
-        print_profile(self._profile_text)
-        sys.stdout.flush()
-        retcode = self._runner(command)
-        if retcode != 0:
-            exit("Error while executing:\n\t %s" % command)
+        with foldable_output("conan_create"):
+            print_message(command)
+            print_rule()
+            print_profile(self._profile_text)
+            retcode = self._runner(command)
+            if retcode != 0:
+                exit("Error while executing:\n\t %s" % command)
 
 
 def autodetect_docker_base_image(profile):
@@ -153,19 +150,26 @@ class DockerTestPackageRunner(TestPackageRunner):
             self.pull_image()
             if not self.docker_image_skip_update:
                 # Update the downloaded image
-                command = "%s docker run --name conan_runner %s /bin/sh -c " \
-                        "\"sudo pip install conan_package_tools==%s " \
-                        "--upgrade" % (self.sudo_command, self.docker_image, package_tools_version)
-                if self._conan_pip_package:
-                    command += " && sudo pip install %s\"" % self._conan_pip_package
-                else:
-                    command += " && sudo pip install conan --upgrade\""
+                with foldable_output("update conan"):
+                    command = "%s docker run --name conan_runner %s /bin/sh -c " \
+                            "\"sudo pip install conan_package_tools==%s " \
+                            "--upgrade" % (self.sudo_command, self.docker_image, package_tools_version)
+                    if self._conan_pip_package:
+                        command += " && sudo pip install %s\"" % self._conan_pip_package
+                    else:
+                        command += " && sudo pip install conan --upgrade\""
 
-                self._runner(command)
-                # Save the image with the updated installed
-                # packages and remove the intermediate container
-                self._runner("%s docker commit conan_runner %s" % (self.sudo_command, self.docker_image))
-                self._runner("%s docker rm conan_runner" % self.sudo_command)
+                    print_message(command)
+                    self._runner(command)
+                    # Save the image with the updated installed
+                    # packages and remove the intermediate container
+                    command = "%s docker commit conan_runner %s" % (self.sudo_command, self.docker_image)
+                    print_message(command)
+                    self._runner(command)
+
+                    command = "%s docker rm conan_runner" % self.sudo_command
+                    print_message(command)
+                    self._runner(command)
 
         # Run the build
         serial = pipes.quote(self.serialize())
@@ -200,8 +204,9 @@ class DockerTestPackageRunner(TestPackageRunner):
             mkdir(datadir)
             if platform.system() != "Windows":
                 self._runner("chmod -R 777 %s" % datadir)
-        logger.info("Pulling docker image %s" % self.docker_image)
-        self._runner("%s docker pull %s" % (self.sudo_command, self.docker_image))
+        with foldable_output("docker pull"):
+            print_message("Pulling docker image %s" % self.docker_image)
+            self._runner("%s docker pull %s" % (self.sudo_command, self.docker_image))
 
     def serialize(self):
         doc = {"args": self._args,
