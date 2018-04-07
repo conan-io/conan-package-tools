@@ -21,34 +21,36 @@ def print_ascci_art(printer=sys.stdout.write):
 def foldable_output(name):
     start_fold(name)
     yield
+    sys.stderr.flush()
+    sys.stdout.flush()
     end_fold(name)
     sys.stdout.flush()
+
+ACTIVE_FOLDING = False  # Not working ok because process output in wrong order
 
 
 def start_fold(name, printer=sys.stdout.write):
     from conan.ci_manager import is_travis
-    if is_travis():
-        printer("travis_fold:start:%s\n" % name)
+    if ACTIVE_FOLDING and is_travis():
+        printer("\ntravis_fold:start:%s\n" % name)
     else:
-        printer("[%s]\n" % name)
+        printer("\n[%s]\n" % name)
 
 
 def end_fold(name, printer=sys.stdout.write):
     from conan.ci_manager import is_travis
-    if is_travis():
-        printer("travis_fold:end:%s\n" % name)
+    if ACTIVE_FOLDING and is_travis():
+        printer("\ntravis_fold:end:%s\n" % name)
 
 
 def print_command(command, printer=sys.stdout.write):
-    printer("\n >> %s" % command)
+    printer("\n >> %s\n" % command)
 
 
 def print_message(title, body="", printer=sys.stdout.write):
-    printer("\n >> %s" % title.upper())
-    printer("\n")
+    printer("\n >> %s\n" % title.upper())
     if body:
-        printer(" >> %s" % body)
-        printer("\n")
+        printer("   >> %s\n" % body)
 
 
 def print_profile(text, printer=sys.stdout.write):

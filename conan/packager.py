@@ -162,10 +162,10 @@ class ConanMultiPackager(object):
         self.upload = upload if upload is not None else os.getenv("CONAN_UPLOAD", None)
         self.stable_branch_pattern = stable_branch_pattern or \
                                      os.getenv("CONAN_STABLE_BRANCH_PATTERN", None)
-        default_channel = channel or os.getenv("CONAN_CHANNEL", "testing")
+        self.specified_channel = channel or os.getenv("CONAN_CHANNEL", "testing")
         self.stable_channel = stable_channel or os.getenv("CONAN_STABLE_CHANNEL", "stable")
         self.stable_channel = self.stable_channel.replace("\n", "")
-        self.channel = self._get_channel(default_channel, self.stable_channel)
+        self.channel = self._get_channel(self.specified_channel, self.stable_channel)
 
         if self.reference:
             self.reference = ConanFileReference.loads("%s@%s/%s" % (self.reference,
@@ -578,11 +578,12 @@ won't be able to use them.
 
         return True
 
-    def _get_channel(self, default_channel, stable_channel):
+    def _get_channel(self, specified_channel, stable_channel):
 
         pattern = self.stable_branch_pattern or "master"
         prog = re.compile(pattern)
         branch = self.ci_manager.get_branch()
+        print_message("Branch detected", branch)
 
         if branch and prog.match(branch):
             print_message("Info", "Redefined channel by CI branch matching with '%s', "
@@ -591,7 +592,7 @@ won't be able to use them.
             self.password = os.getenv("CONAN_STABLE_PASSWORD", self.password)
             return stable_channel
 
-        return default_channel
+        return specified_channel
 
     @staticmethod
     def _get_profile(build_conf, profile_name):
