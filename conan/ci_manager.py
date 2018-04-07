@@ -146,7 +146,7 @@ class AppveyorManager(GenericManager):
 class BambooManager(GenericManager):
 
     def __init__(self):
-        print_message("- CI detected: Bamboo")
+        print_message("CI detected: Bamboo")
 
     def get_branch(self):
         return os.getenv("bamboo_planRepository_branch", None)
@@ -155,7 +155,7 @@ class BambooManager(GenericManager):
 class CircleCiManager(GenericManager):
 
     def __init__(self):
-        print_message("- CI detected: Circle CI")
+        print_message("CI detected: Circle CI")
 
     def get_branch(self):
         return os.getenv("CIRCLE_BRANCH", None)
@@ -167,7 +167,7 @@ class CircleCiManager(GenericManager):
 class GitlabManager(GenericManager):
 
     def __init__(self):
-        print_message("- CI detected: Gitlab")
+        print_message("CI detected: Gitlab")
 
     def get_branch(self):
         return os.getenv("CI_BUILD_REF_NAME", None)
@@ -176,7 +176,7 @@ class GitlabManager(GenericManager):
 class JenkinsManager(GenericManager):
 
     def __init__(self):
-        print_message("- CI detected: Jenkins")
+        print_message("CI detected: Jenkins")
 
     def get_branch(self):
         return os.getenv("BRANCH_NAME", None)

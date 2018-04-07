@@ -36,7 +36,7 @@ class TestPackageRunner(object):
         self._reference = reference
         self._conan_pip_package = conan_pip_package
         self._runner = runner or os.system
-        self.runner = runner
+        self.runner = self._runner
         self.conan_api, self.client_cache, self.user_io = Conan.factory()
         self.conan_home = os.path.realpath(self.client_cache.conan_folder)
         self.data_home = os.path.realpath(self.client_cache.store)
@@ -94,10 +94,12 @@ class TestPackageRunner(object):
 
         if pre_command:
             command = '%s && %s' % (pre_command, command)
+
+        print_command(command)
+        print_rule()
+        print_profile(self._profile_text)
+
         with foldable_output("conan_create"):
-            print_command(command)
-            print_rule()
-            print_profile(self._profile_text)
             retcode = self._runner(command)
             if retcode != 0:
                 exit("Error while executing:\n\t %s" % command)
