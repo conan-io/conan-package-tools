@@ -4,6 +4,8 @@ import re
 import sys
 from collections import defaultdict
 
+import six
+
 from conan.ci_manager import CIManager
 from conan.printer import print_jobs, print_current_page, print_rule, print_ascci_art, print_message, \
     print_dict, foldable_output
@@ -292,7 +294,7 @@ won't be able to use them.
         self.builds_in_current_page = []
 
         def valid_pair(var, value):
-            return (isinstance(value, basestring) or
+            return (isinstance(value, six.string_types) or
                     isinstance(value, bool) or
                     isinstance(value, list)) and not var.startswith("_") and "password" not in var
         with foldable_output("local_vars"):
