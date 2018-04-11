@@ -1,6 +1,7 @@
 import re
 import os
 import subprocess
+import platform
 
 from conan.printer import print_message
 
