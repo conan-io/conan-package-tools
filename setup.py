@@ -15,7 +15,7 @@ from codecs import open
 
 def get_requires(filename):
     requirements = []
-    with open(filename) as req_file:
+    with open(filename, 'rt') as req_file:
         for line in req_file.read().splitlines():
             if not line.strip().startswith("#"):
                 requirements.append(line)
