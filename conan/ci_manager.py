@@ -1,6 +1,7 @@
 import re
 import os
 import subprocess
+import platform
 
 from conan.printer import print_message
 
@@ -92,7 +93,11 @@ class GenericManager(object):
 
     def get_branch(self):
         try:
-            msg = subprocess.check_output("git branch | grep \*", shell=True).decode().strip()
+            if platform.system() == "Windows":
+                search_string = 'find "\*"'
+            else:
+                search_string = 'grep \*'
+            msg = subprocess.check_output("git branch | %s " % search_string, shell=True).decode().strip()
             if " (HEAD detached" not in msg:
                 return msg
             return None
