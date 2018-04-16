@@ -92,9 +92,10 @@ class GenericManager(object):
 
     def get_branch(self):
         try:
-            msg = subprocess.check_output("git branch | grep \*", shell=True).decode().strip()
-            if " (HEAD detached" not in msg:
-                return msg
+            for line in subprocess.check_output("git branch", shell=True).decode().splitlines():
+                line = line.strip()
+                if line.startswith("*") and " (HEAD detached" not in line:
+                    return line.replace("*", "", 1).strip()
             return None
         except Exception:
             pass
