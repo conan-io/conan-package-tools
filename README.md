@@ -368,8 +368,8 @@ of the conan installation. If you want to use a different profile you can pass t
     from conan.packager import ConanMultiPackager
 
 	if __name__ == "__main__":
-	    builder = ConanMultiPackager()
-	    builder.add_common_builds(clang_versions=["3.8", "3.9"])
+	    builder = ConanMultiPackager(clang_versions=["3.8", "3.9"])
+	    builder.add_common_builds()
 	    builder.run("myclang")
 
 Alternatively you can use the `CONAN_BASE_PROFILE` environment variable to choose a different base profile:
