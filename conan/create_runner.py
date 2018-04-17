@@ -140,6 +140,54 @@ class DockerTestPackageRunner(TestPackageRunner):
         elif platform.system() == "Linux":
             self.sudo_command = "sudo"
 
+        # Below is all supporting Docker on Windows
+        # wcow : windows container on windows
+        # lcow : linux container on windows
+        conan_conf = ".conan/conan.conf"
+        conan_profile = ".conan/profiles/default"
+        self.docker_shell = ""
+        # The sudo parameter for the command within the container
+        self.docker_sudo_command = ""
+        if self.is_wcow():
+            self.docker_conan_home = "C:\\Users\\ContainerAdministrator"
+            conf_win = conan_conf.replace("/", "\\")
+            profile_win = conan_profile.replace("/", "\\")
+            conf = "%s\\%s" % (self.docker_conan_home, conf_win)
+            profile = "%s\\%s" % (self.docker_conan_home, profile_win)
+            self.delete_conf_cmd = "IF EXIST {0} del /f {0}".format(conf)
+            self.delete_profile_cmd = "IF EXIST {0} del /f {0}".format(profile)
+            self.docker_shell = "cmd /C"
+        else:  # For both docker on Linux and Linux containers on Windows
+            if self.is_lcow():
+                self.docker_conan_home = "/root"
+            else:
+                self.docker_conan_home = "/home/conan"
+            conf = "%s/%s" % (self.docker_conan_home, conan_conf)
+            profile = "%s/%s" % (self.docker_conan_home, conan_profile)
+            self.delete_conf_cmd = "rm -f %s" % conf
+            self.delete_profile_cmd = "rm -f %s" % profile
+            self.docker_shell = "/bin/sh -c"
+            self.docker_sudo_command = "sudo"
+
+        if self.is_lcow():
+            self.docker_platform = "--platform=linux"
+        else:
+            self.docker_platform = ""
+
+    # For Docker on Windows, including Linux containers on Windows
+    def is_lcow(self):
+        return self.get_container_os() == "linux"
+
+    def is_wcow(self):
+        return self.get_container_os() == "windows"
+
+    def get_container_os(self):
+        # CONAN_DOCKER_PLATFORM=linux must be specified for LCOW
+        if "CONAN_DOCKER_PLATFORM" in os.environ:
+            return os.getenv("CONAN_DOCKER_PLATFORM", "windows").lower()
+        else:
+            return "windows"
+
     def clear_system_requirements(self):
         if self._reference:
             the_path = self.client_cache.system_reqs(self._reference)
@@ -152,15 +200,24 @@ class DockerTestPackageRunner(TestPackageRunner):
             self.pull_image()
             if not self.docker_image_skip_update:
                 # Update the downloaded image
-                with foldable_output("update conan"):
-                    command = "%s docker run --name conan_runner %s /bin/sh -c " \
-                            "\"sudo pip install conan_package_tools==%s " \
-                            "--upgrade" % (self.sudo_command, self.docker_image, package_tools_version)
-                    if self._conan_pip_package:
-                        command += " && sudo pip install %s\"" % self._conan_pip_package
-                    else:
-                        command += " && sudo pip install conan --upgrade\""
+                command = "{sudo} docker run --user conan {platform} --name conan_runner " \
+                          "{docker_image} {shell} \"" \
+                          "{docker_sudo} pip install conan_package_tools=={version} " \
+                          "--upgrade".format(
+                                        sudo=self.sudo_command,
+                                        platform=self.docker_platform,
+                                        docker_image=self.docker_image,
+                                        shell=self.docker_shell,
+                                        docker_sudo=self.docker_sudo_command,
+                                        version=package_tools_version)
 
+                with foldable_output("update conan"):
+                    if self._conan_pip_package:
+                        command += " && %s pip install %s\"" % \
+                                   (self.docker_sudo_command, self._conan_pip_package)
+                    else:
+                        command += " && %s pip install conan --upgrade\"" % \
+                                   self.docker_sudo_command
                     print_command(command)
                     self._runner(command)
                     # Save the image with the updated installed
@@ -175,6 +232,9 @@ class DockerTestPackageRunner(TestPackageRunner):
 
         # Run the build
         serial = pipes.quote(self.serialize())
+        if platform.system() == "Windows":
+            serial = serial.replace('"', '\\"').replace("'", '"')
+
         env_vars = "-e CONAN_RUNNER_ENCODED=%s -e CONAN_USERNAME=%s " \
                    "-e CONAN_CHANNEL=%s" % (serial, self._username, self._channel)
 
@@ -183,13 +243,24 @@ class DockerTestPackageRunner(TestPackageRunner):
                           ["CONAN_CHANNEL", "CONAN_USERNAME", "CONAN_USER_HOME"]}
         env_vars += " " + " ".join(['-e %s="%s"' % (key, value) for key, value in conan_env_vars.items()])
 
-        command = "%s docker run --rm -v %s:/home/conan/project -v " \
-                  "%s:/home/conan/.conan %s %s /bin/sh -c \"" \
-                  "rm -f /home/conan/.conan/conan.conf && cd project && " \
-                  "rm -f /home/conan/.conan/profiles/default && " \
-                  "(conan profile new default --detect || true) && " \
-                  "run_create_in_docker\"" % (self.sudo_command, os.getcwd(), self.conan_home,
-                                              env_vars, self.docker_image)
+        command = "{sudo} docker run {platform} --rm " \
+            "-v {cwd}:{docker_conan_home}/project " \
+            "-v {conan_home}:{docker_conan_home}/.conan " \
+            "{env_vars} {docker_image} {shell} " \
+            "\"cd {docker_conan_home}/project && " \
+            "{delete_profile} && " \
+            "(conan profile new default --detect || true) && " \
+            "run_create_in_docker\"".format(
+                            sudo=self.sudo_command,
+                            platform=self.docker_platform,
+                            cwd=os.getcwd(),
+                            docker_conan_home=self.docker_conan_home,
+                            conan_home=self.conan_home,
+                            env_vars=env_vars,
+                            docker_image=self.docker_image,
+                            shell=self.docker_shell,
+                            delete_conf=self.delete_conf_cmd,
+                            delete_profile=self.delete_profile_cmd)
 
         # Push entry command before to build
         if docker_entry_script:
