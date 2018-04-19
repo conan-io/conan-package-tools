@@ -30,7 +30,7 @@ ACTIVE_FOLDING = False  # Not working ok because process output in wrong order
 
 
 def start_fold(name, printer=sys.stdout.write):
-    from conan.ci_manager import is_travis
+    from cpt.ci_manager import is_travis
     if ACTIVE_FOLDING and is_travis():
         printer("\ntravis_fold:start:%s\n" % name)
     else:
@@ -38,7 +38,7 @@ def start_fold(name, printer=sys.stdout.write):
 
 
 def end_fold(name, printer=sys.stdout.write):
-    from conan.ci_manager import is_travis
+    from cpt.ci_manager import is_travis
     if ACTIVE_FOLDING and is_travis():
         printer("\ntravis_fold:end:%s\n" % name)
 

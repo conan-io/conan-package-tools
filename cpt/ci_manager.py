@@ -2,7 +2,7 @@ import re
 import os
 import subprocess
 
-from conan.printer import print_message
+from cpt.printer import print_message
 
 
 def is_travis():

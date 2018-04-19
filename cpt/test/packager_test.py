@@ -5,8 +5,8 @@ import unittest
 
 from collections import defaultdict
 
-from conan.builds_generator import BuildConf
-from conan.packager import ConanMultiPackager
+from cpt.builds_generator import BuildConf
+from cpt.packager import ConanMultiPackager
 from conans import tools
 from conans.model.ref import ConanFileReference
 from conans.util.files import load
@@ -431,27 +431,27 @@ class AppTest(unittest.TestCase):
                                      gcc_versions=["4.8", "5"],
                                      username="foo")
 
-        self.assertEquals(builder.clang_versions, [])
+        self.assertEquals(builder.build_generator._clang_versions, [])
 
         with tools.environment_append({"CONAN_GCC_VERSIONS": "4.8, 5"}):
             builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
                                          username="foo")
 
-            self.assertEquals(builder.clang_versions, [])
-            self.assertEquals(builder.gcc_versions, ["4.8", "5"])
+            self.assertEquals(builder.build_generator._clang_versions, [])
+            self.assertEquals(builder.build_generator._gcc_versions, ["4.8", "5"])
 
         builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
                                      clang_versions=["4.8", "5"],
                                      username="foo")
 
-        self.assertEquals(builder.gcc_versions, [])
+        self.assertEquals(builder.build_generator._gcc_versions, [])
 
         with tools.environment_append({"CONAN_CLANG_VERSIONS": "4.8, 5"}):
             builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
                                          username="foo")
 
-            self.assertEquals(builder.gcc_versions, [])
-            self.assertEquals(builder.clang_versions, ["4.8", "5"])
+            self.assertEquals(builder.build_generator._gcc_versions, [])
+            self.assertEquals(builder.build_generator._clang_versions, ["4.8", "5"])
 
     def test_upload(self):
         runner = MockRunner()

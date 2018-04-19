@@ -1,16 +1,14 @@
-import json
 import os
-import pipes
 import platform
 import tempfile
 from collections import namedtuple
 
 import shutil
 
-from conan import __version__ as package_tools_version
-from conan.log import logger
-from conan.printer import print_message, print_profile, print_rule, foldable_output, print_command
-from conan.tools import get_bool_from_env
+from cpt import __version__ as package_tools_version
+from cpt.log import logger
+from cpt.printer import print_message, print_profile, print_rule, foldable_output, print_command
+from cpt.tools import get_bool_from_env
 from conans.client.conan_api import Conan
 from conans.client.profile_loader import _load_profile
 from conans.model.version import Version
@@ -20,21 +18,18 @@ from conans import __version__ as client_version
 
 
 class TestPackageRunner(object):
-    def __init__(self, profile_text, username, channel, reference,
-                 mingw_installer_reference=None, runner=None,
-                 args=None, conan_pip_package=None,
-                 exclude_vcvars_precommand=False,
-                 conan_vars=None, build_policy=None):
+    def __init__(self, profile_text=None, username=None, channel=None, reference=None, runner=None,
+                 args=None, conan_pip_package=None, exclude_vcvars_precommand=False,
+                 build_policy=None):
 
-        self._conan_vars = conan_vars or {}
-        self._profile_text = profile_text
-        self._mingw_installer_reference = mingw_installer_reference
-        self._args = args
-        self._args += " --build=%s" % build_policy if build_policy else ""
-        self._username = username
-        self._channel = channel
-        self._reference = reference
-        self._conan_pip_package = conan_pip_package
+        self._profile_text = profile_text or os.getenv("CPT_PROFILE")
+        self._args = args or os.getenv("CPT_ARGS", "")
+        self._build_policy = build_policy or os.getenv("CPT_BUILD_POLICY")
+
+        self._username = username or os.getenv("CONAN_USERNAME")
+        self._channel = channel or os.getenv("CONAN_CHANNEL")
+        self._reference = reference or os.getenv("CONAN_REFERENCE")
+        self._conan_pip_package = conan_pip_package or os.getenv("CPT_PIP_PACKAGE")
         self._runner = runner or os.system
         self.runner = self._runner
         self.conan_api, self.client_cache, self.user_io = Conan.factory()
@@ -89,8 +84,9 @@ class TestPackageRunner(object):
             path = "."
 
         ref = self._reference if self._reference else "%s/%s" % (self._username, self._channel)
-        command = "conan create %s %s --profile %s %s" % (path, str(ref), self.abs_profile_path,
-                                                          self._args)
+        bp_command = " --build=%s" % self._build_policy if self._build_policy else ""
+        command = "conan create %s %s --profile %s %s %s" % (path, str(ref), self.abs_profile_path,
+                                                             self._args, bp_command)
 
         if pre_command:
             command = '%s && %s' % (pre_command, command)
@@ -118,12 +114,11 @@ def autodetect_docker_base_image(profile):
 
 
 class DockerTestPackageRunner(TestPackageRunner):
-    def __init__(self, profile_text, username, channel, reference, mingw_ref=None, runner=None,
+    def __init__(self, profile_text, username=None, channel=None, reference=None, runner=None,
                  args=None, conan_pip_package=None, docker_image=None,
                  docker_image_skip_update=False, docker_arch_suffix=None, build_policy=None):
 
         super(DockerTestPackageRunner, self).__init__(profile_text, username, channel, reference,
-                                                      mingw_installer_reference=mingw_ref,
                                                       runner=runner, args=args,
                                                       conan_pip_package=conan_pip_package,
                                                       build_policy=build_policy)
@@ -174,22 +169,13 @@ class DockerTestPackageRunner(TestPackageRunner):
                     self._runner(command)
 
         # Run the build
-        serial = pipes.quote(self.serialize())
-        env_vars = "-e CONAN_RUNNER_ENCODED=%s -e CONAN_USERNAME=%s " \
-                   "-e CONAN_CHANNEL=%s" % (serial, self._username, self._channel)
+        envs = self.get_env_vars()
+        env_vars_text = " " + " ".join(['-e %s="%s"' % (key, value) for key, value in envs.items()])
 
-        conan_env_vars = {key: value for key, value in os.environ.items()
-                          if key.startswith("CONAN_") and key not in
-                          ["CONAN_CHANNEL", "CONAN_USERNAME", "CONAN_USER_HOME"]}
-        env_vars += " " + " ".join(['-e %s="%s"' % (key, value) for key, value in conan_env_vars.items()])
-
-        command = "%s docker run --rm -v %s:/home/conan/project -v " \
-                  "%s:/home/conan/.conan %s %s /bin/sh -c \"" \
-                  "rm -f /home/conan/.conan/conan.conf && cd project && " \
-                  "rm -f /home/conan/.conan/profiles/default && " \
-                  "(conan profile new default --detect || true) && " \
-                  "run_create_in_docker\"" % (self.sudo_command, os.getcwd(), self.conan_home,
-                                              env_vars, self.docker_image)
+        command = "%s docker run --rm -v %s:/home/conan/project %s %s /bin/sh -c \"" \
+                  "cd project && " \
+                  "run_create_in_docker\"" % (self.sudo_command, os.getcwd(),
+                                              env_vars_text, self.docker_image)
 
         # Push entry command before to build
         if docker_entry_script:
@@ -210,22 +196,15 @@ class DockerTestPackageRunner(TestPackageRunner):
             print_message("Pulling docker image %s" % self.docker_image)
             self._runner("%s docker pull %s" % (self.sudo_command, self.docker_image))
 
-    def serialize(self):
-        doc = {"args": self._args,
-               "username": self._username,
-               "channel": self._channel,
-               "profile": self._profile_text,
-               "conan_pip_package": self._conan_pip_package,
-               "reference": str(self._reference)}
-        return json.dumps(doc)
+    def get_env_vars(self):
+        ret = {key: value for key, value in os.environ.items() if key.startswith("CONAN_")}
+        ret["CPT_ARGS"] = self._args
+        ret["CONAN_USERNAME"] = self._username
+        ret["CONAN_CHANNEL"] = self._channel
+        ret["CONAN_REFERENCE"] = self._reference
+        ret["CPT_PROFILE"] = self._profile_text
+        ret["CPT_PIP_PACKAGE"] = self._conan_pip_package
+        ret["CPT_BUILD_POLICY"] = self._build_policy
 
-    @staticmethod
-    def deserialize(data):
-        the_json = json.loads(data)
-        ret = TestPackageRunner(the_json["profile"],
-                                username=the_json["username"],
-                                channel=the_json["channel"],
-                                reference=the_json["reference"],
-                                args=the_json["args"],
-                                conan_pip_package=the_json["conan_pip_package"])
         return ret
+

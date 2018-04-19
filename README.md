@@ -36,7 +36,7 @@ to a remote (if needed), and using optionally docker images to ease the creation
 
 Create a **build.py** file in your recipe repository, and add the following lines:
 
-    from conan.packager import ConanMultiPackager
+    from cpt.packager import ConanMultiPackager
 
 	if __name__ == "__main__":
 	    builder = ConanMultiPackager(username="myusername")
@@ -119,7 +119,7 @@ If we inspect the local cache we can see that there are two binaries generated f
 Now, we could add new build configurations, but in this case we only want to add Visual Studio configurations and the runtime, but, of course, only if we are on Windows:
 
     import platform
-    from conan.packager import ConanMultiPackager
+    from cpt.packager import ConanMultiPackager
 
 	if __name__ == "__main__":
 	    builder = ConanMultiPackager(username="myusername")
@@ -143,7 +143,7 @@ In the previous example, when we are on Windows, we are adding two build configu
 
 We can also adjust the options, environment variables and build_requires:
 
-	from conan.packager import ConanMultiPackager
+	from cpt.packager import ConanMultiPackager
 
 	if __name__ == "__main__":
 	    builder = ConanMultiPackager(username="myuser")
@@ -165,7 +165,7 @@ Conan package tools can generate automatically a matrix of build configurations 
 and shared/static options.
 
 
-    from conan.packager import ConanMultiPackager
+    from cpt.packager import ConanMultiPackager
 
     if __name__ == "__main__":
         builder = ConanMultiPackager()
@@ -194,7 +194,7 @@ These are all the combinations of arch=x86/x86_64, build_type=Release/Debug for 
 But having different apple-clang compiler versions installed in the same machine is not common at all.
 We can adjust the compiler versions using a parameter or an environment variable, specially useful for a CI environment:
 
-    from conan.packager import ConanMultiPackager
+    from cpt.packager import ConanMultiPackager
 
     if __name__ == "__main__":
         builder = ConanMultiPackager(apple_clang_versions=["9.0"]) # or declare env var CONAN_APPLE_CLANG_VERSIONS=9.0
@@ -266,7 +266,7 @@ There are also two additional parameters of the ``add_common_builds``:
 - **dll_with_static_runtime**: Will add also the combination of runtime MT with shared libraries.
 
 ```
-from conan.packager import ConanMultiPackager
+from cpt.packager import ConanMultiPackager
 
 if __name__ == "__main__":
     builder = ConanMultiPackager()
@@ -278,7 +278,7 @@ if __name__ == "__main__":
 
 You can use **builder.add_common_builds** method and remove then some configurations. EX: Remove the GCC 4.6 packages with build_type=Debug:
 
-    from conan.packager import ConanMultiPackager
+    from cpt.packager import ConanMultiPackager
 
     if __name__ == "__main__":
         builder = ConanMultiPackager(username="myuser")
@@ -303,7 +303,7 @@ The containers will share the conan storage directory, so the packages will be g
 **Example**:
 
 
-    from conan.packager import ConanMultiPackager
+    from cpt.packager import ConanMultiPackager
 
 	if __name__ == "__main__":
 	    builder = ConanMultiPackager()
@@ -337,7 +337,7 @@ you need to install packages, change files or create a setup, there is an option
 
 This example shows how to install *tzdata* package by apt-get, before to build the Conan package.
 
-    from conan.packager import ConanMultiPackager
+    from cpt.packager import ConanMultiPackager
 
 	if __name__ == "__main__":
         command = "sudo apt-get -qq update && sudo apt-get -qq install -y tzdata"
@@ -347,7 +347,7 @@ This example shows how to install *tzdata* package by apt-get, before to build t
 
 Also, it's possible to run some internal script, before to build the package:
 
-    from conan.packager import ConanMultiPackager
+    from cpt.packager import ConanMultiPackager
 
     if __name__ == "__main__":
         command = "python bootstrap.py"
@@ -365,7 +365,7 @@ of the conan installation. If you want to use a different profile you can pass t
  **Example**:
 
 
-    from conan.packager import ConanMultiPackager
+    from cpt.packager import ConanMultiPackager
 
 	if __name__ == "__main__":
 	    builder = ConanMultiPackager(clang_versions=["3.8", "3.9"])
@@ -384,7 +384,7 @@ the build configurations with environment variables.
 So, having a generic ``build.py`` should be enough for almost all the cases:
 
 
-    from conan.packager import ConanMultiPackager
+    from cpt.packager import ConanMultiPackager
 
 	if __name__ == "__main__":
 	    builder = ConanMultiPackager()
@@ -743,7 +743,7 @@ So your different configurations will be distributed in the different machines.
 
 By adding builds to the **named_builds** dictionary, and passing **curpage** with the page name:
 
-    from conan.packager import ConanMultiPackager
+    from cpt.packager import ConanMultiPackager
     from collections import defaultdict
 
     if __name__ == '__main__':
@@ -768,7 +768,7 @@ You can add a different reference in the builds tuple, so for example, if your r
 field, you could generate several versions in the same build script. Conan package tools will export
 the recipe using the different reference automatically:
 
-    from conan.packager import ConanMultiPackager
+    from cpt.packager import ConanMultiPackager
 
     if __name__ == '__main__':
         builder = ConanMultiPackager()
@@ -804,7 +804,7 @@ In your `.travis.yml` or `appveyor.yml` files declare the environment variables:
 
 Or in your `build.py`:
 
-    from conan.packager import ConanMultiPackager
+    from cpt.packager import ConanMultiPackager
 
     if __name__ == "__main__":
         builder = ConanMultiPackager(username="myuser",
@@ -924,7 +924,6 @@ The current commit message can contain special messages:
 
 - **run()**: Run the builds (Will invoke conan create for every specified configuration)
 
-- **upload_packages()**: Called automatically by "run()" when upload is enabled. Can be called explicitly.
 
 
 ## Environment configuration
@@ -957,8 +956,6 @@ This is especially useful for CI integration.
 - **CONAN_DOCKER_32_IMAGES**: If defined, and the current build is arch="x86" the docker image name will be appended with "-i386". e.j: "lasote/conangcc63-i386"
 - **CONAN_STABLE_BRANCH_PATTERN**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *CONAN_STABLE_CHANNEL* channel. Default "master". E.j: "release/*"
 - **CONAN_STABLE_CHANNEL**: Stable channel name, default "stable"
-- **CONAN_STABLE_USERNAME**: Your conan username in case the `CONAN_STABLE_BRANCH_PATTERN` matches. Optional. If not defined `CONAN_USERNAME` is used.
-- **CONAN_STABLE_PASSWORD**: Password for `CONAN_STABLE_USERNAME`. Default: `CONAN_PASSWORD`
 - **CONAN_CHANNEL**: Channel where your packages will be uploaded if the previous parameter doesn't match
 - **CONAN_PIP_PACKAGE**: Specify a conan package to install (by default, installs the latest) e.j conan==0.0.1rc7
 - **MINGW_CONFIGURATIONS**: Specify a list of MinGW builds. See MinGW builds section.

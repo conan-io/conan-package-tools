@@ -1,8 +1,8 @@
 import unittest
 import os
 
-from conan.packager import ConanMultiPackager
-from conan.ci_manager import CIManager
+from cpt.packager import ConanMultiPackager
+from cpt.ci_manager import CIManager
 from conans import tools
 
 
