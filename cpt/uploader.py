@@ -3,29 +3,17 @@ from cpt.printer import print_message
 
 class Uploader(object):
 
-    def __init__(self, remote_name):
-        self._remote_name = remote_name
+    def __init__(self, conan_api, remote_manager, auth_manager):
+        self.conan_api = conan_api
+        self.remote_manager = remote_manager
+        self.auth_manager = auth_manager
 
+    def upload_packages(self, reference):
+        remote_name = self.remote_manager.upload_remote_name
+        if not remote_name:
+            print_message("Upload skipped, not upload remote available")
+            return
 
-def upload_packages(reference, remote_name):
-
-    self.login("upload_repo")
-
-    all_refs = set([ref for _, _, _, _, ref in self.builds_in_current_page])
-
-    if not all_refs:
-        all_refs = [reference]
-
-    if not all_refs:
-        print_message("NOT REFERENCES TO UPLOAD!!")
-
-    for ref in all_refs:
-        command = "conan upload %s --retry %s --all --force --confirm -r=upload_repo" % (
-                str(ref), self.upload_retry)
-
-        print_message("RUNNING UPLOAD COMMAND", "$ %s" % command)
-        ret = self.runner(command)
-        if ret != 0:
-            raise Exception("Error uploading")
-
-
+        print_message("Uploading packages for '%s'" % str(reference))
+        self.auth_manager.login(remote_name)
+        self.conan_api.upload(str(reference), all_packages=True, remote=remote_name)

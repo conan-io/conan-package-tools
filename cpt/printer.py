@@ -44,7 +44,9 @@ def end_fold(name, printer=sys.stdout.write):
 
 
 def print_command(command, printer=sys.stdout.write):
+    print_rule(printer, char="_")
     printer("\n >> %s\n" % command)
+    print_rule(printer, char="_")
 
 
 def print_message(title, body="", printer=sys.stdout.write):

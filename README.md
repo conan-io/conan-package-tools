@@ -419,7 +419,6 @@ Remember, you can use `conan new` command to generate the base files for appveyo
 
     env:
        global:
-         - CONAN_REFERENCE: "zlib/1.2.11" # ADJUST WITH YOUR REFERENCE!
          - CONAN_USERNAME: "conan" # ADJUST WITH YOUR REFERENCE USERNAME!
          - CONAN_LOGIN_USERNAME: "lasote" # ADJUST WITH YOUR LOGIN USERNAME!
          - CONAN_CHANNEL: "testing" # ADJUST WITH YOUR CHANNEL!
@@ -479,7 +478,6 @@ You can also use multiples "pages" to split the builds in different jobs (Check 
 
     env:
        global:
-         - CONAN_REFERENCE: "zlib/1.2.11" # ADJUST WITH YOUR REFERENCE!
          - CONAN_USERNAME: "conan" # ADJUST WITH YOUR REFERENCE USERNAME!
          - CONAN_LOGIN_USERNAME: "lasote" # ADJUST WITH YOUR LOGIN USERNAME!
          - CONAN_CHANNEL: "testing" # ADJUST WITH YOUR CHANNEL!
@@ -630,7 +628,6 @@ This is very similar to Travis CI. With the same **build.py** script we have the
         PYTHON_VERSION: "2.7.8"
         PYTHON_ARCH: "32"
 
-        CONAN_REFERENCE: "lib/1.0"
         CONAN_USERNAME: "lasote"
         CONAN_LOGIN_USERNAME: "lasote"
         CONAN_CHANNEL: "stable"
@@ -860,7 +857,50 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 ## ConanMultiPackager parameters reference
 
 - **args**: List with the parameters that will be passed to "conan test" command. e.j: args=['--build', 'all']. Default sys.argv[1:]
-- **username**: Your conan username
+- **username**: The username (part of the package reference, not the login_username)
+- **login_username**: The login username. Could take two possible values:
+
+    - String with the login":
+       
+       ```
+       login_username = "my_user"
+       ```
+    
+    - Dict containing the remote name and the login for that remote. Use together with "remotes" variable to specify remote names e.j: 
+        
+       ```
+       login_username = {"remote1": "my_user", "my_artifactory": "other_user"}
+       ```
+       
+- **password**. Password to authenticate with the remotes. Could take two possible values:
+
+    - String with the password:
+       
+       ```
+       password = "my_pass"
+       ```
+    
+    - Dict containing the remote name and the login for that remote. Use together with "remotes" variable to specify remote names e.j: 
+        
+       ```
+       password = {"remote1": "my_pass", "my_artifactory": "my_pass2"}
+       ```
+
+- **remotes**: Could take two values:
+
+    - String of URLs separated by ",":
+       
+       ```
+       remotes = "https://api.bintray.com/conan/conan-community/conan,https://api.bintray.com/conan/other/conan2"
+       ```
+    
+    - List of tuples containing the "url", "use_ssl" flag and "name" . e.j: 
+        
+       ```
+       remotes = [("https://api.bintray.com/conan/conan-community/conan", True, "remote1"), 
+                  ("https://api.bintray.com/conan/other/conan2", False, "remote2")]
+       ```
+
 - **gcc_versions**: List with a subset of gcc_versions. Default ["4.9", "5", "6", "7"]
 - **clang_versions**: List with a subset of clang_versions. Default ["3.8", "3.9", "4.0"]
 - **apple_clang_versions**: List with a subset of apple-clang versions. Default ["6.1", "7.3", "8.0"]
@@ -870,14 +910,14 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **archs**: List containing specific architectures to build for. Default ["x86", "x86_64"]
 - **use_docker**: Use docker for package creation in Linux systems.
 - **docker_image_skip_update**: If defined, it will skip the initialization update of "conan package tools" and "conan" in the docker image. By default is False.
+- **always_update_conan_in_docker**: If True, "conan package tools" and "conan" will be installed and upgraded in the docker image in every build execution.
+  and the container won't be commited with the modifications.
 - **docker_entry_script**: Command to be executed before to build when running Docker.
 - **docker_32_images**: If defined, and the current build is arch="x86" the docker image name will be appended with "-i386". e.j: "lasote/conangcc63-i386"
 - **curpage**: Current page of packages to create
 - **total_pages**: Total number of pages
 - **vs10_x86_64_enabled**: Flag indicating whether or not to build for VS10 64bits. Default [False]
-- **upload_retry**: Num retries in upload in case of failure.
-- **remotes**: List of URLs separated by "," for the additional remotes (read).
-- **upload**: URL of the repository where we want to use to upload the packages.
+- **upload_retry**: Num retries in upload in case of failure.             
 - **upload_only_when_stable**: Will try to upload only if the channel is the stable channel
 - **build_types**: List containing specific build types. Default ["Release", "Debug"]
 - **skip_check_credentials**: Conan will check the user credentials before building the packages. Default [False]
@@ -891,9 +931,20 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 
 Upload related parameters:
 
-- **upload**: True or False. Default False
-- **reference**: Reference of the package to upload. Ex: "zlib/1.2.8"
-- **password**. Conan Password
+- **upload**: Could take two values:
+
+    - String with an URL.
+       ```
+       upload = "https://api.bintray.com/conan/conan-community/conan"
+       ```
+    
+    - Tuple containing the "url", "use_ssl" flag and "name". 
+    
+       ```
+       upload = ("https://api.bintray.com/conan/conan-community/conan", True, "remote1")
+       ```
+
+- **reference**: Reference of the package to upload. Ex: "zlib/1.2.8". If not specified it will be read from the `conanfile.py`.
 - **remote**: Alternative remote name. Default "default"
 - **stable_branch_pattern**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *stable* channel. Default "master"
 - **stable_channel**: Stable channel, default "stable".
@@ -932,13 +983,43 @@ You can also use environment variables to change the behavior of ConanMultiPacka
 
 This is especially useful for CI integration.
 
-- **CONAN_USERNAME**: Your conan username
-- **CONAN_REFERENCE**: Reference of the package to upload, e.g. "zlib/1.2.8"
+- **CONAN_USERNAME**: Your conan username (for the package reference)
+- **CONAN_REFERENCE**: Reference of the package to upload, e.g. "zlib/1.2.8". Otherwise it will be read from the `conanfile.py`
+- **CONAN_LOGIN_USERNAME**: Unique login username for all remotes. Will use "CONAN_USERNAME" when not present.
+- **CONAN_LOGIN_USERNAME_XXX**: Specify a login for a remote name: 
+  
+  - `CONAN_LOGIN_USERNAME_MYREPO=my_username` 
+  
 - **CONAN_PASSWORD**: Conan Password, or API key if you are using Bintray.
+- **CONAN_PASSWORD_XXX**: Specify a password for a remote name: 
+  
+  - `CONAN_PASSWORD_MYREPO=mypassword` 
+
 - **CONAN_REMOTES**: List of URLs separated by "," for the additional remotes (read).
-- **CONAN_UPLOAD**: URL of the repository where we want to use to upload the packages.
+- **CONAN_REMOTE_XXX**: Incompatible with CONAN_REMOTES. The order of the remotes with be alphabetic. 
+  The value can containing the URL, the SSL validation flag (optional) separated by ",". e.j:
+  
+  - `CONAN_REMOTE_BINTRAY_CONAN=https://api.bintray.com/conan/conan-community/conan` 
+  - `CONAN_REMOTE_MYREPO=https://api.bintray.com/conan/conan-community/conan,True` 
+
+  
+  If a remote name is not specified, the variable name will be used. Take into account that Windows manage only uppercase environment variables.
+  If the SSL validation configuration is not specified, it will use `True` by default.
+  
+  
+- **CONAN_UPLOAD**: URL of the repository where we want to use to upload the packages. 
+  The value can containing the URL, the SSL validation flag and remote name (last two optionals) separated by ",". e.j:
+  
+  - `CONAN_UPLOAD=https://api.bintray.com/conan/conan-community/conan` 
+  - `CONAN_UPLOAD=https://api.bintray.com/conan/conan-community/conan,True`
+  - `CONAN_UPLOAD=https://api.bintray.com/conan/conan-community/conan,True,other_repo_name` 
+  
+  If a remote name is not specified, `upload_repo` will be used as a remote name.
+  If the SSL validation configuration is not specified, it will use `True` by default.
+  
 - **CONAN_UPLOAD_RETRY**: If defined, in case of fail retries to upload again the specified times
 - **CONAN_UPLOAD_ONLY_WHEN_STABLE**: If defined, will try to upload the packages only when the current channel is the stable one.
+
 - **CONAN_SKIP_CHECK_CREDENTIALS**: Force to check user credentials before to build when upload is required. By default is False.
 - **CONAN_DOCKER_ENTRY_SCRIPT**: Command to be executed before to build when running Docker.
 - **CONAN_GCC_VERSIONS**: Gcc versions, comma separated, e.g. "4.6,4.8,5,6"
@@ -953,6 +1034,8 @@ This is especially useful for CI integration.
 - **CONAN_TOTAL_PAGES**: Total number of pages
 - **CONAN_DOCKER_IMAGE**: If defined and docker is being used, it will use this dockerimage instead of the default images, e.g. "lasote/conangcc63"
 - **CONAN_DOCKER_IMAGE_SKIP_UPDATE**: If defined, it will skip the initialization update of "conan package tools" and "conan" in the docker image. By default is False.
+- **CONAN_ALWAYS_UPDATE_CONAN_DOCKER**: If defined, "conan package tools" and "conan" will be installed and upgraded in the docker image in every build execution 
+  and the container won't be commited with the modifications.
 - **CONAN_DOCKER_32_IMAGES**: If defined, and the current build is arch="x86" the docker image name will be appended with "-i386". e.j: "lasote/conangcc63-i386"
 - **CONAN_STABLE_BRANCH_PATTERN**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *CONAN_STABLE_CHANNEL* channel. Default "master". E.j: "release/*"
 - **CONAN_STABLE_CHANNEL**: Stable channel name, default "stable"

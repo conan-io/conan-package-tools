@@ -24,7 +24,7 @@ class CIManagerTest(unittest.TestCase):
                                        "TRAVIS_COMMIT_MESSAGE": "[skip ci]",
                                        "TRAVIS_BRANCH": "mybranch",
                                        }):
-            packager = ConanMultiPackager(username="dori")
+            packager = ConanMultiPackager(username="dori", reference="lib/1.0")
             # Constructor skipped
             ret = packager.run()
             self.assertEquals(ret, 99)

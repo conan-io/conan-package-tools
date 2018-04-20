@@ -6,21 +6,27 @@ from collections import defaultdict
 
 import six
 
+from conans.client.loader_parse import load_conanfile_class
+from conans.model.version import Version
+from cpt.auth import AuthManager
 from cpt.ci_manager import CIManager
 from cpt.printer import (print_jobs, print_current_page, print_rule, print_ascci_art,
                          print_message, print_dict, foldable_output)
+from cpt.remotes import RemotesManager
 from cpt.tools import get_bool_from_env
 from cpt.builds_generator import BuildConf, BuildGenerator
 from cpt.runner import TestPackageRunner, DockerTestPackageRunner
 from conans.client.conan_api import Conan
 from conans.client.runner import ConanRunner
 from conans.model.ref import ConanFileReference
-from conans import __version__ as client_version
+from conans import __version__ as client_version, tools
+from cpt.uploader import Uploader
 
 
 class PlatformInfo(object):
     """Easy mockable for testing"""
-    def system(self):
+    @staticmethod
+    def system():
         import platform
         return platform.system()
 
@@ -56,7 +62,7 @@ class ConanMultiPackager(object):
                  gcc_versions=None, visual_versions=None, visual_runtimes=None,
                  apple_clang_versions=None, archs=None,
                  use_docker=None, curpage=None, total_pages=None,
-                 docker_image=None, reference=None, password=None, remote=None,
+                 docker_image=None, reference=None, password=None,
                  remotes=None,
                  upload=None, stable_branch_pattern=None,
                  vs10_x86_64_enabled=False,
@@ -74,15 +80,32 @@ class ConanMultiPackager(object):
                  docker_image_skip_update=False,
                  docker_entry_script=None,
                  docker_32_images=None,
-                 build_policy=None):
+                 build_policy=None,
+                 always_update_conan_in_docker=False,
+                 conan_api=None):
 
         print_rule()
         print_ascci_art()
 
+        if not conan_api:
+            self.conan_api, _, _ = Conan.factory()
+        else:
+            self.conan_api = conan_api
+
+        self.ci_manager = CIManager()
+        self.remotes_manager = RemotesManager(self.conan_api, remotes, upload)
+        self.username = username or os.getenv("CONAN_USERNAME", None)
+
+        self.auth_manager = AuthManager(self.conan_api, login_username, password,
+                                        default_username=self.username)
+        self.uploader = Uploader(self.conan_api, self.remotes_manager, self.auth_manager)
+
         self._builds = []
         self._named_builds = {}
 
-        self.ci_manager = CIManager()
+        self._always_update_conan_in_docker = (always_update_conan_in_docker or
+                                               os.getenv("CONAN_ALWAYS_UPDATE_CONAN_DOCKER", False))
+
         self._platform_info = platform_info or PlatformInfo()
 
         self.stable_branch_pattern = stable_branch_pattern or \
@@ -92,11 +115,20 @@ class ConanMultiPackager(object):
         self.stable_channel = stable_channel or os.getenv("CONAN_STABLE_CHANNEL", "stable")
         self.stable_channel = self.stable_channel.rstrip()
         self.channel = self._get_channel(self.specified_channel, self.stable_channel)
-        self.reference = reference or os.getenv("CONAN_REFERENCE", None)
-        self.username = username or os.getenv("CONAN_USERNAME", None)
-        if self.reference:
-            self.reference = ConanFileReference.loads("%s@%s/%s" % (self.reference, self.username,
-                                                                    self.channel))
+        self.partial_reference = reference or os.getenv("CONAN_REFERENCE", None)
+
+        if self.partial_reference:
+            if "@" in self.partial_reference:
+                self.reference = ConanFileReference.loads(self.partial_reference)
+            else:
+                name, version = self.partial_reference.split("/")
+                self.reference = ConanFileReference(name, version, self.username, self.channel)
+        else:
+            if not os.path.exists("conanfile.py"):
+                raise Exception("Conanfile not found")
+            conanfile = load_conanfile_class("conanfile.py")
+            name, version = conanfile.name, conanfile.version
+            self.reference = ConanFileReference(name, version, self.username, self.channel)
 
         # If CONAN_DOCKER_IMAGE is speified, then use docker is True
         self.use_docker = (use_docker or os.getenv("CONAN_USE_DOCKER", False) or
@@ -127,56 +159,24 @@ class ConanMultiPackager(object):
             self.sudo_command = "sudo"
 
         self.exclude_vcvars_precommand = exclude_vcvars_precommand or os.getenv("CONAN_EXCLUDE_VCVARS_PRECOMMAND", False)
-        self.docker_image_skip_update = docker_image_skip_update or os.getenv("CONAN_DOCKER_IMAGE_SKIP_UPDATE", False)
+        self._docker_image_skip_update = docker_image_skip_update or os.getenv("CONAN_DOCKER_IMAGE_SKIP_UPDATE", False)
         self.runner = runner or os.system
         self.output_runner = ConanOutputRunner()
         self.args = args or " ".join(sys.argv[1:])
 
-        self.login_username = login_username or os.getenv("CONAN_LOGIN_USERNAME",
-                                                          None) or self.username
         if not self.username:
             raise Exception("Instance ConanMultiPackage with 'username' "
                             "parameter or use CONAN_USERNAME env variable")
 
         # Upload related variables
         self.upload_retry = upload_retry or os.getenv("CONAN_UPLOAD_RETRY", 3)
-        self.password = password or os.getenv("CONAN_PASSWORD", None)
-        if self.password:
-            self.password = self.password.replace('"', '\\"')
-
-        self.remote = remote or os.getenv("CONAN_REMOTE", None)
-
-        # User is already logged
-        self._logged_user_in_remote = defaultdict(lambda: False)
-
-        if self.remote:
-            raise Exception('''
-'remote' argument is deprecated. Use:
-        - 'upload' argument to specify the remote URL to upload your packages (or None to disable
-        upload)
-        - 'remotes' argument to specify additional remote URLs, for example, different user
-        repositories.
-''')
-
-        self.remotes = remotes or os.getenv("CONAN_REMOTES", [])
-        self.upload = upload if upload is not None else os.getenv("CONAN_UPLOAD", None)
 
         self.upload_only_when_stable = upload_only_when_stable or \
                                        os.getenv("CONAN_UPLOAD_ONLY_WHEN_STABLE", False)
         self.skip_check_credentials = skip_check_credentials or \
                                       os.getenv("CONAN_SKIP_CHECK_CREDENTIALS", False)
 
-        self.docker_entry_script = docker_entry_script or \
-                                      os.getenv("CONAN_DOCKER_ENTRY_SCRIPT", None)
-
-        if self.upload:
-            if self.upload in ("0", "None", "False"):
-                self.upload = None
-            elif self.upload == "1":
-                raise Exception("WARNING! 'upload' argument has changed. Use 'upload' argument or "
-                                "CONAN_UPLOAD environment variable to specify a remote URL to "
-                                "upload your packages. e.j: "
-                                "upload='https://api.bintray.com/conan/myuser/myconanrepo'")
+        self.docker_entry_script = docker_entry_script or os.getenv("CONAN_DOCKER_ENTRY_SCRIPT")
 
         os.environ["CONAN_CHANNEL"] = self.channel
 
@@ -191,29 +191,11 @@ class ConanMultiPackager(object):
 
         self.curpage = curpage or os.getenv("CONAN_CURRENT_PAGE", 1)
         self.total_pages = total_pages or os.getenv("CONAN_TOTAL_PAGES", 1)
-        self.docker_image = docker_image or os.getenv("CONAN_DOCKER_IMAGE", None)
+        self._docker_image = docker_image or os.getenv("CONAN_DOCKER_IMAGE", None)
 
         self.conan_pip_package = os.getenv("CONAN_PIP_PACKAGE", "conan==%s" % client_version)
         self.vs10_x86_64_enabled = vs10_x86_64_enabled
 
-        # Set the remotes
-        if self.remotes:
-            if not isinstance(self.remotes, list):
-                self.remotes = [r.strip() for r in self.remotes.split(",") if r.strip()]
-            for counter, remote in enumerate(reversed(self.remotes)):
-                remote_name = "remote%s" % counter if remote != self.upload else "upload_repo"
-                self.add_remote_safe(remote_name, remote, insert=True)
-            self.runner("conan remote list")
-        else:
-            print_message("Info", "Not additional remotes declared...")
-
-        if self.upload and self.upload not in self.remotes:
-            # If you specify the upload as a remote, put it first
-            # this way we can cover all the possibilities
-            self.add_remote_safe("upload_repo", self.upload, insert=False)
-
-        _, client_cache, _ = Conan.factory()
-        self.data_home = client_cache.store
         self.builds_in_current_page = []
 
         def valid_pair(var, value):
@@ -222,29 +204,6 @@ class ConanMultiPackager(object):
                     isinstance(value, list)) and not var.startswith("_") and "password" not in var
         with foldable_output("local_vars"):
             print_dict({var: value for var, value in self.__dict__.items() if valid_pair(var, value)})
-
-    def get_remote_name(self, remote_url):
-        # FIXME: Use conan api when prepared to return the list
-        self.output_runner("conan remote list")
-        for line in self.output_runner.output.splitlines():
-            if remote_url in line:
-                return line.split(":", 1)[0]
-        return None
-
-    def add_remote_safe(self, name, url, insert=False):
-        # FIXME: Use conan api when prepared to call
-        """Add a remove previoulsy removing if needed an already configured repository
-        with the same URL"""
-        existing_name = self.get_remote_name(url)
-        if existing_name:
-            self.runner("conan remote remove %s" % existing_name)
-
-        if insert:
-            if self.runner("conan remote add %s %s --insert" % (name, url)) != 0:
-                print_message("Info", "Remote add with insert failed... trying to add at the end")
-            else:
-                return 0
-        self.runner("conan remote add %s %s" % (name, url))  # Retrocompatibility
 
     @property
     def items(self):
@@ -264,7 +223,7 @@ class ConanMultiPackager(object):
 
     @builds.setter
     def builds(self, confs):
-        """For retrocompatibility directly assigning builds"""
+        """For retro compatibility directly assigning builds"""
         self._named_builds = {}
         self._builds = []
         for values in confs:
@@ -321,20 +280,21 @@ class ConanMultiPackager(object):
         self._builds.append(BuildConf(settings, options, env_vars, build_requires, reference))
 
     def run(self, profile_name=None):
-        print_message("Running builds...")
-        if self.ci_manager.skip_builds():
-            print("Skipped builds due [skip ci] commit message")
-            return 99
-        if self.conan_pip_package:
-            with foldable_output("pip_update"):
-                self.runner('%s pip install %s' % (self.sudo_command, self.conan_pip_package))
-        if not self.skip_check_credentials and self._upload_enabled():
-            self.login("upload_repo")
+        with tools.environment_append(self.auth_manager.env_vars()):
+            print_message("Running builds...")
+            if self.ci_manager.skip_builds():
+                print("Skipped builds due [skip ci] commit message")
+                return 99
+            if not self.skip_check_credentials and self._upload_enabled():
+                self.auth_manager.login(self.remotes_manager.upload_remote_name)
+            if self.conan_pip_package:
+                with foldable_output("pip_update"):
+                    self.runner('%s pip install %s' % (self.sudo_command, self.conan_pip_package))
 
-        self.run_builds(profile_name=profile_name)
+            self.run_builds(profile_name=profile_name)
 
     def _upload_enabled(self):
-        if not self.upload:
+        if not self.remotes_manager.upload_remote_name:
             return False
 
         st_channel = self.stable_channel or "stable"
@@ -351,8 +311,6 @@ class ConanMultiPackager(object):
         def raise_error(field):
             raise Exception("Upload not possible, '%s' is missing!" % field)
 
-        if not self.password:
-            raise_error("password")
         if not self.channel:
             raise_error("channel")
         if not self.username:
@@ -387,57 +345,71 @@ class ConanMultiPackager(object):
         for build in self.builds_in_current_page:
 
             if self.use_docker:
-                arch = build.settings.get("arch", "") or build.settings.get("arch_build", "")
-
-                if self.docker_32_images and arch == "x86":
-                    build.settings["arch_build"] = "x86"
-                    docker_arch_suffix = "x86"
-                elif arch != "x86" and arch != "x86_64":
-                    docker_arch_suffix = arch
-                else:
-                    docker_arch_suffix = None
 
                 profile = self._get_profile(build, profile_name)
-                build_runner = DockerTestPackageRunner(profile, self.username, self.channel,
-                                                       build.reference, self.runner,
-                                                       self.args,
-                                                       docker_image=self.docker_image,
-                                                       conan_pip_package=self.conan_pip_package,
-                                                       docker_image_skip_update=self.docker_image_skip_update,
-                                                       docker_arch_suffix=docker_arch_suffix,
-                                                       build_policy=self.build_policy)
+                docker_image = self._get_docker_image(build)
 
-                build_runner.run(pull_image=not pulled_docker_images[build_runner.docker_image],
+                sudo_command = ""
+                if "CONAN_DOCKER_USE_SUDO" in os.environ:
+                    if get_bool_from_env("CONAN_DOCKER_USE_SUDO"):
+                       sudo_command = "sudo"
+                elif platform.system() == "Linux":
+                    sudo_command = "sudo"
+
+                build_runner = DockerTestPackageRunner(profile, build.reference, self.conan_api,
+                                                       self.uploader,
+                                                       args=self.args,
+                                                       conan_pip_package=self.conan_pip_package,
+                                                       build_policy=self.build_policy,
+                                                       runner=self.runner,
+                                                       docker_image=docker_image,
+                                                       docker_image_skip_update=self._docker_image_skip_update,
+                                                       sudo_docker_command=sudo_command,
+                                                       always_update_conan_in_docker=self._always_update_conan_in_docker)
+
+                build_runner.run(pull_image=not pulled_docker_images[build_runner._docker_image],
                                  docker_entry_script=self.docker_entry_script)
-                pulled_docker_images[build_runner.docker_image] = True
+                pulled_docker_images[build_runner._docker_image] = True
             else:
                 profile = self._get_profile(build, profile_name)
-                build_runner = TestPackageRunner(profile, self.username, self.channel,
-                                                 build.reference, self.runner,
-                                                 self.args,
+                build_runner = TestPackageRunner(profile, build.reference, self.conan_api,
+                                                 self.uploader,
+                                                 args=self.args,
                                                  conan_pip_package=self.conan_pip_package,
                                                  exclude_vcvars_precommand=self.exclude_vcvars_precommand,
-                                                 build_policy=self.build_policy)
+                                                 build_policy=self.build_policy,
+                                                 runner=self.runner)
                 build_runner.run()
 
-    def login(self, remote_name, user=None, password=None, force=False):
-        if force or not self._logged_user_in_remote[remote_name]:
-            the_user = user or self.login_username
-            user_command = 'conan user %s -p="%s" -r=%s' % (user or self.login_username,
-                                                            password or self.password,
-                                                            remote_name)
+    def _get_docker_image(self, build):
+        arch = build.settings.get("arch", "") or build.settings.get("arch_build", "")
+        if self.docker_32_images and arch == "x86":
+            build.settings["arch_build"] = "x86"
+            docker_arch_suffix = "x86"
+        elif arch != "x86" and arch != "x86_64":
+            docker_arch_suffix = arch
+        else:
+            docker_arch_suffix = None
 
-            print_message("VERIFYING YOUR CREDENTIALS...")
-            if self._platform_info.system() == "Linux" and self.use_docker:
-                data_dir = os.path.expanduser(self.data_home)
-                self.runner("%s chmod -R 777 %s" % (self.sudo_command, data_dir))
+        compiler_name = build.settings.get("compiler", "")
+        compiler_version = build.settings.get("compiler.version", "")
+        default_docker = self._autodetect_docker_base_image(compiler_name, compiler_version)
+        docker_image = self._docker_image or default_docker
+        if docker_arch_suffix and "-" not in docker_image:
+            docker_image = "%s-%s" % (docker_image, docker_arch_suffix)
 
-            ret = self.runner(user_command)
-            if ret != 0:
-                raise Exception("Error with user credentials for remote %s" % remote_name)
-            print_message("OK! '%s' user logged in '%s' " % (the_user, remote_name))
+        return docker_image
 
-        self._logged_user_in_remote[remote_name] = True
+    @staticmethod
+    def _autodetect_docker_base_image(compiler_name, compiler_version):
+        if compiler_name not in ["clang", "gcc"]:
+            raise Exception("Docker image cannot be autodetected for "
+                            "the compiler %s" % compiler_name)
+
+        if compiler_name == "gcc" and Version(compiler_version) > Version("5"):
+            compiler_version = Version(compiler_version).major(fill=False)
+
+        return "lasote/conan%s%s" % (compiler_name, compiler_version.replace(".", ""))
 
     def _get_channel(self, specified_channel, stable_channel):
 

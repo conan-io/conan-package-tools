@@ -3,13 +3,14 @@ import platform
 import sys
 import unittest
 
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 
+from conans.test.utils.test_files import temp_folder
 from cpt.builds_generator import BuildConf
 from cpt.packager import ConanMultiPackager
 from conans import tools
 from conans.model.ref import ConanFileReference
-from conans.util.files import load
+from conans.util.files import load, mkdir, save
 from conans.model.profile import Profile
 
 
@@ -33,42 +34,79 @@ class MockRunner(object):
         self.calls.append(command)
         return 0
 
-    def get_profile_from_trace(self, number):
+
+class MockConanCache(object):
+
+    def __init__(self, *args, **kwargs):
+        _base_dir = temp_folder()
+        self.default_profile_path = os.path.join(_base_dir, "default")
+        self.profiles_path = _base_dir
+
+Action = namedtuple("Action", "name args kwargs")
+
+
+class MockConanAPI(object):
+
+    def __init__(self):
+        self.calls = []
+        self._client_cache = MockConanCache()
+
+    def create(self, *args, **kwargs):
+        self.calls.append(Action("create", args, kwargs))
+
+    def create_profile(self, *args, **kwargs):
+        save(os.path.join(self._client_cache.profiles_path, args[0]), "[settings]")
+        self.calls.append(Action("create_profile", args, kwargs))
+
+    def remote_list(self, *args, **kwargs):
+        self.calls.append(Action("remote_list", args, kwargs))
+        return []
+
+    def remote_add(self, *args, **kwargs):
+        self.calls.append(Action("remote_add", args, kwargs))
+        return args[0]
+
+    def authenticate(self, *args, **kwargs):
+        self.calls.append(Action("authenticate", args, kwargs))
+
+    def upload(self, *args, **kwargs):
+        self.calls.append(Action("upload", args, kwargs))
+
+    def get_profile_from_call_index(self, number):
         call = self.calls[number]
-        profile_start = call.find("--profile") + 10
-        end_profile = call[profile_start:].find(" ") + profile_start
-        profile_path = call[profile_start: end_profile]
-        if hasattr(Profile, "loads"):  # retrocompatibility
-            return Profile.loads(load(profile_path))
-        else:
-            from conans.client.profile_loader import read_profile
-            tools.replace_in_file(profile_path, "include", "#include")
-            # FIXME: Not able to load here the default
-            return read_profile(profile_path, os.path.dirname(profile_path), None)[0]
+        return self.get_profile_from_call(call)
 
-    def assert_tests_for(self, numbers):
-        """Check if executor has ran the builds that are expected.
-        numbers are integers"""
-        def assert_profile_for(pr, num):
-            assert(pr.settings["compiler"] == 'compiler%d' % num)
-            assert(pr.settings["os"] == 'os%d' % num)
-            assert(pr.options.as_list() == [('option%d' % num, 'value%d' % num)])
+    def get_profile_from_call(self, call):
+        if call.name != "create":
+            raise Exception("Invalid test, not contains a create: %s" % self.calls)
+        from conans.client.profile_loader import read_profile
+        profile_name = call.kwargs["profile_name"]
+        tools.replace_in_file(profile_name, "include", "#include")
+        return read_profile(profile_name, os.path.dirname(profile_name), None)[0]
 
-        testp_counter = 0
-        for i, call in enumerate(self.calls):
-            if call.startswith("conan create"):
-                profile = self.get_profile_from_trace(i)
-                assert_profile_for(profile, numbers[testp_counter])
-                testp_counter += 1
+    def reset(self):
+        self.calls = []
+
+    def _get_creates(self):
+        return [call for call in self.calls if call.name == "create"]
+
+    def assert_tests_for(self, indexes):
+        creates = self._get_creates()
+        for create_index, index in enumerate(indexes):
+            profile = self.get_profile_from_call(creates[create_index])
+            assert("os%s" % index == profile.settings["os"])
 
 
 class AppTest(unittest.TestCase):
 
     def setUp(self):
         self.runner = MockRunner()
+        self.conan_api = MockConanAPI()
         self.packager = ConanMultiPackager("--build missing -r conan.io",
                                            "lasote", "mychannel",
-                                           runner=self.runner)
+                                           runner=self.runner,
+                                           conan_api=self.conan_api,
+                                           reference="lib/1.0")
         if "APPVEYOR" in os.environ:
             del os.environ["APPVEYOR"]
         if "TRAVIS" in os.environ:
@@ -87,7 +125,7 @@ class AppTest(unittest.TestCase):
                            "VAR_2": "TWO"},
                           {"*": ["myreference/1.0@lasote/testing"]})
         self.packager.run_builds(1, 1)
-        profile = self.runner.get_profile_from_trace(0)
+        profile = self.conan_api.get_profile_from_call_index(1)
         self.assertEquals(profile.settings["os"], "Windows")
         self.assertEquals(profile.settings["compiler"], "gcc")
         self.assertEquals(profile.options.as_list(), [("option1", "One")])
@@ -104,7 +142,7 @@ class AppTest(unittest.TestCase):
                           {"*": ["myreference/1.0@lasote/testing"]})
         with tools.environment_append({"CONAN_BUILD_REQUIRES": "br1/1.0@conan/testing"}):
             self.packager.run_builds(1, 1)
-            profile = self.runner.get_profile_from_trace(0)
+            profile = self.conan_api.get_profile_from_call_index(1)
             self.assertEquals(profile.build_requires["*"],
                               [ConanFileReference.loads("myreference/1.0@lasote/testing"),
                                ConanFileReference.loads("br1/1.0@conan/testing")])
@@ -115,29 +153,29 @@ class AppTest(unittest.TestCase):
 
         # 10 pages, 1 per build
         self.packager.run_builds(1, 10)
-        self.runner.assert_tests_for([0])
+        self.conan_api.assert_tests_for([0])
 
         # 2 pages, 5 per build
-        self.runner.reset()
+        self.conan_api.reset()
         self.packager.run_builds(1, 2)
-        self.runner.assert_tests_for([0, 2, 4, 6, 8])
+        self.conan_api.assert_tests_for([0, 2, 4, 6, 8])
 
-        self.runner.reset()
+        self.conan_api.reset()
         self.packager.run_builds(2, 2)
-        self.runner.assert_tests_for([1, 3, 5, 7, 9])
+        self.conan_api.assert_tests_for([1, 3, 5, 7, 9])
 
         # 3 pages, 4 builds in page 1 and 3 in the rest of pages
-        self.runner.reset()
+        self.conan_api.reset()
         self.packager.run_builds(1, 3)
-        self.runner.assert_tests_for([0, 3, 6, 9])
+        self.conan_api.assert_tests_for([0, 3, 6, 9])
 
-        self.runner.reset()
+        self.conan_api.reset()
         self.packager.run_builds(2, 3)
-        self.runner.assert_tests_for([1, 4, 7])
+        self.conan_api.assert_tests_for([1, 4, 7])
 
-        self.runner.reset()
+        self.conan_api.reset()
         self.packager.run_builds(3, 3)
-        self.runner.assert_tests_for([2, 5, 8])
+        self.conan_api.assert_tests_for([2, 5, 8])
 
     def test_deprecation_gcc(self):
 
@@ -145,8 +183,10 @@ class AppTest(unittest.TestCase):
             ConanMultiPackager("--build missing -r conan.io",
                                "lasote", "mychannel",
                                runner=self.runner,
+                               conan_api=self.conan_api,
                                gcc_versions=["4.3", "5.4"],
-                               use_docker=True)
+                               use_docker=True,
+                               reference="zlib/1.2.11")
 
     def test_32bits_images(self):
         packager = ConanMultiPackager("--build missing -r conan.io",
@@ -164,8 +204,10 @@ class AppTest(unittest.TestCase):
         packager = ConanMultiPackager("--build missing -r conan.io",
                                       "lasote", "mychannel",
                                       runner=self.runner,
+                                      conan_api=self.conan_api,
                                       use_docker=True,
-                                      docker_32_images=False)
+                                      docker_32_images=False,
+                                      reference="zlib/1.2.11")
 
         packager.add({"arch": "x86", "compiler": "gcc", "compiler.version": "6"})
         packager.run_builds(1, 1)
@@ -176,17 +218,19 @@ class AppTest(unittest.TestCase):
             packager = ConanMultiPackager("--build missing -r conan.io",
                                           "lasote", "mychannel",
                                           runner=self.runner,
-                                          use_docker=True)
+                                          conan_api=self.conan_api,
+                                          use_docker=True,
+                                          reference="zlib/1.2.11")
 
             packager.add({"arch": "x86", "compiler": "gcc", "compiler.version": "6"})
             packager.run_builds(1, 1)
             self.assertIn("docker pull lasote/conangcc6-x86", self.runner.calls[0])
-            self.assertIn("arch_build=x86\\", self.runner.calls[-1])
 
         # Test the opossite
         packager = ConanMultiPackager("--build missing -r conan.io",
                                       "lasote", "mychannel",
                                       runner=self.runner,
+                                      conan_api=self.conan_api,
                                       use_docker=True,
                                       docker_32_images=False,
                                       reference="zlib/1.2.11")
@@ -199,8 +243,10 @@ class AppTest(unittest.TestCase):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
                                            "lasote", "mychannel",
                                            runner=self.runner,
+                                           conan_api=self.conan_api,
                                            gcc_versions=["4.3", "5"],
-                                           use_docker=True)
+                                           use_docker=True,
+                                           reference="zlib/1.2.11")
         self._add_build(1, "gcc", "4.3")
         self._add_build(2, "gcc", "4.3")
         self._add_build(3, "gcc", "4.3")
@@ -223,8 +269,10 @@ class AppTest(unittest.TestCase):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
                                            "lasote", "mychannel",
                                            runner=self.runner,
+                                           conan_api=self.conan_api,
                                            clang_versions=["3.8", "4.0"],
-                                           use_docker=True)
+                                           use_docker=True,
+                                           reference="zlib/1.2.11")
 
         self._add_build(1, "clang", "3.8")
         self._add_build(2, "clang", "3.8")
@@ -242,9 +290,11 @@ class AppTest(unittest.TestCase):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
                                            "lasote", "mychannel",
                                            runner=self.runner,
+                                           conan_api=self.conan_api,
                                            gcc_versions=["5", "6"],
                                            clang_versions=["3.9", "4.0"],
-                                           use_docker=True)
+                                           use_docker=True,
+                                           reference="zlib/1.2.11")
 
         self._add_build(1, "gcc", "5")
         self._add_build(2, "gcc", "5")
@@ -267,8 +317,8 @@ class AppTest(unittest.TestCase):
         self.assertIn('os=os6', self.runner.calls[21])
 
     def test_upload_false(self):
-        packager = ConanMultiPackager("--build missing -r conan.io",
-                                           "lasote", "mychannel", upload=False)
+        packager = ConanMultiPackager("--build missing -r conan.io", "lasote", "mychannel",
+                                      upload=False, reference="zlib/1.2.11")
         self.assertFalse(packager._upload_enabled())
 
     def test_docker_env_propagated(self):
@@ -277,9 +327,11 @@ class AppTest(unittest.TestCase):
             self.packager = ConanMultiPackager("--build missing -r conan.io",
                                                "lasote", "mychannel",
                                                runner=self.runner,
+                                               conan_api=self.conan_api,
                                                gcc_versions=["5", "6"],
                                                clang_versions=["3.9", "4.0"],
-                                               use_docker=True)
+                                               use_docker=True,
+                                               reference="zlib/1.2.11")
             self._add_build(1, "gcc", "5")
             self.packager.run_builds(1, 1)
             self.assertIn('-e CONAN_FAKE_VAR="32"', self.runner.calls[-1])
@@ -289,7 +341,9 @@ class AppTest(unittest.TestCase):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
                                            "lasote", "mychannel",
                                            runner=self.runner,
-                                           visual_versions=[15])
+                                           conan_api=self.conan_api,
+                                           visual_versions=[15],
+                                           reference="zlib/1.2.11")
         self.packager.add_common_builds()      
 
         with tools.environment_append({"VisualStudioVersion": "15.0"}):
@@ -302,8 +356,10 @@ class AppTest(unittest.TestCase):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
                                            "lasote", "mychannel",
                                            runner=self.runner,
+                                           conan_api=self.conan_api,
                                            visual_versions=[15],
-                                           exclude_vcvars_precommand=True)
+                                           exclude_vcvars_precommand=True,
+                                           reference="zlib/1.2.11")
         self.packager.add_common_builds()                                           
         self.packager.run_builds(1, 1)
 
@@ -313,7 +369,9 @@ class AppTest(unittest.TestCase):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
                                            "lasote", "mychannel",
                                            runner=self.runner,
-                                           use_docker=True)
+                                           conan_api=self.conan_api,
+                                           use_docker=True,
+                                           reference="zlib/1.2.11")
 
         self._add_build(1, "msvc", "10")
 
@@ -324,14 +382,16 @@ class AppTest(unittest.TestCase):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
                                            "lasote", "mychannel",
                                            runner=self.runner,
+                                           conan_api=self.conan_api,
                                            gcc_versions=["4.3", "5"],
-                                           use_docker=True)
+                                           use_docker=True,
+                                           reference="lib/1.0")
         self.packager.add_common_builds()
         self.packager.builds = [({"os": "Windows"}, {"option": "value"})]
         self.assertEquals(self.packager.items, [BuildConf(settings={'os': 'Windows'},
                                                           options={'option': 'value'},
                                                           env_vars={}, build_requires={},
-                                                          reference=None)])
+                                                          reference="lib/1.0@lasote/mychannel")])
 
     def test_only_mingw(self):
 
@@ -369,7 +429,7 @@ class AppTest(unittest.TestCase):
         self.assertEquals([tuple(a) for a in builder.builds], expected)
 
     def test_named_pages(self):
-        builder = ConanMultiPackager(username="Pepe")
+        builder = ConanMultiPackager(username="Pepe", reference="zlib/1.2.11")
         named_builds = defaultdict(list)
         builder.add_common_builds(shared_option_name="zlib:shared", pure_c=True)
         for settings, options, env_vars, build_requires in builder.builds:
@@ -390,27 +450,59 @@ class AppTest(unittest.TestCase):
         runner = MockRunner()
         builder = ConanMultiPackager(username="Pepe",
                                      remotes=["url1", "url2"],
-                                     runner=runner)
+                                     runner=runner,
+                                     conan_api=self.conan_api,
+                                     reference="lib/1.0@lasote/mychannel")
 
         builder.add({}, {}, {}, {})
         builder.run_builds()
-        self.assertIn('conan remote add remote0 url2 --insert', runner.calls)
-        self.assertIn('conan remote add remote1 url1 --insert', runner.calls)
+        self.assertEquals(self.conan_api.calls[2].args[1], "url1")
+        self.assertEquals(self.conan_api.calls[2].kwargs["insert"], -1)
+        self.assertEquals(self.conan_api.calls[4].args[1], "url2")
+        self.assertEquals(self.conan_api.calls[4].kwargs["insert"], -1)
 
         runner = MockRunner()
+        self.conan_api = MockConanAPI()
         builder = ConanMultiPackager(username="Pepe",
                                      remotes="myurl1",
-                                     runner=runner)
+                                     runner=runner,
+                                     conan_api=self.conan_api,
+                                     reference="lib/1.0@lasote/mychannel")
 
         builder.add({}, {}, {}, {})
         builder.run_builds()
-        self.assertIn('conan remote add remote0 myurl1 --insert', runner.calls)
+        self.assertEquals(self.conan_api.calls[2].args[1], "myurl1")
+        self.assertEquals(self.conan_api.calls[2].kwargs["insert"], -1)
+
+        # Named remotes, with SSL flag
+        runner = MockRunner()
+        self.conan_api = MockConanAPI()
+        remotes = [("u1", True, "my_cool_name1"),
+                   ("u2", False, "my_cool_name2")]
+        builder = ConanMultiPackager(username="Pepe",
+                                     remotes=remotes,
+                                     runner=runner,
+                                     conan_api=self.conan_api,
+                                     reference="lib/1.0@lasote/mychannel")
+
+        builder.add({}, {}, {}, {})
+        builder.run_builds()
+        self.assertEquals(self.conan_api.calls[2].args[0], "my_cool_name1")
+        self.assertEquals(self.conan_api.calls[2].args[1], "u1")
+        self.assertEquals(self.conan_api.calls[2].kwargs["insert"], -1)
+        self.assertEquals(self.conan_api.calls[2].kwargs["verify_ssl"], True)
+
+        self.assertEquals(self.conan_api.calls[4].args[0], "my_cool_name2")
+        self.assertEquals(self.conan_api.calls[4].args[1], "u2")
+        self.assertEquals(self.conan_api.calls[4].kwargs["insert"], -1)
+        self.assertEquals(self.conan_api.calls[4].kwargs["verify_ssl"], False)
 
     def test_visual_defaults(self):
 
         with tools.environment_append({"CONAN_VISUAL_VERSIONS": "10"}):
             builder = ConanMultiPackager(username="Pepe",
-                                         platform_info=platform_mock_for("Windows"))
+                                         platform_info=platform_mock_for("Windows"),
+                                         reference="lib/1.0@lasote/mychannel")
             builder.add_common_builds()
             for settings, _, _, _ in builder.builds:
                 self.assertEquals(settings["compiler"], "Visual Studio")
@@ -420,35 +512,42 @@ class AppTest(unittest.TestCase):
                                        "MINGW_CONFIGURATIONS": "4.9@x86_64@seh@posix"}):
 
             builder = ConanMultiPackager(username="Pepe",
-                                         platform_info=platform_mock_for("Windows"))
+                                         platform_info=platform_mock_for("Windows"),
+                                         reference="lib/1.0@lasote/mychannel")
             builder.add_common_builds()
             for settings, _, _, _ in builder.builds:
                 self.assertEquals(settings["compiler"], "gcc")
                 self.assertEquals(settings["compiler.version"], "4.9")
 
     def select_defaults_test(self):
-        builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
-                                     gcc_versions=["4.8", "5"],
-                                     username="foo")
-
-        self.assertEquals(builder.build_generator._clang_versions, [])
-
-        with tools.environment_append({"CONAN_GCC_VERSIONS": "4.8, 5"}):
+        with tools.environment_append({"CONAN_REFERENCE": "zlib/1.2.8"}):
             builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
-                                         username="foo")
+                                         gcc_versions=["4.8", "5"],
+                                         username="foo",
+                                         reference="lib/1.0@lasote/mychannel")
+
+            self.assertEquals(builder.build_generator._clang_versions, [])
+
+        with tools.environment_append({"CONAN_GCC_VERSIONS": "4.8, 5",
+                                       "CONAN_REFERENCE": "zlib/1.2.8"}):
+            builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
+                                         username="foo",
+                                         reference="lib/1.0@lasote/mychannel")
 
             self.assertEquals(builder.build_generator._clang_versions, [])
             self.assertEquals(builder.build_generator._gcc_versions, ["4.8", "5"])
 
         builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
                                      clang_versions=["4.8", "5"],
-                                     username="foo")
+                                     username="foo",
+                                     reference="lib/1.0")
 
         self.assertEquals(builder.build_generator._gcc_versions, [])
 
         with tools.environment_append({"CONAN_CLANG_VERSIONS": "4.8, 5"}):
             builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
-                                         username="foo")
+                                         username="foo",
+                                         reference="lib/1.0")
 
             self.assertEquals(builder.build_generator._gcc_versions, [])
             self.assertEquals(builder.build_generator._clang_versions, ["4.8", "5"])
@@ -461,157 +560,126 @@ class AppTest(unittest.TestCase):
                                      upload="myurl", visual_versions=[], gcc_versions=[],
                                      apple_clang_versions=[],
                                      runner=runner,
+                                     conan_api=self.conan_api,
                                      remotes="myurl, otherurl",
                                      platform_info=platform_mock_for("Darwin"))
         builder.add_common_builds()
         builder.run()
 
         # Duplicated upload remote puts upload repo first (in the remotes order)
-        self.assertEqual(runner.calls[0:3], ['conan remote add remote0 otherurl --insert',
-                                             'conan remote add upload_repo myurl --insert',
-                                             'conan remote list'])
+        self.assertEqual(self.conan_api.calls[3].args[0], 'upload_repo')
+        self.assertEqual(self.conan_api.calls[5].args[0], 'remote1')
 
         # Now check that the upload remote order is preserved if we specify it in the remotes
         runner = MockRunner()
+        self.conan_api = MockConanAPI()
         builder = ConanMultiPackager(username="pepe", channel="testing",
                                      reference="Hello/0.1", password="password",
                                      upload="myurl", visual_versions=[], gcc_versions=[],
                                      apple_clang_versions=[],
                                      runner=runner,
+                                     conan_api=self.conan_api,
                                      remotes="otherurl, myurl, moreurl",
                                      platform_info=platform_mock_for("Darwin"))
         builder.add_common_builds()
         builder.run()
 
-        # Duplicated upload remote puts upload repo first (in the remotes order)
-        self.assertEqual(runner.calls[0:3], ['conan remote add remote0 moreurl --insert',
-                                             'conan remote add upload_repo myurl --insert',
-                                             'conan remote add remote2 otherurl --insert'])
-
-        self.assertEqual(runner.calls[-1],
-                         'conan upload Hello/0.1@pepe/testing --retry 3 --all --force '
-                         '--confirm -r=upload_repo')
+        self.assertEqual(self.conan_api.calls[3].args[0], 'remote0')
+        self.assertEqual(self.conan_api.calls[5].args[0], 'upload_repo')
+        self.assertEqual(self.conan_api.calls[7].args[0], 'remote2')
 
         runner = MockRunner()
+        self.conan_api = MockConanAPI()
         builder = ConanMultiPackager(username="pepe", channel="testing",
                                      reference="Hello/0.1", password="password",
                                      upload="myurl", visual_versions=[], gcc_versions=[],
                                      apple_clang_versions=[],
                                      runner=runner,
+                                     conan_api=self.conan_api,
                                      remotes="otherurl",
                                      platform_info=platform_mock_for("Darwin"))
         builder.add_common_builds()
         builder.run()
 
-        self.assertEqual(runner.calls[0:3],
-                         ['conan remote add remote0 otherurl --insert',
-                          'conan remote list',
-                          'conan remote add upload_repo myurl'])
-
-        self.assertEqual(runner.calls[-1],
-                         'conan upload Hello/0.1@pepe/testing --retry 3 --all '
-                         '--force --confirm -r=upload_repo')
-
-    def test_login(self):
-        runner = MockRunner()
-        builder = ConanMultiPackager(username="pepe", channel="testing",
-                                     reference="Hello/0.1", password="password",
-                                     upload="myurl", visual_versions=[], gcc_versions=[],
-                                     apple_clang_versions=[],
-                                     runner=runner)
-
-        builder.login("Myremote", "myuser", "mypass", force=False)
-        self.assertIn('conan user myuser -p="mypass" -r=Myremote', runner.calls[-1])
-        runner.calls = []
-        # Already logged, not call conan user again
-        builder.login("Myremote", "myuser", "mypass", force=False)
-        self.assertEquals(len(runner.calls), 0)
-        # Already logged, but forced
-        runner.calls = []
-        builder.login("Myremote", "myuser", "mypass", force=True)
-        self.assertEquals(len(runner.calls), 1)
-
-        # Default users/pass
-        runner.calls = []
-        builder.login("Myremote2")
-        self.assertIn('conan user pepe -p="password" -r=Myremote2', runner.calls[-1])
+        self.assertEqual(self.conan_api.calls[3].args[0], 'remote0')
+        self.assertEqual(self.conan_api.calls[5].args[0], 'upload_repo')
 
     def test_build_policy(self):
-        runner = MockRunner()
         builder = ConanMultiPackager(username="pepe", channel="testing",
                                      reference="Hello/0.1", password="password",
                                      visual_versions=[], gcc_versions=[],
                                      apple_clang_versions=[],
-                                     runner=runner,
+                                     runner=self.runner,
+                                     conan_api=self.conan_api,
                                      remotes="otherurl",
                                      platform_info=platform_mock_for("Darwin"),
                                      build_policy="outdated")
         builder.add_common_builds()
         builder.run()
-        self.assertIn(" --build=outdated", runner.calls[-1])
+        self.assertEquals("outdated", self.conan_api.calls[-1].kwargs["build_modes"])
 
         with tools.environment_append({"CONAN_BUILD_POLICY": "missing"}):
+            self.conan_api = MockConanAPI()
             builder = ConanMultiPackager(username="pepe", channel="testing",
                                          reference="Hello/0.1", password="password",
                                          visual_versions=[], gcc_versions=[],
                                          apple_clang_versions=[],
-                                         runner=runner,
+                                         runner=self.runner,
+                                         conan_api=self.conan_api,
                                          remotes="otherurl",
                                          platform_info=platform_mock_for("Darwin"),
                                          build_policy="missing")
             builder.add_common_builds()
             builder.run()
-            self.assertIn(" --build=missing", runner.calls[-1])
+            self.assertEquals("missing", self.conan_api.calls[-1].kwargs["build_modes"])
 
     def test_check_credentials(self):
 
-        runner = MockRunner()
-        runner.output = "arepo: myurl"
         builder = ConanMultiPackager(username="pepe", channel="testing",
                                      reference="Hello/0.1", password="password",
                                      upload="myurl", visual_versions=[], gcc_versions=[],
                                      apple_clang_versions=[],
-                                     runner=runner,
+                                     runner=self.runner,
+                                     conan_api=self.conan_api,
                                      platform_info=platform_mock_for("Darwin"))
         builder.add_common_builds()
         builder.run()
 
         # When activated, check credentials before to create the profiles
-        self.assertEqual(runner.calls[0], 'conan remote add upload_repo myurl')
-        self.assertEqual(runner.calls[2], 'conan user pepe -p="password" -r=upload_repo')
-        self.assertIn("conan create", runner.calls[-2])  # Not login again before upload its cached
-        self.assertEqual(runner.calls[-1],
-                         "conan upload Hello/0.1@pepe/testing --retry 3 --all --force --confirm "
-                         "-r=upload_repo")
+        self.assertEqual(self.conan_api.calls[0].name, 'authenticate')
+        self.assertEqual(self.conan_api.calls[1].name, 'create_profile')
+        self.assertEqual(self.conan_api.calls[2].name, 'remote_list')
+        self.assertEqual(self.conan_api.calls[3].name, 'remote_add')
+        self.assertEqual(self.conan_api.calls[4].name, 'create')
+        self.assertEqual(self.conan_api.calls[5].name, 'authenticate')
+        self.assertEqual(self.conan_api.calls[6].name, 'upload')
 
-        runner = MockRunner()
-        builder = ConanMultiPackager(username="pepe", channel="testing",
-                                     reference="Hello/0.1", password="password",
-                                     visual_versions=[], gcc_versions=[],
-                                     apple_clang_versions=[],
-                                     runner=runner,
-                                     remotes="otherurl",
-                                     platform_info=platform_mock_for("Darwin"))
-        builder.add_common_builds()
-        builder.run()
-
-        # When upload is not required, credentials verification must be avoided
-        self.assertFalse('conan user pepe -p="password" -r=upload_repo' in runner.calls)
-        self.assertFalse('conan upload Hello/0.1@pepe/testing --retry 3 '
-                         '--all --force --confirm -r=upload_repo' in runner.calls)
-
+        self.conan_api = MockConanAPI()
         # If we skip the credentials check, the login will be performed just before the upload
         builder = ConanMultiPackager(username="pepe", channel="testing",
                                      reference="Hello/0.1", password="password",
                                      upload="myurl", visual_versions=[], gcc_versions=[],
                                      apple_clang_versions=[],
-                                     runner=runner,
+                                     runner=self.runner,
+                                     conan_api=self.conan_api,
                                      platform_info=platform_mock_for("Darwin"),
                                      skip_check_credentials=True)
         builder.add_common_builds()
         builder.run()
-        self.assertEqual(runner.calls[-2],
-                         'conan user pepe -p="password" -r=upload_repo')
-        self.assertEqual(runner.calls[-1],
-                         "conan upload Hello/0.1@pepe/testing --retry 3 --all --force --confirm "
-                         "-r=upload_repo")
+        self.assertNotEqual(self.conan_api.calls[0].name, 'authenticate')
+
+        # No upload, no authenticate
+        self.conan_api = MockConanAPI()
+        builder = ConanMultiPackager(username="pepe", channel="testing",
+                                     reference="Hello/0.1", password="password",
+                                     upload=None, visual_versions=[], gcc_versions=[],
+                                     apple_clang_versions=[],
+                                     runner=self.runner,
+                                     conan_api=self.conan_api,
+                                     platform_info=platform_mock_for("Darwin"),
+                                     skip_check_credentials=True)
+        builder.add_common_builds()
+        builder.run()
+        for action in self.conan_api.calls:
+            self.assertNotEqual(action.name, 'authenticate')
+            self.assertNotEqual(action.name, 'upload')
