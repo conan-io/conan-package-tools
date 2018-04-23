@@ -32,7 +32,8 @@ class AuthManager(object):
                 self._data[remote.lower()] = (username, dict_password[remote])
         elif unique_login:
             if not unique_password and dict_password:
-                raise Exception("Specify a dict for 'login_username' or CONAN_LOGIN_USERNAME_XXX")
+                raise Exception("Specify a dict for 'login_username' or CONAN_LOGIN_USERNAME_XXX"
+                                " for the login=%s" % unique_login)
 
             self._data[None] = (unique_login, unique_password)
         else:

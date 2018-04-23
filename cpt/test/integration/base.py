@@ -11,9 +11,8 @@ PYPI_PASSWORD = os.getenv("PYPI_PASSWORD", None)
 
 CONAN_UPLOAD_URL = os.getenv("CONAN_UPLOAD_URL",
                              "https://conan.jfrog.io/conan/api/conan/conan-testsuite")
-CONAN_PASSWORD_UPLOAD = os.getenv("CONAN_PASSWORD_UPLOAD", "")
+CONAN_UPLOAD_PASSWORD = os.getenv("CONAN_UPLOAD_PASSWORD", "")
 CONAN_LOGIN_UPLOAD = os.getenv("CONAN_LOGIN_UPLOAD", "")
-
 
 
 pypi_template = """

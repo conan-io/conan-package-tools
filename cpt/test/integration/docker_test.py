@@ -5,7 +5,7 @@ from cpt import __version__ as version
 
 from conans.client import tools
 from cpt.test.integration.base import BaseTest, PYPI_TESTING_REPO, CONAN_UPLOAD_URL, \
-    CONAN_PASSWORD_UPLOAD, CONAN_LOGIN_UPLOAD
+    CONAN_UPLOAD_PASSWORD, CONAN_LOGIN_UPLOAD
 from cpt.packager import ConanMultiPackager
 
 
@@ -29,7 +29,7 @@ class Pkg(ConanFile):
                                        "CONAN_LOGIN_USERNAME": CONAN_LOGIN_UPLOAD,
                                        "CONAN_USERNAME": "lasote",
                                        "CONAN_UPLOAD": CONAN_UPLOAD_URL,
-                                       "CONAN_PASSWORD": CONAN_PASSWORD_UPLOAD}):
+                                       "CONAN_PASSWORD": CONAN_UPLOAD_PASSWORD}):
             self.packager = ConanMultiPackager("--build missing -r conan.io",
                                                channel="mychannel",
                                                gcc_versions=["6"],
