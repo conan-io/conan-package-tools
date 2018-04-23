@@ -1,3 +1,3 @@
 conan user
 mkdir %HOMEPATH%/.conan/data
-nosetests cpt.test
+nosetests cpt.test --nocapture
