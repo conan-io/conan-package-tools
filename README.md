@@ -996,23 +996,18 @@ This is especially useful for CI integration.
   - `CONAN_PASSWORD_MYREPO=mypassword` 
 
 - **CONAN_REMOTES**: List of URLs separated by "," for the additional remotes (read).
-- **CONAN_REMOTE_XXX**: Incompatible with CONAN_REMOTES. The order of the remotes with be alphabetic. 
-  The value can containing the URL, the SSL validation flag (optional) separated by ",". e.j:
+                     You can specify the SSL verify flag and the remote name using the "@" separator. e.j:
+                     
+  - `CONAN_REMOTES=url1@True@remote_name, url2@False@remote_name2`
   
-  - `CONAN_REMOTE_BINTRAY_CONAN=https://api.bintray.com/conan/conan-community/conan` 
-  - `CONAN_REMOTE_MYREPO=https://api.bintray.com/conan/conan-community/conan,True` 
+  The remote name is useful in case you want to specify custom credentials for different remotes. See `CONAN_LOGIN_USERNAME_XXX` and `CONAN_PASSWORD_XXX`
 
-  
-  If a remote name is not specified, the variable name will be used. Take into account that Windows manage only uppercase environment variables.
-  If the SSL validation configuration is not specified, it will use `True` by default.
-  
-  
 - **CONAN_UPLOAD**: URL of the repository where we want to use to upload the packages. 
-  The value can containing the URL, the SSL validation flag and remote name (last two optionals) separated by ",". e.j:
+  The value can containing the URL, the SSL validation flag and remote name (last two optionals) separated by "@". e.j:
   
   - `CONAN_UPLOAD=https://api.bintray.com/conan/conan-community/conan` 
-  - `CONAN_UPLOAD=https://api.bintray.com/conan/conan-community/conan,True`
-  - `CONAN_UPLOAD=https://api.bintray.com/conan/conan-community/conan,True,other_repo_name` 
+  - `CONAN_UPLOAD=https://api.bintray.com/conan/conan-community/conan@True`
+  - `CONAN_UPLOAD=https://api.bintray.com/conan/conan-community/conan@True@other_repo_name` 
   
   If a remote name is not specified, `upload_repo` will be used as a remote name.
   If the SSL validation configuration is not specified, it will use `True` by default.

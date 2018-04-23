@@ -7,20 +7,23 @@ class Remote(namedtuple("Remote", "url use_ssl name")):
 
     def to_str(self):
         ret = self.url
-        if self.use_ssl:
-            ret += ",%s" % self.use_ssl
+        if self.use_ssl is not None:
+            ret += "@%s" % self.use_ssl
+        else:
+            ret += "@True"
         if self.name:
-            ret += ",%s" % self.name
+            ret += "@%s" % self.name
 
         return ret
 
 
 class RemotesManager(object):
 
-    def __init__(self, conan_api, remotes_input=None, upload_input=None):
+    def __init__(self, conan_api, printer, remotes_input=None, upload_input=None):
         self._conan_api = conan_api
         self._remotes = []
         self._upload = None
+        self.printer = printer
 
         if remotes_input:
             if isinstance(remotes_input, string_types):
@@ -38,13 +41,8 @@ class RemotesManager(object):
             remotes_input = os.getenv("CONAN_REMOTES", [])
             if remotes_input:
                 for n, r in enumerate(remotes_input.split(",")):
-                    self._remotes.append(Remote(r, True, "remote%s" % n))
-            else:  # Try CONAN_REMOTE_XXX
-                env_vars = self._get_remote_env_vars()
-                for var in env_vars:
-                    tmp = os.getenv(var)
-                    remote_name = var.split("_", 2)[2].lower()
-                    self._remotes.append(self._get_remote_from_str(tmp, var, remote_name))
+                    remote = self._get_remote_from_str(r, "CONAN_REMOTES", "remote%s" % n)
+                    self._remotes.append(remote)
 
         if upload_input:
             if isinstance(upload_input, string_types):
@@ -97,23 +95,15 @@ class RemotesManager(object):
 
     @staticmethod
     def _get_remote_from_str(the_str, var_name, name=None):
-        tmp = the_str.split(",")
+        tmp = the_str.split("@")
         if len(tmp) == 1:  # only URL
             return Remote(tmp[0].strip(), True, name)
         elif len(tmp) == 2:  # With SSL flag
-            return Remote(tmp[0].strip(), tmp[1] not in (None, "0", "None", "False"), None)
+            return Remote(tmp[0].strip(), tmp[1] not in (None, "0", "None", "False"), name)
         elif len(tmp) == 3:  # With SSL flag and name
             return Remote(tmp[0].strip(), tmp[1] not in (None, "0", "None", "False"), tmp[2].strip())
         else:
             raise Exception("Invalid %s env var format, check README" % var_name)
-
-    @staticmethod
-    def _get_remote_env_vars():
-        ret = []
-        for name in os.environ.keys():
-            if name.startswith("CONAN_REMOTE_"):
-                ret.append(name)
-        return sorted(ret)
 
     def _get_remote_name(self, remote_url):
         remotes = self._conan_api.remote_list()
@@ -126,6 +116,8 @@ class RemotesManager(object):
 
         remote = self._get_remote_name(url)
         if remote:
+            self.printer.print_message("Remote for URL '%s' already exist, "
+                                       "keeping the current remote and its name" % url)
             return remote
 
         self._conan_api.remote_add(name, url, verify_ssl=verify_ssl, insert=insert)
@@ -147,7 +139,9 @@ class RemotesManager(object):
         if self._upload:
             ret["CONAN_UPLOAD"] = self._upload.to_str()
 
+        tmp = []
         if self.named_remotes():
             for remote in self._remotes:
-                ret["CONAN_REMOTE_%s" % remote.name] = ",".join(remote.url, remote.use_ssl)
+                tmp.append(remote.to_str())
+        ret["CONAN_REMOTES"] = ",".join(tmp)
         return ret

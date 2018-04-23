@@ -10,8 +10,7 @@ from conans.client.loader_parse import load_conanfile_class
 from conans.model.version import Version
 from cpt.auth import AuthManager
 from cpt.ci_manager import CIManager
-from cpt.printer import (print_jobs, print_current_page, print_rule, print_ascci_art,
-                         print_message, print_dict, foldable_output)
+from cpt.printer import Printer
 from cpt.remotes import RemotesManager
 from cpt.tools import get_bool_from_env
 from cpt.builds_generator import BuildConf, BuildGenerator
@@ -82,23 +81,29 @@ class ConanMultiPackager(object):
                  docker_32_images=None,
                  build_policy=None,
                  always_update_conan_in_docker=False,
-                 conan_api=None):
+                 conan_api=None,
+                 out=None):
 
-        print_rule()
-        print_ascci_art()
+        self.printer = Printer(out)
+        self.printer.print_rule()
+        self.printer.print_ascci_art()
 
         if not conan_api:
             self.conan_api, _, _ = Conan.factory()
         else:
             self.conan_api = conan_api
 
-        self.ci_manager = CIManager()
-        self.remotes_manager = RemotesManager(self.conan_api, remotes, upload)
+        self.ci_manager = CIManager(self.printer)
+        self.remotes_manager = RemotesManager(self.conan_api, self.printer, remotes, upload)
         self.username = username or os.getenv("CONAN_USERNAME", None)
 
-        self.auth_manager = AuthManager(self.conan_api, login_username, password,
+        if not self.username:
+            raise Exception("Instance ConanMultiPackage with 'username' parameter or use "
+                            "CONAN_USERNAME env variable")
+
+        self.auth_manager = AuthManager(self.conan_api, self.printer, login_username, password,
                                         default_username=self.username)
-        self.uploader = Uploader(self.conan_api, self.remotes_manager, self.auth_manager)
+        self.uploader = Uploader(self.conan_api, self.remotes_manager, self.auth_manager, self.printer)
 
         self._builds = []
         self._named_builds = {}
@@ -124,10 +129,13 @@ class ConanMultiPackager(object):
                 name, version = self.partial_reference.split("/")
                 self.reference = ConanFileReference(name, version, self.username, self.channel)
         else:
+            print(os.getcwd())
             if not os.path.exists("conanfile.py"):
                 raise Exception("Conanfile not found")
-            conanfile = load_conanfile_class("conanfile.py")
+            conanfile = load_conanfile_class("./conanfile.py")
             name, version = conanfile.name, conanfile.version
+            if not name or not version:
+                raise Exception("Specify a CONAN_REFERENCE or name and version fields in the recipe")
             self.reference = ConanFileReference(name, version, self.username, self.channel)
 
         # If CONAN_DOCKER_IMAGE is speified, then use docker is True
@@ -164,10 +172,6 @@ class ConanMultiPackager(object):
         self.output_runner = ConanOutputRunner()
         self.args = args or " ".join(sys.argv[1:])
 
-        if not self.username:
-            raise Exception("Instance ConanMultiPackage with 'username' "
-                            "parameter or use CONAN_USERNAME env variable")
-
         # Upload related variables
         self.upload_retry = upload_retry or os.getenv("CONAN_UPLOAD_RETRY", 3)
 
@@ -194,6 +198,8 @@ class ConanMultiPackager(object):
         self._docker_image = docker_image or os.getenv("CONAN_DOCKER_IMAGE", None)
 
         self.conan_pip_package = os.getenv("CONAN_PIP_PACKAGE", "conan==%s" % client_version)
+        if self.conan_pip_package in ("0", "False"):
+            self.conan_pip_package = False
         self.vs10_x86_64_enabled = vs10_x86_64_enabled
 
         self.builds_in_current_page = []
@@ -202,8 +208,8 @@ class ConanMultiPackager(object):
             return (isinstance(value, six.string_types) or
                     isinstance(value, bool) or
                     isinstance(value, list)) and not var.startswith("_") and "password" not in var
-        with foldable_output("local_vars"):
-            print_dict({var: value for var, value in self.__dict__.items() if valid_pair(var, value)})
+        with self.printer.foldable_output("local_vars"):
+            self.printer.print_dict({var: value for var, value in self.__dict__.items() if valid_pair(var, value)})
 
     @property
     def items(self):
@@ -216,9 +222,11 @@ class ConanMultiPackager(object):
     @property
     def builds(self):
         # Retrocompatibility iterating
-        print_message("WARNING", "\n\n\n******** ITERATING THE CONAN_PACKAGE_TOOLS BUILDS WITH "
-                      ".builds is deprecated use .items() instead (unpack 5 elements: "
-                      "settings, options, env_vars, build_requires, reference  **********\n\n\n")
+        self.printer.print_message("WARNING",
+                                   "\n\n\n******** ITERATING THE CONAN_PACKAGE_TOOLS BUILDS WITH "
+                                   ".builds is deprecated use .items() instead (unpack 5 elements: "
+                                   "settings, options, env_vars, build_requires, reference  ********"
+                                   "**\n\n\n")
         return [elem[0:4] for elem in self._builds]
 
     @builds.setter
@@ -280,15 +288,17 @@ class ConanMultiPackager(object):
         self._builds.append(BuildConf(settings, options, env_vars, build_requires, reference))
 
     def run(self, profile_name=None):
-        with tools.environment_append(self.auth_manager.env_vars()):
-            print_message("Running builds...")
+        env_vars = self.auth_manager.env_vars()
+        with tools.environment_append(env_vars):
+            self.printer.print_message("Running builds...")
             if self.ci_manager.skip_builds():
                 print("Skipped builds due [skip ci] commit message")
                 return 99
             if not self.skip_check_credentials and self._upload_enabled():
+                self.remotes_manager.add_remotes_to_conan()
                 self.auth_manager.login(self.remotes_manager.upload_remote_name)
             if self.conan_pip_package:
-                with foldable_output("pip_update"):
+                with self.printer.foldable_output("pip_update"):
                     self.runner('%s pip install %s' % (self.sudo_command, self.conan_pip_package))
 
             self.run_builds(profile_name=profile_name)
@@ -297,15 +307,18 @@ class ConanMultiPackager(object):
         if not self.remotes_manager.upload_remote_name:
             return False
 
+        if not self.auth_manager.credentials_ready(self.remotes_manager.upload_remote_name):
+            return False
+
         st_channel = self.stable_channel or "stable"
         if self.upload_only_when_stable and self.channel != st_channel:
-            print("Skipping upload, not stable channel")
+            self.printer.print_message("Skipping upload, not stable channel")
             return False
 
         if not os.getenv("CONAN_TEST_SUITE", False):
             if self.ci_manager.is_pull_request():
                 # PENDING! can't found info for gitlab/bamboo
-                print("Skipping upload, this is a Pull Request")
+                self.printer.print_message("Skipping upload, this is a Pull Request")
                 return False
 
         def raise_error(field):
@@ -338,10 +351,13 @@ class ConanMultiPackager(object):
             for build in self.named_builds[curpage]:
                 self.builds_in_current_page.append(build)
 
-        print_current_page(curpage, total_pages)
-        print_jobs(self.builds_in_current_page)
+        self.printer.print_current_page(curpage, total_pages)
+        self.printer.print_jobs(self.builds_in_current_page)
 
         pulled_docker_images = defaultdict(lambda: False)
+
+        # FIXME: Remove in Conan 1.3, https://github.com/conan-io/conan/issues/2787
+        abs_folder = os.path.realpath(os.getcwd())
         for build in self.builds_in_current_page:
 
             if self.use_docker:
@@ -378,7 +394,9 @@ class ConanMultiPackager(object):
                                                  conan_pip_package=self.conan_pip_package,
                                                  exclude_vcvars_precommand=self.exclude_vcvars_precommand,
                                                  build_policy=self.build_policy,
-                                                 runner=self.runner)
+                                                 runner=self.runner,
+                                                 abs_folder=abs_folder,
+                                                 printer=self.printer)
                 build_runner.run()
 
     def _get_docker_image(self, build):
@@ -416,22 +434,21 @@ class ConanMultiPackager(object):
         pattern = self.stable_branch_pattern or "master"
         prog = re.compile(pattern)
         branch = self.ci_manager.get_branch()
-        print_message("Branch detected", branch)
+        self.printer.print_message("Branch detected", branch)
 
         if branch and prog.match(branch):
-            print_message("Info", "Redefined channel by CI branch matching with '%s', "
-                                  "setting CONAN_CHANNEL to '%s'" % (pattern, stable_channel))
+            self.printer.print_message("Info", "Redefined channel by CI branch matching with '%s', "
+                                       "setting CONAN_CHANNEL to '%s'" % (pattern, stable_channel))
             return stable_channel
 
         return specified_channel
 
-    @staticmethod
-    def _get_profile(build_conf, base_profile_name):
+    def _get_profile(self, build_conf, base_profile_name):
         profile_name = base_profile_name or os.getenv("CONAN_BASE_PROFILE")
         if profile_name:
-            print("**************************************************")
-            print("Using specified default base profile: %s" % profile_name)
-            print("**************************************************")
+            self.printer.print_message("**************************************************")
+            self.printer.print_message("Using specified default base profile: %s" % profile_name)
+            self.printer.print_message("**************************************************")
         profile_name = profile_name or "default"
         tmp = """
 include(%s)

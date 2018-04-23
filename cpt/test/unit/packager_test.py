@@ -3,15 +3,13 @@ import platform
 import sys
 import unittest
 
-from collections import defaultdict, namedtuple
+from collections import defaultdict
 
-from conans.test.utils.test_files import temp_folder
 from cpt.builds_generator import BuildConf
 from cpt.packager import ConanMultiPackager
 from conans import tools
 from conans.model.ref import ConanFileReference
-from conans.util.files import load, mkdir, save
-from conans.model.profile import Profile
+from cpt.test.unit.utils import MockConanAPI, MockRunner
 
 
 def platform_mock_for(so):
@@ -19,82 +17,6 @@ def platform_mock_for(so):
         def system(self):
             return so
      return PlatformInfoMock()
-
-
-class MockRunner(object):
-
-    def __init__(self):
-        self.reset()
-        self.output = ""
-
-    def reset(self):
-        self.calls = []
-
-    def __call__(self, command):
-        self.calls.append(command)
-        return 0
-
-
-class MockConanCache(object):
-
-    def __init__(self, *args, **kwargs):
-        _base_dir = temp_folder()
-        self.default_profile_path = os.path.join(_base_dir, "default")
-        self.profiles_path = _base_dir
-
-Action = namedtuple("Action", "name args kwargs")
-
-
-class MockConanAPI(object):
-
-    def __init__(self):
-        self.calls = []
-        self._client_cache = MockConanCache()
-
-    def create(self, *args, **kwargs):
-        self.calls.append(Action("create", args, kwargs))
-
-    def create_profile(self, *args, **kwargs):
-        save(os.path.join(self._client_cache.profiles_path, args[0]), "[settings]")
-        self.calls.append(Action("create_profile", args, kwargs))
-
-    def remote_list(self, *args, **kwargs):
-        self.calls.append(Action("remote_list", args, kwargs))
-        return []
-
-    def remote_add(self, *args, **kwargs):
-        self.calls.append(Action("remote_add", args, kwargs))
-        return args[0]
-
-    def authenticate(self, *args, **kwargs):
-        self.calls.append(Action("authenticate", args, kwargs))
-
-    def upload(self, *args, **kwargs):
-        self.calls.append(Action("upload", args, kwargs))
-
-    def get_profile_from_call_index(self, number):
-        call = self.calls[number]
-        return self.get_profile_from_call(call)
-
-    def get_profile_from_call(self, call):
-        if call.name != "create":
-            raise Exception("Invalid test, not contains a create: %s" % self.calls)
-        from conans.client.profile_loader import read_profile
-        profile_name = call.kwargs["profile_name"]
-        tools.replace_in_file(profile_name, "include", "#include")
-        return read_profile(profile_name, os.path.dirname(profile_name), None)[0]
-
-    def reset(self):
-        self.calls = []
-
-    def _get_creates(self):
-        return [call for call in self.calls if call.name == "create"]
-
-    def assert_tests_for(self, indexes):
-        creates = self._get_creates()
-        for create_index, index in enumerate(indexes):
-            profile = self.get_profile_from_call(creates[create_index])
-            assert("os%s" % index == profile.settings["os"])
 
 
 class AppTest(unittest.TestCase):
@@ -336,35 +258,6 @@ class AppTest(unittest.TestCase):
             self.packager.run_builds(1, 1)
             self.assertIn('-e CONAN_FAKE_VAR="32"', self.runner.calls[-1])
 
-    @unittest.skipUnless(sys.platform.startswith("win"), "Requires Windows")
-    def test_msvc(self):
-        self.packager = ConanMultiPackager("--build missing -r conan.io",
-                                           "lasote", "mychannel",
-                                           runner=self.runner,
-                                           conan_api=self.conan_api,
-                                           visual_versions=[15],
-                                           reference="zlib/1.2.11")
-        self.packager.add_common_builds()      
-
-        with tools.environment_append({"VisualStudioVersion": "15.0"}):
-            self.packager.run_builds(1, 1)
-        
-        self.assertIn("vcvars", self.runner.calls[1])
-
-    @unittest.skipUnless(sys.platform.startswith("win"), "Requires Windows")
-    def test_msvc_no_precommand(self):
-        self.packager = ConanMultiPackager("--build missing -r conan.io",
-                                           "lasote", "mychannel",
-                                           runner=self.runner,
-                                           conan_api=self.conan_api,
-                                           visual_versions=[15],
-                                           exclude_vcvars_precommand=True,
-                                           reference="zlib/1.2.11")
-        self.packager.add_common_builds()                                           
-        self.packager.run_builds(1, 1)
-
-        self.assertNotIn("vcvars", self.runner.calls[1])
-
     def test_docker_invalid(self):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
                                            "lasote", "mychannel",
@@ -567,8 +460,8 @@ class AppTest(unittest.TestCase):
         builder.run()
 
         # Duplicated upload remote puts upload repo first (in the remotes order)
-        self.assertEqual(self.conan_api.calls[3].args[0], 'upload_repo')
-        self.assertEqual(self.conan_api.calls[5].args[0], 'remote1')
+        self.assertEqual(self.conan_api.calls[1].args[0], 'upload_repo')
+        self.assertEqual(self.conan_api.calls[3].args[0], 'remote1')
 
         # Now check that the upload remote order is preserved if we specify it in the remotes
         runner = MockRunner()
@@ -584,9 +477,9 @@ class AppTest(unittest.TestCase):
         builder.add_common_builds()
         builder.run()
 
-        self.assertEqual(self.conan_api.calls[3].args[0], 'remote0')
-        self.assertEqual(self.conan_api.calls[5].args[0], 'upload_repo')
-        self.assertEqual(self.conan_api.calls[7].args[0], 'remote2')
+        self.assertEqual(self.conan_api.calls[1].args[0], 'remote0')
+        self.assertEqual(self.conan_api.calls[3].args[0], 'upload_repo')
+        self.assertEqual(self.conan_api.calls[5].args[0], 'remote2')
 
         runner = MockRunner()
         self.conan_api = MockConanAPI()
@@ -601,8 +494,8 @@ class AppTest(unittest.TestCase):
         builder.add_common_builds()
         builder.run()
 
-        self.assertEqual(self.conan_api.calls[3].args[0], 'remote0')
-        self.assertEqual(self.conan_api.calls[5].args[0], 'upload_repo')
+        self.assertEqual(self.conan_api.calls[1].args[0], 'remote0')
+        self.assertEqual(self.conan_api.calls[3].args[0], 'upload_repo')
 
     def test_build_policy(self):
         builder = ConanMultiPackager(username="pepe", channel="testing",
@@ -646,13 +539,13 @@ class AppTest(unittest.TestCase):
         builder.run()
 
         # When activated, check credentials before to create the profiles
-        self.assertEqual(self.conan_api.calls[0].name, 'authenticate')
-        self.assertEqual(self.conan_api.calls[1].name, 'create_profile')
-        self.assertEqual(self.conan_api.calls[2].name, 'remote_list')
-        self.assertEqual(self.conan_api.calls[3].name, 'remote_add')
-        self.assertEqual(self.conan_api.calls[4].name, 'create')
-        self.assertEqual(self.conan_api.calls[5].name, 'authenticate')
-        self.assertEqual(self.conan_api.calls[6].name, 'upload')
+        self.assertEqual(self.conan_api.calls[2].name, 'authenticate')
+        self.assertEqual(self.conan_api.calls[3].name, 'create_profile')
+        self.assertEqual(self.conan_api.calls[4].name, 'remote_list')
+        self.assertEqual(self.conan_api.calls[5].name, 'remote_add')
+        self.assertEqual(self.conan_api.calls[6].name, 'create')
+        self.assertEqual(self.conan_api.calls[7].name, 'authenticate')
+        self.assertEqual(self.conan_api.calls[8].name, 'upload')
 
         self.conan_api = MockConanAPI()
         # If we skip the credentials check, the login will be performed just before the upload

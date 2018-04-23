@@ -1,5 +1,4 @@
 import os
-import shutil
 import sys
 import tempfile
 from collections import namedtuple
@@ -8,15 +7,17 @@ from conans import tools
 from conans.client.profile_loader import _load_profile
 from conans.util.files import save
 from cpt import __version__ as package_tools_version
-from cpt.printer import print_message, print_profile, print_rule, foldable_output, print_command
+from cpt.printer import Printer
 
 
 class TestPackageRunner(object):
 
     def __init__(self, profile_text, reference, conan_api, uploader,
                  args=None, conan_pip_package=None, exclude_vcvars_precommand=False,
-                 build_policy=None, runner=None):
+                 build_policy=None, runner=None, abs_folder=None, printer=None):
 
+        self.printer = printer or Printer()
+        self._abs_folder = abs_folder or os.getcwd()
         self._uploader = uploader
         self._conan_api = conan_api
         self._client_cache = self._conan_api._client_cache
@@ -26,7 +27,7 @@ class TestPackageRunner(object):
         self._conan_pip_package = conan_pip_package
         self._exclude_vcvars_precommand = exclude_vcvars_precommand
         self._build_policy = build_policy
-        self._runner = PrintRunner(runner or os.system)
+        self._runner = PrintRunner(runner or os.system, self.printer)
 
         if "default" in self._profile_text:  # User didn't specified a custom profile
             default_profile_name = os.path.basename(self._client_cache.default_profile_path)
@@ -68,22 +69,18 @@ class TestPackageRunner(object):
                                                                  lambda x: self.settings.get(x, None))
                 context = tools.vcvars(mock_sets)
         with context:
-            self._run_create()
+            self.printer.print_rule()
+            self.printer.print_profile(self._profile_text)
 
-    def _run_create(self):
+            with self.printer.foldable_output("conan_create"):
+                # TODO: Get uploaded packages with Conan 1.3 from the ret json
+                self.printer.print_message("Calling 'conan create'")
+                name, version, user, channel = self._reference
+                self._conan_api.create(self._abs_folder, name=name, version=version, user=user, channel=channel,
+                                       build_modes=self._build_policy,
+                                       profile_name=self._abs_profile_path)
 
-        print_rule()
-        print_profile(self._profile_text)
-
-        with foldable_output("conan_create"):
-            # TODO: Get uploaded packages with Conan 1.3 from the ret json
-            print_message("Calling 'conan create'")
-            name, version, user, channel = self._reference
-            self._conan_api.create(".", name=name, version=version, user=user, channel=channel,
-                                   build_modes=self._build_policy,
-                                   profile_name=self._abs_profile_path)
-
-            self._uploader.upload_packages(self._reference)
+                self._uploader.upload_packages(self._reference)
 
 
 class DockerTestPackageRunner(TestPackageRunner):
@@ -115,7 +112,7 @@ class DockerTestPackageRunner(TestPackageRunner):
             self.pull_image()
             if not self._docker_image_skip_update and not self._always_update_conan_in_docker:
                 # Update the downloaded image
-                with foldable_output("update conan"):
+                with self.printer.foldable_output("update conan"):
                     command = '%s docker run --name ' \
                               'conan_runner %s /bin/sh -c "%s"' % (self._sudo_docker_command,
                                                                    self._docker_image,
@@ -155,7 +152,7 @@ class DockerTestPackageRunner(TestPackageRunner):
             raise Exception("Error building: %s" % command)
 
     def pull_image(self):
-        with foldable_output("docker pull"):
+        with self.printer.foldable_output("docker pull"):
             self._runner("%s docker pull %s" % (self._sudo_docker_command, self._docker_image))
 
     def get_env_vars(self):
@@ -183,11 +180,12 @@ def escape_env(text):
 
 class PrintRunner(object):
 
-    def __init__(self, runner):
+    def __init__(self, runner, printer):
         self.runner = runner
+        self.printer = printer
 
     def __call__(self, command):
-        print_command(command)
+        self.printer.print_command(command)
         sys.stderr.flush()
         sys.stdout.flush()
         return self.runner(command)

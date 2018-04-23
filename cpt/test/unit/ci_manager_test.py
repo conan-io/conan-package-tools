@@ -1,9 +1,11 @@
 import unittest
 import os
 
+from conans.test.utils.tools import TestBufferConanOutput
 from cpt.packager import ConanMultiPackager
 from cpt.ci_manager import CIManager
 from conans import tools
+from cpt.printer import Printer
 
 
 class CIManagerTest(unittest.TestCase):
@@ -18,6 +20,8 @@ class CIManagerTest(unittest.TestCase):
                 new_env[var] = value
 
         os.environ = new_env
+        self.output = TestBufferConanOutput()
+        self.printer = Printer(self.output.write)
 
     def test_skip(self):
         with tools.environment_append({"TRAVIS": "1",
@@ -33,7 +37,7 @@ class CIManagerTest(unittest.TestCase):
         # Bamboo
         with tools.environment_append({"bamboo_buildNumber": "xx",
                                        "bamboo_planRepository_branch": "mybranch"}):
-            manager = CIManager()
+            manager = CIManager(self.printer)
             self.assertEquals(manager.get_branch(), "mybranch")
             self.assertIsNotNone(manager.get_commit_msg())
 
@@ -42,7 +46,7 @@ class CIManagerTest(unittest.TestCase):
                                        "TRAVIS_COMMIT_MESSAGE": "msg",
                                        "TRAVIS_BRANCH": "mybranch",
                                        }):
-            manager = CIManager()
+            manager = CIManager(self.printer)
             self.assertEquals(manager.get_branch(), "mybranch")
             self.assertEquals(manager.get_commit_msg(), "msg")
 
@@ -52,7 +56,7 @@ class CIManagerTest(unittest.TestCase):
                                        "APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED": "more",
                                        "APPVEYOR_REPO_BRANCH": "mybranch",
                                        }):
-            manager = CIManager()
+            manager = CIManager(self.printer)
             self.assertEquals(manager.get_branch(), "mybranch")
             self.assertEquals(manager.get_commit_msg(), "msg more")
 
@@ -63,7 +67,7 @@ class CIManagerTest(unittest.TestCase):
                                        "APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED": "more",
                                        "APPVEYOR_REPO_BRANCH": "mybranch",
                                        }):
-            manager = CIManager()
+            manager = CIManager(self.printer)
             self.assertIsNone(manager.get_branch())
             self.assertEquals(manager.get_commit_msg(), "msg more")
 
@@ -73,7 +77,7 @@ class CIManagerTest(unittest.TestCase):
                                        "APPVEYOR_REPO_COMMIT_MESSAGE": "msg",
                                        "APPVEYOR_REPO_BRANCH": "mybranch",
                                        }):
-            manager = CIManager()
+            manager = CIManager(self.printer)
             self.assertIsNone(manager.get_branch())
             self.assertEquals(manager.get_commit_msg(), "msg")
 
@@ -81,7 +85,7 @@ class CIManagerTest(unittest.TestCase):
         with tools.environment_append({"CIRCLECI": "1",
                                        "CIRCLE_BRANCH": "mybranch",
                                        }):
-            manager = CIManager()
+            manager = CIManager(self.printer)
             self.assertEquals(manager.get_branch(), "mybranch")
             self.assertIsNotNone(manager.get_commit_msg())
 
@@ -89,7 +93,7 @@ class CIManagerTest(unittest.TestCase):
         with tools.environment_append({"GITLAB_CI": "1",
                                        "CI_BUILD_REF_NAME": "mybranch",
                                        }):
-            manager = CIManager()
+            manager = CIManager(self.printer)
             self.assertEquals(manager.get_branch(), "mybranch")
             self.assertIsNotNone(manager.get_commit_msg())
 
@@ -97,7 +101,7 @@ class CIManagerTest(unittest.TestCase):
         with tools.environment_append({"JENKINS_URL": "1",
                                        "BRANCH_NAME": "mybranch",
                                        }):
-            manager = CIManager()
+            manager = CIManager(self.printer)
             self.assertEquals(manager.get_branch(), "mybranch")
             self.assertIsNotNone(manager.get_commit_msg())
 
@@ -106,7 +110,7 @@ class CIManagerTest(unittest.TestCase):
         with tools.environment_append({"TRAVIS": "1",
                                        "TRAVIS_COMMIT_MESSAGE":
                                            "This is a great commit [build=outdated] End."}):
-            manager = CIManager()
+            manager = CIManager(self.printer)
             self.assertEquals(manager.get_commit_build_policy(), "outdated")
             self.assertEquals(manager.get_commit_msg(), "This is a great commit "
                                                         "[build=outdated] End.")
@@ -119,7 +123,7 @@ class CIManagerTest(unittest.TestCase):
                                            "more [build=missing] ",
                                        "APPVEYOR_REPO_BRANCH": "mybranch",
                                        }):
-            manager = CIManager()
+            manager = CIManager(self.printer)
             self.assertEquals(manager.get_commit_build_policy(), "missing")
 
         # Raise invalid
@@ -130,5 +134,5 @@ class CIManagerTest(unittest.TestCase):
                                            "more [build=joujou] ",
                                        "APPVEYOR_REPO_BRANCH": "mybranch",
                                        }):
-            manager = CIManager()
+            manager = CIManager(self.printer)
             self.assertRaises(Exception, manager.get_commit_build_policy)

@@ -1,0 +1,75 @@
+from conans.client import tools
+from conans.errors import ConanException
+from cpt.test.integration.base import BaseTest
+from conan.packager import ConanMultiPackager
+
+
+class UploadTest(BaseTest):
+
+    conanfile = """from conans import ConanFile
+class Pkg(ConanFile):
+    name = "lib"
+    version = "1.0"
+    options = {"shared": [True, False]}
+    default_options = "shared=False"
+    requires = "zlib/1.2.11@conan/stable"
+
+"""
+
+    def test_no_upload_remote(self):
+
+        self.save_conanfile(self.conanfile)
+        mp = ConanMultiPackager(username="lasote", out=self.output.write)
+        mp.add({}, {}, {})
+        mp.run()
+        self.assertIn("UPLOAD SKIPPED, NOT UPLOAD REMOTE AVAILABLE", self.output)
+
+    def test_no_credentials(self):
+        self.save_conanfile(self.conanfile)
+        mp = ConanMultiPackager(username="lasote", out=self.output.write,
+                                upload=("https://api.bintray.com/conan/conan-community/conan",
+                                        True, "my_upload_remote"))
+        mp.add({}, {}, {})
+        mp.run()
+        self.assertIn("UPLOAD SKIPPED, CREDENTIALS FOR REMOTE "
+                      "'MY_UPLOAD_REMOTE' NOT AVAILABLE", self.output)
+
+    def test_no_credentials_only_url(self):
+        self.save_conanfile(self.conanfile)
+        mp = ConanMultiPackager(username="lasote", out=self.output.write,
+                                upload="https://api.bintray.com/conan/conan-community/conan")
+        mp.add({}, {}, {})
+        mp.run()
+        self.assertIn("UPLOAD SKIPPED, CREDENTIALS FOR REMOTE "
+                      "'UPLOAD_REPO' NOT AVAILABLE", self.output)
+
+    def test_no_credentials_only_url(self):
+        self.save_conanfile(self.conanfile)
+        with tools.environment_append({"CONAN_PASSWORD": "mypass"}):
+            mp = ConanMultiPackager(username="lasote", out=self.output.write,
+                                    upload="https://api.bintray.com/conan/conan-community/conan")
+            with self.assertRaisesRegexp(ConanException, "Wrong user or password"):
+                mp.run()
+
+    def test_no_credentials_only_url_skip_check(self):
+        self.save_conanfile(self.conanfile)
+        with tools.environment_append({"CONAN_PASSWORD": "mypass",
+                                       "CONAN_SKIP_CHECK_CREDENTIALS": "1"}):
+            mp = ConanMultiPackager(username="lasote", out=self.output.write,
+                                    upload="https://api.bintray.com/conan/conan-community/conan")
+            mp.run()  # No builds to upload so no raises
+
+    def test_existing_upload_repo(self):
+        self.api.remote_add("my_upload_repo", "https://api.bintray.com/conan/conan-community/conan")
+        self.save_conanfile(self.conanfile)
+        with tools.environment_append({"CONAN_PASSWORD": "mypass"}):
+            mp = ConanMultiPackager(username="lasote", out=self.output.write,
+                                    upload=["https://api.bintray.com/conan/conan-community/conan",
+                                            False, "othername"])
+            mp.add({}, {}, {})
+            with self.assertRaisesRegexp(ConanException, "Wrong user or password"):
+                mp.run()
+            # The upload repo is kept because there is already an url
+            # FIXME: Probaby we should rename if name is different (Conan 1.3)
+            self.assertIn("REMOTE FOR URL 'HTTPS://API.BINTRAY.COM/CONAN/CONAN-COMMUNITY/CONAN' "
+                          "ALREADY EXIST, KEEPING THE CURRENT REMOTE AND ITS NAME", self.output)

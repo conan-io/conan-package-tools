@@ -1,6 +1,7 @@
 import os
 
 from conans.client.conan_api import Conan
+from conans.model.ref import ConanFileReference
 from cpt.auth import AuthManager
 from cpt.remotes import RemotesManager
 from cpt.runner import TestPackageRunner, unscape_env
@@ -20,7 +21,7 @@ def run():
     profile_text = unscape_env(os.getenv("CPT_PROFILE"))
     args = os.getenv("CPT_ARGS", "")
     build_policy = unscape_env(os.getenv("CPT_BUILD_POLICY"))
-    reference = os.getenv("CONAN_REFERENCE")
+    reference = ConanFileReference.loads(os.getenv("CONAN_REFERENCE"))
     conan_pip_package = unscape_env(os.getenv("CPT_PIP_PACKAGE"))
 
     runner = TestPackageRunner(profile_text, reference, conan_api, uploader,
