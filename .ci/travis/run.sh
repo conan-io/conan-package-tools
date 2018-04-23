@@ -12,4 +12,4 @@ fi
 
 conan user
 mkdir ~/.conan/data
-nosetests cpt.test --nocapture
+nosetests cpt.test.integration.docker_test --nocapture
