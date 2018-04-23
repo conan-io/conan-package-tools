@@ -22,7 +22,7 @@ class Pkg(ConanFile):
         mp = ConanMultiPackager(username="lasote", out=self.output.write)
         mp.add({}, {}, {})
         mp.run()
-        self.assertIn("UPLOAD SKIPPED, NOT UPLOAD REMOTE AVAILABLE", self.output)
+        self.assertIn("Upload skipped, not upload remote available", self.output)
 
     def test_no_credentials(self):
         self.save_conanfile(self.conanfile)
@@ -31,8 +31,8 @@ class Pkg(ConanFile):
                                         True, "my_upload_remote"))
         mp.add({}, {}, {})
         mp.run()
-        self.assertIn("UPLOAD SKIPPED, CREDENTIALS FOR REMOTE "
-                      "'MY_UPLOAD_REMOTE' NOT AVAILABLE", self.output)
+        self.assertIn("Upload skipped, credentials for remote 'my_upload_remote' "
+                      "not available", self.output)
 
     def test_no_credentials_only_url(self):
         self.save_conanfile(self.conanfile)
@@ -40,8 +40,8 @@ class Pkg(ConanFile):
                                 upload="https://api.bintray.com/conan/conan-community/conan")
         mp.add({}, {}, {})
         mp.run()
-        self.assertIn("UPLOAD SKIPPED, CREDENTIALS FOR REMOTE "
-                      "'UPLOAD_REPO' NOT AVAILABLE", self.output)
+        self.assertIn("Upload skipped, credentials for remote 'my_upload_remote' "
+                      "not available", self.output)
 
     def test_no_credentials_only_url(self):
         self.save_conanfile(self.conanfile)
@@ -71,5 +71,5 @@ class Pkg(ConanFile):
                 mp.run()
             # The upload repo is kept because there is already an url
             # FIXME: Probaby we should rename if name is different (Conan 1.3)
-            self.assertIn("REMOTE FOR URL 'HTTPS://API.BINTRAY.COM/CONAN/CONAN-COMMUNITY/CONAN' "
-                          "ALREADY EXIST, KEEPING THE CURRENT REMOTE AND ITS NAME", self.output)
+            self.assertIn("Remote for URL 'https://api.bintray.com/conan/conan-community/conan' "
+                          "already exist, keeping the current remote and its name", self.output)

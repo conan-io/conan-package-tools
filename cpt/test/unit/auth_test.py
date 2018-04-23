@@ -1,9 +1,9 @@
 import unittest
 
 from conans import tools
-from conans.client.printer import Printer
 from conans.test.utils.tools import TestBufferConanOutput
 from cpt.auth import AuthManager
+from cpt.printer import Printer
 from cpt.test.unit.packager_test import MockConanAPI
 
 
@@ -61,8 +61,7 @@ class AuthTest(unittest.TestCase):
         # Bad mix
         with tools.environment_append({"CONAN_LOGIN_USERNAME_R1": "myuser",
                                        "CONAN_PASSWORD": "mypass"}):
-            with self.assertRaisesRegexp(Exception, "Invalid login/password parameter "
-                                                    "values, check README"):
+            with self.assertRaisesRegexp(Exception, "Password for remote 'R1' not specified"):
                 AuthManager(self.conan_api, self.printer)
 
         with tools.environment_append({"CONAN_LOGIN_USERNAME_R1": "myuser",

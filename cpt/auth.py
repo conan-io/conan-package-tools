@@ -26,9 +26,6 @@ class AuthManager(object):
         dict_password = self._get_multiple_passwords(passwords_input)
 
         if dict_login:
-            if not dict_password:
-                raise Exception("Invalid login/password parameter values, check README")
-
             for remote, username in dict_login.items():
                 if remote not in dict_password:
                     raise Exception("Password for remote '%s' not specified" % remote)
