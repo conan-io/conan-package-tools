@@ -1,7 +1,7 @@
 from conans.client import tools
 from conans.errors import ConanException
 from cpt.test.integration.base import BaseTest
-from conan.packager import ConanMultiPackager
+from cpt.packager import ConanMultiPackager
 
 
 class UploadTest(BaseTest):

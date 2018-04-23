@@ -2,9 +2,8 @@ import unittest
 
 from future.moves import sys
 
-from conans.client import tools
 from cpt.test.integration.base import BaseTest
-from conan.packager import ConanMultiPackager
+from cpt.packager import ConanMultiPackager
 
 
 class SimpleTest(BaseTest):
@@ -39,10 +38,7 @@ class Pkg(ConanFile):
 import os
 
 class Pkg(ConanFile):
-    name = "lib"
-    version = "1.0"
-    options = {"shared": [True, False]}
-    default_options = "shared=False"
+    settings = "os", "compiler", "build_type", "arch"
 
     def build(self):
         assert("WindowsLibPath" in os.environ)
@@ -52,7 +48,10 @@ class Pkg(ConanFile):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
                                            "lasote", "mychannel",
                                            visual_versions=[15],
-                                           reference="zlib/1.2.11")
+                                           archs=["x86"],
+                                           build_types=["Release"],
+                                           visual_runtimes=["MD"],
+                                           reference="zlib/1.2.2")
         self.packager.add_common_builds()
         self.packager.run_builds(1, 1)
 
@@ -61,8 +60,7 @@ class Pkg(ConanFile):
 import os
 
 class Pkg(ConanFile):
-    options = {"shared": [True, False]}
-    default_options = "shared=False"
+    settings = "os", "compiler", "build_type", "arch"
 
     def build(self):
         assert("WindowsLibPath" not in os.environ)
@@ -72,7 +70,10 @@ class Pkg(ConanFile):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
                                            "lasote", "mychannel",
                                            visual_versions=[15],
+                                           archs=["x86"],
+                                           build_types=["Release"],
+                                           visual_runtimes=["MD"],
                                            exclude_vcvars_precommand=True,
-                                           reference="zlib/1.2.11")
+                                           reference="zlib/1.2.2")
         self.packager.add_common_builds()
         self.packager.run_builds(1, 1)
