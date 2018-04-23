@@ -12,7 +12,6 @@ class Pkg(ConanFile):
     version = "1.0"
     options = {"shared": [True, False]}
     default_options = "shared=False"
-    requires = "zlib/1.2.11@conan/stable"
 
 """
 
