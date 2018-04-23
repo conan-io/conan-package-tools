@@ -39,6 +39,7 @@ class AuthManager(object):
 
             self._data[None] = (unique_login, unique_password)
         else:
+            self.printer.print_message(str(os.environ))
             self._data[None] = (None, None)
 
     @staticmethod
@@ -98,7 +99,7 @@ class AuthManager(object):
         self.printer.print_message("Verifying credentials...")
         user, password = self.get_user_password(remote_name)
         self._conan_api.authenticate(user, password, remote_name)
-        self.printer.print_message("OK! '%s' user logged in '%s' " % (user, password))
+        self.printer.print_message("OK! '%s' user logged in '%s' " % (user, remote_name))
 
     def env_vars(self):
         ret = {}

@@ -51,7 +51,7 @@ class Printer(object):
         self.print_rule(char="_")
 
     def print_message(self, title, body=""):
-        self.printer("\n >> %s\n" % title.upper())
+        self.printer("\n >> %s\n" % title)
         if body:
             self.printer("   >> %s\n" % body)
 

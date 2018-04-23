@@ -5,6 +5,29 @@ from conans import tools
 from conans.client.conan_api import ConanAPIV1
 from conans.test.utils.tools import TestBufferConanOutput
 
+PYPI_TESTING_REPO = os.getenv("PYPI_TESTING_REPO", "")
+PYPI_PASSWORD = os.getenv("PYPI_PASSWORD", None)
+
+
+CONAN_UPLOAD_URL = os.getenv("CONAN_UPLOAD_URL",
+                             "https://conan.jfrog.io/conan/api/conan/conan-testsuite")
+CONAN_PASSWORD_UPLOAD = os.getenv("CONAN_PASSWORD_UPLOAD", "")
+CONAN_LOGIN_UPLOAD = os.getenv("CONAN_LOGIN_UPLOAD", "")
+
+
+
+pypi_template = """
+[distutils]
+index-servers =
+   pypi_testing_conan
+
+[pypi_testing_conan]
+repository: %s
+username: python
+password: %s
+
+""" % (PYPI_TESTING_REPO, PYPI_PASSWORD)
+
 
 class BaseTest(unittest.TestCase):
 
@@ -18,6 +41,18 @@ class BaseTest(unittest.TestCase):
         os.environ.update({"CONAN_USER_HOME": self.conan_home, "CONAN_PIP_PACKAGE": "0"})
         self.output = TestBufferConanOutput()
         self.api, _, _ = ConanAPIV1.factory()
+
+    def deploy_pip(self):
+        if os.getenv("PYPI_PASSWORD", None):
+            conf_path = os.path.expanduser("~/.pypirc")
+            if not os.path.exists(conf_path):
+                tools.save(conf_path, pypi_template)
+            ret = os.system("cd %s && ls && python setup.py sdist upload -r pypi_testing_conan" % self.old_folder)
+            if ret != 0:
+                raise Exception("Failed publishing conan package tools")
+            self.output.write("Deployed pip package")
+        else:
+            raise Exception("Skipped deploy of pip package!")
 
     def tearDown(self):
         os.chdir(self.old_folder)

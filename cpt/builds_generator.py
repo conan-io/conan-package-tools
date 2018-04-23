@@ -62,7 +62,7 @@ class BuildGenerator(object):
 
         if self._gcc_versions and not self._allow_gcc_minors:
             for a_version in self._gcc_versions:
-                if Version(a_version) >= Version("5") and "." in a_version:
+                if Version(str(a_version)) >= Version("5") and "." in str(a_version):
                     raise Exception("""
 ******************* DEPRECATED GCC MINOR VERSIONS! ***************************************
 

@@ -10,7 +10,7 @@ from cpt import __version__ as package_tools_version
 from cpt.printer import Printer
 
 
-class TestPackageRunner(object):
+class CreateRunner(object):
 
     def __init__(self, profile_text, reference, conan_api, uploader,
                  args=None, conan_pip_package=None, exclude_vcvars_precommand=False,
@@ -83,15 +83,15 @@ class TestPackageRunner(object):
                 self._uploader.upload_packages(self._reference)
 
 
-class DockerTestPackageRunner(TestPackageRunner):
+class DockerCreateRunner(CreateRunner):
     def __init__(self, profile_text, reference, conan_api, uploader, runner=None,
                  args=None, conan_pip_package=None, docker_image=None, sudo_docker_command=True,
                  docker_image_skip_update=False, build_policy=None,
                  always_update_conan_in_docker=False):
 
-        super(DockerTestPackageRunner, self).__init__(profile_text, reference, conan_api, uploader,
-                                                      args=args, conan_pip_package=conan_pip_package,
-                                                      build_policy=build_policy, runner=runner)
+        super(DockerCreateRunner, self).__init__(profile_text, reference, conan_api, uploader,
+                                                 args=args, conan_pip_package=conan_pip_package,
+                                                 build_policy=build_policy, runner=runner)
 
         self._docker_image = docker_image
         self._always_update_conan_in_docker = always_update_conan_in_docker
@@ -99,12 +99,14 @@ class DockerTestPackageRunner(TestPackageRunner):
         self._sudo_docker_command = sudo_docker_command
 
     def pip_update_conan_command(self):
-        command = "sudo pip install conan_package_tools==%s --upgrade" % package_tools_version
-        if self._conan_pip_package:
-            command += " && sudo pip install %s" % self._conan_pip_package
+        if not self._conan_pip_package:
+            command = "sudo pip install conan_package_tools==%s --upgrade" % package_tools_version
         else:
-            command += " && sudo pip install conan --upgrade"
+            command = "sudo pip install %s" % self._conan_pip_package
 
+        command += " && sudo pip install conan --upgrade"
+
+        self.printer.print_command(command)
         return command
 
     def run(self, pull_image=True, docker_entry_script=None):
@@ -113,8 +115,8 @@ class DockerTestPackageRunner(TestPackageRunner):
             if not self._docker_image_skip_update and not self._always_update_conan_in_docker:
                 # Update the downloaded image
                 with self.printer.foldable_output("update conan"):
-                    command = '%s docker run --name ' \
-                              'conan_runner %s /bin/sh -c "%s"' % (self._sudo_docker_command,
+                    command = '%s docker run --name conan_runner ' \
+                              ' %s /bin/sh -c "%s"' % (self._sudo_docker_command,
                                                                    self._docker_image,
                                                                    self.pip_update_conan_command())
                     self._runner(command)
@@ -156,11 +158,13 @@ class DockerTestPackageRunner(TestPackageRunner):
             self._runner("%s docker pull %s" % (self._sudo_docker_command, self._docker_image))
 
     def get_env_vars(self):
-        ret = {key: value for key, value in os.environ.items() if key.startswith("CONAN_")}
+        ret = {key: value for key, value in os.environ.items() if key.startswith("CONAN_") and
+               key != "CONAN_USER_HOME"}
         ret["CPT_ARGS"] = escape_env(self._args)
         ret["CONAN_REFERENCE"] = self._reference
         ret["CPT_PROFILE"] = escape_env(self._profile_text)
-        ret["CPT_PIP_PACKAGE"] = escape_env(self._conan_pip_package)
+        ret["CONAN_USERNAME"] = escape_env(self._reference.user)
+
         ret["CPT_BUILD_POLICY"] = escape_env(self._build_policy)
 
         return ret

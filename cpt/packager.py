@@ -14,7 +14,7 @@ from cpt.printer import Printer
 from cpt.remotes import RemotesManager
 from cpt.tools import get_bool_from_env
 from cpt.builds_generator import BuildConf, BuildGenerator
-from cpt.runner import TestPackageRunner, DockerTestPackageRunner
+from cpt.runner import CreateRunner, DockerCreateRunner
 from conans.client.conan_api import Conan
 from conans.client.runner import ConanRunner
 from conans.model.ref import ConanFileReference
@@ -372,31 +372,31 @@ class ConanMultiPackager(object):
                 elif platform.system() == "Linux":
                     sudo_command = "sudo"
 
-                build_runner = DockerTestPackageRunner(profile, build.reference, self.conan_api,
-                                                       self.uploader,
-                                                       args=self.args,
-                                                       conan_pip_package=self.conan_pip_package,
-                                                       build_policy=self.build_policy,
-                                                       runner=self.runner,
-                                                       docker_image=docker_image,
-                                                       docker_image_skip_update=self._docker_image_skip_update,
-                                                       sudo_docker_command=sudo_command,
-                                                       always_update_conan_in_docker=self._always_update_conan_in_docker)
+                build_runner = DockerCreateRunner(profile, build.reference, self.conan_api,
+                                                  self.uploader,
+                                                  args=self.args,
+                                                  conan_pip_package=self.conan_pip_package,
+                                                  build_policy=self.build_policy,
+                                                  runner=self.runner,
+                                                  docker_image=docker_image,
+                                                  docker_image_skip_update=self._docker_image_skip_update,
+                                                  sudo_docker_command=sudo_command,
+                                                  always_update_conan_in_docker=self._always_update_conan_in_docker)
 
                 build_runner.run(pull_image=not pulled_docker_images[build_runner._docker_image],
                                  docker_entry_script=self.docker_entry_script)
                 pulled_docker_images[build_runner._docker_image] = True
             else:
                 profile = self._get_profile(build, profile_name)
-                build_runner = TestPackageRunner(profile, build.reference, self.conan_api,
-                                                 self.uploader,
-                                                 args=self.args,
-                                                 conan_pip_package=self.conan_pip_package,
-                                                 exclude_vcvars_precommand=self.exclude_vcvars_precommand,
-                                                 build_policy=self.build_policy,
-                                                 runner=self.runner,
-                                                 abs_folder=abs_folder,
-                                                 printer=self.printer)
+                build_runner = CreateRunner(profile, build.reference, self.conan_api,
+                                            self.uploader,
+                                            args=self.args,
+                                            conan_pip_package=self.conan_pip_package,
+                                            exclude_vcvars_precommand=self.exclude_vcvars_precommand,
+                                            build_policy=self.build_policy,
+                                            runner=self.runner,
+                                            abs_folder=abs_folder,
+                                            printer=self.printer)
                 build_runner.run()
 
     def _get_docker_image(self, build):
