@@ -1,4 +1,5 @@
-
+import unittest
+import sys
 
 from cpt import __version__ as version
 
@@ -10,7 +11,7 @@ from cpt.packager import ConanMultiPackager
 
 class DockerTest(BaseTest):
 
-    #@unittest.skipUnless(sys.platform.startswith("linux"), "Requires Linux")
+    @unittest.skipUnless(sys.platform.startswith("linux"), "Requires Linux")
     def test_docker(self):
         self.deploy_pip()
 
