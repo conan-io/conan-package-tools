@@ -1,6 +1,7 @@
 import sys
 from tabulate import tabulate
 from contextlib import contextmanager
+from cpt import __version__ as version
 
 
 class Printer(object):
@@ -21,6 +22,7 @@ class Printer(object):
 
     """
         self.printer(text)
+        self.printer("\nVersion: %s" % version)
 
     @contextmanager
     def foldable_output(self, name):

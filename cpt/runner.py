@@ -99,11 +99,10 @@ class DockerCreateRunner(CreateRunner):
         self._sudo_docker_command = sudo_docker_command
 
     def pip_update_conan_command(self):
-        if not self._conan_pip_package:
-            command = "sudo pip install conan_package_tools==%s --upgrade" % package_tools_version
-        else:
-            command = "sudo pip install %s" % self._conan_pip_package
 
+        command = "sudo pip install conan_package_tools==%s --upgrade" % package_tools_version
+        if self._conan_pip_package:
+            command += " && sudo pip install %s" % self._conan_pip_package
         command += " && sudo pip install conan --upgrade"
 
         self.printer.print_command(command)
@@ -117,8 +116,8 @@ class DockerCreateRunner(CreateRunner):
                 with self.printer.foldable_output("update conan"):
                     command = '%s docker run --name conan_runner ' \
                               ' %s /bin/sh -c "%s"' % (self._sudo_docker_command,
-                                                                   self._docker_image,
-                                                                   self.pip_update_conan_command())
+                                                       self._docker_image,
+                                                       self.pip_update_conan_command())
                     self._runner(command)
                     # Save the image with the updated installed
                     # packages and remove the intermediate container
