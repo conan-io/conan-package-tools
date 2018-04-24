@@ -2,6 +2,7 @@ import unittest
 import sys
 
 from conans.client.conan_api import ConanAPIV1
+from conans.model.ref import ConanFileReference
 
 from cpt import __version__ as version
 
@@ -42,16 +43,15 @@ class Pkg(ConanFile):
             self.packager.add_common_builds()
             self.packager.run()
 
-        self.api.remote_add("upload_testing", CONAN_UPLOAD_URL)
-
         # Remove from remote
-        self.assertEquals(len(self.api.search_recipes("zlib*", remote="upload_testing")), 1)
-        self.assertEquals(len(self.api.search_packages("zlib/1.2.2@lasote/testing",
-                                                  remote="upload_testing")), 2)
+        self.assertEquals(len(self.api.search_recipes("zlib*", remote="upload_repo")), 1)
+        packages = self.api.search_packages(ConanFileReference.loads("zlib/1.2.2@lasote/mychannel"),
+                                                       remote="upload_repo")[0]
+        self.assertEquals(len(packages), 2)
 
         self.api.authenticate(name=CONAN_LOGIN_UPLOAD, password=CONAN_UPLOAD_PASSWORD,
-                         remote="upload_testing")
-        self.api.remove("zlib*", remote="upload_testing", force=True)
+                         remote="upload_repo")
+        self.api.remove("zlib*", remote="upload_repo", force=True)
         self.assertEquals(self.api.search_recipes("zlib*"), [])
 
         # Try upload only when stable, shouldn't upload anything
@@ -61,7 +61,7 @@ class Pkg(ConanFile):
                                        "CONAN_USERNAME": "lasote",
                                        "CONAN_UPLOAD": CONAN_UPLOAD_URL,
                                        "CONAN_PASSWORD": CONAN_UPLOAD_PASSWORD,
-                                       "CONAN_UPLOAD_ONLY_WHEN_STABLE": 1}):
+                                       "CONAN_UPLOAD_ONLY_WHEN_STABLE": "1"}):
             self.packager = ConanMultiPackager("--build missing -r conan.io",
                                                channel="mychannel",
                                                gcc_versions=["6"],
@@ -71,4 +71,4 @@ class Pkg(ConanFile):
             self.packager.add_common_builds()
             self.packager.run()
 
-        self.assertEquals(len(api.search_recipes("zlib*", remote="upload_testing")), 0)
+        self.assertEquals(len(self.api.search_recipes("zlib*", remote="upload_repo")), 0)

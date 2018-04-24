@@ -5,7 +5,8 @@ from conans import tools
 from conans.client.conan_api import ConanAPIV1
 from conans.test.utils.tools import TestBufferConanOutput
 
-PYPI_TESTING_REPO = os.getenv("PYPI_TESTING_REPO", "")
+PYPI_TESTING_REPO = os.getenv("PYPI_TESTING_REPO",
+                              "https://conan.jfrog.io/conan/api/pypi/pypi_testing_conan")
 PYPI_PASSWORD = os.getenv("PYPI_PASSWORD", None)
 
 
