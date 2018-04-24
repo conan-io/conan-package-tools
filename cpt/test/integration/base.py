@@ -59,4 +59,5 @@ class BaseTest(unittest.TestCase):
         os.environ.update(self.old_env)
 
     def save_conanfile(self, conanfile):
+        os.chmod(self.tmp_folder, 777)
         tools.save(os.path.join(self.tmp_folder, "conanfile.py"), conanfile)
