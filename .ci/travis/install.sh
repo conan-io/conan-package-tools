@@ -45,5 +45,5 @@ else
     sudo apt-get install gcc-multilib g++-multilib
 fi
 
-pip install -r conan/requirements.txt
-pip install -r conan/requirements_test.txt
+pip install -r cpt/requirements.txt
+pip install -r cpt/requirements_test.txt
