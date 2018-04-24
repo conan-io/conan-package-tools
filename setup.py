@@ -25,14 +25,14 @@ def get_requires(filename):
 def load_version():
     """Loads a file content"""
     filename = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                            "conan", "__init__.py"))
+                                            "cpt", "__init__.py"))
     with open(filename, "rt") as version_file:
         conan_init = version_file.read()
         version = re.search("__version__ = '([0-9a-z.-]+)'", conan_init).group(1)
         return version
 
 
-project_requirements = get_requires("conan/requirements.txt")
+project_requirements = get_requires("cpt/requirements.txt")
 
 setup(
     name='conan_package_tools',
@@ -93,7 +93,7 @@ setup(
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
     package_data={
-        'conan': ['*.txt'],
+        'cpt': ['*.txt'],
     },
 
     # Although 'package_data' is the preferred approach, in some case you may
@@ -107,7 +107,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'run_create_in_docker=conan.run_in_docker:run',
+            'run_create_in_docker=cpt.run_in_docker:run',
         ],
     },
 )

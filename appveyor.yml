@@ -1,7 +1,10 @@
 environment:
   matrix:
     - PYTHON: "C:\\Python27"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
     - PYTHON: "C:\\Python35"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+
 build: false
 install:
   - .ci/appveyor/install.bat
