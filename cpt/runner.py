@@ -103,14 +103,19 @@ class DockerCreateRunner(CreateRunner):
         self._sudo_docker_command = sudo_docker_command
 
     def pip_update_conan_command(self):
+        commands = []
+        if "conan-package-tools" not in self._conan_pip_package:
+            commands.append("%s pip install conan_package_tools==%s "
+                            "--upgrade --no-cache" % (self._sudo_docker_command,
+                                                      package_tools_version))
 
-        command = "%s pip install conan_package_tools==%s --upgrade --no-cache" % (self._sudo_docker_command,
-                                                                        package_tools_version)
         if self._conan_pip_package:
-            command += " && %s pip install %s --no-cache" % (self._sudo_docker_command, self._conan_pip_package)
+            commands.append("%s pip install %s --no-cache" % (self._sudo_docker_command,
+                                                              self._conan_pip_package))
         else:
-            command += " && %s pip install conan --upgrade --no-cache" % self._sudo_docker_command
+            commands.append("%s pip install conan --upgrade --no-cache" % self._sudo_docker_command)
 
+        command = "&& ".join(commands)
         self.printer.print_command(command)
         return command
 
