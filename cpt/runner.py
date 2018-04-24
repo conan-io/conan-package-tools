@@ -138,8 +138,8 @@ class DockerCreateRunner(CreateRunner):
             update_command = self.pip_update_conan_command() + " && "
         else:
             update_command = ""
-        command = ("%s docker run --rm -v%s:/home/conan/project %s %s /bin/sh "
-                   "-c \"chown \$(id -un) project && cd project && "
+        command = ("%s docker run --rm -v%s:/home/conan/project:ro %s %s /bin/sh "
+                   "-c \"cd project && "
                    "%s run_create_in_docker \"" % (self._sudo_docker_command, os.getcwd(),
                                                    env_vars_text, self._docker_image,
                                                    update_command))
@@ -164,6 +164,7 @@ class DockerCreateRunner(CreateRunner):
         ret["CONAN_REFERENCE"] = self._reference
         ret["CPT_PROFILE"] = escape_env(self._profile_text)
         ret["CONAN_USERNAME"] = escape_env(self._reference.user)
+        ret["CONAN_TEMP_TEST_FOLDER"] = "1"  # test package folder to a temp one
 
         ret["CPT_BUILD_POLICY"] = escape_env(self._build_policy)
 

@@ -180,9 +180,18 @@ class AppTest(unittest.TestCase):
         self.packager.run_builds(1, 2)
         self.assertIn("docker pull lasote/conangcc43", self.runner.calls[0])
 
-        with tools.environment_append({"CONAN_DOCKER_USE_SUDO": "1"}):
-             self.packager.run_builds(1, 2)
-             self.assertIn("sudo docker run", self.runner.calls[-1])
+        for env_sudo in ["CONAN_DOCKER_USE_SUDO", "CONAN_USE_SUDO"]:
+            with tools.environment_append({env_sudo: "True"}):
+                self.packager = ConanMultiPackager("--build missing -r conan.io",
+                                                   "lasote", "mychannel",
+                                                   runner=self.runner,
+                                                   conan_api=self.conan_api,
+                                                   gcc_versions=["4.3", "5"],
+                                                   use_docker=True,
+                                                   reference="zlib/1.2.11")
+                self._add_build(1, "gcc", "4.3")
+                self.packager.run_builds(1, 2)
+                self.assertIn("sudo docker run", self.runner.calls[-1])
 
         # Next build from 4.3 is cached, not pulls are performed
         self.assertIn('os=os3', self.runner.calls[5])
