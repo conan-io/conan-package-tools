@@ -103,7 +103,8 @@ class DockerCreateRunner(CreateRunner):
         command = "sudo pip install conan_package_tools==%s --upgrade" % package_tools_version
         if self._conan_pip_package:
             command += " && sudo pip install %s" % self._conan_pip_package
-        command += " && sudo pip install conan --upgrade"
+        else:
+            command += " && sudo pip install conan --upgrade"
 
         self.printer.print_command(command)
         return command
@@ -130,14 +131,14 @@ class DockerCreateRunner(CreateRunner):
 
         # Run the build
         envs = self.get_env_vars()
-        env_vars_text = " " + " ".join(['-e %s="%s"' % (key, value)
+        env_vars_text = " ".join(['-e %s="%s"' % (key, value)
                                         for key, value in envs.items() if value])
 
         if self._always_update_conan_in_docker:
             update_command = self.pip_update_conan_command() + " && "
         else:
             update_command = ""
-        command = ("%s docker run --rm -v %s:/home/conan/project %s %s /bin/sh "
+        command = ("%s docker run --rm -v%s:/home/conan/project %s %s /bin/sh "
                    "-c \" cd project && "
                    "%s run_create_in_docker \"" % (self._sudo_docker_command, os.getcwd(),
                                                    env_vars_text, self._docker_image,
