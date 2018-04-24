@@ -325,7 +325,7 @@ class AppTest(unittest.TestCase):
         builder = ConanMultiPackager(username="Pepe", reference="zlib/1.2.11")
         named_builds = defaultdict(list)
         builder.add_common_builds(shared_option_name="zlib:shared", pure_c=True)
-        for settings, options, env_vars, build_requires in builder.builds:
+        for settings, options, env_vars, build_requires, _ in builder.items:
             named_builds[settings['arch']].append([settings, options, env_vars, build_requires])
         builder.named_builds = named_builds
 
@@ -397,7 +397,7 @@ class AppTest(unittest.TestCase):
                                          platform_info=platform_mock_for("Windows"),
                                          reference="lib/1.0@lasote/mychannel")
             builder.add_common_builds()
-            for settings, _, _, _ in builder.builds:
+            for settings, _, _, _, _ in builder.items:
                 self.assertEquals(settings["compiler"], "Visual Studio")
                 self.assertEquals(settings["compiler.version"], "10")
 
@@ -408,7 +408,7 @@ class AppTest(unittest.TestCase):
                                          platform_info=platform_mock_for("Windows"),
                                          reference="lib/1.0@lasote/mychannel")
             builder.add_common_builds()
-            for settings, _, _, _ in builder.builds:
+            for settings, _, _, _, _ in builder.items:
                 self.assertEquals(settings["compiler"], "gcc")
                 self.assertEquals(settings["compiler.version"], "4.9")
 

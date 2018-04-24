@@ -138,8 +138,8 @@ class DockerCreateRunner(CreateRunner):
             update_command = self.pip_update_conan_command() + " && "
         else:
             update_command = ""
-        command = ("%s docker run --rm -v%s:/home/conan/project %s %s /bin/sh "
-                   "-c \"pwd && ls && cd project && "
+        command = ("ls -la . && %s docker run --rm -v%s:/home/conan/project %s %s /bin/sh "
+                   "-c \"pwd && ls -la && cd project && "
                    "%s run_create_in_docker \"" % (self._sudo_docker_command, os.getcwd(),
                                                    env_vars_text, self._docker_image,
                                                    update_command))
