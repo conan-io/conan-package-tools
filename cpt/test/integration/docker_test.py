@@ -26,7 +26,8 @@ class Pkg(ConanFile):
 
 """
         self.save_conanfile(conanfile)
-        pip = "--extra-index-url %s/simple conan-package-tools==%s " % (PYPI_TESTING_REPO, version)
+        the_version = version.replace("-", ".")  # Canonical name for artifactory repo
+        pip = "--extra-index-url %s/simple conan-package-tools==%s " % (PYPI_TESTING_REPO, the_version)
         with tools.environment_append({"CONAN_USE_DOCKER": "1",
                                        "CONAN_PIP_PACKAGE": pip,
                                        "CONAN_LOGIN_USERNAME": CONAN_LOGIN_UPLOAD,

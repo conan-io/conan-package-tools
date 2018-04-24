@@ -124,15 +124,21 @@ class DockerCreateRunner(CreateRunner):
                               ' %s /bin/sh -c "%s"' % (self._sudo_docker_command,
                                                        self._docker_image,
                                                        self.pip_update_conan_command())
-                    self._runner(command)
+                    ret = self._runner(command)
+                    if ret != 0:
+                        raise Exception("Error updating the image: %s" % command)
                     # Save the image with the updated installed
                     # packages and remove the intermediate container
                     command = "%s docker commit conan_runner %s" % (self._sudo_docker_command,
                                                                     self._docker_image)
-                    self._runner(command)
+                    ret = self._runner(command)
+                    if ret != 0:
+                        raise Exception("Error commiting the image: %s" % command)
 
                     command = "%s docker rm conan_runner" % self._sudo_docker_command
-                    self._runner(command)
+                    ret = self._runner(command)
+                    if ret != 0:
+                        raise Exception("Error updating the image: %s" % command)
 
         # Run the build
         envs = self.get_env_vars()
@@ -160,7 +166,9 @@ class DockerCreateRunner(CreateRunner):
 
     def pull_image(self):
         with self.printer.foldable_output("docker pull"):
-            self._runner("%s docker pull %s" % (self._sudo_docker_command, self._docker_image))
+            ret = self._runner("%s docker pull %s" % (self._sudo_docker_command, self._docker_image))
+            if ret != 0:
+                raise Exception("Error pulling the image: %s" % self._docker_image)
 
     def get_env_vars(self):
         ret = {key: value for key, value in os.environ.items() if key.startswith("CONAN_") and
