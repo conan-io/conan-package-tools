@@ -16,7 +16,6 @@ class DockerTest(BaseTest):
     @unittest.skipUnless(sys.platform.startswith("linux"), "Requires Linux")
     def test_docker(self):
         self.deploy_pip()
-        api, _, _ = ConanAPIV1.factory()
 
         conanfile = """from conans import ConanFile
 import os
@@ -43,17 +42,17 @@ class Pkg(ConanFile):
             self.packager.add_common_builds()
             self.packager.run()
 
-        api.remote_add("upload_testing", CONAN_UPLOAD_URL)
+        self.api.remote_add("upload_testing", CONAN_UPLOAD_URL)
 
         # Remove from remote
-        self.assertEquals(len(api.search_recipes("zlib*", remote="upload_testing")), 1)
-        self.assertEquals(len(api.search_packages("zlib/1.2.2@lasote/testing",
+        self.assertEquals(len(self.api.search_recipes("zlib*", remote="upload_testing")), 1)
+        self.assertEquals(len(self.api.search_packages("zlib/1.2.2@lasote/testing",
                                                   remote="upload_testing")), 2)
 
-        api.authenticate(name=CONAN_LOGIN_UPLOAD, password=CONAN_UPLOAD_PASSWORD,
+        self.api.authenticate(name=CONAN_LOGIN_UPLOAD, password=CONAN_UPLOAD_PASSWORD,
                          remote="upload_testing")
-        api.remove("zlib*", remote="upload_testing", force=True)
-        self.assertEquals(api.search_recipes("zlib*"), [])
+        self.api.remove("zlib*", remote="upload_testing", force=True)
+        self.assertEquals(self.api.search_recipes("zlib*"), [])
 
         # Try upload only when stable, shouldn't upload anything
         with tools.environment_append({"CONAN_USE_DOCKER": "1",

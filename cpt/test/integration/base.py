@@ -40,7 +40,8 @@ class BaseTest(unittest.TestCase):
         self.old_env = dict(os.environ)
         os.environ.update({"CONAN_USER_HOME": self.conan_home, "CONAN_PIP_PACKAGE": "0"})
         self.output = TestBufferConanOutput()
-        self.api, _, _ = ConanAPIV1.factory()
+        self.api, self.client_cache, _ = ConanAPIV1.factory()
+        print("Testing with Conan Folder=%s" % conan_folder)
 
     def deploy_pip(self):
         if os.getenv("PYPI_PASSWORD", None):
