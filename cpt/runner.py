@@ -117,8 +117,8 @@ class DockerCreateRunner(CreateRunner):
                 with self.printer.foldable_output("update conan"):
                     command = '%s docker run --name conan_runner ' \
                               ' %s /bin/sh -c "%s"' % (self._sudo_docker_command,
-                                                                        self._docker_image,
-                                                                        self.pip_update_conan_command())
+                                                       self._docker_image,
+                                                       self.pip_update_conan_command())
                     self._runner(command)
                     # Save the image with the updated installed
                     # packages and remove the intermediate container
