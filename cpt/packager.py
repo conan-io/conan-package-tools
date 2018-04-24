@@ -166,7 +166,7 @@ class ConanMultiPackager(object):
         elif "CONAN_USE_SUDO" in os.environ:
             if get_bool_from_env("CONAN_USE_SUDO"):
                 self.sudo_command = "sudo"
-        elif platform.system() == "Linux":
+        elif platform.system() != "Windows":
             self.sudo_command = "sudo"
 
         self.exclude_vcvars_precommand = exclude_vcvars_precommand or os.getenv("CONAN_EXCLUDE_VCVARS_PRECOMMAND", False)
@@ -382,7 +382,8 @@ class ConanMultiPackager(object):
                                                   docker_image=docker_image,
                                                   docker_image_skip_update=self._docker_image_skip_update,
                                                   sudo_docker_command=self.sudo_command,
-                                                  always_update_conan_in_docker=self._always_update_conan_in_docker)
+                                                  always_update_conan_in_docker=self._always_update_conan_in_docker,
+                                                  upload=self._upload_enabled())
 
                 build_runner.run(pull_image=not pulled_docker_images[build_runner._docker_image],
                                  docker_entry_script=self.docker_entry_script)
@@ -397,7 +398,8 @@ class ConanMultiPackager(object):
                                             build_policy=self.build_policy,
                                             runner=self.runner,
                                             abs_folder=abs_folder,
-                                            printer=self.printer)
+                                            printer=self.printer,
+                                            upload=self._upload_enabled())
                 build_runner.run()
 
     def _get_docker_image(self, build):

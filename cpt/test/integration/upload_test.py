@@ -32,6 +32,7 @@ class Pkg(ConanFile):
         mp.run()
         self.assertIn("Upload skipped, credentials for remote 'my_upload_remote' "
                       "not available", self.output)
+        self.assertNotIn("Uploading packages", self.output)
 
     def test_no_credentials_only_url(self):
         self.save_conanfile(self.conanfile)
@@ -41,6 +42,7 @@ class Pkg(ConanFile):
         mp.run()
         self.assertIn("Upload skipped, credentials for remote 'my_upload_remote' "
                       "not available", self.output)
+        self.assertNotIn("Uploading packages", self.output)
 
     def test_no_credentials_only_url(self):
         self.save_conanfile(self.conanfile)

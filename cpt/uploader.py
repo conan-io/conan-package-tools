@@ -8,7 +8,7 @@ class Uploader(object):
         self.auth_manager = auth_manager
         self.printer = printer
 
-    def upload_packages(self, reference):
+    def upload_packages(self, reference, upload):
         remote_name = self.remote_manager.upload_remote_name
         if not remote_name:
             self.printer.print_message("Upload skipped, not upload remote available")
@@ -17,6 +17,7 @@ class Uploader(object):
             self.printer.print_message("Upload skipped, credentials for remote '%s' not available" % remote_name)
             return
 
-        self.printer.print_message("Uploading packages for '%s'" % str(reference))
-        self.auth_manager.login(remote_name)
-        self.conan_api.upload(str(reference), all_packages=True, remote=remote_name)
+        if upload:
+            self.printer.print_message("Uploading packages for '%s'" % str(reference))
+            self.auth_manager.login(remote_name)
+            self.conan_api.upload(str(reference), all_packages=True, remote=remote_name)

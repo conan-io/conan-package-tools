@@ -14,7 +14,8 @@ class CreateRunner(object):
 
     def __init__(self, profile_text, reference, conan_api, uploader,
                  args=None, conan_pip_package=None, exclude_vcvars_precommand=False,
-                 build_policy=None, runner=None, abs_folder=None, printer=None):
+                 build_policy=None, runner=None, abs_folder=None, printer=None,
+                 upload=False):
 
         self.printer = printer or Printer()
         self._abs_folder = abs_folder or os.getcwd()
@@ -28,6 +29,7 @@ class CreateRunner(object):
         self._exclude_vcvars_precommand = exclude_vcvars_precommand
         self._build_policy = build_policy
         self._runner = PrintRunner(runner or os.system, self.printer)
+        self._upload = upload or os.getenv("CPT_UPLOAD_ENABLED", None)
 
         if "default" in self._profile_text:  # User didn't specified a custom profile
             default_profile_name = os.path.basename(self._client_cache.default_profile_path)
@@ -80,18 +82,20 @@ class CreateRunner(object):
                                        build_modes=self._build_policy,
                                        profile_name=self._abs_profile_path)
 
-                self._uploader.upload_packages(self._reference)
+                self._uploader.upload_packages(self._reference, self._upload)
 
 
 class DockerCreateRunner(CreateRunner):
     def __init__(self, profile_text, reference, conan_api, uploader, runner=None,
                  args=None, conan_pip_package=None, docker_image=None, sudo_docker_command=True,
                  docker_image_skip_update=False, build_policy=None,
-                 always_update_conan_in_docker=False):
+                 always_update_conan_in_docker=False,
+                 upload=False):
 
         super(DockerCreateRunner, self).__init__(profile_text, reference, conan_api, uploader,
                                                  args=args, conan_pip_package=conan_pip_package,
-                                                 build_policy=build_policy, runner=runner)
+                                                 build_policy=build_policy, runner=runner,
+                                                 upload=upload)
 
         self._docker_image = docker_image
         self._always_update_conan_in_docker = always_update_conan_in_docker
@@ -100,7 +104,8 @@ class DockerCreateRunner(CreateRunner):
 
     def pip_update_conan_command(self):
 
-        command = "%s pip install conan_package_tools==%s --upgrade" % (self._sudo_docker_command, package_tools_version)
+        command = "%s pip install conan_package_tools==%s --upgrade" % (self._sudo_docker_command,
+                                                                        package_tools_version)
         if self._conan_pip_package:
             command += " && %s pip install %s" % (self._sudo_docker_command, self._conan_pip_package)
         else:
@@ -165,7 +170,7 @@ class DockerCreateRunner(CreateRunner):
         ret["CPT_PROFILE"] = escape_env(self._profile_text)
         ret["CONAN_USERNAME"] = escape_env(self._reference.user)
         ret["CONAN_TEMP_TEST_FOLDER"] = "1"  # test package folder to a temp one
-
+        ret["CPT_UPLOAD_ENABLED"] = self._upload
         ret["CPT_BUILD_POLICY"] = escape_env(self._build_policy)
 
         return ret
