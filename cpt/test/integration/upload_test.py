@@ -55,6 +55,17 @@ class Pkg(ConanFile):
     def test_no_credentials_only_url_skip_check(self):
         self.save_conanfile(self.conanfile)
         with tools.environment_append({"CONAN_PASSWORD": "mypass",
+                                       "CONAN_UPLOAD_ONLY_WHEN_STABLE": "1"}):
+            mp = ConanMultiPackager(username="lasote", out=self.output.write,
+                                    channel="my_channel",
+                                    upload="https://api.bintray.com/conan/conan-community/conan")
+            mp.add({}, {}, {})
+            mp.run()
+            self.assertIn("Skipping upload, not stable channel", self.output)
+
+    def test_upload_only_stable(self):
+        self.save_conanfile(self.conanfile)
+        with tools.environment_append({"CONAN_PASSWORD": "mypass",
                                        "CONAN_SKIP_CHECK_CREDENTIALS": "1"}):
             mp = ConanMultiPackager(username="lasote", out=self.output.write,
                                     upload="https://api.bintray.com/conan/conan-community/conan")

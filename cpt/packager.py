@@ -71,7 +71,7 @@ class ConanMultiPackager(object):
                  upload_retry=None,
                  clang_versions=None,
                  login_username=None,
-                 upload_only_when_stable=False,
+                 upload_only_when_stable=None,
                  build_types=None,
                  skip_check_credentials=False,
                  allow_gcc_minors=False,
@@ -178,8 +178,11 @@ class ConanMultiPackager(object):
         # Upload related variables
         self.upload_retry = upload_retry or os.getenv("CONAN_UPLOAD_RETRY", 3)
 
-        self.upload_only_when_stable = upload_only_when_stable or \
-                                       os.getenv("CONAN_UPLOAD_ONLY_WHEN_STABLE", False)
+        if upload_only_when_stable is not None:
+            self.upload_only_when_stable = upload_only_when_stable
+        else:
+            self.upload_only_when_stable = get_bool_from_env("CONAN_UPLOAD_ONLY_WHEN_STABLE")
+
         self.skip_check_credentials = skip_check_credentials or \
                                       os.getenv("CONAN_SKIP_CHECK_CREDENTIALS", False)
 

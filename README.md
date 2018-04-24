@@ -919,7 +919,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **total_pages**: Total number of pages
 - **vs10_x86_64_enabled**: Flag indicating whether or not to build for VS10 64bits. Default [False]
 - **upload_retry**: Num retries in upload in case of failure.             
-- **upload_only_when_stable**: Will try to upload only if the channel is the stable channel
+- **upload_only_when_stable**: Will try to upload only if the channel is the stable channel. Default [False]
 - **build_types**: List containing specific build types. Default ["Release", "Debug"]
 - **skip_check_credentials**: Conan will check the user credentials before building the packages. Default [False]
 - **allow_gcc_minors** Declare this variable if you want to allow gcc >=5 versions with the minor (5.1, 6.3 etc).
