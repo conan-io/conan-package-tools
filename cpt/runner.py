@@ -138,11 +138,10 @@ class DockerCreateRunner(CreateRunner):
             update_command = self.pip_update_conan_command() + " && "
         else:
             update_command = ""
-        command = ("%s docker run --rm -v%s:/home/conan/project:ro %s %s /bin/sh "
-                   "-c \"cd project && "
-                   "%s run_create_in_docker \"" % (self._sudo_docker_command, os.getcwd(),
-                                                   env_vars_text, self._docker_image,
-                                                   update_command))
+        command = ("%s docker run --rm -v%s:/home/conan/:ro %s %s /bin/sh "
+                   "-c \"%s run_create_in_docker \"" % (self._sudo_docker_command, os.getcwd(),
+                                                        env_vars_text, self._docker_image,
+                                                        update_command))
 
         # Push entry command before to build
         if docker_entry_script:
