@@ -33,6 +33,7 @@ class BaseTest(unittest.TestCase):
     def setUp(self):
         self.old_folder = os.getcwd()
         self.tmp_folder = tools.mkdir_tmp()
+        os.chmod(self.tmp_folder, 0o777)
         self.conan_home = self.tmp_folder
         os.chdir(self.tmp_folder)
         # user_home = "c:/tmp/home"  # Cache
@@ -59,5 +60,4 @@ class BaseTest(unittest.TestCase):
         os.environ.update(self.old_env)
 
     def save_conanfile(self, conanfile):
-        os.chmod(self.tmp_folder, 0o777)
         tools.save(os.path.join(self.tmp_folder, "conanfile.py"), conanfile)
