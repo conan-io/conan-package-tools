@@ -116,9 +116,9 @@ class DockerCreateRunner(CreateRunner):
                 # Update the downloaded image
                 with self.printer.foldable_output("update conan"):
                     command = '%s docker run --name conan_runner ' \
-                              ' %s /bin/sh -c "%s"' % (self._sudo_docker_command,
-                                                       self._docker_image,
-                                                       self.pip_update_conan_command())
+                              ' %s /bin/sh -c "%s && mkdir project"' % (self._sudo_docker_command,
+                                                                        self._docker_image,
+                                                                        self.pip_update_conan_command())
                     self._runner(command)
                     # Save the image with the updated installed
                     # packages and remove the intermediate container
@@ -138,10 +138,11 @@ class DockerCreateRunner(CreateRunner):
             update_command = self.pip_update_conan_command() + " && "
         else:
             update_command = ""
-        command = ("%s docker run --rm -v%s:/home/conan/:ro %s %s /bin/sh "
-                   "-c \"%s run_create_in_docker \"" % (self._sudo_docker_command, os.getcwd(),
-                                                        env_vars_text, self._docker_image,
-                                                        update_command))
+        command = ("%s docker run --rm -v%s:/home/conan/project:ro %s %s /bin/sh "
+                   "-c \"cd project && "
+                   "%s run_create_in_docker \"" % (self._sudo_docker_command, os.getcwd(),
+                                                   env_vars_text, self._docker_image,
+                                                   update_command))
 
         # Push entry command before to build
         if docker_entry_script:
