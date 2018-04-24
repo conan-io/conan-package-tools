@@ -139,7 +139,7 @@ class DockerCreateRunner(CreateRunner):
         else:
             update_command = ""
         command = ("%s docker run --rm -v%s:/home/conan/project %s %s /bin/sh "
-                   "-c \" cd project && "
+                   "-c \"pwd && ls && cd project && "
                    "%s run_create_in_docker \"" % (self._sudo_docker_command, os.getcwd(),
                                                    env_vars_text, self._docker_image,
                                                    update_command))

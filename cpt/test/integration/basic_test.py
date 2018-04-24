@@ -77,3 +77,36 @@ class Pkg(ConanFile):
                                            reference="zlib/1.2.2")
         self.packager.add_common_builds()
         self.packager.run_builds(1, 1)
+
+    def test_shared_option_auto_managed(self):
+        conanfile = """from conans import ConanFile
+
+class Pkg(ConanFile):
+    name = "lib"
+    version = "1.0"
+    settings = "os", "compiler", "build_type", "arch"
+    options = {"shared": [True, False]}
+
+"""
+        self.save_conanfile(conanfile)
+        self.packager = ConanMultiPackager(username="lasote")
+        self.packager.add_common_builds()
+        self.assertIn("lib:shared", self.packager.items[0].options)
+
+        # Even without name and version but reference
+        conanfile = """from conans import ConanFile
+
+class Pkg(ConanFile):
+    settings = "os", "compiler", "build_type", "arch"
+    options = {"shared": [True, False]}
+
+
+"""
+        self.save_conanfile(conanfile)
+        self.packager = ConanMultiPackager(username="lasote", reference="lib2/1.0")
+        self.packager.add_common_builds()
+        self.assertIn("lib2:shared", self.packager.items[0].options)
+
+        self.packager = ConanMultiPackager(username="lasote", reference="lib2/1.0")
+        self.packager.add_common_builds(shared_option_name=False)
+        self.assertNotIn("lib2:shared", self.packager.items[0].options)

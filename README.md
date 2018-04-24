@@ -262,7 +262,8 @@ There are also two additional parameters of the ``add_common_builds``:
         del self.settings.compiler.libcxx
 ```
 
-- **shared_option_name**: If your conanfile.py have an option to specify **shared**/**static** packages, you can add new build combinations for static/shared packages.
+- **shared_option_name**: If your conanfile.py have an option **shared**, the generated builds will contain automatically the "True/False" combination for that option. 
+  Pass "False" to deactivate it or "lib_name:shared_option_name" to specify a custom option name, e.j: boost:my_shared``
 - **dll_with_static_runtime**: Will add also the combination of runtime MT with shared libraries.
 
 ```

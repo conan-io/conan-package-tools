@@ -271,6 +271,12 @@ class ConanMultiPackager(object):
     def add_common_builds(self, shared_option_name=None, pure_c=True,
                           dll_with_static_runtime=False, reference=None):
 
+        if shared_option_name is None:
+            if os.path.exists("conanfile.py"):
+                conanfile = load_conanfile_class("./conanfile.py")
+                if hasattr(conanfile, "options") and "shared" in conanfile.options:
+                    shared_option_name = "%s:shared" % self.reference.name
+
         tmp = self.build_generator.get_builds(pure_c, shared_option_name, dll_with_static_runtime,
                                               reference or self.reference)
 
