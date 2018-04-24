@@ -43,14 +43,15 @@ class Pkg(ConanFile):
             self.packager.add_common_builds()
             self.packager.run()
 
-        self.assertEquals(len(api.search_recipes("zlib*")), 1)
-        self.assertEquals(len(api.search_packages("zlib/1.2.2@lasote/testing")), 2)
-
         # Remove from remote
         try:
             api.remote_add("upload_testing", CONAN_UPLOAD_URL)
         except:
             pass
+
+        self.assertEquals(len(api.search_recipes("zlib*", remote="upload_testing")), 1)
+        self.assertEquals(len(api.search_packages("zlib/1.2.2@lasote/testing",
+                                                  remote="upload_testing")), 2)
 
         api.authenticate(name=CONAN_LOGIN_UPLOAD, password=CONAN_UPLOAD_PASSWORD,
                          remote="upload_testing")
@@ -74,4 +75,4 @@ class Pkg(ConanFile):
             self.packager.add_common_builds()
             self.packager.run()
 
-        self.assertEquals(len(api.search_recipes("zlib*")), 0)
+        self.assertEquals(len(api.search_recipes("zlib*", remote="upload_testing")), 0)
