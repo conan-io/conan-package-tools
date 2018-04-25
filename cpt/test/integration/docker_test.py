@@ -16,7 +16,7 @@ from cpt.test.unit.utils import MockCIManager
 
 class DockerTest(BaseTest):
 
-    # @unittest.skipUnless(sys.platform.startswith("linux"), "Requires Linux")
+    @unittest.skipUnless(sys.platform.startswith("linux"), "Requires Linux")
     def test_docker(self):
         self.deploy_pip()
         ci_manager = MockCIManager()
