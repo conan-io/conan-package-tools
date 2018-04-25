@@ -2,6 +2,7 @@ from conans.client import tools
 from conans.errors import ConanException
 from cpt.test.integration.base import BaseTest
 from cpt.packager import ConanMultiPackager
+from cpt.test.unit.utils import MockCIManager
 
 
 class UploadTest(BaseTest):
@@ -14,6 +15,7 @@ class Pkg(ConanFile):
     default_options = "shared=False"
 
 """
+    ci_manager = MockCIManager()
 
     def test_no_upload_remote(self):
 
@@ -26,6 +28,7 @@ class Pkg(ConanFile):
     def test_no_credentials(self):
         self.save_conanfile(self.conanfile)
         mp = ConanMultiPackager(username="lasote", out=self.output.write,
+                                ci_manager=self.ci_manager,
                                 upload=("https://api.bintray.com/conan/conan-community/conan",
                                         True, "my_upload_remote"))
         mp.add({}, {}, {})
@@ -37,6 +40,7 @@ class Pkg(ConanFile):
     def test_no_credentials_only_url(self):
         self.save_conanfile(self.conanfile)
         mp = ConanMultiPackager(username="lasote", out=self.output.write,
+                                ci_manager=self.ci_manager,
                                 upload="https://api.bintray.com/conan/conan-community/conan")
         mp.add({}, {}, {})
         mp.run()
@@ -48,6 +52,7 @@ class Pkg(ConanFile):
         self.save_conanfile(self.conanfile)
         with tools.environment_append({"CONAN_PASSWORD": "mypass"}):
             mp = ConanMultiPackager(username="lasote", out=self.output.write,
+                                    ci_manager=self.ci_manager,
                                     upload="https://api.bintray.com/conan/conan-community/conan")
             with self.assertRaisesRegexp(ConanException, "Wrong user or password"):
                 mp.run()
@@ -58,7 +63,8 @@ class Pkg(ConanFile):
                                        "CONAN_UPLOAD_ONLY_WHEN_STABLE": "1"}):
             mp = ConanMultiPackager(username="lasote", out=self.output.write,
                                     channel="my_channel",
-                                    upload="https://api.bintray.com/conan/conan-community/conan")
+                                    ci_manager=self.ci_manager,
+                                    upload="https://api.bintray.com/conan/conan-community/conan",)
             mp.add({}, {}, {})
             mp.run()
             self.assertIn("Skipping upload, not stable channel", self.output)
@@ -68,6 +74,7 @@ class Pkg(ConanFile):
         with tools.environment_append({"CONAN_PASSWORD": "mypass",
                                        "CONAN_SKIP_CHECK_CREDENTIALS": "1"}):
             mp = ConanMultiPackager(username="lasote", out=self.output.write,
+                                    ci_manager=self.ci_manager,
                                     upload="https://api.bintray.com/conan/conan-community/conan")
             mp.run()  # No builds to upload so no raises
 
@@ -76,6 +83,7 @@ class Pkg(ConanFile):
         self.save_conanfile(self.conanfile)
         with tools.environment_append({"CONAN_PASSWORD": "mypass"}):
             mp = ConanMultiPackager(username="lasote", out=self.output.write,
+                                    ci_manager=self.ci_manager,
                                     upload=["https://api.bintray.com/conan/conan-community/conan",
                                             False, "othername"])
             mp.add({}, {}, {})
