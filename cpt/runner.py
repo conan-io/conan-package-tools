@@ -89,7 +89,8 @@ class CreateRunner(object):
 
 
 class DockerCreateRunner(CreateRunner):
-    def __init__(self, profile_text, reference, conan_api, uploader, runner=None,
+    def __init__(self, profile_text, base_profile_text, base_profile_name, reference, conan_api,
+                 uploader, runner=None,
                  args=None, conan_pip_package=None, docker_image=None, sudo_docker_command=True,
                  sudo_pip_command=True,
                  docker_image_skip_update=False, build_policy=None,
@@ -106,6 +107,8 @@ class DockerCreateRunner(CreateRunner):
         self._docker_image_skip_update = docker_image_skip_update
         self._sudo_docker_command = sudo_docker_command
         self._sudo_pip_command = sudo_pip_command
+        self._base_profile_text = base_profile_text
+        self._base_profile_name = base_profile_name
 
     def pip_update_conan_command(self):
         commands = []
@@ -121,7 +124,7 @@ class DockerCreateRunner(CreateRunner):
         else:
             commands.append("%s pip install conan --upgrade --no-cache" % self._sudo_pip_command)
 
-        command = "&& ".join(commands)
+        command = " && ".join(commands)
         self.printer.print_command(command)
         return command
 
@@ -187,6 +190,8 @@ class DockerCreateRunner(CreateRunner):
         ret["CPT_ARGS"] = escape_env(self._args)
         ret["CONAN_REFERENCE"] = self._reference
         ret["CPT_PROFILE"] = escape_env(self._profile_text)
+        ret["CPT_BASE_PROFILE"] = escape_env(self._base_profile_text)
+        ret["CPT_BASE_PROFILE_NAME"] = escape_env(self._base_profile_name)
         ret["CONAN_USERNAME"] = escape_env(self._reference.user)
         ret["CONAN_TEMP_TEST_FOLDER"] = "1"  # test package folder to a temp one
         ret["CPT_UPLOAD_ENABLED"] = self._upload

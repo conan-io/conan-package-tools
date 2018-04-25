@@ -1,5 +1,6 @@
 import os
 
+from conans import tools
 from conans.client.conan_api import Conan
 from conans.model.ref import ConanFileReference
 from cpt.auth import AuthManager
@@ -26,6 +27,12 @@ def run():
     build_policy = unscape_env(os.getenv("CPT_BUILD_POLICY"))
     reference = ConanFileReference.loads(os.getenv("CONAN_REFERENCE"))
     conan_pip_package = unscape_env(os.getenv("CPT_PIP_PACKAGE"))
+
+    base_profile_text = unscape_env(os.getenv("CPT_BASE_PROFILE"))
+    if base_profile_text:
+        base_profile_name = unscape_env(os.getenv("CPT_BASE_PROFILE_NAME"))
+        tools.save(os.path.join(client_cache.profiles_path, base_profile_name),
+                   base_profile_text)
 
     runner = CreateRunner(profile_text, reference, conan_api, uploader,
                           args=args, conan_pip_package=conan_pip_package,

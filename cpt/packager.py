@@ -82,6 +82,7 @@ class ConanMultiPackager(object):
                  build_policy=None,
                  always_update_conan_in_docker=False,
                  conan_api=None,
+                 client_cache=None,
                  ci_manager=None,
                  out=None):
 
@@ -90,9 +91,10 @@ class ConanMultiPackager(object):
         self.printer.print_ascci_art()
 
         if not conan_api:
-            self.conan_api, _, _ = Conan.factory()
+            self.conan_api, self.client_cache, _ = Conan.factory()
         else:
             self.conan_api = conan_api
+            self.client_cache = client_cache
 
         self.ci_manager = ci_manager or CIManager(self.printer)
         self.remotes_manager = RemotesManager(self.conan_api, self.printer, remotes, upload)
@@ -373,12 +375,11 @@ class ConanMultiPackager(object):
         # FIXME: Remove in Conan 1.3, https://github.com/conan-io/conan/issues/2787
         abs_folder = os.path.realpath(os.getcwd())
         for build in self.builds_in_current_page:
-
+            base_profile_name = profile_name or os.getenv("CONAN_BASE_PROFILE")
+            profile, base_profile = self._get_profiles(build, base_profile_name)
             if self.use_docker:
-
-                profile = self._get_profile(build, profile_name)
                 docker_image = self._get_docker_image(build)
-                build_runner = DockerCreateRunner(profile, build.reference, self.conan_api,
+                build_runner = DockerCreateRunner(profile, base_profile, base_profile_name, build.reference, self.conan_api,
                                                   self.uploader,
                                                   args=self.args,
                                                   conan_pip_package=self.conan_pip_package,
@@ -395,7 +396,6 @@ class ConanMultiPackager(object):
                                  docker_entry_script=self.docker_entry_script)
                 pulled_docker_images[build_runner._docker_image] = True
             else:
-                profile = self._get_profile(build, profile_name)
                 build_runner = CreateRunner(profile, build.reference, self.conan_api,
                                             self.uploader,
                                             args=self.args,
@@ -459,13 +459,16 @@ class ConanMultiPackager(object):
 
         return specified_channel
 
-    def _get_profile(self, build_conf, base_profile_name):
-        profile_name = base_profile_name or os.getenv("CONAN_BASE_PROFILE")
-        if profile_name:
+    def _get_profiles(self, build_conf, base_profile_name):
+        base_profile_text = ""
+        if base_profile_name:
+            base_profile_path = os.path.join(self.client_cache.profiles_path,
+                                             base_profile_name)
+            base_profile_text = tools.load(base_profile_path)
             self.printer.print_message("**************************************************")
-            self.printer.print_message("Using specified default base profile: %s" % profile_name)
+            self.printer.print_message("Using specified default base profile: %s" % base_profile_name)
             self.printer.print_message("**************************************************")
-        profile_name = profile_name or "default"
+        base_profile_name = base_profile_name or "default"
         tmp = """
 include(%s)
 
@@ -492,8 +495,8 @@ include(%s)
                 br_lines += "\n"
             br_lines += "\n".join(brs)
 
-        profile_text = tmp % (profile_name, settings, options, env_vars, br_lines)
-        return profile_text
+        profile_text = tmp % (base_profile_name, settings, options, env_vars, br_lines)
+        return profile_text, base_profile_text
 
 
 if __name__ == "__main__":
