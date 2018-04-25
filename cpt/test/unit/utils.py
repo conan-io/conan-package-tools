@@ -81,3 +81,23 @@ class MockConanAPI(object):
             profile = self.get_profile_from_call(creates[create_index])
             assert("os%s" % index == profile.settings["os"])
 
+
+class MockCIManager(object):
+
+    def __init__(self, current_branch=None, build_policy=None, skip_builds=False, is_pull_request=False):
+        self._current_branch = current_branch
+        self._build_policy = build_policy
+        self._skip_builds = skip_builds
+        self._is_pr = is_pull_request
+
+    def get_commit_build_policy(self):
+        return self._build_policy
+
+    def skip_builds(self):
+        return self._skip_builds
+
+    def is_pull_request(self):
+        return self._is_pr
+
+    def get_branch(self):
+        return self._current_branch

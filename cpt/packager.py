@@ -82,6 +82,7 @@ class ConanMultiPackager(object):
                  build_policy=None,
                  always_update_conan_in_docker=False,
                  conan_api=None,
+                 ci_manager=None,
                  out=None):
 
         self.printer = Printer(out)
@@ -93,7 +94,7 @@ class ConanMultiPackager(object):
         else:
             self.conan_api = conan_api
 
-        self.ci_manager = CIManager(self.printer)
+        self.ci_manager = ci_manager or CIManager(self.printer)
         self.remotes_manager = RemotesManager(self.conan_api, self.printer, remotes, upload)
         self.username = username or os.getenv("CONAN_USERNAME", None)
 
@@ -129,9 +130,8 @@ class ConanMultiPackager(object):
                 name, version = self.partial_reference.split("/")
                 self.reference = ConanFileReference(name, version, self.username, self.channel)
         else:
-            print(os.getcwd())
             if not os.path.exists("conanfile.py"):
-                raise Exception("Conanfile not found")
+                raise Exception("Conanfile not found, specify a 'reference' parameter with name and version")
             conanfile = load_conanfile_class("./conanfile.py")
             name, version = conanfile.name, conanfile.version
             if not name or not version:
@@ -159,15 +159,17 @@ class ConanMultiPackager(object):
 
         self.build_policy = build_policy
 
-        self.sudo_command = ""
+        self.sudo_docker_command = ""
         if "CONAN_DOCKER_USE_SUDO" in os.environ:
-            if get_bool_from_env("CONAN_DOCKER_USE_SUDO"):
-                self.sudo_command = "sudo"
-        elif "CONAN_USE_SUDO" in os.environ:
-            if get_bool_from_env("CONAN_USE_SUDO"):
-                self.sudo_command = "sudo"
+            self.sudo_docker_command = "sudo" if get_bool_from_env("CONAN_DOCKER_USE_SUDO") else ""
         elif platform.system() != "Windows":
-            self.sudo_command = "sudo"
+            self.sudo_docker_command = "sudo"
+
+        self.sudo_pip_command = ""
+        if "CONAN_PIP_USE_SUDO" in os.environ:
+            self.sudo_pip_command = "sudo" if get_bool_from_env("CONAN_PIP_USE_SUDO") else ""
+        elif platform.system() != "Windows":
+            self.sudo_pip_command = "sudo"
 
         self.exclude_vcvars_precommand = exclude_vcvars_precommand or os.getenv("CONAN_EXCLUDE_VCVARS_PRECOMMAND", False)
         self._docker_image_skip_update = docker_image_skip_update or os.getenv("CONAN_DOCKER_IMAGE_SKIP_UPDATE", False)
@@ -309,9 +311,9 @@ class ConanMultiPackager(object):
             if not self.skip_check_credentials and self._upload_enabled():
                 self.remotes_manager.add_remotes_to_conan()
                 self.auth_manager.login(self.remotes_manager.upload_remote_name)
-            if self.conan_pip_package:
+            if self.conan_pip_package and not self.use_docker:
                 with self.printer.foldable_output("pip_update"):
-                    self.runner('%s pip install %s' % (self.sudo_command, self.conan_pip_package))
+                    self.runner('%s pip install %s' % (self.sudo_pip_command, self.conan_pip_package))
 
             self.run_builds(profile_name=profile_name)
 
@@ -384,7 +386,8 @@ class ConanMultiPackager(object):
                                                   runner=self.runner,
                                                   docker_image=docker_image,
                                                   docker_image_skip_update=self._docker_image_skip_update,
-                                                  sudo_docker_command=self.sudo_command,
+                                                  sudo_docker_command=self.sudo_docker_command,
+                                                  sudo_pip_command=self.sudo_pip_command,
                                                   always_update_conan_in_docker=self._always_update_conan_in_docker,
                                                   upload=self._upload_enabled())
 
@@ -436,16 +439,23 @@ class ConanMultiPackager(object):
         return "lasote/conan%s%s" % (compiler_name, compiler_version.replace(".", ""))
 
     def _get_channel(self, specified_channel, stable_channel):
+        if self.stable_branch_pattern:
+            stable_patterns = [self.stable_branch_pattern]
+        else:
+            stable_patterns = ["master$", "release*", "stable*"]
 
-        pattern = self.stable_branch_pattern or "master"
-        prog = re.compile(pattern)
         branch = self.ci_manager.get_branch()
         self.printer.print_message("Branch detected", branch)
 
-        if branch and prog.match(branch):
-            self.printer.print_message("Info", "Redefined channel by CI branch matching with '%s', "
-                                       "setting CONAN_CHANNEL to '%s'" % (pattern, stable_channel))
-            return stable_channel
+        for pattern in stable_patterns:
+            prog = re.compile(pattern)
+
+            if branch and prog.match(branch):
+                self.printer.print_message("Info",
+                                           "Redefined channel by CI branch matching with '%s', "
+                                           "setting CONAN_CHANNEL to '%s'" % (pattern,
+                                                                              stable_channel))
+                return stable_channel
 
         return specified_channel
 

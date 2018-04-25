@@ -1,6 +1,5 @@
 import os
 import platform
-import sys
 import unittest
 
 from collections import defaultdict
@@ -9,7 +8,7 @@ from cpt.builds_generator import BuildConf
 from cpt.packager import ConanMultiPackager
 from conans import tools
 from conans.model.ref import ConanFileReference
-from cpt.test.unit.utils import MockConanAPI, MockRunner
+from cpt.test.unit.utils import MockConanAPI, MockRunner, MockCIManager
 
 
 def platform_mock_for(so):
@@ -24,11 +23,13 @@ class AppTest(unittest.TestCase):
     def setUp(self):
         self.runner = MockRunner()
         self.conan_api = MockConanAPI()
+        self.ci_manager = MockCIManager()
         self.packager = ConanMultiPackager("--build missing -r conan.io",
                                            "lasote", "mychannel",
                                            runner=self.runner,
                                            conan_api=self.conan_api,
-                                           reference="lib/1.0")
+                                           reference="lib/1.0",
+                                           ci_manager=self.ci_manager)
         if "APPVEYOR" in os.environ:
             del os.environ["APPVEYOR"]
         if "TRAVIS" in os.environ:
@@ -108,7 +109,8 @@ class AppTest(unittest.TestCase):
                                conan_api=self.conan_api,
                                gcc_versions=["4.3", "5.4"],
                                use_docker=True,
-                               reference="zlib/1.2.11")
+                               reference="zlib/1.2.11",
+                               ci_manager=self.ci_manager)
 
     def test_32bits_images(self):
         packager = ConanMultiPackager("--build missing -r conan.io",
@@ -116,7 +118,8 @@ class AppTest(unittest.TestCase):
                                       runner=self.runner,
                                       use_docker=True,
                                       docker_32_images=True,
-                                      reference="zlib/1.2.11")
+                                      reference="zlib/1.2.11",
+                                      ci_manager=self.ci_manager)
 
         packager.add({"arch": "x86", "compiler": "gcc", "compiler.version": "6"})
         packager.run_builds(1, 1)
@@ -129,7 +132,8 @@ class AppTest(unittest.TestCase):
                                       conan_api=self.conan_api,
                                       use_docker=True,
                                       docker_32_images=False,
-                                      reference="zlib/1.2.11")
+                                      reference="zlib/1.2.11",
+                                      ci_manager=self.ci_manager)
 
         packager.add({"arch": "x86", "compiler": "gcc", "compiler.version": "6"})
         packager.run_builds(1, 1)
@@ -142,12 +146,14 @@ class AppTest(unittest.TestCase):
                                           runner=self.runner,
                                           conan_api=self.conan_api,
                                           use_docker=True,
-                                          reference="zlib/1.2.11")
+                                          reference="zlib/1.2.11",
+                                          ci_manager=self.ci_manager)
 
             packager.add({"arch": "x86", "compiler": "gcc", "compiler.version": "6"})
             packager.run_builds(1, 1)
             self.assertIn("docker pull lasote/conangcc6-x86", self.runner.calls[0])
 
+        self.runner.reset()
         # Test the opossite
         packager = ConanMultiPackager("--build missing -r conan.io",
                                       "lasote", "mychannel",
@@ -155,7 +161,8 @@ class AppTest(unittest.TestCase):
                                       conan_api=self.conan_api,
                                       use_docker=True,
                                       docker_32_images=False,
-                                      reference="zlib/1.2.11")
+                                      reference="zlib/1.2.11",
+                                      ci_manager=self.ci_manager)
 
         packager.add({"arch": "x86", "compiler": "gcc", "compiler.version": "6"})
         packager.run_builds(1, 1)
@@ -168,7 +175,8 @@ class AppTest(unittest.TestCase):
                                            conan_api=self.conan_api,
                                            gcc_versions=["4.3", "5"],
                                            use_docker=True,
-                                           reference="zlib/1.2.11")
+                                           reference="zlib/1.2.11",
+                                           ci_manager=self.ci_manager)
         self._add_build(1, "gcc", "4.3")
         self._add_build(2, "gcc", "4.3")
         self._add_build(3, "gcc", "4.3")
@@ -180,21 +188,44 @@ class AppTest(unittest.TestCase):
         self.packager.run_builds(1, 2)
         self.assertIn("docker pull lasote/conangcc43", self.runner.calls[0])
 
-        for env_sudo in ["CONAN_DOCKER_USE_SUDO", "CONAN_USE_SUDO"]:
-            with tools.environment_append({env_sudo: "True"}):
+        # Next build from 4.3 is cached, not pulls are performed
+        self.assertIn('os=os3', self.runner.calls[5])
+
+        for the_bool in ["True", "False"]:
+            self.runner.reset()
+            with tools.environment_append({"CONAN_DOCKER_USE_SUDO": the_bool}):
                 self.packager = ConanMultiPackager("--build missing -r conan.io",
                                                    "lasote", "mychannel",
                                                    runner=self.runner,
                                                    conan_api=self.conan_api,
                                                    gcc_versions=["4.3", "5"],
                                                    use_docker=True,
-                                                   reference="zlib/1.2.11")
+                                                   reference="zlib/1.2.11",
+                                                   ci_manager=self.ci_manager)
                 self._add_build(1, "gcc", "4.3")
                 self.packager.run_builds(1, 2)
-                self.assertIn("sudo docker run", self.runner.calls[-1])
-
-        # Next build from 4.3 is cached, not pulls are performed
-        self.assertIn('os=os3', self.runner.calls[5])
+                if the_bool == "True":
+                    self.assertIn("sudo docker run", self.runner.calls[-1])
+                else:
+                    self.assertNotIn("sudo docker run", self.runner.calls[-1])
+                    self.assertIn("docker run", self.runner.calls[-1])
+            self.runner.reset()
+            with tools.environment_append({"CONAN_PIP_USE_SUDO": the_bool}):
+                self.packager = ConanMultiPackager("--build missing -r conan.io",
+                                                   "lasote", "mychannel",
+                                                   runner=self.runner,
+                                                   conan_api=self.conan_api,
+                                                   gcc_versions=["4.3", "5"],
+                                                   use_docker=True,
+                                                   reference="zlib/1.2.11",
+                                                   ci_manager=self.ci_manager)
+                self._add_build(1, "gcc", "4.3")
+                self.packager.run_builds(1, 2)
+                if the_bool == "True":
+                    self.assertIn("sudo pip", self.runner.calls[1])
+                else:
+                    self.assertNotIn("sudo pip", self.runner.calls[1])
+                    self.assertIn("pip", self.runner.calls[1])
 
     def test_docker_clang(self):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
@@ -203,7 +234,8 @@ class AppTest(unittest.TestCase):
                                            conan_api=self.conan_api,
                                            clang_versions=["3.8", "4.0"],
                                            use_docker=True,
-                                           reference="zlib/1.2.11")
+                                           reference="zlib/1.2.11",
+                                           ci_manager=self.ci_manager)
 
         self._add_build(1, "clang", "3.8")
         self._add_build(2, "clang", "3.8")
@@ -225,7 +257,8 @@ class AppTest(unittest.TestCase):
                                            gcc_versions=["5", "6"],
                                            clang_versions=["3.9", "4.0"],
                                            use_docker=True,
-                                           reference="zlib/1.2.11")
+                                           reference="zlib/1.2.11",
+                                           ci_manager=self.ci_manager)
 
         self._add_build(1, "gcc", "5")
         self._add_build(2, "gcc", "5")
@@ -249,7 +282,8 @@ class AppTest(unittest.TestCase):
 
     def test_upload_false(self):
         packager = ConanMultiPackager("--build missing -r conan.io", "lasote", "mychannel",
-                                      upload=False, reference="zlib/1.2.11")
+                                      upload=False, reference="zlib/1.2.11",
+                                      ci_manager=self.ci_manager)
         self.assertFalse(packager._upload_enabled())
 
     def test_docker_env_propagated(self):
@@ -262,7 +296,8 @@ class AppTest(unittest.TestCase):
                                                gcc_versions=["5", "6"],
                                                clang_versions=["3.9", "4.0"],
                                                use_docker=True,
-                                               reference="zlib/1.2.11")
+                                               reference="zlib/1.2.11",
+                                               ci_manager=self.ci_manager)
             self._add_build(1, "gcc", "5")
             self.packager.run_builds(1, 1)
             self.assertIn('-e CONAN_FAKE_VAR="32"', self.runner.calls[-1])
@@ -273,7 +308,8 @@ class AppTest(unittest.TestCase):
                                            runner=self.runner,
                                            conan_api=self.conan_api,
                                            use_docker=True,
-                                           reference="zlib/1.2.11")
+                                           reference="zlib/1.2.11",
+                                           ci_manager=self.ci_manager)
 
         self._add_build(1, "msvc", "10")
 
@@ -287,7 +323,8 @@ class AppTest(unittest.TestCase):
                                            conan_api=self.conan_api,
                                            gcc_versions=["4.3", "5"],
                                            use_docker=True,
-                                           reference="lib/1.0")
+                                           reference="lib/1.0",
+                                           ci_manager=self.ci_manager)
         self.packager.add_common_builds()
         self.packager.builds = [({"os": "Windows"}, {"option": "value"})]
         self.assertEquals(self.packager.items, [BuildConf(settings={'os': 'Windows'},
@@ -300,7 +337,7 @@ class AppTest(unittest.TestCase):
         mingw_configurations = [("4.9", "x86_64", "seh", "posix")]
         builder = ConanMultiPackager(mingw_configurations=mingw_configurations, visual_versions=[],
                                      username="Pepe", platform_info=platform_mock_for("Windows"),
-                                     reference="lib/1.0")
+                                     reference="lib/1.0", ci_manager=self.ci_manager)
         builder.add_common_builds(shared_option_name="zlib:shared", pure_c=True)
         expected = [({'compiler.exception': 'seh', 'compiler.libcxx': "libstdc++",
                       'compiler.threads': 'posix', 'compiler.version': '4.9', 'arch': 'x86_64',
@@ -331,7 +368,8 @@ class AppTest(unittest.TestCase):
         self.assertEquals([tuple(a) for a in builder.builds], expected)
 
     def test_named_pages(self):
-        builder = ConanMultiPackager(username="Pepe", reference="zlib/1.2.11")
+        builder = ConanMultiPackager(username="Pepe", reference="zlib/1.2.11",
+                                     ci_manager=self.ci_manager)
         named_builds = defaultdict(list)
         builder.add_common_builds(shared_option_name="zlib:shared", pure_c=True)
         for settings, options, env_vars, build_requires, _ in builder.items:
@@ -354,7 +392,8 @@ class AppTest(unittest.TestCase):
                                      remotes=["url1", "url2"],
                                      runner=runner,
                                      conan_api=self.conan_api,
-                                     reference="lib/1.0@lasote/mychannel")
+                                     reference="lib/1.0@lasote/mychannel",
+                                     ci_manager=self.ci_manager)
 
         builder.add({}, {}, {}, {})
         builder.run_builds()
@@ -369,7 +408,8 @@ class AppTest(unittest.TestCase):
                                      remotes="myurl1",
                                      runner=runner,
                                      conan_api=self.conan_api,
-                                     reference="lib/1.0@lasote/mychannel")
+                                     reference="lib/1.0@lasote/mychannel",
+                                     ci_manager=self.ci_manager)
 
         builder.add({}, {}, {}, {})
         builder.run_builds()
@@ -385,7 +425,8 @@ class AppTest(unittest.TestCase):
                                      remotes=remotes,
                                      runner=runner,
                                      conan_api=self.conan_api,
-                                     reference="lib/1.0@lasote/mychannel")
+                                     reference="lib/1.0@lasote/mychannel",
+                                     ci_manager=self.ci_manager)
 
         builder.add({}, {}, {}, {})
         builder.run_builds()
@@ -404,7 +445,8 @@ class AppTest(unittest.TestCase):
         with tools.environment_append({"CONAN_VISUAL_VERSIONS": "10"}):
             builder = ConanMultiPackager(username="Pepe",
                                          platform_info=platform_mock_for("Windows"),
-                                         reference="lib/1.0@lasote/mychannel")
+                                         reference="lib/1.0@lasote/mychannel",
+                                         ci_manager=self.ci_manager)
             builder.add_common_builds()
             for settings, _, _, _, _ in builder.items:
                 self.assertEquals(settings["compiler"], "Visual Studio")
@@ -415,7 +457,8 @@ class AppTest(unittest.TestCase):
 
             builder = ConanMultiPackager(username="Pepe",
                                          platform_info=platform_mock_for("Windows"),
-                                         reference="lib/1.0@lasote/mychannel")
+                                         reference="lib/1.0@lasote/mychannel",
+                                         ci_manager=self.ci_manager)
             builder.add_common_builds()
             for settings, _, _, _, _ in builder.items:
                 self.assertEquals(settings["compiler"], "gcc")
@@ -426,7 +469,8 @@ class AppTest(unittest.TestCase):
             builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
                                          gcc_versions=["4.8", "5"],
                                          username="foo",
-                                         reference="lib/1.0@lasote/mychannel")
+                                         reference="lib/1.0@lasote/mychannel",
+                                         ci_manager=self.ci_manager)
 
             self.assertEquals(builder.build_generator._clang_versions, [])
 
@@ -434,7 +478,8 @@ class AppTest(unittest.TestCase):
                                        "CONAN_REFERENCE": "zlib/1.2.8"}):
             builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
                                          username="foo",
-                                         reference="lib/1.0@lasote/mychannel")
+                                         reference="lib/1.0@lasote/mychannel",
+                                         ci_manager=self.ci_manager)
 
             self.assertEquals(builder.build_generator._clang_versions, [])
             self.assertEquals(builder.build_generator._gcc_versions, ["4.8", "5"])
@@ -442,14 +487,16 @@ class AppTest(unittest.TestCase):
         builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
                                      clang_versions=["4.8", "5"],
                                      username="foo",
-                                     reference="lib/1.0")
+                                     reference="lib/1.0",
+                                     ci_manager=self.ci_manager)
 
         self.assertEquals(builder.build_generator._gcc_versions, [])
 
         with tools.environment_append({"CONAN_CLANG_VERSIONS": "4.8, 5"}):
             builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
                                          username="foo",
-                                         reference="lib/1.0")
+                                         reference="lib/1.0",
+                                         ci_manager=self.ci_manager)
 
             self.assertEquals(builder.build_generator._gcc_versions, [])
             self.assertEquals(builder.build_generator._clang_versions, ["4.8", "5"])
@@ -464,7 +511,8 @@ class AppTest(unittest.TestCase):
                                      runner=runner,
                                      conan_api=self.conan_api,
                                      remotes="myurl, otherurl",
-                                     platform_info=platform_mock_for("Darwin"))
+                                     platform_info=platform_mock_for("Darwin"),
+                                     ci_manager=self.ci_manager)
         builder.add_common_builds()
         builder.run()
 
@@ -482,7 +530,8 @@ class AppTest(unittest.TestCase):
                                      runner=runner,
                                      conan_api=self.conan_api,
                                      remotes="otherurl, myurl, moreurl",
-                                     platform_info=platform_mock_for("Darwin"))
+                                     platform_info=platform_mock_for("Darwin"),
+                                     ci_manager=self.ci_manager)
         builder.add_common_builds()
         builder.run()
 
@@ -499,7 +548,8 @@ class AppTest(unittest.TestCase):
                                      runner=runner,
                                      conan_api=self.conan_api,
                                      remotes="otherurl",
-                                     platform_info=platform_mock_for("Darwin"))
+                                     platform_info=platform_mock_for("Darwin"),
+                                     ci_manager=self.ci_manager)
         builder.add_common_builds()
         builder.run()
 
@@ -515,7 +565,8 @@ class AppTest(unittest.TestCase):
                                      conan_api=self.conan_api,
                                      remotes="otherurl",
                                      platform_info=platform_mock_for("Darwin"),
-                                     build_policy="outdated")
+                                     build_policy="outdated",
+                                     ci_manager=self.ci_manager)
         builder.add_common_builds()
         builder.run()
         self.assertEquals("outdated", self.conan_api.calls[-1].kwargs["build_modes"])
@@ -530,7 +581,8 @@ class AppTest(unittest.TestCase):
                                          conan_api=self.conan_api,
                                          remotes="otherurl",
                                          platform_info=platform_mock_for("Darwin"),
-                                         build_policy="missing")
+                                         build_policy="missing",
+                                         ci_manager=self.ci_manager)
             builder.add_common_builds()
             builder.run()
             self.assertEquals("missing", self.conan_api.calls[-1].kwargs["build_modes"])
@@ -543,7 +595,8 @@ class AppTest(unittest.TestCase):
                                      apple_clang_versions=[],
                                      runner=self.runner,
                                      conan_api=self.conan_api,
-                                     platform_info=platform_mock_for("Darwin"))
+                                     platform_info=platform_mock_for("Darwin"),
+                                     ci_manager=self.ci_manager)
         builder.add_common_builds()
         builder.run()
 
@@ -565,7 +618,8 @@ class AppTest(unittest.TestCase):
                                      runner=self.runner,
                                      conan_api=self.conan_api,
                                      platform_info=platform_mock_for("Darwin"),
-                                     skip_check_credentials=True)
+                                     skip_check_credentials=True,
+                                     ci_manager=self.ci_manager)
         builder.add_common_builds()
         builder.run()
         self.assertNotEqual(self.conan_api.calls[0].name, 'authenticate')
@@ -579,9 +633,29 @@ class AppTest(unittest.TestCase):
                                      runner=self.runner,
                                      conan_api=self.conan_api,
                                      platform_info=platform_mock_for("Darwin"),
-                                     skip_check_credentials=True)
+                                     skip_check_credentials=True,
+                                     ci_manager=self.ci_manager)
         builder.add_common_builds()
         builder.run()
         for action in self.conan_api.calls:
             self.assertNotEqual(action.name, 'authenticate')
             self.assertNotEqual(action.name, 'upload')
+
+    def channel_detector_test(self):
+
+        for branch, expected_channel in [("testing", "a_channel"),
+                                         ("dummy", "a_channel"),
+                                         ("stable", "stable"),
+                                         ("stable/something", "stable"),
+                                         ("release", "stable"),
+                                         ("release/something", "stable"),
+                                         ("master", "stable"),
+                                         ("master/something", "a_channel")]:
+            builder = ConanMultiPackager(username="pepe",
+                                         channel="a_channel",
+                                         reference="lib/1.0",
+                                         ci_manager=MockCIManager(current_branch=branch))
+
+            self.assertEquals(builder.channel, expected_channel, "Not match for branch %s" % branch)
+
+
