@@ -13,7 +13,8 @@ class RemotesTest(BaseTest):
         manager = RemotesManager(self.api, Printer(), remotes_input="url1@True@upload_repo",
                                  upload_input="url1@True@upload_repo")
 
-        self.assertIsNotNone(manager._get_remote_by_name("upload_repo"))
+        remotes = self.api.remote_list()
+        self.assertIsNotNone(manager._get_remote_by_name(remotes, "upload_repo"))
 
         manager.add_remotes_to_conan()
 
@@ -31,7 +32,8 @@ class RemotesTest(BaseTest):
         manager = RemotesManager(self.api, Printer(), remotes_input="url1@True@upload_repo",
                                  upload_input="url1@True@upload_repo")
 
-        self.assertIsNotNone(manager._get_remote_by_name("upload_repo"))
+        remotes = self.api.remote_list()
+        self.assertIsNotNone(manager._get_remote_by_name(remotes, "upload_repo"))
 
         manager.add_remotes_to_conan()
         self.assertEquals(len(self.api.remote_list()), 1)

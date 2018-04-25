@@ -109,11 +109,10 @@ class RemotesManager(object):
         remotes = self._conan_api.remote_list()
         for remote in remotes:
             if remote.url == remote_url:
-                return remote.name
-        return None
+                return remote.name, remotes
+        return None, remotes
 
-    def _get_remote_by_name(self, name):
-        remotes = self._conan_api.remote_list()
+    def _get_remote_by_name(self, remotes, name):
         for remote in remotes:
             if remote.name == name:
                 return remote
@@ -121,13 +120,13 @@ class RemotesManager(object):
 
     def _add_remote(self, url, verify_ssl, name, insert=False):
 
-        remote = self._get_remote_by_url(url)
+        remote, remote_list = self._get_remote_by_url(url)
         if remote:
             self.printer.print_message("Remote for URL '%s' already exist, "
                                        "keeping the current remote and its name" % url)
             return remote
 
-        remote = self._get_remote_by_name(name)
+        remote = self._get_remote_by_name(remote_list, name)
         # If name is duplicated, but the url is not equal, remove it before adding it
         # A rename won't be good, because the remote is really different, it happens in local
         # when "upload_repo" is kept
