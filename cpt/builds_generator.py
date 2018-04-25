@@ -4,6 +4,7 @@ from collections import namedtuple
 
 from conans.model.ref import ConanFileReference
 from conans.model.version import Version
+from cpt.tools import split_colon_env
 
 default_gcc_versions = ["4.9", "5", "6", "7"]
 default_clang_versions = ["3.8", "3.9", "4.0"]
@@ -30,10 +31,6 @@ def get_mingw_config_from_env():
         conf = conf.strip()
         ret.append(conf.split("@"))
     return ret
-
-
-def split_colon_env(varname):
-    return [a.strip() for a in list(filter(None, os.getenv(varname, "").split(",")))]
 
 
 class BuildGenerator(object):

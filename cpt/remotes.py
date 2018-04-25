@@ -105,20 +105,34 @@ class RemotesManager(object):
         else:
             raise Exception("Invalid %s env var format, check README" % var_name)
 
-    def _get_remote_name(self, remote_url):
+    def _get_remote_by_url(self, remote_url):
         remotes = self._conan_api.remote_list()
         for remote in remotes:
             if remote.url == remote_url:
                 return remote.name
         return None
 
+    def _get_remote_by_name(self, name):
+        remotes = self._conan_api.remote_list()
+        for remote in remotes:
+            if remote.name == name:
+                return remote
+        return None
+
     def _add_remote(self, url, verify_ssl, name, insert=False):
 
-        remote = self._get_remote_name(url)
+        remote = self._get_remote_by_url(url)
         if remote:
             self.printer.print_message("Remote for URL '%s' already exist, "
                                        "keeping the current remote and its name" % url)
             return remote
+
+        remote = self._get_remote_by_name(name)
+        # If name is duplicated, but the url is not equal, remove it before adding it
+        # A rename won't be good, because the remote is really different, it happens in local
+        # when "upload_repo" is kept
+        if remote:
+            self._conan_api.remote_remove(name)
 
         self._conan_api.remote_add(name, url, verify_ssl=verify_ssl, insert=insert)
         return name

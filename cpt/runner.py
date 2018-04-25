@@ -78,9 +78,12 @@ class CreateRunner(object):
                 # TODO: Get uploaded packages with Conan 1.3 from the ret json
                 self.printer.print_message("Calling 'conan create'")
                 name, version, user, channel = self._reference
-                self._conan_api.create(self._abs_folder, name=name, version=version, user=user, channel=channel,
-                                       build_modes=self._build_policy,
-                                       profile_name=self._abs_profile_path)
+                # FIXME: chdir Can be removed in 1.3, fixed issue about api changing curdir
+                with tools.chdir(self._abs_folder):
+                    self._conan_api.create(".", name=name, version=version,
+                                           user=user, channel=channel,
+                                           build_modes=self._build_policy,
+                                           profile_name=self._abs_profile_path)
 
                 self._uploader.upload_packages(self._reference, self._upload)
 
@@ -88,6 +91,7 @@ class CreateRunner(object):
 class DockerCreateRunner(CreateRunner):
     def __init__(self, profile_text, reference, conan_api, uploader, runner=None,
                  args=None, conan_pip_package=None, docker_image=None, sudo_docker_command=True,
+                 sudo_pip_command=True,
                  docker_image_skip_update=False, build_policy=None,
                  always_update_conan_in_docker=False,
                  upload=False):
@@ -101,20 +105,21 @@ class DockerCreateRunner(CreateRunner):
         self._always_update_conan_in_docker = always_update_conan_in_docker
         self._docker_image_skip_update = docker_image_skip_update
         self._sudo_docker_command = sudo_docker_command
+        self._sudo_pip_command = sudo_pip_command
 
     def pip_update_conan_command(self):
         commands = []
         # Hack for testing when retriving cpt from artifactory repo
         if "conan-package-tools" not in self._conan_pip_package:
             commands.append("%s pip install conan_package_tools==%s "
-                            "--upgrade --no-cache" % (self._sudo_docker_command,
+                            "--upgrade --no-cache" % (self._sudo_pip_command,
                                                       package_tools_version))
 
         if self._conan_pip_package:
-            commands.append("%s pip install %s --no-cache" % (self._sudo_docker_command,
+            commands.append("%s pip install %s --no-cache" % (self._sudo_pip_command,
                                                               self._conan_pip_package))
         else:
-            commands.append("%s pip install conan --upgrade --no-cache" % self._sudo_docker_command)
+            commands.append("%s pip install conan --upgrade --no-cache" % self._sudo_pip_command)
 
         command = "&& ".join(commands)
         self.printer.print_command(command)

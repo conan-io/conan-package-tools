@@ -9,7 +9,7 @@ from cpt.builds_generator import BuildConf
 from cpt.packager import ConanMultiPackager
 from conans import tools
 from conans.model.ref import ConanFileReference
-from cpt.test.unit.utils import MockConanAPI, MockRunner
+from cpt.test.unit.utils import MockConanAPI, MockRunner, MockCIManager
 
 
 def platform_mock_for(so):
@@ -148,6 +148,7 @@ class AppTest(unittest.TestCase):
             packager.run_builds(1, 1)
             self.assertIn("docker pull lasote/conangcc6-x86", self.runner.calls[0])
 
+        self.runner.reset()
         # Test the opossite
         packager = ConanMultiPackager("--build missing -r conan.io",
                                       "lasote", "mychannel",
@@ -180,8 +181,12 @@ class AppTest(unittest.TestCase):
         self.packager.run_builds(1, 2)
         self.assertIn("docker pull lasote/conangcc43", self.runner.calls[0])
 
-        for env_sudo in ["CONAN_DOCKER_USE_SUDO", "CONAN_USE_SUDO"]:
-            with tools.environment_append({env_sudo: "True"}):
+        # Next build from 4.3 is cached, not pulls are performed
+        self.assertIn('os=os3', self.runner.calls[5])
+
+        for the_bool in ["True", "False"]:
+            self.runner.reset()
+            with tools.environment_append({"CONAN_DOCKER_USE_SUDO": the_bool}):
                 self.packager = ConanMultiPackager("--build missing -r conan.io",
                                                    "lasote", "mychannel",
                                                    runner=self.runner,
@@ -191,10 +196,27 @@ class AppTest(unittest.TestCase):
                                                    reference="zlib/1.2.11")
                 self._add_build(1, "gcc", "4.3")
                 self.packager.run_builds(1, 2)
-                self.assertIn("sudo docker run", self.runner.calls[-1])
-
-        # Next build from 4.3 is cached, not pulls are performed
-        self.assertIn('os=os3', self.runner.calls[5])
+                if the_bool == "True":
+                    self.assertIn("sudo docker run", self.runner.calls[-1])
+                else:
+                    self.assertNotIn("sudo docker run", self.runner.calls[-1])
+                    self.assertIn("docker run", self.runner.calls[-1])
+            self.runner.reset()
+            with tools.environment_append({"CONAN_PIP_USE_SUDO": the_bool}):
+                self.packager = ConanMultiPackager("--build missing -r conan.io",
+                                                   "lasote", "mychannel",
+                                                   runner=self.runner,
+                                                   conan_api=self.conan_api,
+                                                   gcc_versions=["4.3", "5"],
+                                                   use_docker=True,
+                                                   reference="zlib/1.2.11")
+                self._add_build(1, "gcc", "4.3")
+                self.packager.run_builds(1, 2)
+                if the_bool == "True":
+                    self.assertIn("sudo pip", self.runner.calls[1])
+                else:
+                    self.assertNotIn("sudo pip", self.runner.calls[1])
+                    self.assertIn("pip", self.runner.calls[1])
 
     def test_docker_clang(self):
         self.packager = ConanMultiPackager("--build missing -r conan.io",
@@ -585,3 +607,22 @@ class AppTest(unittest.TestCase):
         for action in self.conan_api.calls:
             self.assertNotEqual(action.name, 'authenticate')
             self.assertNotEqual(action.name, 'upload')
+
+    def channel_detector_test(self):
+
+        for branch, expected_channel in [("testing", "a_channel"),
+                                         ("dummy", "a_channel"),
+                                         ("stable", "stable"),
+                                         ("stable/something", "stable"),
+                                         ("release", "stable"),
+                                         ("release/something", "stable"),
+                                         ("master", "stable"),
+                                         ("master/something", "a_channel")]:
+            builder = ConanMultiPackager(username="pepe",
+                                         channel="a_channel",
+                                         reference="lib/1.0",
+                                         ci_manager=MockCIManager(current_branch=branch))
+
+            self.assertEquals(builder.channel, expected_channel, "Not match for branch %s" % branch)
+
+
