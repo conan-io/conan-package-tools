@@ -57,17 +57,19 @@ class CreateRunner(object):
                 with tools.chdir(self._abs_folder):
                     if self._build_policy:
                         self._build_policy = [self._build_policy]
-                    self._conan_api.create(".", name=name, version=version,
-                                           user=user, channel=channel,
-                                           build_modes=self._build_policy,
-                                           profile_name=self._profile_abs_path)
+                    # https://github.com/conan-io/conan-package-tools/issues/184
+                    with tools.environment_append({"_CONAN_CREATE_COMMAND_": "1"}):
+                        self._conan_api.create(".", name=name, version=version,
+                                               user=user, channel=channel,
+                                               build_modes=self._build_policy,
+                                               profile_name=self._profile_abs_path)
 
                 self._uploader.upload_packages(self._reference, self._upload)
 
 
 class DockerCreateRunner(object):
     def __init__(self, profile_text, base_profile_text, base_profile_name, reference,
-                 args=None, conan_pip_package=None, docker_image=None, sudo_docker_command=True,
+                 args=None, conan_pip_package=None, docker_image=None, sudo_docker_command=None,
                  sudo_pip_command=True,
                  docker_image_skip_update=False, build_policy=None,
                  always_update_conan_in_docker=False,
@@ -82,7 +84,7 @@ class DockerCreateRunner(object):
         self._docker_image = docker_image
         self._always_update_conan_in_docker = always_update_conan_in_docker
         self._docker_image_skip_update = docker_image_skip_update
-        self._sudo_docker_command = sudo_docker_command
+        self._sudo_docker_command = sudo_docker_command or ""
         self._sudo_pip_command = sudo_pip_command
         self._profile_text = profile_text
         self._base_profile_text = base_profile_text
