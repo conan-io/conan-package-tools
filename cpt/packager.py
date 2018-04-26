@@ -11,6 +11,7 @@ from conans.model.version import Version
 from cpt.auth import AuthManager
 from cpt.ci_manager import CIManager
 from cpt.printer import Printer
+from cpt.profiles import get_profiles, save_profile_to_tmp
 from cpt.remotes import RemotesManager
 from cpt.tools import get_bool_from_env
 from cpt.builds_generator import BuildConf, BuildGenerator
@@ -106,13 +107,14 @@ class ConanMultiPackager(object):
 
         self.auth_manager = AuthManager(self.conan_api, self.printer, login_username, password,
                                         default_username=self.username)
-        self.uploader = Uploader(self.conan_api, self.remotes_manager, self.auth_manager, self.printer)
+        self.uploader = Uploader(self.conan_api, self.remotes_manager, self.auth_manager,
+                                 self.printer)
 
         self._builds = []
         self._named_builds = {}
 
-        self._always_update_conan_in_docker = (always_update_conan_in_docker or
-                                               os.getenv("CONAN_ALWAYS_UPDATE_CONAN_DOCKER", False))
+        self._update_conan_in_docker = (always_update_conan_in_docker or
+                                        os.getenv("CONAN_ALWAYS_UPDATE_CONAN_DOCKER", False))
 
         self._platform_info = platform_info or PlatformInfo()
 
@@ -173,8 +175,10 @@ class ConanMultiPackager(object):
         elif platform.system() != "Windows":
             self.sudo_pip_command = "sudo"
 
-        self.exclude_vcvars_precommand = exclude_vcvars_precommand or os.getenv("CONAN_EXCLUDE_VCVARS_PRECOMMAND", False)
-        self._docker_image_skip_update = docker_image_skip_update or os.getenv("CONAN_DOCKER_IMAGE_SKIP_UPDATE", False)
+        self.exclude_vcvars_precommand = (exclude_vcvars_precommand or
+                                          os.getenv("CONAN_EXCLUDE_VCVARS_PRECOMMAND", False))
+        self._docker_image_skip_update = (docker_image_skip_update or
+                                          os.getenv("CONAN_DOCKER_IMAGE_SKIP_UPDATE", False))
         self.runner = runner or os.system
         self.output_runner = ConanOutputRunner()
         self.args = args or " ".join(sys.argv[1:])
@@ -219,7 +223,9 @@ class ConanMultiPackager(object):
                     isinstance(value, bool) or
                     isinstance(value, list)) and not var.startswith("_") and "password" not in var
         with self.printer.foldable_output("local_vars"):
-            self.printer.print_dict({var: value for var, value in self.__dict__.items() if valid_pair(var, value)})
+            self.printer.print_dict({var: value
+                                     for var, value in self.__dict__.items()
+                                     if valid_pair(var, value)})
 
     @property
     def items(self):
@@ -233,9 +239,9 @@ class ConanMultiPackager(object):
     def builds(self):
         # Retrocompatibility iterating
         self.printer.print_message("WARNING",
-                                   "\n\n\n******** ITERATING THE CONAN_PACKAGE_TOOLS BUILDS WITH "
+                                   "\n\n\n******* ITERATING THE CONAN_PACKAGE_TOOLS BUILDS WITH "
                                    ".builds is deprecated use .items() instead (unpack 5 elements: "
-                                   "settings, options, env_vars, build_requires, reference  ********"
+                                   "settings, options, env_vars, build_requires, reference  *******"
                                    "**\n\n\n")
         return [elem[0:4] for elem in self._builds]
 
@@ -303,7 +309,7 @@ class ConanMultiPackager(object):
         reference = reference or self.reference
         self._builds.append(BuildConf(settings, options, env_vars, build_requires, reference))
 
-    def run(self, profile_name=None):
+    def run(self, base_profile_name=None):
         env_vars = self.auth_manager.env_vars()
         with tools.environment_append(env_vars):
             self.printer.print_message("Running builds...")
@@ -315,9 +321,10 @@ class ConanMultiPackager(object):
                 self.auth_manager.login(self.remotes_manager.upload_remote_name)
             if self.conan_pip_package and not self.use_docker:
                 with self.printer.foldable_output("pip_update"):
-                    self.runner('%s pip install %s' % (self.sudo_pip_command, self.conan_pip_package))
+                    self.runner('%s pip install %s' % (self.sudo_pip_command,
+                                                       self.conan_pip_package))
 
-            self.run_builds(profile_name=profile_name)
+            self.run_builds(base_profile_name=base_profile_name)
 
     def _upload_enabled(self):
         if not self.remotes_manager.upload_remote_name:
@@ -347,11 +354,9 @@ class ConanMultiPackager(object):
 
         return True
 
-    def run_builds(self, curpage=None, total_pages=None, profile_name=None):
+    def run_builds(self, curpage=None, total_pages=None, base_profile_name=None):
         if len(self.named_builds) > 0 and len(self.items) > 0:
             raise Exception("Both bulk and named builds are set. Only one is allowed.")
-
-        # self.runner('conan export %s/%s' % (self.username, self.channel))
 
         self.builds_in_current_page = []
         if len(self.items) > 0:
@@ -375,38 +380,44 @@ class ConanMultiPackager(object):
         # FIXME: Remove in Conan 1.3, https://github.com/conan-io/conan/issues/2787
         abs_folder = os.path.realpath(os.getcwd())
         for build in self.builds_in_current_page:
-            base_profile_name = profile_name or os.getenv("CONAN_BASE_PROFILE")
-            profile, base_profile = self._get_profiles(build, base_profile_name)
-            if self.use_docker:
-                docker_image = self._get_docker_image(build)
-                build_runner = DockerCreateRunner(profile, base_profile, base_profile_name, build.reference, self.conan_api,
-                                                  self.uploader,
-                                                  args=self.args,
-                                                  conan_pip_package=self.conan_pip_package,
-                                                  build_policy=self.build_policy,
-                                                  runner=self.runner,
-                                                  docker_image=docker_image,
-                                                  docker_image_skip_update=self._docker_image_skip_update,
-                                                  sudo_docker_command=self.sudo_docker_command,
-                                                  sudo_pip_command=self.sudo_pip_command,
-                                                  always_update_conan_in_docker=self._always_update_conan_in_docker,
-                                                  upload=self._upload_enabled())
+            base_profile_name = base_profile_name or os.getenv("CONAN_BASE_PROFILE")
 
-                build_runner.run(pull_image=not pulled_docker_images[build_runner._docker_image],
-                                 docker_entry_script=self.docker_entry_script)
-                pulled_docker_images[build_runner._docker_image] = True
+            self.printer.print_message("**************************************************")
+            self.printer.print_message("Using specified default "
+                                       "base profile: %s" % base_profile_name)
+            self.printer.print_message("**************************************************")
+
+            profile_text, base_profile_text = get_profiles(self.client_cache, build,
+                                                           base_profile_name)
+            if not self.use_docker:
+                profile_abs_path = save_profile_to_tmp(profile_text)
+                r = CreateRunner(profile_abs_path, build.reference, self.conan_api,
+                                 self.uploader,
+                                 args=self.args,
+                                 exclude_vcvars_precommand=self.exclude_vcvars_precommand,
+                                 build_policy=self.build_policy,
+                                 runner=self.runner,
+                                 abs_folder=abs_folder,
+                                 printer=self.printer,
+                                 upload=self._upload_enabled())
+                r.run()
             else:
-                build_runner = CreateRunner(profile, build.reference, self.conan_api,
-                                            self.uploader,
-                                            args=self.args,
-                                            conan_pip_package=self.conan_pip_package,
-                                            exclude_vcvars_precommand=self.exclude_vcvars_precommand,
-                                            build_policy=self.build_policy,
-                                            runner=self.runner,
-                                            abs_folder=abs_folder,
-                                            printer=self.printer,
-                                            upload=self._upload_enabled())
-                build_runner.run()
+                docker_image = self._get_docker_image(build)
+                r = DockerCreateRunner(profile_text, base_profile_text, base_profile_name,
+                                       build.reference, args=self.args,
+                                       conan_pip_package=self.conan_pip_package,
+                                       docker_image=docker_image,
+                                       sudo_docker_command=self.sudo_docker_command,
+                                       sudo_pip_command=self.sudo_pip_command,
+                                       docker_image_skip_update=self._docker_image_skip_update,
+                                       build_policy=self.build_policy,
+                                       always_update_conan_in_docker=self._update_conan_in_docker,
+                                       upload=self._upload_enabled(),
+                                       runner=self.runner)
+
+                r.run(pull_image=not pulled_docker_images[docker_image],
+                      docker_entry_script=self.docker_entry_script)
+                pulled_docker_images[docker_image] = True
 
     def _get_docker_image(self, build):
         arch = build.settings.get("arch", "") or build.settings.get("arch_build", "")
@@ -458,47 +469,3 @@ class ConanMultiPackager(object):
                 return stable_channel
 
         return specified_channel
-
-    def _get_profiles(self, build_conf, base_profile_name):
-        base_profile_text = ""
-        if base_profile_name:
-            base_profile_path = os.path.join(self.client_cache.profiles_path,
-                                             base_profile_name)
-            base_profile_text = tools.load(base_profile_path)
-            self.printer.print_message("**************************************************")
-            self.printer.print_message("Using specified default base profile: %s" % base_profile_name)
-            self.printer.print_message("**************************************************")
-        base_profile_name = base_profile_name or "default"
-        tmp = """
-include(%s)
-
-[settings]
-%s
-[options]
-%s
-[env]
-%s
-[build_requires]
-%s
-"""
-        settings = "\n".join(["%s=%s" % (k, v) for k, v in sorted(build_conf.settings.items())])
-        options = "\n".join(["%s=%s" % (k, v) for k, v in build_conf.options.items()])
-        env_vars = "\n".join(["%s=%s" % (k, v) for k, v in build_conf.env_vars.items()])
-        br_lines = ""
-        for pattern, build_requires in build_conf.build_requires.items():
-            br_lines += "\n".join(["%s:%s" % (pattern, br) for br in build_requires])
-
-        if os.getenv("CONAN_BUILD_REQUIRES"):
-            brs = os.getenv("CONAN_BUILD_REQUIRES").split(",")
-            brs = ['*:%s' % br.strip() if ":" not in br else br for br in brs]
-            if br_lines:
-                br_lines += "\n"
-            br_lines += "\n".join(brs)
-
-        profile_text = tmp % (base_profile_name, settings, options, env_vars, br_lines)
-        return profile_text, base_profile_text
-
-
-if __name__ == "__main__":
-    runner = ConanOutputRunner()
-    runner("ls")

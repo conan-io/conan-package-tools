@@ -397,10 +397,10 @@ class AppTest(unittest.TestCase):
 
         builder.add({}, {}, {}, {})
         builder.run_builds()
-        self.assertEquals(self.conan_api.calls[2].args[1], "url1")
-        self.assertEquals(self.conan_api.calls[2].kwargs["insert"], -1)
-        self.assertEquals(self.conan_api.calls[4].args[1], "url2")
-        self.assertEquals(self.conan_api.calls[4].kwargs["insert"], -1)
+        self.assertEquals(self.conan_api.calls[1].args[1], "url1")
+        self.assertEquals(self.conan_api.calls[1].kwargs["insert"], -1)
+        self.assertEquals(self.conan_api.calls[3].args[1], "url2")
+        self.assertEquals(self.conan_api.calls[3].kwargs["insert"], -1)
 
         runner = MockRunner()
         self.conan_api = MockConanAPI()
@@ -413,8 +413,8 @@ class AppTest(unittest.TestCase):
 
         builder.add({}, {}, {}, {})
         builder.run_builds()
-        self.assertEquals(self.conan_api.calls[2].args[1], "myurl1")
-        self.assertEquals(self.conan_api.calls[2].kwargs["insert"], -1)
+        self.assertEquals(self.conan_api.calls[1].args[1], "myurl1")
+        self.assertEquals(self.conan_api.calls[1].kwargs["insert"], -1)
 
         # Named remotes, with SSL flag
         runner = MockRunner()
@@ -430,15 +430,15 @@ class AppTest(unittest.TestCase):
 
         builder.add({}, {}, {}, {})
         builder.run_builds()
-        self.assertEquals(self.conan_api.calls[2].args[0], "my_cool_name1")
-        self.assertEquals(self.conan_api.calls[2].args[1], "u1")
-        self.assertEquals(self.conan_api.calls[2].kwargs["insert"], -1)
-        self.assertEquals(self.conan_api.calls[2].kwargs["verify_ssl"], True)
+        self.assertEquals(self.conan_api.calls[1].args[0], "my_cool_name1")
+        self.assertEquals(self.conan_api.calls[1].args[1], "u1")
+        self.assertEquals(self.conan_api.calls[1].kwargs["insert"], -1)
+        self.assertEquals(self.conan_api.calls[1].kwargs["verify_ssl"], True)
 
-        self.assertEquals(self.conan_api.calls[4].args[0], "my_cool_name2")
-        self.assertEquals(self.conan_api.calls[4].args[1], "u2")
-        self.assertEquals(self.conan_api.calls[4].kwargs["insert"], -1)
-        self.assertEquals(self.conan_api.calls[4].kwargs["verify_ssl"], False)
+        self.assertEquals(self.conan_api.calls[3].args[0], "my_cool_name2")
+        self.assertEquals(self.conan_api.calls[3].args[1], "u2")
+        self.assertEquals(self.conan_api.calls[3].kwargs["insert"], -1)
+        self.assertEquals(self.conan_api.calls[3].kwargs["verify_ssl"], False)
 
     def test_visual_defaults(self):
 
@@ -602,12 +602,7 @@ class AppTest(unittest.TestCase):
 
         # When activated, check credentials before to create the profiles
         self.assertEqual(self.conan_api.calls[2].name, 'authenticate')
-        self.assertEqual(self.conan_api.calls[3].name, 'create_profile')
-        self.assertEqual(self.conan_api.calls[4].name, 'remote_list')
-        self.assertEqual(self.conan_api.calls[5].name, 'remote_add')
-        self.assertEqual(self.conan_api.calls[6].name, 'create')
-        self.assertEqual(self.conan_api.calls[7].name, 'authenticate')
-        self.assertEqual(self.conan_api.calls[8].name, 'upload')
+        self.assertEqual(self.conan_api.calls[5].name, 'create_profile')
 
         self.conan_api = MockConanAPI()
         # If we skip the credentials check, the login will be performed just before the upload

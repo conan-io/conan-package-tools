@@ -8,57 +8,34 @@ from conans.client.profile_loader import _load_profile
 from conans.util.files import save
 from cpt import __version__ as package_tools_version
 from cpt.printer import Printer
+from cpt.profiles import load_profile, patch_default_base_profile
 
 
 class CreateRunner(object):
 
-    def __init__(self, profile_text, reference, conan_api, uploader,
-                 args=None, conan_pip_package=None, exclude_vcvars_precommand=False,
-                 build_policy=None, runner=None, abs_folder=None, printer=None,
-                 upload=False):
+    def __init__(self, profile_abs_path, reference, conan_api, uploader, args=None,
+                 exclude_vcvars_precommand=False, build_policy=None, runner=None,
+                 abs_folder=None, printer=None, upload=False):
 
         self.printer = printer or Printer()
         self._abs_folder = abs_folder or os.getcwd()
         self._uploader = uploader
+        self._upload = upload
         self._conan_api = conan_api
-        self._client_cache = self._conan_api._client_cache
-        self._profile_text = profile_text
+        self._profile_abs_path = profile_abs_path
         self._reference = reference
         self._args = args
-        self._conan_pip_package = conan_pip_package
         self._exclude_vcvars_precommand = exclude_vcvars_precommand
         self._build_policy = build_policy
         self._runner = PrintRunner(runner or os.system, self.printer)
-        self._upload = upload or os.getenv("CPT_UPLOAD_ENABLED", None)
-
-        if "default" in self._profile_text:  # User didn't specified a custom profile
-            default_profile_name = os.path.basename(self._client_cache.default_profile_path)
-            if not os.path.exists(self._client_cache.default_profile_path):
-                self._conan_api.create_profile(default_profile_name, detect=True)
-
-            if default_profile_name != "default":  # User have a different default profile name
-                # https://github.com/conan-io/conan-package-tools/issues/121
-                self._profile_text = self._profile_text.replace("include(default)",
-                                                                "include(%s)" % default_profile_name)
-
-        # Save the profile in a tmp file
-        tmp = os.path.join(tempfile.mkdtemp(suffix='conan_package_tools_profiles'), "profile")
-        self._abs_profile_path = os.path.abspath(tmp)
-        save(self._abs_profile_path, self._profile_text)
-
-        self._profile, _ = _load_profile(self._profile_text,
-                                         os.path.dirname(self._abs_profile_path),
-                                         self._client_cache.profiles_path)
-
         self._uploader.remote_manager.add_remotes_to_conan()
+
+        patch_default_base_profile(conan_api, profile_abs_path)
+        self._profile = load_profile(profile_abs_path, self._conan_api._client_cache)
 
     @property
     def settings(self):
         return self._profile.settings
-
-    @property
-    def options(self):
-        return self._profile.options
 
     def run(self):
         context = tools.no_op()
@@ -72,7 +49,7 @@ class CreateRunner(object):
                 context = tools.vcvars(mock_sets)
         with context:
             self.printer.print_rule()
-            self.printer.print_profile(self._profile_text)
+            self.printer.print_profile(tools.load(self._profile_abs_path))
 
             with self.printer.foldable_output("conan_create"):
                 # TODO: Get uploaded packages with Conan 1.3 from the ret json
@@ -83,34 +60,36 @@ class CreateRunner(object):
                     self._conan_api.create(".", name=name, version=version,
                                            user=user, channel=channel,
                                            build_modes=self._build_policy,
-                                           profile_name=self._abs_profile_path)
+                                           profile_name=self._profile_abs_path)
 
                 self._uploader.upload_packages(self._reference, self._upload)
 
 
-class DockerCreateRunner(CreateRunner):
-    def __init__(self, profile_text, base_profile_text, base_profile_name, reference, conan_api,
-                 uploader, runner=None,
+class DockerCreateRunner(object):
+    def __init__(self, profile_text, base_profile_text, base_profile_name, reference,
                  args=None, conan_pip_package=None, docker_image=None, sudo_docker_command=True,
                  sudo_pip_command=True,
                  docker_image_skip_update=False, build_policy=None,
                  always_update_conan_in_docker=False,
-                 upload=False):
+                 upload=False, runner=None):
 
-        super(DockerCreateRunner, self).__init__(profile_text, reference, conan_api, uploader,
-                                                 args=args, conan_pip_package=conan_pip_package,
-                                                 build_policy=build_policy, runner=runner,
-                                                 upload=upload)
-
+        self.printer = Printer()
+        self._args = args
+        self._upload = upload
+        self._reference = reference
+        self._conan_pip_package = conan_pip_package
+        self._build_policy = build_policy
         self._docker_image = docker_image
         self._always_update_conan_in_docker = always_update_conan_in_docker
         self._docker_image_skip_update = docker_image_skip_update
         self._sudo_docker_command = sudo_docker_command
         self._sudo_pip_command = sudo_pip_command
+        self._profile_text = profile_text
         self._base_profile_text = base_profile_text
         self._base_profile_name = base_profile_name
+        self._runner = runner
 
-    def pip_update_conan_command(self):
+    def _pip_update_conan_command(self):
         commands = []
         # Hack for testing when retriving cpt from artifactory repo
         if "conan-package-tools" not in self._conan_pip_package:
@@ -137,7 +116,7 @@ class DockerCreateRunner(CreateRunner):
                     command = '%s docker run --name conan_runner ' \
                               ' %s /bin/sh -c "%s"' % (self._sudo_docker_command,
                                                        self._docker_image,
-                                                       self.pip_update_conan_command())
+                                                       self._pip_update_conan_command())
                     ret = self._runner(command)
                     if ret != 0:
                         raise Exception("Error updating the image: %s" % command)
@@ -160,7 +139,7 @@ class DockerCreateRunner(CreateRunner):
                                         for key, value in envs.items() if value])
 
         if self._always_update_conan_in_docker:
-            update_command = self.pip_update_conan_command() + " && "
+            update_command = self._pip_update_conan_command() + " && "
         else:
             update_command = ""
         command = ("%s docker run --rm -v%s:/home/conan/project %s %s /bin/sh "
@@ -189,9 +168,11 @@ class DockerCreateRunner(CreateRunner):
                key != "CONAN_USER_HOME"}
         ret["CPT_ARGS"] = escape_env(self._args)
         ret["CONAN_REFERENCE"] = self._reference
+
         ret["CPT_PROFILE"] = escape_env(self._profile_text)
         ret["CPT_BASE_PROFILE"] = escape_env(self._base_profile_text)
         ret["CPT_BASE_PROFILE_NAME"] = escape_env(self._base_profile_name)
+
         ret["CONAN_USERNAME"] = escape_env(self._reference.user)
         ret["CONAN_TEMP_TEST_FOLDER"] = "1"  # test package folder to a temp one
         ret["CPT_UPLOAD_ENABLED"] = self._upload
