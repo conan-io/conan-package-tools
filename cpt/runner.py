@@ -87,7 +87,7 @@ class DockerCreateRunner(object):
         self._profile_text = profile_text
         self._base_profile_text = base_profile_text
         self._base_profile_name = base_profile_name
-        self._runner = runner
+        self._runner = PrintRunner(runner, self.printer)
 
     def _pip_update_conan_command(self):
         commands = []
@@ -104,7 +104,6 @@ class DockerCreateRunner(object):
             commands.append("%s pip install conan --upgrade --no-cache" % self._sudo_pip_command)
 
         command = " && ".join(commands)
-        self.printer.print_command(command)
         return command
 
     def run(self, pull_image=True, docker_entry_script=None):
@@ -153,9 +152,11 @@ class DockerCreateRunner(object):
             command = command.replace("run_create_in_docker",
                                       "%s && run_create_in_docker" % docker_entry_script)
 
+        self.printer.print_in_docker(self._docker_image)
         ret = self._runner(command)
         if ret != 0:
             raise Exception("Error building: %s" % command)
+        self.printer.print_message("Exiting docker...")
 
     def pull_image(self):
         with self.printer.foldable_output("docker pull"):

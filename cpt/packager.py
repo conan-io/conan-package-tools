@@ -381,11 +381,11 @@ class ConanMultiPackager(object):
         abs_folder = os.path.realpath(os.getcwd())
         for build in self.builds_in_current_page:
             base_profile_name = base_profile_name or os.getenv("CONAN_BASE_PROFILE")
-
-            self.printer.print_message("**************************************************")
-            self.printer.print_message("Using specified default "
-                                       "base profile: %s" % base_profile_name)
-            self.printer.print_message("**************************************************")
+            if base_profile_name:
+                self.printer.print_message("**************************************************")
+                self.printer.print_message("Using specified default "
+                                           "base profile: %s" % base_profile_name)
+                self.printer.print_message("**************************************************")
 
             profile_text, base_profile_text = get_profiles(self.client_cache, build,
                                                            base_profile_name)
