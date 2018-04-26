@@ -569,7 +569,7 @@ class AppTest(unittest.TestCase):
                                      ci_manager=self.ci_manager)
         builder.add_common_builds()
         builder.run()
-        self.assertEquals("outdated", self.conan_api.calls[-1].kwargs["build_modes"])
+        self.assertEquals(["outdated"], self.conan_api.calls[-1].kwargs["build_modes"])
 
         with tools.environment_append({"CONAN_BUILD_POLICY": "missing"}):
             self.conan_api = MockConanAPI()
@@ -585,7 +585,7 @@ class AppTest(unittest.TestCase):
                                          ci_manager=self.ci_manager)
             builder.add_common_builds()
             builder.run()
-            self.assertEquals("missing", self.conan_api.calls[-1].kwargs["build_modes"])
+            self.assertEquals(["missing"], self.conan_api.calls[-1].kwargs["build_modes"])
 
     def test_check_credentials(self):
 
