@@ -9,6 +9,21 @@ class Printer(object):
     def __init__(self, printer=None):
         self.printer = printer or sys.stdout.write
 
+    def print_in_docker(self, container=None):
+        text = """
+                    ##        .
+              ## ## ##       ==
+           ## ## ## ##      ===
+       /*********************\___/ ===
+  ~~~ {~~ ~~~~ ~~~ ~~~~ ~~ ~ /  ===- ~~~
+       \______ o          __/
+         \    \        __/
+          \____\______/
+
+       You are in Docker now! %s
+""" % container or ""
+        self.printer(text)
+
     def print_ascci_art(self):
         text = """
        _____                          _____           _                      _______          _

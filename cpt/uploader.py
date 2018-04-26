@@ -20,4 +20,4 @@ class Uploader(object):
         if upload:
             self.printer.print_message("Uploading packages for '%s'" % str(reference))
             self.auth_manager.login(remote_name)
-            self.conan_api.upload(str(reference), all_packages=True, remote=remote_name)
+            self.conan_api.upload(str(reference), all_packages=True, remote=remote_name, force=True)
