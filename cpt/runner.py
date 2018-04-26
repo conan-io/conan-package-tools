@@ -1,11 +1,9 @@
 import os
 import sys
-import tempfile
 from collections import namedtuple
 
 from conans import tools
-from conans.client.profile_loader import _load_profile
-from conans.util.files import save
+
 from cpt import __version__ as package_tools_version
 from cpt.printer import Printer
 from cpt.profiles import load_profile, patch_default_base_profile
@@ -57,6 +55,8 @@ class CreateRunner(object):
                 name, version, user, channel = self._reference
                 # FIXME: chdir Can be removed in 1.3, fixed issue about api changing curdir
                 with tools.chdir(self._abs_folder):
+                    if self._build_policy:
+                        self._build_policy = [self._build_policy]
                     self._conan_api.create(".", name=name, version=version,
                                            user=user, channel=channel,
                                            build_modes=self._build_policy,
