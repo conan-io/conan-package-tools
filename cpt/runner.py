@@ -114,25 +114,26 @@ class DockerCreateRunner(object):
             if not self._docker_image_skip_update and not self._always_update_conan_in_docker:
                 # Update the downloaded image
                 with self.printer.foldable_output("update conan"):
-                    command = '%s docker run --name conan_runner ' \
-                              ' %s /bin/sh -c "%s"' % (self._sudo_docker_command,
-                                                       self._docker_image,
-                                                       self._pip_update_conan_command())
-                    ret = self._runner(command)
-                    if ret != 0:
-                        raise Exception("Error updating the image: %s" % command)
-                    # Save the image with the updated installed
-                    # packages and remove the intermediate container
-                    command = "%s docker commit conan_runner %s" % (self._sudo_docker_command,
-                                                                    self._docker_image)
-                    ret = self._runner(command)
-                    if ret != 0:
-                        raise Exception("Error commiting the image: %s" % command)
-
-                    command = "%s docker rm conan_runner" % self._sudo_docker_command
-                    ret = self._runner(command)
-                    if ret != 0:
-                        raise Exception("Error updating the image: %s" % command)
+                    try:
+                        command = '%s docker run --name conan_runner ' \
+                                  ' %s /bin/sh -c "%s"' % (self._sudo_docker_command,
+                                                           self._docker_image,
+                                                           self._pip_update_conan_command())
+                        ret = self._runner(command)
+                        if ret != 0:
+                            raise Exception("Error updating the image: %s" % command)
+                        # Save the image with the updated installed
+                        # packages and remove the intermediate container
+                        command = "%s docker commit conan_runner %s" % (self._sudo_docker_command,
+                                                                        self._docker_image)
+                        ret = self._runner(command)
+                        if ret != 0:
+                            raise Exception("Error commiting the image: %s" % command)
+                    finally:
+                        command = "%s docker rm conan_runner" % self._sudo_docker_command
+                        ret = self._runner(command)
+                        if ret != 0:
+                            raise Exception("Error removing the temp container: %s" % command)
 
         # Run the build
         envs = self.get_env_vars()
