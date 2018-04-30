@@ -181,7 +181,7 @@ class ConanMultiPackager(object):
                                           os.getenv("CONAN_DOCKER_IMAGE_SKIP_UPDATE", False))
         self.runner = runner or os.system
         self.output_runner = ConanOutputRunner()
-        self.args = args or " ".join(sys.argv[1:])
+        self.args = " ".join(args) if args else " ".join(sys.argv[1:])
 
         # Upload related variables
         self.upload_retry = upload_retry or os.getenv("CONAN_UPLOAD_RETRY", 3)
