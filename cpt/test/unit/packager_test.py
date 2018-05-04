@@ -24,7 +24,7 @@ class AppTest(unittest.TestCase):
         self.runner = MockRunner()
         self.conan_api = MockConanAPI()
         self.ci_manager = MockCIManager()
-        self.packager = ConanMultiPackager("--build missing -r conan.io",
+        self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
                                            "lasote", "mychannel",
                                            runner=self.runner,
                                            conan_api=self.conan_api,
@@ -103,7 +103,7 @@ class AppTest(unittest.TestCase):
     def test_deprecation_gcc(self):
 
         with self.assertRaisesRegexp(Exception, "DEPRECATED GCC MINOR VERSIONS!"):
-            ConanMultiPackager("--build missing -r conan.io",
+            ConanMultiPackager(["--build missing", "-r conan.io"],
                                "lasote", "mychannel",
                                runner=self.runner,
                                conan_api=self.conan_api,
@@ -113,7 +113,7 @@ class AppTest(unittest.TestCase):
                                ci_manager=self.ci_manager)
 
     def test_32bits_images(self):
-        packager = ConanMultiPackager("--build missing -r conan.io",
+        packager = ConanMultiPackager(["--build missing", "-r conan.io"],
                                       "lasote", "mychannel",
                                       runner=self.runner,
                                       use_docker=True,
@@ -126,7 +126,7 @@ class AppTest(unittest.TestCase):
         self.assertIn("docker pull lasote/conangcc6-x86", self.runner.calls[0])
 
         self.runner.reset()
-        packager = ConanMultiPackager("--build missing -r conan.io",
+        packager = ConanMultiPackager(["--build missing", "-r conan.io"],
                                       "lasote", "mychannel",
                                       runner=self.runner,
                                       conan_api=self.conan_api,
@@ -141,7 +141,7 @@ class AppTest(unittest.TestCase):
 
         self.runner.reset()
         with tools.environment_append({"CONAN_DOCKER_32_IMAGES": "1"}):
-            packager = ConanMultiPackager("--build missing -r conan.io",
+            packager = ConanMultiPackager(["--build missing", "-r conan.io"],
                                           "lasote", "mychannel",
                                           runner=self.runner,
                                           conan_api=self.conan_api,
@@ -155,7 +155,7 @@ class AppTest(unittest.TestCase):
 
         self.runner.reset()
         # Test the opossite
-        packager = ConanMultiPackager("--build missing -r conan.io",
+        packager = ConanMultiPackager(["--build missing", "-r conan.io"],
                                       "lasote", "mychannel",
                                       runner=self.runner,
                                       conan_api=self.conan_api,
@@ -169,7 +169,7 @@ class AppTest(unittest.TestCase):
         self.assertIn("docker pull lasote/conangcc6", self.runner.calls[0])
 
     def test_docker_gcc(self):
-        self.packager = ConanMultiPackager("--build missing -r conan.io",
+        self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
                                            "lasote", "mychannel",
                                            runner=self.runner,
                                            conan_api=self.conan_api,
@@ -194,7 +194,7 @@ class AppTest(unittest.TestCase):
         for the_bool in ["True", "False"]:
             self.runner.reset()
             with tools.environment_append({"CONAN_DOCKER_USE_SUDO": the_bool}):
-                self.packager = ConanMultiPackager("--build missing -r conan.io",
+                self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
                                                    "lasote", "mychannel",
                                                    runner=self.runner,
                                                    conan_api=self.conan_api,
@@ -211,7 +211,7 @@ class AppTest(unittest.TestCase):
                     self.assertIn("docker run", self.runner.calls[-1])
             self.runner.reset()
             with tools.environment_append({"CONAN_PIP_USE_SUDO": the_bool}):
-                self.packager = ConanMultiPackager("--build missing -r conan.io",
+                self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
                                                    "lasote", "mychannel",
                                                    runner=self.runner,
                                                    conan_api=self.conan_api,
@@ -228,7 +228,7 @@ class AppTest(unittest.TestCase):
                     self.assertIn("pip", self.runner.calls[1])
 
     def test_docker_clang(self):
-        self.packager = ConanMultiPackager("--build missing -r conan.io",
+        self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
                                            "lasote", "mychannel",
                                            runner=self.runner,
                                            conan_api=self.conan_api,
@@ -250,7 +250,7 @@ class AppTest(unittest.TestCase):
         self.assertIn('os=os3', self.runner.calls[5])
 
     def test_docker_gcc_and_clang(self):
-        self.packager = ConanMultiPackager("--build missing -r conan.io",
+        self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
                                            "lasote", "mychannel",
                                            runner=self.runner,
                                            conan_api=self.conan_api,
@@ -281,7 +281,7 @@ class AppTest(unittest.TestCase):
         self.assertIn('os=os6', self.runner.calls[21])
 
     def test_upload_false(self):
-        packager = ConanMultiPackager("--build missing -r conan.io", "lasote", "mychannel",
+        packager = ConanMultiPackager(["--build missing", "-r conan.io"], "lasote", "mychannel",
                                       upload=False, reference="zlib/1.2.11",
                                       ci_manager=self.ci_manager)
         self.assertFalse(packager._upload_enabled())
@@ -289,7 +289,7 @@ class AppTest(unittest.TestCase):
     def test_docker_env_propagated(self):
         # test env
         with tools.environment_append({"CONAN_FAKE_VAR": "32"}):
-            self.packager = ConanMultiPackager("--build missing -r conan.io",
+            self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
                                                "lasote", "mychannel",
                                                runner=self.runner,
                                                conan_api=self.conan_api,
@@ -303,7 +303,7 @@ class AppTest(unittest.TestCase):
             self.assertIn('-e CONAN_FAKE_VAR="32"', self.runner.calls[-1])
 
     def test_docker_invalid(self):
-        self.packager = ConanMultiPackager("--build missing -r conan.io",
+        self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
                                            "lasote", "mychannel",
                                            runner=self.runner,
                                            conan_api=self.conan_api,
@@ -317,7 +317,7 @@ class AppTest(unittest.TestCase):
         self.assertRaises(Exception, self.packager.run_builds)
 
     def test_assign_builds_retrocompatibility(self):
-        self.packager = ConanMultiPackager("--build missing -r conan.io",
+        self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
                                            "lasote", "mychannel",
                                            runner=self.runner,
                                            conan_api=self.conan_api,
