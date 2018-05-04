@@ -65,7 +65,6 @@ class Pkg(ConanFile):
                                        "CONAN_PIP_PACKAGE": pip,
                                        "CONAN_LOGIN_USERNAME": CONAN_LOGIN_UPLOAD,
                                        "CONAN_USERNAME": "lasote",
-                                       "CONAN_UPLOAD": CONAN_UPLOAD_URL,
                                        "CONAN_PASSWORD": CONAN_UPLOAD_PASSWORD,
                                        "CONAN_UPLOAD_ONLY_WHEN_STABLE": "1"}):
             self.packager = ConanMultiPackager("--build missing -r conan.io",
@@ -74,6 +73,7 @@ class Pkg(ConanFile):
                                                archs=["x86", "x86_64"],
                                                build_types=["Release"],
                                                reference=unique_ref,
+                                               upload=CONAN_UPLOAD_URL,
                                                ci_manager=ci_manager)
             self.packager.add_common_builds()
             self.packager.run()

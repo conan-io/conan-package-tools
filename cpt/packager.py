@@ -311,6 +311,7 @@ class ConanMultiPackager(object):
 
     def run(self, base_profile_name=None):
         env_vars = self.auth_manager.env_vars()
+        env_vars.update(self.remotes_manager.env_vars())
         with tools.environment_append(env_vars):
             self.printer.print_message("Running builds...")
             if self.ci_manager.skip_builds():
