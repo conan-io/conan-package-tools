@@ -73,7 +73,8 @@ class DockerCreateRunner(object):
                  sudo_pip_command=True,
                  docker_image_skip_update=False, build_policy=None,
                  always_update_conan_in_docker=False,
-                 upload=False, runner=None):
+                 upload=False, runner=None,
+                 docker_shell=None, docker_conan_home=None):
 
         self.printer = Printer()
         self._args = args
@@ -89,6 +90,8 @@ class DockerCreateRunner(object):
         self._profile_text = profile_text
         self._base_profile_text = base_profile_text
         self._base_profile_name = base_profile_name
+        self._docker_shell = docker_shell
+        self._docker_conan_home = docker_conan_home
         self._runner = PrintRunner(runner, self.printer)
 
     def _pip_update_conan_command(self):
@@ -144,11 +147,15 @@ class DockerCreateRunner(object):
             update_command = self._pip_update_conan_command() + " && "
         else:
             update_command = ""
-        command = ("%s docker run --rm -v%s:/home/conan/project %s %s /bin/sh "
-                   "-c \"cd project && "
-                   "%s run_create_in_docker \"" % (self._sudo_docker_command, os.getcwd(),
-                                                   env_vars_text, self._docker_image,
-                                                   update_command))
+        command = ('%s docker run --rm -v %s:%s/project %s %s %s '
+                   '"cd project && '
+                   '%s run_create_in_docker "' % (self._sudo_docker_command,
+                                                  os.getcwd(),
+                                                  self._docker_conan_home,
+                                                  env_vars_text,
+                                                  self._docker_image,
+                                                  self._docker_shell,
+                                                  update_command))
 
         # Push entry command before to build
         if docker_entry_script:

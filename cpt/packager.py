@@ -175,6 +175,9 @@ class ConanMultiPackager(object):
         elif platform.system() != "Windows":
             self.sudo_pip_command = "sudo"
 
+        self.docker_shell = "/bin/sh -c"
+        self.docker_conan_home = "/home/conan"
+
         self.exclude_vcvars_precommand = (exclude_vcvars_precommand or
                                           os.getenv("CONAN_EXCLUDE_VCVARS_PRECOMMAND", False))
         self._docker_image_skip_update = (docker_image_skip_update or
@@ -413,7 +416,9 @@ class ConanMultiPackager(object):
                                        build_policy=self.build_policy,
                                        always_update_conan_in_docker=self._update_conan_in_docker,
                                        upload=self._upload_enabled(),
-                                       runner=self.runner)
+                                       runner=self.runner,
+                                       docker_shell=self.docker_shell,
+                                       docker_conan_home=self.docker_conan_home)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
                       docker_entry_script=self.docker_entry_script)
