@@ -78,6 +78,7 @@ class ConanMultiPackager(object):
                  allow_gcc_minors=False,
                  exclude_vcvars_precommand=False,
                  docker_image_skip_update=False,
+                 docker_image_skip_pull=False,
                  docker_entry_script=None,
                  docker_32_images=None,
                  build_policy=None,
@@ -179,6 +180,9 @@ class ConanMultiPackager(object):
                                           os.getenv("CONAN_EXCLUDE_VCVARS_PRECOMMAND", False))
         self._docker_image_skip_update = (docker_image_skip_update or
                                           os.getenv("CONAN_DOCKER_IMAGE_SKIP_UPDATE", False))
+        self._docker_image_skip_pull = (docker_image_skip_pull or
+                                        os.getenv("CONAN_DOCKER_IMAGE_SKIP_PULL", False))
+
         self.runner = runner or os.system
         self.output_runner = ConanOutputRunner()
         self.args = " ".join(args) if args else " ".join(sys.argv[1:])
@@ -410,6 +414,7 @@ class ConanMultiPackager(object):
                                        sudo_docker_command=self.sudo_docker_command,
                                        sudo_pip_command=self.sudo_pip_command,
                                        docker_image_skip_update=self._docker_image_skip_update,
+                                       docker_image_skip_pull=self._docker_image_skip_pull,
                                        build_policy=self.build_policy,
                                        always_update_conan_in_docker=self._update_conan_in_docker,
                                        upload=self._upload_enabled(),
