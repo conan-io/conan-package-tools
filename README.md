@@ -911,6 +911,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **archs**: List containing specific architectures to build for. Default ["x86", "x86_64"]
 - **use_docker**: Use docker for package creation in Linux systems.
 - **docker_image_skip_update**: If defined, it will skip the initialization update of "conan package tools" and "conan" in the docker image. By default is False.
+- **docker_image_skip_pull**: If defined, it will skip the "docker pull" command, enabling a local image to be used, and without being overwritten.
 - **always_update_conan_in_docker**: If True, "conan package tools" and "conan" will be installed and upgraded in the docker image in every build execution.
   and the container won't be commited with the modifications.
 - **docker_entry_script**: Command to be executed before to build when running Docker.
@@ -1030,7 +1031,8 @@ This is especially useful for CI integration.
 - **CONAN_TOTAL_PAGES**: Total number of pages
 - **CONAN_DOCKER_IMAGE**: If defined and docker is being used, it will use this dockerimage instead of the default images, e.g. "lasote/conangcc63"
 - **CONAN_DOCKER_IMAGE_SKIP_UPDATE**: If defined, it will skip the initialization update of "conan package tools" and "conan" in the docker image. By default is False.
-- **CONAN_ALWAYS_UPDATE_CONAN_DOCKER**: If defined, "conan package tools" and "conan" will be installed and upgraded in the docker image in every build execution 
+- **CONAN_DOCKER_IMAGE_SKIP_PULL**: If defined, it will skip the "docker pull" command, enabling a local image to be used, and without being overwritten.
+- **CONAN_ALWAYS_UPDATE_CONAN_DOCKER**: If defined, "conan package tools" and "conan" will be installed and upgraded in the docker image in every build execution
   and the container won't be commited with the modifications.
 - **CONAN_DOCKER_32_IMAGES**: If defined, and the current build is arch="x86" the docker image name will be appended with "-i386". e.j: "lasote/conangcc63-i386"
 - **CONAN_STABLE_BRANCH_PATTERN**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *CONAN_STABLE_CHANNEL* channel. Default "master". E.j: "release/*"
