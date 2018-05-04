@@ -37,7 +37,7 @@ class Pkg(ConanFile):
                                        "CONAN_USERNAME": "lasote",
                                        "CONAN_UPLOAD": CONAN_UPLOAD_URL,
                                        "CONAN_PASSWORD": CONAN_UPLOAD_PASSWORD}):
-            self.packager = ConanMultiPackager("--build missing -r conan.io",
+            self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
                                                channel="mychannel",
                                                gcc_versions=["6"],
                                                archs=["x86", "x86_64"],
@@ -67,7 +67,7 @@ class Pkg(ConanFile):
                                        "CONAN_USERNAME": "lasote",
                                        "CONAN_PASSWORD": CONAN_UPLOAD_PASSWORD,
                                        "CONAN_UPLOAD_ONLY_WHEN_STABLE": "1"}):
-            self.packager = ConanMultiPackager("--build missing -r conan.io",
+            self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
                                                channel="mychannel",
                                                gcc_versions=["6"],
                                                archs=["x86", "x86_64"],
