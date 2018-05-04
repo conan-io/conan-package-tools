@@ -165,15 +165,15 @@ class ConanMultiPackager(object):
 
         self.sudo_docker_command = ""
         if "CONAN_DOCKER_USE_SUDO" in os.environ:
-            self.sudo_docker_command = "sudo" if get_bool_from_env("CONAN_DOCKER_USE_SUDO") else ""
+            self.sudo_docker_command = "sudo -E" if get_bool_from_env("CONAN_DOCKER_USE_SUDO") else ""
         elif platform.system() != "Windows":
-            self.sudo_docker_command = "sudo"
+            self.sudo_docker_command = "sudo -E"
 
         self.sudo_pip_command = ""
         if "CONAN_PIP_USE_SUDO" in os.environ:
-            self.sudo_pip_command = "sudo" if get_bool_from_env("CONAN_PIP_USE_SUDO") else ""
+            self.sudo_pip_command = "sudo -E" if get_bool_from_env("CONAN_PIP_USE_SUDO") else ""
         elif platform.system() != "Windows":
-            self.sudo_pip_command = "sudo"
+            self.sudo_pip_command = "sudo -E"
 
         self.exclude_vcvars_precommand = (exclude_vcvars_precommand or
                                           os.getenv("CONAN_EXCLUDE_VCVARS_PRECOMMAND", False))

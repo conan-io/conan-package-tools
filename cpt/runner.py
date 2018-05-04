@@ -109,14 +109,22 @@ class DockerCreateRunner(object):
         return command
 
     def run(self, pull_image=True, docker_entry_script=None):
+        envs = self.get_env_vars()
+        env_vars_text = " ".join(['-e %s="%s"' % (key, value)
+                                        for key, value in envs.items() if value])
+
+        env_vars_text += " -e PIP_INDEX_URL -e PIP_EXTRA_INDEX_URL"
+
+        # Run the build
         if pull_image:
             self.pull_image()
             if not self._docker_image_skip_update and not self._always_update_conan_in_docker:
                 # Update the downloaded image
                 with self.printer.foldable_output("update conan"):
                     try:
-                        command = '%s docker run --name conan_runner ' \
+                        command = '%s docker run %s --name conan_runner ' \
                                   ' %s /bin/sh -c "%s"' % (self._sudo_docker_command,
+                                                           env_vars_text,
                                                            self._docker_image,
                                                            self._pip_update_conan_command())
                         ret = self._runner(command)
@@ -134,11 +142,6 @@ class DockerCreateRunner(object):
                         ret = self._runner(command)
                         if ret != 0:
                             raise Exception("Error removing the temp container: %s" % command)
-
-        # Run the build
-        envs = self.get_env_vars()
-        env_vars_text = " ".join(['-e %s="%s"' % (key, value)
-                                        for key, value in envs.items() if value])
 
         if self._always_update_conan_in_docker:
             update_command = self._pip_update_conan_command() + " && "
