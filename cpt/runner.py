@@ -79,6 +79,7 @@ class DockerCreateRunner(object):
                  args=None, conan_pip_package=None, docker_image=None, sudo_docker_command=None,
                  sudo_pip_command=True,
                  docker_image_skip_update=False, build_policy=None,
+                 docker_image_skip_pull=False,
                  always_update_conan_in_docker=False,
                  upload=False, runner=None):
 
@@ -91,6 +92,7 @@ class DockerCreateRunner(object):
         self._docker_image = docker_image
         self._always_update_conan_in_docker = always_update_conan_in_docker
         self._docker_image_skip_update = docker_image_skip_update
+        self._docker_image_skip_pull = docker_image_skip_pull
         self._sudo_docker_command = sudo_docker_command or ""
         self._sudo_pip_command = sudo_pip_command
         self._profile_text = profile_text
@@ -117,7 +119,8 @@ class DockerCreateRunner(object):
 
     def run(self, pull_image=True, docker_entry_script=None):
         if pull_image:
-            self.pull_image()
+            if not self._docker_image_skip_pull:
+                self.pull_image()
             if not self._docker_image_skip_update and not self._always_update_conan_in_docker:
                 # Update the downloaded image
                 with self.printer.foldable_output("update conan"):
