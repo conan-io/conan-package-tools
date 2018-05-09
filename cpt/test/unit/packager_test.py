@@ -205,7 +205,7 @@ class AppTest(unittest.TestCase):
                 self._add_build(1, "gcc", "4.3")
                 self.packager.run_builds(1, 2)
                 if the_bool == "True":
-                    self.assertIn("sudo docker run", self.runner.calls[-1])
+                    self.assertIn("sudo -E docker run", self.runner.calls[-1])
                 else:
                     self.assertNotIn("sudo docker run", self.runner.calls[-1])
                     self.assertIn("docker run", self.runner.calls[-1])
