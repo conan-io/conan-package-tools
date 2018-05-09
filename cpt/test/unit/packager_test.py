@@ -207,7 +207,7 @@ class AppTest(unittest.TestCase):
                 if the_bool == "True":
                     self.assertIn("sudo -E docker run", self.runner.calls[-1])
                 else:
-                    self.assertNotIn("sudo docker run", self.runner.calls[-1])
+                    self.assertNotIn("sudo -E docker run", self.runner.calls[-1])
                     self.assertIn("docker run", self.runner.calls[-1])
             self.runner.reset()
             with tools.environment_append({"CONAN_PIP_USE_SUDO": the_bool}):
@@ -222,9 +222,9 @@ class AppTest(unittest.TestCase):
                 self._add_build(1, "gcc", "4.3")
                 self.packager.run_builds(1, 2)
                 if the_bool == "True":
-                    self.assertIn("sudo pip", self.runner.calls[1])
+                    self.assertIn("sudo -E pip", self.runner.calls[1])
                 else:
-                    self.assertNotIn("sudo pip", self.runner.calls[1])
+                    self.assertNotIn("sudo -E pip", self.runner.calls[1])
                     self.assertIn("pip", self.runner.calls[1])
 
     def test_docker_clang(self):
