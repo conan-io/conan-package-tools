@@ -431,6 +431,13 @@ class ConanMultiPackager(object):
                 pulled_docker_images[docker_image] = True
 
     def _get_docker_image(self, build):
+        if self._docker_image:
+            docker_image = self._docker_image
+        else:
+            compiler_name = build.settings.get("compiler", "")
+            compiler_version = build.settings.get("compiler.version", "")
+            docker_image = self._autodetect_docker_base_image(compiler_name, compiler_version)
+
         arch = build.settings.get("arch", "") or build.settings.get("arch_build", "")
         if self.docker_32_images and arch == "x86":
             build.settings["arch_build"] = "x86"
@@ -439,11 +446,6 @@ class ConanMultiPackager(object):
             docker_arch_suffix = arch
         else:
             docker_arch_suffix = None
-
-        compiler_name = build.settings.get("compiler", "")
-        compiler_version = build.settings.get("compiler.version", "")
-        default_docker = self._autodetect_docker_base_image(compiler_name, compiler_version)
-        docker_image = self._docker_image or default_docker
         if docker_arch_suffix and "-" not in docker_image:
             docker_image = "%s-%s" % (docker_image, docker_arch_suffix)
 
