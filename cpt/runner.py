@@ -82,7 +82,8 @@ class DockerCreateRunner(object):
                  docker_image_skip_pull=False,
                  always_update_conan_in_docker=False,
                  upload=False, runner=None,
-                 docker_shell=None, docker_conan_home=None):
+                 docker_shell="", docker_conan_home="",
+                 docker_platform_param="", lcow_user_workaround=""):
 
         self.printer = Printer()
         self._args = args
@@ -101,6 +102,8 @@ class DockerCreateRunner(object):
         self._base_profile_name = base_profile_name
         self._docker_shell = docker_shell
         self._docker_conan_home = docker_conan_home
+        self._docker_platform_param = docker_platform_param
+        self._lcow_user_workaround = lcow_user_workaround
         self._runner = PrintRunner(runner, self.printer)
 
     def _pip_update_conan_command(self):
@@ -123,7 +126,7 @@ class DockerCreateRunner(object):
     def run(self, pull_image=True, docker_entry_script=None):
         envs = self.get_env_vars()
         env_vars_text = " ".join(['-e %s="%s"' % (key, value)
-                                        for key, value in envs.items() if value])
+                                  for key, value in envs.items() if value])
 
         env_vars_text += " -e PIP_INDEX_URL -e PIP_EXTRA_INDEX_URL"
 
@@ -135,11 +138,13 @@ class DockerCreateRunner(object):
                 # Update the downloaded image
                 with self.printer.foldable_output("update conan"):
                     try:
-                        command = '%s docker run %s --name conan_runner ' \
-                                  ' %s /bin/sh -c "%s"' % (self._sudo_docker_command,
-                                                           env_vars_text,
-                                                           self._docker_image,
-                                                           self._pip_update_conan_command())
+                        command = '%s docker run %s %s --name conan_runner ' \
+                                  ' %s %s "%s"' % (self._sudo_docker_command,
+                                                   env_vars_text,
+                                                   self._docker_platform_param,
+                                                   self._docker_image,
+                                                   self._docker_shell,
+                                                   self._pip_update_conan_command())
                         ret = self._runner(command)
                         if ret != 0:
                             raise Exception("Error updating the image: %s" % command)
@@ -160,14 +165,16 @@ class DockerCreateRunner(object):
             update_command = self._pip_update_conan_command() + " && "
         else:
             update_command = ""
-        command = ('%s docker run --rm -v %s:%s/project %s %s %s '
-                   '"cd project && '
+        command = ('%s docker run --rm -v %s:%s/project %s %s %s %s '
+                   '"%s cd project && '
                    '%s run_create_in_docker "' % (self._sudo_docker_command,
                                                   os.getcwd(),
                                                   self._docker_conan_home,
                                                   env_vars_text,
+                                                  self._docker_platform_param,
                                                   self._docker_image,
                                                   self._docker_shell,
+                                                  self._lcow_user_workaround,
                                                   update_command))
 
         # Push entry command before to build
