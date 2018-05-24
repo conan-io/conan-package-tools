@@ -123,9 +123,7 @@ class DockerCreateRunner(object):
     def run(self, pull_image=True, docker_entry_script=None):
         envs = self.get_env_vars()
         env_vars_text = " ".join(['-e %s="%s"' % (key, value)
-                                        for key, value in envs.items() if value])
-
-        env_vars_text += " -e PIP_INDEX_URL -e PIP_EXTRA_INDEX_URL"
+                                 for key, value in envs.items() if value])
 
         # Run the build
         if pull_image:
@@ -203,6 +201,8 @@ class DockerCreateRunner(object):
         ret["CONAN_TEMP_TEST_FOLDER"] = "1"  # test package folder to a temp one
         ret["CPT_UPLOAD_ENABLED"] = self._upload
         ret["CPT_BUILD_POLICY"] = escape_env(self._build_policy)
+
+        ret.update({key: value for key, value in os.environ.items() if key.startswith("PIP_")})
 
         return ret
 
