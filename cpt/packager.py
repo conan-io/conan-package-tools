@@ -78,6 +78,7 @@ class ConanMultiPackager(object):
                  allow_gcc_minors=False,
                  exclude_vcvars_precommand=False,
                  docker_image_skip_update=False,
+                 docker_image_skip_pull=False,
                  docker_entry_script=None,
                  docker_32_images=None,
                  build_policy=None,
@@ -165,20 +166,26 @@ class ConanMultiPackager(object):
 
         self.sudo_docker_command = ""
         if "CONAN_DOCKER_USE_SUDO" in os.environ:
-            self.sudo_docker_command = "sudo" if get_bool_from_env("CONAN_DOCKER_USE_SUDO") else ""
+            self.sudo_docker_command = "sudo -E" if get_bool_from_env("CONAN_DOCKER_USE_SUDO") else ""
         elif platform.system() != "Windows":
-            self.sudo_docker_command = "sudo"
+            self.sudo_docker_command = "sudo -E"
 
         self.sudo_pip_command = ""
         if "CONAN_PIP_USE_SUDO" in os.environ:
-            self.sudo_pip_command = "sudo" if get_bool_from_env("CONAN_PIP_USE_SUDO") else ""
+            self.sudo_pip_command = "sudo -E" if get_bool_from_env("CONAN_PIP_USE_SUDO") else ""
         elif platform.system() != "Windows":
-            self.sudo_pip_command = "sudo"
+            self.sudo_pip_command = "sudo -E"
+
+        self.docker_shell = "/bin/sh -c"
+        self.docker_conan_home = "/home/conan"
 
         self.exclude_vcvars_precommand = (exclude_vcvars_precommand or
                                           os.getenv("CONAN_EXCLUDE_VCVARS_PRECOMMAND", False))
         self._docker_image_skip_update = (docker_image_skip_update or
                                           os.getenv("CONAN_DOCKER_IMAGE_SKIP_UPDATE", False))
+        self._docker_image_skip_pull = (docker_image_skip_pull or
+                                        os.getenv("CONAN_DOCKER_IMAGE_SKIP_PULL", False))
+
         self.runner = runner or os.system
         self.output_runner = ConanOutputRunner()
         self.args = " ".join(args) if args else " ".join(sys.argv[1:])
@@ -411,16 +418,26 @@ class ConanMultiPackager(object):
                                        sudo_docker_command=self.sudo_docker_command,
                                        sudo_pip_command=self.sudo_pip_command,
                                        docker_image_skip_update=self._docker_image_skip_update,
+                                       docker_image_skip_pull=self._docker_image_skip_pull,
                                        build_policy=self.build_policy,
                                        always_update_conan_in_docker=self._update_conan_in_docker,
                                        upload=self._upload_enabled(),
-                                       runner=self.runner)
+                                       runner=self.runner,
+                                       docker_shell=self.docker_shell,
+                                       docker_conan_home=self.docker_conan_home)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
                       docker_entry_script=self.docker_entry_script)
                 pulled_docker_images[docker_image] = True
 
     def _get_docker_image(self, build):
+        if self._docker_image:
+            docker_image = self._docker_image
+        else:
+            compiler_name = build.settings.get("compiler", "")
+            compiler_version = build.settings.get("compiler.version", "")
+            docker_image = self._autodetect_docker_base_image(compiler_name, compiler_version)
+
         arch = build.settings.get("arch", "") or build.settings.get("arch_build", "")
         if self.docker_32_images and arch == "x86":
             build.settings["arch_build"] = "x86"
@@ -429,11 +446,6 @@ class ConanMultiPackager(object):
             docker_arch_suffix = arch
         else:
             docker_arch_suffix = None
-
-        compiler_name = build.settings.get("compiler", "")
-        compiler_version = build.settings.get("compiler.version", "")
-        default_docker = self._autodetect_docker_base_image(compiler_name, compiler_version)
-        docker_image = self._docker_image or default_docker
         if docker_arch_suffix and "-" not in docker_image:
             docker_image = "%s-%s" % (docker_image, docker_arch_suffix)
 
