@@ -5,7 +5,7 @@ from six import string_types
 class AuthManager(object):
 
     def __init__(self, conan_api, printer, login_input=None,
-                 passwords_input=None, default_username=None):
+                 passwords_input=None, default_username=None, already_logged_in=False):
         """
         :param conan_api: ConanAPI
         :param login_input: Can be a string with the user or a dict with {"remote": "login"}
@@ -18,6 +18,7 @@ class AuthManager(object):
         self._conan_api = conan_api
         self._data = {}  # {"remote_name": (user, password)}
         self.printer = printer
+        self.already_logged_in = already_logged_in
 
         unique_login = self._get_single_login_username(login_input) or default_username
         unique_password = self._get_single_password(passwords_input)
@@ -90,10 +91,15 @@ class AuthManager(object):
         return self._data[remote]
 
     def credentials_ready(self, upload_remote_name):
+        if self.already_logged_in:
+            return True
         user, password = self.get_user_password(upload_remote_name)
         return user and password
 
     def login(self, remote_name):
+        if self.already_logged_in:
+            self.printer.print_message("Forced to use the already stored credentials...")
+            return True
         self.printer.print_message("Verifying credentials...")
         user, password = self.get_user_password(remote_name)
         self._conan_api.authenticate(user, password, remote_name)

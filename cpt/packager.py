@@ -72,6 +72,7 @@ class ConanMultiPackager(object):
                  upload_retry=None,
                  clang_versions=None,
                  login_username=None,
+                 already_logged_in=False,
                  upload_only_when_stable=None,
                  build_types=None,
                  skip_check_credentials=False,
@@ -106,8 +107,10 @@ class ConanMultiPackager(object):
             raise Exception("Instance ConanMultiPackage with 'username' parameter or use "
                             "CONAN_USERNAME env variable")
 
+        already_logged_in = already_logged_in or os.getenv("CONAN_ALREADY_LOGGED_IN", False)
         self.auth_manager = AuthManager(self.conan_api, self.printer, login_username, password,
-                                        default_username=self.username)
+                                        default_username=self.username,
+                                        already_logged_in=already_logged_in)
         self.uploader = Uploader(self.conan_api, self.remotes_manager, self.auth_manager,
                                  self.printer)
 
