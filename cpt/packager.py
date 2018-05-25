@@ -72,7 +72,6 @@ class ConanMultiPackager(object):
                  upload_retry=None,
                  clang_versions=None,
                  login_username=None,
-                 already_logged_in=False,
                  upload_only_when_stable=None,
                  build_types=None,
                  skip_check_credentials=False,
@@ -106,11 +105,12 @@ class ConanMultiPackager(object):
         if not self.username:
             raise Exception("Instance ConanMultiPackage with 'username' parameter or use "
                             "CONAN_USERNAME env variable")
+        self.skip_check_credentials = skip_check_credentials or \
+                                      os.getenv("CONAN_SKIP_CHECK_CREDENTIALS", False)
 
-        already_logged_in = already_logged_in or os.getenv("CONAN_ALREADY_LOGGED_IN", False)
         self.auth_manager = AuthManager(self.conan_api, self.printer, login_username, password,
                                         default_username=self.username,
-                                        already_logged_in=already_logged_in)
+                                        skip_check_credentials=self.skip_check_credentials)
         self.uploader = Uploader(self.conan_api, self.remotes_manager, self.auth_manager,
                                  self.printer)
 
@@ -200,9 +200,6 @@ class ConanMultiPackager(object):
             self.upload_only_when_stable = upload_only_when_stable
         else:
             self.upload_only_when_stable = get_bool_from_env("CONAN_UPLOAD_ONLY_WHEN_STABLE")
-
-        self.skip_check_credentials = skip_check_credentials or \
-                                      os.getenv("CONAN_SKIP_CHECK_CREDENTIALS", False)
 
         self.docker_entry_script = docker_entry_script or os.getenv("CONAN_DOCKER_ENTRY_SCRIPT")
 

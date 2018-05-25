@@ -37,6 +37,21 @@ class Pkg(ConanFile):
                       "not available", self.output)
         self.assertNotIn("Uploading packages", self.output)
 
+    def test_no_credentials_but_skip(self):
+        with tools.environment_append({"CONAN_NON_INTERACTIVE": "1"}):
+            self.save_conanfile(self.conanfile)
+            mp = ConanMultiPackager(username="lasote", out=self.output.write,
+                                    ci_manager=self.ci_manager,
+                                    upload=("https://api.bintray.com/conan/conan-community/conan",
+                                            True, "my_upload_remote"),
+                                    skip_check_credentials=True)
+            mp.add({}, {}, {})
+            with self.assertRaisesRegexp(ConanException, "Conan interactive mode disabled"):
+                mp.run()
+            self.assertIn("Uploading packages for")
+            self.assertIn("Credentials not specified but 'skip_check_credentials' activated",
+                          self.output)
+
     def test_no_credentials_only_url(self):
         self.save_conanfile(self.conanfile)
         mp = ConanMultiPackager(username="lasote", out=self.output.write,
