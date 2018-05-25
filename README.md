@@ -922,7 +922,8 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **upload_retry**: Num retries in upload in case of failure.             
 - **upload_only_when_stable**: Will try to upload only if the channel is the stable channel. Default [False]
 - **build_types**: List containing specific build types. Default ["Release", "Debug"]
-- **skip_check_credentials**: Conan will check the user credentials before building the packages. Default [False]
+- **skip_check_credentials**: Conan will skip checking the user credentials before building the packages. And if no user/remote is specified, will try to upload with the
+  already stored credentiales in the local cache. Default [False]
 - **allow_gcc_minors** Declare this variable if you want to allow gcc >=5 versions with the minor (5.1, 6.3 etc).
 - **exclude_vcvars_precommand** For Visual Studio builds, it exclude the vcvars call to set the environment.
 - **build_policy**: Default None.
@@ -1017,7 +1018,8 @@ This is especially useful for CI integration.
 - **CONAN_UPLOAD_RETRY**: If defined, in case of fail retries to upload again the specified times
 - **CONAN_UPLOAD_ONLY_WHEN_STABLE**: If defined, will try to upload the packages only when the current channel is the stable one.
 
-- **CONAN_SKIP_CHECK_CREDENTIALS**: Force to check user credentials before to build when upload is required. By default is False.
+- **CONAN_SKIP_CHECK_CREDENTIALS**: Conan will skip checking the user credentials before building the packages. And if no user/remote is specified, will try to upload with the
+  already stored credentiales in the local cache. Default [False]
 - **CONAN_DOCKER_ENTRY_SCRIPT**: Command to be executed before to build when running Docker.
 - **CONAN_GCC_VERSIONS**: Gcc versions, comma separated, e.g. "4.6,4.8,5,6"
 - **CONAN_CLANG_VERSIONS**: Clang versions, comma separated, e.g. "3.8,3.9,4.0"

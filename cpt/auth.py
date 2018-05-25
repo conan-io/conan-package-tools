@@ -5,7 +5,7 @@ from six import string_types
 class AuthManager(object):
 
     def __init__(self, conan_api, printer, login_input=None,
-                 passwords_input=None, default_username=None):
+                 passwords_input=None, default_username=None, skip_check_credentials=False):
         """
         :param conan_api: ConanAPI
         :param login_input: Can be a string with the user or a dict with {"remote": "login"}
@@ -18,6 +18,7 @@ class AuthManager(object):
         self._conan_api = conan_api
         self._data = {}  # {"remote_name": (user, password)}
         self.printer = printer
+        self.skip_check_credentials = skip_check_credentials
 
         unique_login = self._get_single_login_username(login_input) or default_username
         unique_password = self._get_single_password(passwords_input)
@@ -91,11 +92,17 @@ class AuthManager(object):
 
     def credentials_ready(self, upload_remote_name):
         user, password = self.get_user_password(upload_remote_name)
-        return user and password
+        return (user and password) or self.skip_check_credentials
 
     def login(self, remote_name):
         self.printer.print_message("Verifying credentials...")
         user, password = self.get_user_password(remote_name)
+        if not (user and password) and self.skip_check_credentials:  # Assume that it is already logged.
+                self.printer.print_message("Credentials not specified but 'skip_check_credentials' "
+                                           "activated, trying to use pre-stored user/password in "
+                                           "local cache")
+                return
+
         self._conan_api.authenticate(user, password, remote_name)
         self.printer.print_message("OK! '%s' user logged in '%s' " % (user, remote_name))
 
