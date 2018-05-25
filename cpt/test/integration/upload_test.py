@@ -48,7 +48,7 @@ class Pkg(ConanFile):
             mp.add({}, {}, {})
             with self.assertRaisesRegexp(ConanException, "Conan interactive mode disabled"):
                 mp.run()
-            self.assertIn("Uploading packages for")
+            self.assertIn("Uploading packages for", self.output)
             self.assertIn("Credentials not specified but 'skip_check_credentials' activated",
                           self.output)
 
