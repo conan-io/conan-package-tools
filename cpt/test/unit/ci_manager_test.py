@@ -136,3 +136,14 @@ class CIManagerTest(unittest.TestCase):
                                        }):
             manager = CIManager(self.printer)
             self.assertRaises(Exception, manager.get_commit_build_policy)
+
+    def test_bamboo_env_vars(self):
+        self.assertIsNone(os.getenv('CONAN_LOGIN_USERNAME'))
+
+        with tools.environment_append({"bamboo_buildNumber": "xx",
+                                       "bamboo_planRepository_branch": "mybranch",
+                                       "bamboo.CONAN_LOGIN_USERNAME": "bamboo"}):
+            manager = CIManager(self.printer)
+            self.assertEquals(manager.get_branch(), "mybranch") # checks that manager is Bamboo 
+
+            self.assertEquals(os.getenv('CONAN_LOGIN_USERNAME'), "bamboo")
