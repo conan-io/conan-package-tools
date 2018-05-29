@@ -154,6 +154,13 @@ class BambooManager(GenericManager):
         super(BambooManager, self).__init__(printer)
         self.printer.print_message("CI detected: Bamboo")
 
+        for var in list(os.environ.keys()):
+            result = re.match('\Abamboo\.(.*)', var)
+            if result != None:
+                self.printer.print_message("de-bambooized env var : %s " % result.group(1))
+                os.environ[result.group(1)] = os.environ[var]
+
+
     def get_branch(self):
         return os.getenv("bamboo_planRepository_branch", None)
 
