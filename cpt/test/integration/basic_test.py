@@ -18,8 +18,9 @@ class Pkg(ConanFile):
     pass
 """
         self.save_conanfile(conanfile)
+        mp = ConanMultiPackager(username="lasote")
         with self.assertRaisesRegexp(Exception, "Specify a CONAN_REFERENCE or name and version"):
-            ConanMultiPackager(username="lasote")
+            mp.add_common_builds()
 
     def test_missing_username(self):
         conanfile = """from conans import ConanFile
