@@ -142,9 +142,10 @@ class ConanMultiPackager(object):
                 raise Exception("Conanfile not found, specify a 'reference' parameter with name and version")
             conanfile = load_conanfile_class("./conanfile.py")
             name, version = conanfile.name, conanfile.version
-            if not name or not version:
-                raise Exception("Specify a CONAN_REFERENCE or name and version fields in the recipe")
-            self.reference = ConanFileReference(name, version, self.username, self.channel)
+            if name and version:
+                self.reference = ConanFileReference(name, version, self.username, self.channel)
+            else:
+                self.reference = None
 
         # If CONAN_DOCKER_IMAGE is speified, then use docker is True
         self.use_docker = (use_docker or os.getenv("CONAN_USE_DOCKER", False) or
@@ -294,6 +295,9 @@ class ConanMultiPackager(object):
     def add_common_builds(self, shared_option_name=None, pure_c=True,
                           dll_with_static_runtime=False, reference=None):
 
+        if not reference and not self.reference:
+            raise Exception("Specify a CONAN_REFERENCE or name and version fields in the recipe")
+
         if shared_option_name is None:
             if os.path.exists("conanfile.py"):
                 conanfile = load_conanfile_class("./conanfile.py")
@@ -302,7 +306,6 @@ class ConanMultiPackager(object):
 
         tmp = self.build_generator.get_builds(pure_c, shared_option_name, dll_with_static_runtime,
                                               reference or self.reference)
-
         self._builds.extend(tmp)
 
     def add(self, settings=None, options=None, env_vars=None, build_requires=None, reference=None):
