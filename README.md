@@ -251,18 +251,18 @@ So, if we want to generate packages for ``x86_64`` and ``armv8`` but only for ``
 
 There are also two additional parameters of the ``add_common_builds``:
 
-- **pure_c**: (Default True) If your project is C++, pass the **pure_c=False** to add both 
-              combinations using **libstdc** and **libstdc++11** for the setting **compiler.libcxx**. 
+- **pure_c**: (Default True) If your project is C++, pass the **pure_c=False** to add both
+              combinations using **libstdc** and **libstdc++11** for the setting **compiler.libcxx**.
               When True, the default profile value of ``libcxx`` will be applied.
-              If you don't want ``libcxx`` value to apply 
+              If you don't want ``libcxx`` value to apply
               to your binary packages you have to use the ``configure`` method to remove it:
-              
+
 ```
     def configure(self):
         del self.settings.compiler.libcxx
 ```
 
-- **shared_option_name**: If your conanfile.py have an option **shared**, the generated builds will contain automatically the "True/False" combination for that option. 
+- **shared_option_name**: If your conanfile.py have an option **shared**, the generated builds will contain automatically the "True/False" combination for that option.
   Pass "False" to deactivate it or "lib_name:shared_option_name" to specify a custom option name, e.j: boost:my_shared``
 - **dll_with_static_runtime**: Will add also the combination of runtime MT with shared libraries.
 
@@ -322,11 +322,11 @@ And run the build.py:
 
 It will generate a set of build configurations (profiles) for gcc 4.9 and will run it inside a container of the ``lasote/conangcc49`` image.
 
-If you want to run the arch="x86" build inside a docker container of 32 bits you can set the parameter ``docker_32_images`` in the 
+If you want to run the arch="x86" build inside a docker container of 32 bits you can set the parameter ``docker_32_images`` in the
 ConanMultiPackager constructor or set the environment variable ``CONAN_DOCKER_32_IMAGES``. In this case, the docker image name to use
-will be appended with ``-i386``. 
+will be appended with ``-i386``.
 
-The Docker images used by default both for 64 and 32 bits are pushed to dockerhub and its Dockerfiles are  available in the 
+The Docker images used by default both for 64 and 32 bits are pushed to dockerhub and its Dockerfiles are  available in the
 [conan-docker-tools](https://github.com/conan-io/conan-docker-tools) repository.
 
 ### Running scripts and executing commands before to build on Docker
@@ -862,27 +862,27 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **login_username**: The login username. Could take two possible values:
 
     - String with the login":
-       
+
        ```
        login_username = "my_user"
        ```
-    
-    - Dict containing the remote name and the login for that remote. Use together with "remotes" variable to specify remote names e.j: 
-        
+
+    - Dict containing the remote name and the login for that remote. Use together with "remotes" variable to specify remote names e.j:
+
        ```
        login_username = {"remote1": "my_user", "my_artifactory": "other_user"}
        ```
-       
+
 - **password**. Password to authenticate with the remotes. Could take two possible values:
 
     - String with the password:
-       
+
        ```
        password = "my_pass"
        ```
-    
-    - Dict containing the remote name and the login for that remote. Use together with "remotes" variable to specify remote names e.j: 
-        
+
+    - Dict containing the remote name and the login for that remote. Use together with "remotes" variable to specify remote names e.j:
+
        ```
        password = {"remote1": "my_pass", "my_artifactory": "my_pass2"}
        ```
@@ -890,15 +890,15 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **remotes**: Could take two values:
 
     - String of URLs separated by ",":
-       
+
        ```
        remotes = "https://api.bintray.com/conan/conan-community/conan,https://api.bintray.com/conan/other/conan2"
        ```
-    
-    - List of tuples containing the "url", "use_ssl" flag and "name" . e.j: 
-        
+
+    - List of tuples containing the "url", "use_ssl" flag and "name" . e.j:
+
        ```
-       remotes = [("https://api.bintray.com/conan/conan-community/conan", True, "remote1"), 
+       remotes = [("https://api.bintray.com/conan/conan-community/conan", True, "remote1"),
                   ("https://api.bintray.com/conan/other/conan2", False, "remote2")]
        ```
 
@@ -927,10 +927,11 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **allow_gcc_minors** Declare this variable if you want to allow gcc >=5 versions with the minor (5.1, 6.3 etc).
 - **exclude_vcvars_precommand** For Visual Studio builds, it exclude the vcvars call to set the environment.
 - **build_policy**: Default None.
-    - "never": No build from sources, only download packages. 
+    - "never": No build from sources, only download packages.
     - "missing": Build only missing packages.
     - "outdated": Build only missing or if the available package is not built with the current recipe. Useful to upload new configurations, e.j packages for a new compiler without
       rebuild all packages.
+- **test_folder**: Custom test folder consumed by Conan create, e.j .conan/test_package
 
 Upload related parameters:
 
@@ -940,9 +941,9 @@ Upload related parameters:
        ```
        upload = "https://api.bintray.com/conan/conan-community/conan"
        ```
-    
-    - Tuple containing the "url", "use_ssl" flag and "name". 
-    
+
+    - Tuple containing the "url", "use_ssl" flag and "name".
+
        ```
        upload = ("https://api.bintray.com/conan/conan-community/conan", True, "remote1")
        ```
@@ -989,32 +990,32 @@ This is especially useful for CI integration.
 - **CONAN_USERNAME**: Your conan username (for the package reference)
 - **CONAN_REFERENCE**: Reference of the package to upload, e.g. "zlib/1.2.8". Otherwise it will be read from the `conanfile.py`
 - **CONAN_LOGIN_USERNAME**: Unique login username for all remotes. Will use "CONAN_USERNAME" when not present.
-- **CONAN_LOGIN_USERNAME_XXX**: Specify a login for a remote name: 
-  
-  - `CONAN_LOGIN_USERNAME_MYREPO=my_username` 
-  
+- **CONAN_LOGIN_USERNAME_XXX**: Specify a login for a remote name:
+
+  - `CONAN_LOGIN_USERNAME_MYREPO=my_username`
+
 - **CONAN_PASSWORD**: Conan Password, or API key if you are using Bintray.
-- **CONAN_PASSWORD_XXX**: Specify a password for a remote name: 
-  
-  - `CONAN_PASSWORD_MYREPO=mypassword` 
+- **CONAN_PASSWORD_XXX**: Specify a password for a remote name:
+
+  - `CONAN_PASSWORD_MYREPO=mypassword`
 
 - **CONAN_REMOTES**: List of URLs separated by "," for the additional remotes (read).
                      You can specify the SSL verify flag and the remote name using the "@" separator. e.j:
-                     
+
   - `CONAN_REMOTES=url1@True@remote_name, url2@False@remote_name2`
-  
+
   The remote name is useful in case you want to specify custom credentials for different remotes. See `CONAN_LOGIN_USERNAME_XXX` and `CONAN_PASSWORD_XXX`
 
-- **CONAN_UPLOAD**: URL of the repository where we want to use to upload the packages. 
+- **CONAN_UPLOAD**: URL of the repository where we want to use to upload the packages.
   The value can containing the URL, the SSL validation flag and remote name (last two optionals) separated by "@". e.j:
-  
-  - `CONAN_UPLOAD=https://api.bintray.com/conan/conan-community/conan` 
+
+  - `CONAN_UPLOAD=https://api.bintray.com/conan/conan-community/conan`
   - `CONAN_UPLOAD=https://api.bintray.com/conan/conan-community/conan@True`
-  - `CONAN_UPLOAD=https://api.bintray.com/conan/conan-community/conan@True@other_repo_name` 
-  
+  - `CONAN_UPLOAD=https://api.bintray.com/conan/conan-community/conan@True@other_repo_name`
+
   If a remote name is not specified, `upload_repo` will be used as a remote name.
   If the SSL validation configuration is not specified, it will use `True` by default.
-  
+
 - **CONAN_UPLOAD_RETRY**: If defined, in case of fail retries to upload again the specified times
 - **CONAN_UPLOAD_ONLY_WHEN_STABLE**: If defined, will try to upload the packages only when the current channel is the stable one.
 
@@ -1049,13 +1050,14 @@ This is especially useful for CI integration.
 - **CONAN_ALLOW_GCC_MINORS** Declare this variable if you want to allow gcc >=5 versions with the minor (5.1, 6.3 etc).
 - **CONAN_EXCLUDE_VCVARS_PRECOMMAND** For Visual Studio builds, it exclude the vcvars call to set the environment.
 - **CONAN_BUILD_REQUIRES** You can specify additional build requires for the generated profile with an environment variable following the same profile syntax and separated by ","
-  i.e ``CONAN_BUILD_REQUIRES: mingw-installer/7.1@conan/stable, pattern: other/1.0@conan/stable`` 
+  i.e ``CONAN_BUILD_REQUIRES: mingw-installer/7.1@conan/stable, pattern: other/1.0@conan/stable``
 - **CONAN_BUILD_POLICY**:  Default None.
-    - "never": No build from sources, only download packages. 
+    - "never": No build from sources, only download packages.
     - "missing": Build only missing packages.
     - "outdated": Build only missing or if the available package is not built with the current recipe. Useful to upload new configurations, e.j packages for a new compiler without
       rebuild all packages.
 - **CONAN_BASE_PROFILE**: Apply options, settings, etc. to this profile instead of `default`.
+- **CONAN_TEST_FOLDER**: Custom test_package path, e.j .conan/test_package
 
 
 # Full example

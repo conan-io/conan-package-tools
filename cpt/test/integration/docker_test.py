@@ -3,6 +3,7 @@ import sys
 import time
 import unittest
 
+
 from conans.client import tools
 from conans.model.ref import ConanFileReference
 from cpt import __version__ as version
@@ -84,3 +85,4 @@ class Pkg(ConanFile):
         results = self.api.search_recipes(search_pattern, remote="upload_repo")["results"]
         self.assertEquals(len(results), 0)
         self.api.remove(search_pattern, remote="upload_repo", force=True)
+

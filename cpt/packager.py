@@ -86,7 +86,8 @@ class ConanMultiPackager(object):
                  conan_api=None,
                  client_cache=None,
                  ci_manager=None,
-                 out=None):
+                 out=None,
+                 test_folder=None):
 
         self.printer = Printer(out)
         self.printer.print_rule()
@@ -180,8 +181,23 @@ class ConanMultiPackager(object):
         elif platform.system() != "Windows":
             self.sudo_pip_command = "sudo -E"
 
-        self.docker_shell = "/bin/sh -c"
-        self.docker_conan_home = "/home/conan"
+        self.docker_shell = ""
+        self.docker_conan_home = ""
+
+        if self.is_wcow:
+            self.docker_conan_home = "C:/Users/ContainerAdministrator"
+            self.docker_shell = "cmd /C"
+        else:
+            self.docker_conan_home = "/home/conan"
+            self.docker_shell = "/bin/sh -c"
+
+        self.docker_platform_param = ""
+        self.lcow_user_workaround = ""
+
+        if self.is_lcow:
+            self.docker_platform_param = "--platform=linux"
+            # With LCOW, Docker doesn't respect USER directive in dockerfile yet
+            self.lcow_user_workaround = "sudo su conan && "
 
         self.exclude_vcvars_precommand = (exclude_vcvars_precommand or
                                           os.getenv("CONAN_EXCLUDE_VCVARS_PRECOMMAND", False))
@@ -226,6 +242,8 @@ class ConanMultiPackager(object):
 
         self.builds_in_current_page = []
 
+        self.test_folder = test_folder or os.getenv("CONAN_TEST_FOLDER", None)
+
         def valid_pair(var, value):
             return (isinstance(value, six.string_types) or
                     isinstance(value, bool) or
@@ -234,6 +252,26 @@ class ConanMultiPackager(object):
             self.printer.print_dict({var: value
                                      for var, value in self.__dict__.items()
                                      if valid_pair(var, value)})
+
+    # For Docker on Windows, including Linux containers on Windows
+    @property
+    def is_lcow(self):
+        return self.container_os == "linux" and platform.system() == "Windows"
+
+    @property
+    def is_wcow(self):
+        return self.container_os == "windows" and platform.system() == "Windows"
+
+    @property
+    def container_os(self):
+        # CONAN_DOCKER_PLATFORM=linux must be specified for LCOW
+        if self.use_docker:
+            if "CONAN_DOCKER_PLATFORM" in os.environ:
+                return os.getenv("CONAN_DOCKER_PLATFORM", "windows").lower()
+            else:
+                return "windows"
+        else:
+            return ""
 
     @property
     def items(self):
@@ -410,7 +448,8 @@ class ConanMultiPackager(object):
                                  runner=self.runner,
                                  abs_folder=abs_folder,
                                  printer=self.printer,
-                                 upload=self._upload_enabled())
+                                 upload=self._upload_enabled(),
+                                 test_folder=self.test_folder)
                 r.run()
             else:
                 docker_image = self._get_docker_image(build)
@@ -427,7 +466,10 @@ class ConanMultiPackager(object):
                                        upload=self._upload_enabled(),
                                        runner=self.runner,
                                        docker_shell=self.docker_shell,
-                                       docker_conan_home=self.docker_conan_home)
+                                       docker_conan_home=self.docker_conan_home,
+                                       docker_platform_param=self.docker_platform_param,
+                                       lcow_user_workaround=self.lcow_user_workaround,
+                                       test_folder=self.test_folder)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
                       docker_entry_script=self.docker_entry_script)
