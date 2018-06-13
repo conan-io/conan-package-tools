@@ -13,7 +13,7 @@ class CreateRunner(object):
 
     def __init__(self, profile_abs_path, reference, conan_api, uploader, args=None,
                  exclude_vcvars_precommand=False, build_policy=None, runner=None,
-                 abs_folder=None, printer=None, upload=False):
+                 abs_folder=None, printer=None, upload=False, test_folder=None):
 
         self.printer = printer or Printer()
         self._abs_folder = abs_folder or os.getcwd()
@@ -27,6 +27,7 @@ class CreateRunner(object):
         self._build_policy = build_policy
         self._runner = PrintRunner(runner or os.system, self.printer)
         self._uploader.remote_manager.add_remotes_to_conan()
+        self._test_folder = test_folder
 
         patch_default_base_profile(conan_api, profile_abs_path)
         self._profile = load_profile(profile_abs_path, self._conan_api._client_cache)
@@ -69,7 +70,8 @@ class CreateRunner(object):
                         self._conan_api.create(".", name=name, version=version,
                                                user=user, channel=channel,
                                                build_modes=self._build_policy,
-                                               profile_name=self._profile_abs_path)
+                                               profile_name=self._profile_abs_path,
+                                               test_folder=self._test_folder)
 
                 self._uploader.upload_packages(self._reference, self._upload)
 
@@ -83,7 +85,8 @@ class DockerCreateRunner(object):
                  always_update_conan_in_docker=False,
                  upload=False, runner=None,
                  docker_shell="", docker_conan_home="",
-                 docker_platform_param="", lcow_user_workaround=""):
+                 docker_platform_param="", lcow_user_workaround="",
+                 test_folder=None):
 
         self.printer = Printer()
         self._args = args
@@ -105,6 +108,7 @@ class DockerCreateRunner(object):
         self._docker_platform_param = docker_platform_param
         self._lcow_user_workaround = lcow_user_workaround
         self._runner = PrintRunner(runner, self.printer)
+        self._test_folder = test_folder
 
     def _pip_update_conan_command(self):
         commands = []
@@ -206,6 +210,7 @@ class DockerCreateRunner(object):
         ret["CONAN_TEMP_TEST_FOLDER"] = "1"  # test package folder to a temp one
         ret["CPT_UPLOAD_ENABLED"] = self._upload
         ret["CPT_BUILD_POLICY"] = escape_env(self._build_policy)
+        ret["CPT_TEST_FOLDER"] = escape_env(self._test_folder)
 
         ret.update({key: value for key, value in os.environ.items() if key.startswith("PIP_")})
 

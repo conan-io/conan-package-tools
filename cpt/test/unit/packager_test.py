@@ -587,6 +587,37 @@ class AppTest(unittest.TestCase):
             builder.run()
             self.assertEquals(["missing"], self.conan_api.calls[-1].kwargs["build_modes"])
 
+    def test_test_folder(self):
+        builder = ConanMultiPackager(username="pepe", channel="testing",
+                                     reference="Hello/0.1", password="password",
+                                     visual_versions=[], gcc_versions=[],
+                                     apple_clang_versions=[],
+                                     runner=self.runner,
+                                     conan_api=self.conan_api,
+                                     remotes="otherurl",
+                                     platform_info=platform_mock_for("Darwin"),
+                                     test_folder="foobar",
+                                     ci_manager=self.ci_manager)
+        builder.add_common_builds()
+        builder.run()
+        self.assertEquals("foobar", self.conan_api.calls[-1].kwargs["test_folder"])
+
+        with tools.environment_append({"CONAN_BUILD_POLICY": "missing"}):
+            self.conan_api = MockConanAPI()
+            builder = ConanMultiPackager(username="pepe", channel="testing",
+                                         reference="Hello/0.1", password="password",
+                                         visual_versions=[], gcc_versions=[],
+                                         apple_clang_versions=[],
+                                         runner=self.runner,
+                                         conan_api=self.conan_api,
+                                         remotes="otherurl",
+                                         platform_info=platform_mock_for("Darwin"),
+                                         build_policy=None,
+                                         ci_manager=self.ci_manager)
+            builder.add_common_builds()
+            builder.run()
+            self.assertEquals(None, self.conan_api.calls[-1].kwargs["test_folder"])
+
     def test_check_credentials(self):
 
         builder = ConanMultiPackager(username="pepe", channel="testing",
@@ -652,5 +683,3 @@ class AppTest(unittest.TestCase):
                                          ci_manager=MockCIManager(current_branch=branch))
 
             self.assertEquals(builder.channel, expected_channel, "Not match for branch %s" % branch)
-
-

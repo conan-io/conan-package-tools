@@ -86,7 +86,8 @@ class ConanMultiPackager(object):
                  conan_api=None,
                  client_cache=None,
                  ci_manager=None,
-                 out=None):
+                 out=None,
+                 test_folder=None):
 
         self.printer = Printer(out)
         self.printer.print_rule()
@@ -142,9 +143,10 @@ class ConanMultiPackager(object):
                 raise Exception("Conanfile not found, specify a 'reference' parameter with name and version")
             conanfile = load_conanfile_class("./conanfile.py")
             name, version = conanfile.name, conanfile.version
-            if not name or not version:
-                raise Exception("Specify a CONAN_REFERENCE or name and version fields in the recipe")
-            self.reference = ConanFileReference(name, version, self.username, self.channel)
+            if name and version:
+                self.reference = ConanFileReference(name, version, self.username, self.channel)
+            else:
+                self.reference = None
 
         # If CONAN_DOCKER_IMAGE is speified, then use docker is True
         self.use_docker = (use_docker or os.getenv("CONAN_USE_DOCKER", False) or
@@ -240,6 +242,8 @@ class ConanMultiPackager(object):
 
         self.builds_in_current_page = []
 
+        self.test_folder = test_folder or os.getenv("CONAN_TEST_FOLDER", None)
+
         def valid_pair(var, value):
             return (isinstance(value, six.string_types) or
                     isinstance(value, bool) or
@@ -329,6 +333,9 @@ class ConanMultiPackager(object):
     def add_common_builds(self, shared_option_name=None, pure_c=True,
                           dll_with_static_runtime=False, reference=None):
 
+        if not reference and not self.reference:
+            raise Exception("Specify a CONAN_REFERENCE or name and version fields in the recipe")
+
         if shared_option_name is None:
             if os.path.exists("conanfile.py"):
                 conanfile = load_conanfile_class("./conanfile.py")
@@ -337,7 +344,6 @@ class ConanMultiPackager(object):
 
         tmp = self.build_generator.get_builds(pure_c, shared_option_name, dll_with_static_runtime,
                                               reference or self.reference)
-
         self._builds.extend(tmp)
 
     def add(self, settings=None, options=None, env_vars=None, build_requires=None, reference=None):
@@ -442,7 +448,8 @@ class ConanMultiPackager(object):
                                  runner=self.runner,
                                  abs_folder=abs_folder,
                                  printer=self.printer,
-                                 upload=self._upload_enabled())
+                                 upload=self._upload_enabled(),
+                                 test_folder=self.test_folder)
                 r.run()
             else:
                 docker_image = self._get_docker_image(build)
@@ -462,6 +469,8 @@ class ConanMultiPackager(object):
                                        docker_conan_home=self.docker_conan_home,
                                        docker_platform_param=self.docker_platform_param,
                                        lcow_user_workaround=self.lcow_user_workaround)
+                                       test_folder=self.test_folder)
+
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
                       docker_entry_script=self.docker_entry_script)
