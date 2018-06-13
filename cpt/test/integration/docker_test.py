@@ -53,7 +53,9 @@ class Pkg(ConanFile):
         ref = ConanFileReference.loads("%s@lasote/mychannel" % unique_ref)
 
         # Remove from remote
-        self.assertEquals(len(self.api.search_recipes(search_pattern, remote="upload_repo")), 1)
+        res = self.api.search_recipes(search_pattern, remote="upload_repo")
+        print(res)
+        self.assertEquals(len(res[0]["results"]["items"]), 1)
         packages = self.api.search_packages(ref, remote="upload_repo")
         print(packages)
         self.assertEquals(len(packages[0]["results"]["items"]), 2)
