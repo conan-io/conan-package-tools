@@ -86,7 +86,8 @@ class ConanMultiPackager(object):
                  conan_api=None,
                  client_cache=None,
                  ci_manager=None,
-                 out=None):
+                 out=None,
+                 test_folder=None):
 
         self.printer = Printer(out)
         self.printer.print_rule()
@@ -225,6 +226,8 @@ class ConanMultiPackager(object):
         self.vs10_x86_64_enabled = vs10_x86_64_enabled
 
         self.builds_in_current_page = []
+
+        self.test_folder = test_folder or os.getenv("CONAN_TEST_FOLDER", None)
 
         def valid_pair(var, value):
             return (isinstance(value, six.string_types) or
@@ -410,7 +413,8 @@ class ConanMultiPackager(object):
                                  runner=self.runner,
                                  abs_folder=abs_folder,
                                  printer=self.printer,
-                                 upload=self._upload_enabled())
+                                 upload=self._upload_enabled(),
+                                 test_folder=self.test_folder)
                 r.run()
             else:
                 docker_image = self._get_docker_image(build)
@@ -427,7 +431,8 @@ class ConanMultiPackager(object):
                                        upload=self._upload_enabled(),
                                        runner=self.runner,
                                        docker_shell=self.docker_shell,
-                                       docker_conan_home=self.docker_conan_home)
+                                       docker_conan_home=self.docker_conan_home,
+                                       test_folder=self.test_folder)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
                       docker_entry_script=self.docker_entry_script)

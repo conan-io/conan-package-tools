@@ -25,6 +25,7 @@ def run():
     uploader = Uploader(conan_api, remotes_manager, auth_manager, printer)
     args = os.getenv("CPT_ARGS", "")
     build_policy = unscape_env(os.getenv("CPT_BUILD_POLICY"))
+    test_folder = unscape_env(os.getenv("CPT_TEST_FOLDER"))
     reference = ConanFileReference.loads(os.getenv("CONAN_REFERENCE"))
 
     profile_text = unscape_env(os.getenv("CPT_PROFILE"))
@@ -38,7 +39,8 @@ def run():
     upload = os.getenv("CPT_UPLOAD_ENABLED", None)
     runner = CreateRunner(abs_profile_path, reference, conan_api, uploader,
                           args=args,
-                          build_policy=build_policy, printer=printer, upload=upload)
+                          build_policy=build_policy, printer=printer, upload=upload,
+                          test_folder=test_folder)
     runner.run()
 
 if __name__ == '__main__':
