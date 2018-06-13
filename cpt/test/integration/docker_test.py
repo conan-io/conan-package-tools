@@ -54,8 +54,9 @@ class Pkg(ConanFile):
 
         # Remove from remote
         self.assertEquals(len(self.api.search_recipes(search_pattern, remote="upload_repo")), 1)
-        packages = self.api.search_packages(ref, remote="upload_repo")[0]
-        self.assertEquals(len(packages), 2)
+        packages = self.api.search_packages(ref, remote="upload_repo")
+        print(packages)
+        self.assertEquals(len(packages[0]["results"]["items"]), 2)
 
         self.api.authenticate(name=CONAN_LOGIN_UPLOAD, password=CONAN_UPLOAD_PASSWORD,
                               remote="upload_repo")
@@ -80,5 +81,6 @@ class Pkg(ConanFile):
             self.packager.add_common_builds()
             self.packager.run()
 
-        self.assertEquals(len(self.api.search_recipes(search_pattern, remote="upload_repo")), 0)
+        res = self.api.search_recipes(search_pattern, remote="upload_repo")
+        self.assertEquals(len(res[0]["results"]["items"]), 0)
         self.api.remove(search_pattern, remote="upload_repo", force=True)
