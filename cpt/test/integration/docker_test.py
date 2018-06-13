@@ -3,7 +3,6 @@ import unittest
 import sys
 
 import time
-from conans.client.conan_api import ConanAPIV1
 from conans.model.ref import ConanFileReference
 
 from cpt import __version__ as version

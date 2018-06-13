@@ -253,16 +253,16 @@ class ConanMultiPackager(object):
                                      for var, value in self.__dict__.items()
                                      if valid_pair(var, value)})
 
-     # For Docker on Windows, including Linux containers on Windows
-    @ property
+    # For Docker on Windows, including Linux containers on Windows
+    @property
     def is_lcow(self):
         return self.container_os == "linux"
 
-    @ property
+    @property
     def is_wcow(self):
-        return self.container_os == "windows"
+        return self.container_os == "windows" and platform.system() == "Windows"
 
-    @ property
+    @property
     def container_os(self):
         # CONAN_DOCKER_PLATFORM=linux must be specified for LCOW
         if self.use_docker:
