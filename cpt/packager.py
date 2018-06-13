@@ -468,9 +468,8 @@ class ConanMultiPackager(object):
                                        docker_shell=self.docker_shell,
                                        docker_conan_home=self.docker_conan_home,
                                        docker_platform_param=self.docker_platform_param,
-                                       lcow_user_workaround=self.lcow_user_workaround)
+                                       lcow_user_workaround=self.lcow_user_workaround,
                                        test_folder=self.test_folder)
-
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
                       docker_entry_script=self.docker_entry_script)
