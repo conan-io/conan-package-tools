@@ -181,8 +181,23 @@ class ConanMultiPackager(object):
         elif platform.system() != "Windows":
             self.sudo_pip_command = "sudo -E"
 
-        self.docker_shell = "/bin/sh -c"
-        self.docker_conan_home = "/home/conan"
+        self.docker_shell = ""
+        self.docker_conan_home = ""
+
+        if self.is_wcow:
+            self.docker_conan_home = "C:/Users/ContainerAdministrator"
+            self.docker_shell = "cmd /C"
+        else:
+            self.docker_conan_home = "/home/conan"
+            self.docker_shell = "/bin/sh -c"
+
+        self.docker_platform_param = ""
+        self.lcow_user_workaround = ""
+
+        if self.is_lcow:
+            self.docker_platform_param = "--platform=linux"
+            # With LCOW, Docker doesn't respect USER directive in dockerfile yet
+            self.lcow_user_workaround = "sudo su conan && "
 
         self.exclude_vcvars_precommand = (exclude_vcvars_precommand or
                                           os.getenv("CONAN_EXCLUDE_VCVARS_PRECOMMAND", False))
@@ -237,6 +252,26 @@ class ConanMultiPackager(object):
             self.printer.print_dict({var: value
                                      for var, value in self.__dict__.items()
                                      if valid_pair(var, value)})
+
+     # For Docker on Windows, including Linux containers on Windows
+    @ property
+    def is_lcow(self):
+        return self.container_os == "linux"
+
+    @ property
+    def is_wcow(self):
+        return self.container_os == "windows"
+
+    @ property
+    def container_os(self):
+        # CONAN_DOCKER_PLATFORM=linux must be specified for LCOW
+        if self.use_docker:
+            if "CONAN_DOCKER_PLATFORM" in os.environ:
+                return os.getenv("CONAN_DOCKER_PLATFORM", "windows").lower()
+            else:
+                return "windows"
+        else:
+            return ""
 
     @property
     def items(self):
@@ -432,7 +467,10 @@ class ConanMultiPackager(object):
                                        runner=self.runner,
                                        docker_shell=self.docker_shell,
                                        docker_conan_home=self.docker_conan_home,
+                                       docker_platform_param=self.docker_platform_param,
+                                       lcow_user_workaround=self.lcow_user_workaround)
                                        test_folder=self.test_folder)
+
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
                       docker_entry_script=self.docker_entry_script)

@@ -84,7 +84,9 @@ class DockerCreateRunner(object):
                  docker_image_skip_pull=False,
                  always_update_conan_in_docker=False,
                  upload=False, runner=None,
-                 docker_shell=None, docker_conan_home=None, test_folder=None):
+                 docker_shell="", docker_conan_home="",
+                 docker_platform_param="", lcow_user_workaround="",
+                 test_folder=None):
 
         self.printer = Printer()
         self._args = args
@@ -103,6 +105,8 @@ class DockerCreateRunner(object):
         self._base_profile_name = base_profile_name
         self._docker_shell = docker_shell
         self._docker_conan_home = docker_conan_home
+        self._docker_platform_param = docker_platform_param
+        self._lcow_user_workaround = lcow_user_workaround
         self._runner = PrintRunner(runner, self.printer)
         self._test_folder = test_folder
 
@@ -163,14 +167,16 @@ class DockerCreateRunner(object):
             update_command = self._pip_update_conan_command() + " && "
         else:
             update_command = ""
-        command = ('%s docker run --rm -v %s:%s/project %s %s %s '
-                   '"cd project && '
+        command = ('%s docker run --rm -v %s:%s/project %s %s %s %s '
+                   '"%s cd project && '
                    '%s run_create_in_docker "' % (self._sudo_docker_command,
                                                   os.getcwd(),
                                                   self._docker_conan_home,
                                                   env_vars_text,
+                                                  self._docker_platform_param,
                                                   self._docker_image,
                                                   self._docker_shell,
+                                                  self._lcow_user_workaround,
                                                   update_command))
 
         # Push entry command before to build
