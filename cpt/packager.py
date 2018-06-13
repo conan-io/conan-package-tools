@@ -256,7 +256,7 @@ class ConanMultiPackager(object):
     # For Docker on Windows, including Linux containers on Windows
     @property
     def is_lcow(self):
-        return self.container_os == "linux"
+        return self.container_os == "linux" and platform.system() == "Windows"
 
     @property
     def is_wcow(self):
