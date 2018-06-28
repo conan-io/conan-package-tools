@@ -155,9 +155,9 @@ class BambooManager(GenericManager):
         self.printer.print_message("CI detected: Bamboo")
 
         for var in list(os.environ.keys()):
-            result = re.match('\Abamboo\.(.*)', var)
-            if result != None:
-                self.printer.print_message("de-bambooized env var : %s " % result.group(1))
+            result = re.match('\Abamboo_(CONAN.*)', var)
+            if result != None and os.getenv(result.group(1), None) == None:
+                self.printer.print_message("de-bambooized CONAN env var : %s " % result.group(1))
                 os.environ[result.group(1)] = os.environ[var]
 
 
