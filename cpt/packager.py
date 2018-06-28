@@ -242,7 +242,7 @@ class ConanMultiPackager(object):
 
         self.builds_in_current_page = []
 
-        self.test_folder = test_folder or os.getenv("CONAN_TEST_FOLDER", None)
+        self.test_folder = test_folder or os.getenv("CPT_TEST_FOLDER", None)
 
         def valid_pair(var, value):
             return (isinstance(value, six.string_types) or

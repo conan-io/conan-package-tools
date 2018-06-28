@@ -1057,7 +1057,7 @@ This is especially useful for CI integration.
     - "outdated": Build only missing or if the available package is not built with the current recipe. Useful to upload new configurations, e.j packages for a new compiler without
       rebuild all packages.
 - **CONAN_BASE_PROFILE**: Apply options, settings, etc. to this profile instead of `default`.
-- **CONAN_TEST_FOLDER**: Custom test_package path, e.j .conan/test_package
+- **CPT_TEST_FOLDER**: Custom test_package path, e.j .conan/test_package
 
 
 # Full example
