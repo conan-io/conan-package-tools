@@ -286,7 +286,7 @@ class ConanMultiPackager(object):
         # Retrocompatibility iterating
         self.printer.print_message("WARNING",
                                    "\n\n\n******* ITERATING THE CONAN_PACKAGE_TOOLS BUILDS WITH "
-                                   ".builds is deprecated use .items() instead (unpack 5 elements: "
+                                   ".builds is deprecated use '.items' instead (unpack 5 elements: "
                                    "settings, options, env_vars, build_requires, reference  *******"
                                    "**\n\n\n")
         return [elem[0:4] for elem in self._builds]
