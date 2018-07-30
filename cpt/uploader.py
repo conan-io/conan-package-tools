@@ -27,4 +27,4 @@ class Uploader(object):
                                   all_packages=True,
                                   remote=remote_name,
                                   force=True,
-                                  retry=self._upload_retry)
+                                  retry=int(self._upload_retry))

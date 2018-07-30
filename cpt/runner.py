@@ -13,7 +13,7 @@ class CreateRunner(object):
 
     def __init__(self, profile_abs_path, reference, conan_api, uploader, args=None,
                  exclude_vcvars_precommand=False, build_policy=None, runner=None,
-                 abs_folder=None, printer=None, upload=False, upload_retry=None, test_folder=None):
+                 abs_folder=None, printer=None, upload=False, test_folder=None):
 
         self.printer = printer or Printer()
         self._abs_folder = abs_folder or os.getcwd()
