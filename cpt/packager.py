@@ -112,8 +112,17 @@ class ConanMultiPackager(object):
         self.auth_manager = AuthManager(self.conan_api, self.printer, login_username, password,
                                         default_username=self.username,
                                         skip_check_credentials=self.skip_check_credentials)
+
+        # Upload related variables
+        self.upload_retry = upload_retry or os.getenv("CONAN_UPLOAD_RETRY", 3)
+
+        if upload_only_when_stable is not None:
+            self.upload_only_when_stable = upload_only_when_stable
+        else:
+            self.upload_only_when_stable = get_bool_from_env("CONAN_UPLOAD_ONLY_WHEN_STABLE")
+
         self.uploader = Uploader(self.conan_api, self.remotes_manager, self.auth_manager,
-                                 self.printer)
+                                 self.printer, self.upload_retry)
 
         self._builds = []
         self._named_builds = {}
@@ -210,14 +219,6 @@ class ConanMultiPackager(object):
         self.output_runner = ConanOutputRunner()
         self.args = " ".join(args) if args else " ".join(sys.argv[1:])
 
-        # Upload related variables
-        self.upload_retry = upload_retry or os.getenv("CONAN_UPLOAD_RETRY", 3)
-
-        if upload_only_when_stable is not None:
-            self.upload_only_when_stable = upload_only_when_stable
-        else:
-            self.upload_only_when_stable = get_bool_from_env("CONAN_UPLOAD_ONLY_WHEN_STABLE")
-
         self.docker_entry_script = docker_entry_script or os.getenv("CONAN_DOCKER_ENTRY_SCRIPT")
 
         os.environ["CONAN_CHANNEL"] = self.channel
@@ -286,7 +287,7 @@ class ConanMultiPackager(object):
         # Retrocompatibility iterating
         self.printer.print_message("WARNING",
                                    "\n\n\n******* ITERATING THE CONAN_PACKAGE_TOOLS BUILDS WITH "
-                                   ".builds is deprecated use .items() instead (unpack 5 elements: "
+                                   ".builds is deprecated use '.items' instead (unpack 5 elements: "
                                    "settings, options, env_vars, build_requires, reference  *******"
                                    "**\n\n\n")
         return [elem[0:4] for elem in self._builds]
@@ -464,6 +465,7 @@ class ConanMultiPackager(object):
                                        build_policy=self.build_policy,
                                        always_update_conan_in_docker=self._update_conan_in_docker,
                                        upload=self._upload_enabled(),
+                                       upload_retry=self.upload_retry,
                                        runner=self.runner,
                                        docker_shell=self.docker_shell,
                                        docker_conan_home=self.docker_conan_home,

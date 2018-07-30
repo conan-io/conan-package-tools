@@ -950,7 +950,8 @@ Upload related parameters:
 
 - **reference**: Reference of the package to upload. Ex: "zlib/1.2.8". If not specified it will be read from the `conanfile.py`.
 - **remote**: Alternative remote name. Default "default"
-- **stable_branch_pattern**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *stable* channel. Default "master"
+- **stable_branch_pattern**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *stable* channel. 
+  By default it will check the following patterns: ``["master$", "release*", "stable*"]``
 - **stable_channel**: Stable channel, default "stable".
 - **channel**: Channel where your packages will be uploaded if previous parameter doesn't match
 
