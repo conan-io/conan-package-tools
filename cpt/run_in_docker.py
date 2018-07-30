@@ -19,10 +19,11 @@ def run():
         os.remove(client_cache.default_profile_path)
 
     remotes_manager = RemotesManager(conan_api, printer)
-    default_username = os.getenv("CONAN_USERNAME", None)
+    default_username = os.getenv("CONAN_USERNAME")
     auth_manager = AuthManager(conan_api, printer, default_username=default_username)
 
-    uploader = Uploader(conan_api, remotes_manager, auth_manager, printer)
+    upload_retry = os.getenv("CPT_UPLOAD_RETRY")
+    uploader = Uploader(conan_api, remotes_manager, auth_manager, printer, upload_retry)
     args = os.getenv("CPT_ARGS", "")
     build_policy = unscape_env(os.getenv("CPT_BUILD_POLICY"))
     test_folder = unscape_env(os.getenv("CPT_TEST_FOLDER"))
