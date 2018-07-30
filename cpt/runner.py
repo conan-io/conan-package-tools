@@ -13,7 +13,7 @@ class CreateRunner(object):
 
     def __init__(self, profile_abs_path, reference, conan_api, uploader, args=None,
                  exclude_vcvars_precommand=False, build_policy=None, runner=None,
-                 abs_folder=None, printer=None, upload=False, test_folder=None):
+                 abs_folder=None, printer=None, upload=False, upload_retry=None, test_folder=None):
 
         self.printer = printer or Printer()
         self._abs_folder = abs_folder or os.getcwd()
@@ -83,7 +83,8 @@ class DockerCreateRunner(object):
                  docker_image_skip_update=False, build_policy=None,
                  docker_image_skip_pull=False,
                  always_update_conan_in_docker=False,
-                 upload=False, runner=None,
+                 upload=False, upload_retry=None,
+                 runner=None,
                  docker_shell="", docker_conan_home="",
                  docker_platform_param="", lcow_user_workaround="",
                  test_folder=None):
@@ -91,6 +92,7 @@ class DockerCreateRunner(object):
         self.printer = Printer()
         self._args = args
         self._upload = upload
+        self._upload_retry = upload_retry
         self._reference = reference
         self._conan_pip_package = conan_pip_package
         self._build_policy = build_policy
@@ -112,7 +114,7 @@ class DockerCreateRunner(object):
 
     def _pip_update_conan_command(self):
         commands = []
-        # Hack for testing when retriving cpt from artifactory repo
+        # Hack for testing when retrieving cpt from artifactory repo
         if "conan-package-tools" not in self._conan_pip_package:
             commands.append("%s pip install conan_package_tools==%s "
                             "--upgrade --no-cache" % (self._sudo_pip_command,
@@ -209,6 +211,7 @@ class DockerCreateRunner(object):
         ret["CONAN_USERNAME"] = escape_env(self._reference.user)
         ret["CONAN_TEMP_TEST_FOLDER"] = "1"  # test package folder to a temp one
         ret["CPT_UPLOAD_ENABLED"] = self._upload
+        ret["CPT_UPLOAD_RETRY"] = self._upload_retry
         ret["CPT_BUILD_POLICY"] = escape_env(self._build_policy)
         ret["CPT_TEST_FOLDER"] = escape_env(self._test_folder)
 
