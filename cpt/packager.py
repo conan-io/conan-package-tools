@@ -6,7 +6,7 @@ from collections import defaultdict
 
 import six
 
-from conans.client.loader_parse import load_conanfile_class
+
 from conans.model.version import Version
 from cpt.auth import AuthManager
 from cpt.ci_manager import CIManager
@@ -21,6 +21,17 @@ from conans.client.runner import ConanRunner
 from conans.model.ref import ConanFileReference
 from conans import __version__ as client_version, tools
 from cpt.uploader import Uploader
+from conans.client.graph.python_requires import ConanPythonRequire
+
+
+def load_cf_class(path):
+    if Version(client_version) < Version("1.7.0"):
+        from conans.client.loader_parse import load_conanfile_class
+        return load_conanfile_class(path)
+    else:
+        from conans.client.loader import ConanFileLoader
+        loader = ConanFileLoader(None, None, ConanPythonRequire(None, None))
+        return loader.load_class(path)
 
 
 class PlatformInfo(object):
@@ -150,7 +161,7 @@ class ConanMultiPackager(object):
         else:
             if not os.path.exists("conanfile.py"):
                 raise Exception("Conanfile not found, specify a 'reference' parameter with name and version")
-            conanfile = load_conanfile_class("./conanfile.py")
+            conanfile = load_cf_class("./conanfile.py")
             name, version = conanfile.name, conanfile.version
             if name and version:
                 self.reference = ConanFileReference(name, version, self.username, self.channel)
@@ -339,7 +350,7 @@ class ConanMultiPackager(object):
 
         if shared_option_name is None:
             if os.path.exists("conanfile.py"):
-                conanfile = load_conanfile_class("./conanfile.py")
+                conanfile = load_cf_class("./conanfile.py")
                 if hasattr(conanfile, "options") and "shared" in conanfile.options:
                     shared_option_name = "%s:shared" % self.reference.name
 

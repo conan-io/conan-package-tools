@@ -25,6 +25,6 @@ class Uploader(object):
             self.auth_manager.login(remote_name)
             self.conan_api.upload(str(reference),
                                   all_packages=True,
-                                  remote=remote_name,
+                                  remote_name=remote_name,
                                   force=True,
                                   retry=int(self._upload_retry))
