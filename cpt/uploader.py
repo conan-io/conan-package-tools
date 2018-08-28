@@ -21,10 +21,21 @@ class Uploader(object):
             return
 
         if upload:
+            from conans.model.version import Version
+            from conans import __version__ as client_version
             self.printer.print_message("Uploading packages for '%s'" % str(reference))
             self.auth_manager.login(remote_name)
-            self.conan_api.upload(str(reference),
-                                  all_packages=True,
-                                  remote_name=remote_name,
-                                  force=True,
-                                  retry=int(self._upload_retry))
+
+
+            if Version(client_version) < Version("1.7.0"):
+                self.conan_api.upload(str(reference),
+                                      all_packages=True,
+                                      remote=remote_name,
+                                      force=True,
+                                      retry=int(self._upload_retry))
+            else:
+                self.conan_api.upload(str(reference),
+                                      all_packages=True,
+                                      remote_name=remote_name,
+                                      force=True,
+                                      retry=int(self._upload_retry))
