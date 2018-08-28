@@ -21,7 +21,6 @@ from conans.client.runner import ConanRunner
 from conans.model.ref import ConanFileReference
 from conans import __version__ as client_version, tools
 from cpt.uploader import Uploader
-from conans.client.graph.python_requires import ConanPythonRequire
 
 
 def load_cf_class(path):
@@ -30,6 +29,7 @@ def load_cf_class(path):
         return load_conanfile_class(path)
     else:
         from conans.client.loader import ConanFileLoader
+        from conans.client.graph.python_requires import ConanPythonRequire
         loader = ConanFileLoader(None, None, ConanPythonRequire(None, None))
         return loader.load_class(path)
 
