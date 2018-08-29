@@ -291,7 +291,7 @@ class GeneratorsTest(unittest.TestCase):
                                    shared_option_name=None,
                                    dll_with_static_runtime=False,
                                    vs10_x86_64_enabled=True,
-                                   build_types=["Debug", "Release"],
+                                   build_types=["Debug", "Release", "RelWithDebInfo", "MinSizeRel"],
                                    reference=ref)
 
         expected = [
@@ -306,7 +306,7 @@ class GeneratorsTest(unittest.TestCase):
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=True,
                                    vs10_x86_64_enabled=True,
-                                   build_types=["Debug", "Release"])
+                                   build_types=["Debug", "Release", "RelWithDebInfo", "MinSizeRel"])
 
         expected = [
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10'},
@@ -324,7 +324,7 @@ class GeneratorsTest(unittest.TestCase):
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=True,
                                    vs10_x86_64_enabled=False,
-                                   build_types=["Debug", "Release"])
+                                   build_types=["Debug", "Release", "RelWithDebInfo", "MinSizeRel"])
         expected = [
         ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10'},
           {'libpng:shared': False}, {}, {}, None),
@@ -337,7 +337,7 @@ class GeneratorsTest(unittest.TestCase):
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=False,
                                    vs10_x86_64_enabled=False,
-                                   build_types=["Debug", "Release"])
+                                   build_types=["Debug", "Release", "RelWithDebInfo", "MinSizeRel"])
         expected = [
             ({'compiler': 'Visual Studio', 'compiler.runtime': 'MTd', 'compiler.version': '10', 'arch': 'x86', 'build_type': 'Debug'},
              {'libpng:shared': False}, {}, {}, None)]
@@ -476,6 +476,144 @@ class GeneratorsTest(unittest.TestCase):
         expected = [
             ({'compiler': 'Visual Studio', 'compiler.runtime': 'MT', 'compiler.version': '10', 'arch': 'x86',
               'build_type': 'Release'},
+             {'libpng:shared': False}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        #############
+
+        builds = get_visual_builds(visual_versions=["10", "14"], archs=["x86_64"], visual_runtimes=["MD", "MT"],
+                                   shared_option_name=None,
+                                   dll_with_static_runtime=False,
+                                   vs10_x86_64_enabled=True,
+                                   build_types=["RelWithDebInfo"])
+
+        expected = [
+            ({'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio', 'compiler.version': '10',
+              'compiler.runtime': 'MT'}, {}, {}, {}, None),
+            ({'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio', 'compiler.version': '10',
+              'compiler.runtime': 'MD'}, {}, {}, {}, None),
+            ({'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio', 'compiler.version': '14',
+              'compiler.runtime': 'MT'}, {}, {}, {}, None),
+            ({'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio', 'compiler.version': '14',
+              'compiler.runtime': 'MD'}, {}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MD"],
+                                   shared_option_name="libpng:shared",
+                                   dll_with_static_runtime=True,
+                                   vs10_x86_64_enabled=True,
+                                   build_types=["RelWithDebInfo"])
+
+        expected = [
+            ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio',
+              'compiler.version': '10'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio',
+              'compiler.version': '10'},
+             {'libpng:shared': True}, {}, {}, None),
+            ({'compiler.runtime': 'MD', 'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio',
+              'compiler.version': '10'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler.runtime': 'MD', 'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio',
+              'compiler.version': '10'},
+             {'libpng:shared': True}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MD"],
+                                   shared_option_name="libpng:shared",
+                                   dll_with_static_runtime=True,
+                                   vs10_x86_64_enabled=False,
+                                   build_types=["RelWithDebInfo"])
+        expected = [
+            ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio',
+              'compiler.version': '10'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio',
+              'compiler.version': '10'},
+             {'libpng:shared': True}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MT"],
+                                   shared_option_name="libpng:shared",
+                                   dll_with_static_runtime=False,
+                                   vs10_x86_64_enabled=False,
+                                   build_types=["RelWithDebInfo"])
+        expected = [
+            ({'compiler': 'Visual Studio', 'compiler.runtime': 'MT', 'compiler.version': '10', 'arch': 'x86',
+              'build_type': 'RelWithDebInfo'},
+             {'libpng:shared': False}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        #############
+
+        builds = get_visual_builds(visual_versions=["10", "14"], archs=["x86_64"], visual_runtimes=["MD", "MT"],
+                                   shared_option_name=None,
+                                   dll_with_static_runtime=False,
+                                   vs10_x86_64_enabled=True,
+                                   build_types=["MinSizeRel"])
+
+        expected = [
+            ({'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio', 'compiler.version': '10',
+              'compiler.runtime': 'MT'}, {}, {}, {}, None),
+            ({'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio', 'compiler.version': '10',
+              'compiler.runtime': 'MD'}, {}, {}, {}, None),
+            ({'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio', 'compiler.version': '14',
+              'compiler.runtime': 'MT'}, {}, {}, {}, None),
+            ({'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio', 'compiler.version': '14',
+              'compiler.runtime': 'MD'}, {}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MD"],
+                                   shared_option_name="libpng:shared",
+                                   dll_with_static_runtime=True,
+                                   vs10_x86_64_enabled=True,
+                                   build_types=["MinSizeRel"])
+
+        expected = [
+            ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio',
+              'compiler.version': '10'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio',
+              'compiler.version': '10'},
+             {'libpng:shared': True}, {}, {}, None),
+            ({'compiler.runtime': 'MD', 'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio',
+              'compiler.version': '10'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler.runtime': 'MD', 'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio',
+              'compiler.version': '10'},
+             {'libpng:shared': True}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MD"],
+                                   shared_option_name="libpng:shared",
+                                   dll_with_static_runtime=True,
+                                   vs10_x86_64_enabled=False,
+                                   build_types=["MinSizeRel"])
+        expected = [
+            ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio',
+              'compiler.version': '10'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio',
+              'compiler.version': '10'},
+             {'libpng:shared': True}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MT"],
+                                   shared_option_name="libpng:shared",
+                                   dll_with_static_runtime=False,
+                                   vs10_x86_64_enabled=False,
+                                   build_types=["MinSizeRel"])
+        expected = [
+            ({'compiler': 'Visual Studio', 'compiler.runtime': 'MT', 'compiler.version': '10', 'arch': 'x86',
+              'build_type': 'MinSizeRel'},
              {'libpng:shared': False}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
