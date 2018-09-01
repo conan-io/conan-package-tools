@@ -219,32 +219,34 @@ def get_visual_builds_for_version(visual_runtimes, visual_version, arch, shared_
                 "arch": arch}
     sets = []
 
-    def append_to_sets(runtimes, builds, check_dll_with_static_runtime):
-        for rt in runtimes:
-            if rt in visual_runtimes:
-                for bld in builds:
-                    if bld in build_types:
-                        if shared_option_name:
-                            sets.append(({"build_type": bld, "compiler.runtime": rt},
-                                         {shared_option_name: False}, {}, {}))
-                            if rt in check_dll_with_static_runtime:
-                                if dll_with_static_runtime:
-                                    sets.append(({"build_type": bld, "compiler.runtime": rt},
-                                                 {shared_option_name: True}, {}, {}))
-                            else:
-                                sets.append(({"build_type": bld, "compiler.runtime": rt},
-                                             {shared_option_name: True}, {}, {}))
-                        else:
-                            sets.append(({"build_type": bld, "compiler.runtime": rt}, {}, {}, {}))
+    debug_builds = set(['Debug'])
+    release_builds = set(['Release', 'RelWithDebInfo', 'MinSizeRel'])
 
-    debug_runtimes = ['MTd', 'MDd']
-    debug_builds = ['Debug']
-    release_runtimes = ['MT', 'MD']
-    release_builds = ['Release', 'RelWithDebInfo', 'MinSizeRel']
-    check_dll_with_static_runtime = ['MT', 'MTd']
+    runtime_build_map = {
+        'MTd': debug_builds,
+        'MDd': debug_builds,
+        'MT': release_builds,
+        'MD': release_builds,
+    }
 
-    append_to_sets(debug_runtimes, debug_builds, check_dll_with_static_runtime)
-    append_to_sets(release_runtimes, release_builds, check_dll_with_static_runtime)
+    build_types_set = set(build_types)
+
+    for rt in visual_runtimes:
+        compatible_builds = list(build_types_set.intersection(runtime_build_map[rt]))
+        compatible_builds.sort() # so that it is deterministic.
+        for bld in compatible_builds:
+            if shared_option_name:
+                sets.append(({"build_type": bld, "compiler.runtime": rt},
+                                {shared_option_name: False}, {}, {}))
+                if rt in ['MT', 'MTd']:
+                    if dll_with_static_runtime:
+                        sets.append(({"build_type": bld, "compiler.runtime": rt},
+                                            {shared_option_name: True}, {}, {}))
+                else:
+                    sets.append(({"build_type": bld, "compiler.runtime": rt},
+                                    {shared_option_name: True}, {}, {}))
+            else:
+                sets.append(({"build_type": bld, "compiler.runtime": rt}, {}, {}, {}))
 
     ret = []
     for setting, options, env_vars, build_requires in sets:

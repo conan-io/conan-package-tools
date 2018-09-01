@@ -295,10 +295,10 @@ class GeneratorsTest(unittest.TestCase):
                                    reference=ref)
 
         expected = [
-        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.runtime': 'MTd'}, {}, {}, {}, ref),
         ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.runtime': 'MDd'}, {}, {}, {}, ref),
-        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.runtime': 'MTd'}, {}, {}, {}, ref),
-        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.runtime': 'MDd'}, {}, {}, {}, ref)]
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.runtime': 'MTd'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.runtime': 'MDd'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.runtime': 'MTd'}, {}, {}, {}, ref)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
@@ -352,13 +352,13 @@ class GeneratorsTest(unittest.TestCase):
 
         expected = [
             ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10',
-              'compiler.runtime': 'MTd'}, {}, {}, {}, None),
+              'compiler.runtime': 'MDd'}, {}, {}, {}, None),
             ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10',
+              'compiler.runtime': 'MTd'}, {}, {}, {}, None),
+            ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14',
               'compiler.runtime': 'MDd'}, {}, {}, {}, None),
             ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14',
-              'compiler.runtime': 'MTd'}, {}, {}, {}, None),
-            ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14',
-              'compiler.runtime': 'MDd'}, {}, {}, {}, None)]
+              'compiler.runtime': 'MTd'}, {}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
@@ -421,13 +421,13 @@ class GeneratorsTest(unittest.TestCase):
 
         expected = [
             ({'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'Visual Studio', 'compiler.version': '10',
-              'compiler.runtime': 'MT'}, {}, {}, {}, None),
+              'compiler.runtime': 'MD'}, {}, {}, {}, None),
             ({'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'Visual Studio', 'compiler.version': '10',
+              'compiler.runtime': 'MT'}, {}, {}, {}, None),
+            ({'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'Visual Studio', 'compiler.version': '14',
               'compiler.runtime': 'MD'}, {}, {}, {}, None),
             ({'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'Visual Studio', 'compiler.version': '14',
-              'compiler.runtime': 'MT'}, {}, {}, {}, None),
-            ({'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'Visual Studio', 'compiler.version': '14',
-              'compiler.runtime': 'MD'}, {}, {}, {}, None)]
+              'compiler.runtime': 'MT'}, {}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
@@ -490,13 +490,13 @@ class GeneratorsTest(unittest.TestCase):
 
         expected = [
             ({'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio', 'compiler.version': '10',
-              'compiler.runtime': 'MT'}, {}, {}, {}, None),
+              'compiler.runtime': 'MD'}, {}, {}, {}, None),
             ({'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio', 'compiler.version': '10',
+              'compiler.runtime': 'MT'}, {}, {}, {}, None),
+            ({'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio', 'compiler.version': '14',
               'compiler.runtime': 'MD'}, {}, {}, {}, None),
             ({'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio', 'compiler.version': '14',
-              'compiler.runtime': 'MT'}, {}, {}, {}, None),
-            ({'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio', 'compiler.version': '14',
-              'compiler.runtime': 'MD'}, {}, {}, {}, None)]
+              'compiler.runtime': 'MT'}, {}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
@@ -559,13 +559,13 @@ class GeneratorsTest(unittest.TestCase):
 
         expected = [
             ({'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio', 'compiler.version': '10',
-              'compiler.runtime': 'MT'}, {}, {}, {}, None),
+              'compiler.runtime': 'MD'}, {}, {}, {}, None),
             ({'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio', 'compiler.version': '10',
+              'compiler.runtime': 'MT'}, {}, {}, {}, None),
+            ({'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio', 'compiler.version': '14',
               'compiler.runtime': 'MD'}, {}, {}, {}, None),
             ({'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio', 'compiler.version': '14',
-              'compiler.runtime': 'MT'}, {}, {}, {}, None),
-            ({'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio', 'compiler.version': '14',
-              'compiler.runtime': 'MD'}, {}, {}, {}, None)]
+              'compiler.runtime': 'MT'}, {}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
@@ -615,5 +615,26 @@ class GeneratorsTest(unittest.TestCase):
             ({'compiler': 'Visual Studio', 'compiler.runtime': 'MT', 'compiler.version': '10', 'arch': 'x86',
               'build_type': 'MinSizeRel'},
              {'libpng:shared': False}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        #############
+
+        builds = get_visual_builds(visual_versions=["10", "14"], archs=["x86"], visual_runtimes=["MD", "MDd"],
+                                   shared_option_name=None,
+                                   dll_with_static_runtime=False,
+                                   vs10_x86_64_enabled=True,
+                                   build_types=["Debug", "Release", "RelWithDebInfo", "MinSizeRel"],
+                                   reference=ref)
+
+        expected = [
+        ({'arch': 'x86', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.runtime': 'MD'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.runtime': 'MD'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Release', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.runtime': 'MD'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.runtime': 'MDd'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.runtime': 'MD'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.runtime': 'MD'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Release', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.runtime': 'MD'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.runtime': 'MDd'}, {}, {}, {}, ref)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
