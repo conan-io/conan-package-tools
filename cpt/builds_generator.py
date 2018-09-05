@@ -219,39 +219,34 @@ def get_visual_builds_for_version(visual_runtimes, visual_version, arch, shared_
                 "arch": arch}
     sets = []
 
-    if shared_option_name:
-        if "MT" in visual_runtimes and "Release" in build_types:
-            sets.append(({"build_type": "Release", "compiler.runtime": "MT"},
-                         {shared_option_name: False}, {}, {}))
-            if dll_with_static_runtime:
-                sets.append(({"build_type": "Release", "compiler.runtime": "MT"},
-                             {shared_option_name: True}, {}, {}))
-        if "MTd" in visual_runtimes and "Debug" in build_types:
-            sets.append(({"build_type": "Debug", "compiler.runtime": "MTd"},
-                                  {shared_option_name: False}, {}, {}))
-            if dll_with_static_runtime:
-                sets.append(({"build_type": "Debug", "compiler.runtime": "MTd"},
-                                      {shared_option_name: True}, {}, {}))
-        if "MD" in visual_runtimes and "Release" in build_types:
-            sets.append(({"build_type": "Release", "compiler.runtime": "MD"},
-                                  {shared_option_name: False}, {}, {}))
-            sets.append(({"build_type": "Release", "compiler.runtime": "MD"},
-                                  {shared_option_name: True}, {}, {}))
-        if "MDd" in visual_runtimes and "Debug" in build_types:
-            sets.append(({"build_type": "Debug", "compiler.runtime": "MDd"},
-                                  {shared_option_name: False}, {}, {}))
-            sets.append(({"build_type": "Debug", "compiler.runtime": "MDd"},
-                                  {shared_option_name: True}, {}, {}))
+    debug_builds = set(['Debug'])
+    release_builds = set(['Release', 'RelWithDebInfo', 'MinSizeRel'])
 
-    else:
-        if "MT" in visual_runtimes and "Release" in build_types:
-            sets.append(({"build_type": "Release", "compiler.runtime": "MT"}, {}, {}, {}))
-        if "MTd" in visual_runtimes and "Debug" in build_types:
-            sets.append(({"build_type": "Debug", "compiler.runtime": "MTd"}, {}, {}, {}))
-        if "MDd" in visual_runtimes and "Debug" in build_types:
-            sets.append(({"build_type": "Debug", "compiler.runtime": "MDd"}, {}, {}, {}))
-        if "MD" in visual_runtimes and "Release" in build_types:
-            sets.append(({"build_type": "Release", "compiler.runtime": "MD"}, {}, {}, {}))
+    runtime_build_map = {
+        'MTd': debug_builds,
+        'MDd': debug_builds,
+        'MT': release_builds,
+        'MD': release_builds,
+    }
+
+    build_types_set = set(build_types)
+
+    for rt in visual_runtimes:
+        compatible_builds = list(build_types_set.intersection(runtime_build_map[rt]))
+        compatible_builds.sort() # so that it is deterministic.
+        for bld in compatible_builds:
+            if shared_option_name:
+                sets.append(({"build_type": bld, "compiler.runtime": rt},
+                                {shared_option_name: False}, {}, {}))
+                if rt in ['MT', 'MTd']:
+                    if dll_with_static_runtime:
+                        sets.append(({"build_type": bld, "compiler.runtime": rt},
+                                            {shared_option_name: True}, {}, {}))
+                else:
+                    sets.append(({"build_type": bld, "compiler.runtime": rt},
+                                    {shared_option_name: True}, {}, {}))
+            else:
+                sets.append(({"build_type": bld, "compiler.runtime": rt}, {}, {}, {}))
 
     ret = []
     for setting, options, env_vars, build_requires in sets:
