@@ -5,7 +5,7 @@ import sys
 from collections import defaultdict
 
 import six
-
+from conans.errors import ConanException
 
 from conans.model.version import Version
 from cpt.auth import AuthManager
@@ -161,12 +161,17 @@ class ConanMultiPackager(object):
         else:
             if not os.path.exists("conanfile.py"):
                 raise Exception("Conanfile not found, specify a 'reference' parameter with name and version")
-            conanfile = load_cf_class("./conanfile.py")
-            name, version = conanfile.name, conanfile.version
-            if name and version:
-                self.reference = ConanFileReference(name, version, self.username, self.channel)
-            else:
+            try:
+                conanfile = load_cf_class("./conanfile.py")
+            except ConanException:  # Currently not able to load conanfiles with python requires,
+                # a reference is needed
                 self.reference = None
+            else:
+                name, version = conanfile.name, conanfile.version
+                if name and version:
+                    self.reference = ConanFileReference(name, version, self.username, self.channel)
+                else:
+                    self.reference = None
 
         # If CONAN_DOCKER_IMAGE is speified, then use docker is True
         self.use_docker = (use_docker or os.getenv("CONAN_USE_DOCKER", False) or

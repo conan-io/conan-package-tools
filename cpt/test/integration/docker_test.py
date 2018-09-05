@@ -3,9 +3,11 @@ import sys
 import time
 import unittest
 
-
+from conans import __version__ as client_version
 from conans.client import tools
 from conans.model.ref import ConanFileReference
+from conans.model.version import Version
+
 from cpt import __version__ as version
 from cpt.packager import ConanMultiPackager
 from cpt.test.integration.base import BaseTest, PYPI_TESTING_REPO, CONAN_UPLOAD_URL, \
@@ -53,15 +55,24 @@ class Pkg(ConanFile):
         ref = ConanFileReference.loads("%s@lasote/mychannel" % unique_ref)
 
         # Remove from remote
-        results = self.api.search_recipes(search_pattern, remote="upload_repo")["results"][0]["items"]
-        self.assertEquals(len(results), 1)
-        packages = self.api.search_packages(ref, remote="upload_repo")["results"][0]["items"][0]["packages"]
-        self.assertEquals(len(packages), 2)
-
-        self.api.authenticate(name=CONAN_LOGIN_UPLOAD, password=CONAN_UPLOAD_PASSWORD,
+        if Version(client_version) < Version("1.7"):
+            results = self.api.search_recipes(search_pattern, remote="upload_repo")["results"][0]["items"]
+            self.assertEquals(len(results), 1)
+            packages = self.api.search_packages(ref, remote="upload_repo")["results"][0]["items"][0]["packages"]
+            self.assertEquals(len(packages), 2)
+            self.api.authenticate(name=CONAN_LOGIN_UPLOAD, password=CONAN_UPLOAD_PASSWORD,
                               remote="upload_repo")
-        self.api.remove(search_pattern, remote="upload_repo", force=True)
-        self.assertEquals(self.api.search_recipes(search_pattern)["results"], [])
+            self.api.remove(search_pattern, remote="upload_repo", force=True)
+            self.assertEquals(self.api.search_recipes(search_pattern)["results"], [])
+        else:
+            results = self.api.search_recipes(search_pattern, remote_name="upload_repo")["results"][0]["items"]
+            self.assertEquals(len(results), 1)
+            packages = self.api.search_packages(ref, remote_name="upload_repo")["results"][0]["items"][0]["packages"]
+            self.assertEquals(len(packages), 2)
+            self.api.authenticate(name=CONAN_LOGIN_UPLOAD, password=CONAN_UPLOAD_PASSWORD,
+                                  remote_name="upload_repo")
+            self.api.remove(search_pattern, remote_name="upload_repo", force=True)
+            self.assertEquals(self.api.search_recipes(search_pattern)["results"], [])
 
         # Try upload only when stable, shouldn't upload anything
         with tools.environment_append({"CONAN_USE_DOCKER": "1",
@@ -82,7 +93,12 @@ class Pkg(ConanFile):
             self.packager.add_common_builds()
             self.packager.run()
 
-        results = self.api.search_recipes(search_pattern, remote="upload_repo")["results"]
-        self.assertEquals(len(results), 0)
-        self.api.remove(search_pattern, remote="upload_repo", force=True)
+        if Version(client_version) < Version("1.7"):
+            results = self.api.search_recipes(search_pattern, remote="upload_repo")["results"]
+            self.assertEquals(len(results), 0)
+            self.api.remove(search_pattern, remote="upload_repo", force=True)
+        else:
+            results = self.api.search_recipes(search_pattern, remote_name="upload_repo")["results"]
+            self.assertEquals(len(results), 0)
+            self.api.remove(search_pattern, remote_name="upload_repo", force=True)
 
