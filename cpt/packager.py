@@ -23,15 +23,12 @@ from conans import __version__ as client_version, tools
 from cpt.uploader import Uploader
 
 
-def load_cf_class(path):
+def load_cf_class(path, conan_api):
     if Version(client_version) < Version("1.7.0"):
         from conans.client.loader_parse import load_conanfile_class
         return load_conanfile_class(path)
     else:
-        from conans.client.loader import ConanFileLoader
-        from conans.client.graph.python_requires import ConanPythonRequire
-        loader = ConanFileLoader(None, None, ConanPythonRequire(None, None))
-        return loader.load_class(path)
+        return conan_api._loader.load_class(path)
 
 
 class PlatformInfo(object):
@@ -162,7 +159,7 @@ class ConanMultiPackager(object):
             if not os.path.exists("conanfile.py"):
                 raise Exception("Conanfile not found, specify a 'reference' parameter with name and version")
             try:
-                conanfile = load_cf_class("./conanfile.py")
+                conanfile = load_cf_class("./conanfile.py", self.conan_api)
             except ConanException:  # Currently not able to load conanfiles with python requires,
                 # a reference is needed
                 self.reference = None
@@ -355,7 +352,7 @@ class ConanMultiPackager(object):
 
         if shared_option_name is None:
             if os.path.exists("conanfile.py"):
-                conanfile = load_cf_class("./conanfile.py")
+                conanfile = load_cf_class("./conanfile.py", self.conan_api)
                 if hasattr(conanfile, "options") and "shared" in conanfile.options:
                     shared_option_name = "%s:shared" % self.reference.name
 
