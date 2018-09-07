@@ -26,16 +26,22 @@ class Uploader(object):
             self.printer.print_message("Uploading packages for '%s'" % str(reference))
             self.auth_manager.login(remote_name)
 
-
             if Version(client_version) < Version("1.7.0"):
                 self.conan_api.upload(str(reference),
                                       all_packages=True,
                                       remote=remote_name,
                                       force=True,
                                       retry=int(self._upload_retry))
-            else:
+            elif Version(client_version) < Version("1.8.0"):
                 self.conan_api.upload(str(reference),
                                       all_packages=True,
                                       remote_name=remote_name,
                                       force=True,
                                       retry=int(self._upload_retry))
+            # Comming 1.8:
+            #else:
+            #    self.conan_api.upload(str(reference),
+            #                          all_packages=True,
+            #                          remote_name=remote_name,
+            #                          policy=UPLOAD_POLICY_FORCE,
+            #                          retry=int(self._upload_retry))

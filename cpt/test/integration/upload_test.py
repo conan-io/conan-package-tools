@@ -108,3 +108,19 @@ class Pkg(ConanFile):
             # FIXME: Probaby we should rename if name is different (Conan 1.3)
             self.assertIn("Remote for URL 'https://api.bintray.com/conan/conan-community/conan' "
                           "already exist, keeping the current remote and its name", self.output)
+
+    def test_existing_upload_repo_by_name(self):
+        self.api.remote_add("upload_repo",
+                            "https://api.bintray.com/different/conan-community/conan")
+        self.save_conanfile(self.conanfile)
+        with tools.environment_append({"CONAN_PASSWORD": "mypass",
+                                       "CONAN_UPLOAD": "https://api.bintray.com/conan/"
+                                                       "conan-community/conan"}):
+            mp = ConanMultiPackager(username="lasote", out=self.output.write,
+                                    ci_manager=self.ci_manager)
+            mp.add({}, {}, {})
+            with self.assertRaisesRegexp(ConanException, "Wrong user or password"):
+                mp.run()
+            self.assertNotIn("already exist, keeping the current remote and its name", self.output)
+            repo = self.api.get_remote_by_name("upload_repo")
+            self.assertEquals(repo.url, "https://api.bintray.com/conan/conan-community/conan")
