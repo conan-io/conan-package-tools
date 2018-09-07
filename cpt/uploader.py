@@ -11,7 +11,7 @@ class Uploader(object):
         if not self._upload_retry:
             self._upload_retry = 0
 
-    def upload_packages(self, reference, upload):
+    def upload_packages(self, reference, upload, package_id):
         remote_name = self.remote_manager.upload_remote_name
         if not remote_name:
             self.printer.print_message("Upload skipped, not upload remote available")
@@ -28,13 +28,13 @@ class Uploader(object):
 
             if Version(client_version) < Version("1.7.0"):
                 self.conan_api.upload(str(reference),
-                                      all_packages=True,
+                                      package=package_id,
                                       remote=remote_name,
                                       force=True,
                                       retry=int(self._upload_retry))
             elif Version(client_version) < Version("1.8.0"):
                 self.conan_api.upload(str(reference),
-                                      all_packages=True,
+                                      package=package_id,
                                       remote_name=remote_name,
                                       force=True,
                                       retry=int(self._upload_retry))
