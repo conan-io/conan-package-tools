@@ -52,28 +52,24 @@ class CreateRunner(object):
 
             with self.printer.foldable_output("conan_create"):
                 name, version, user, channel = self._reference
-                # print_dict
-                # TODO: Get uploaded packages with Conan 1.3 from the ret json
+                if self._build_policy:
+                    self._build_policy = [self._build_policy]
+                # https://github.com/conan-io/conan-package-tools/issues/184
+                with tools.environment_append({"_CONAN_CREATE_COMMAND_": "1"}):
+                    params = {"name": name, "version": version, "user": user,
+                              "channel": channel, "build_modes": self._build_policy,
+                              "profile_name": self._profile_abs_path}
+                    self.printer.print_message("Calling 'conan create'")
+                    self.printer.print_dict(params)
 
-                # FIXME: chdir Can be removed in 1.3, fixed issue about api changing curdir
-                with tools.chdir(self._abs_folder):
-                    if self._build_policy:
-                        self._build_policy = [self._build_policy]
-                    # https://github.com/conan-io/conan-package-tools/issues/184
-                    with tools.environment_append({"_CONAN_CREATE_COMMAND_": "1"}):
-                        params = {"name": name, "version": version, "user": user,
-                                  "channel": channel, "build_modes": self._build_policy,
-                                  "profile_name": self._profile_abs_path}
-                        self.printer.print_message("Calling 'conan create'")
-                        self.printer.print_dict(params)
-
-                        self._conan_api.create(".", name=name, version=version,
+                    r = self._conan_api.create(".", name=name, version=version,
                                                user=user, channel=channel,
                                                build_modes=self._build_policy,
                                                profile_name=self._profile_abs_path,
                                                test_folder=self._test_folder)
 
-                self._uploader.upload_packages(self._reference, self._upload)
+                    package_id = r['installed'][0]['packages'][0]['id']
+                    self._uploader.upload_packages(self._reference, self._upload, package_id)
 
 
 class DockerCreateRunner(object):
@@ -169,7 +165,7 @@ class DockerCreateRunner(object):
             update_command = self._pip_update_conan_command() + " && "
         else:
             update_command = ""
-        command = ('%s docker run --rm -v %s:%s/project %s %s %s %s '
+        command = ('%s docker run --rm -v "%s:%s/project" %s %s %s %s '
                    '"%s cd project && '
                    '%s run_create_in_docker "' % (self._sudo_docker_command,
                                                   os.getcwd(),

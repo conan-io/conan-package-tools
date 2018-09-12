@@ -38,6 +38,18 @@ class MockConanAPI(object):
 
     def create(self, *args, **kwargs):
         self.calls.append(Action("create", args, kwargs))
+        return {
+            "installed": [
+               {
+                  "packages": [
+                     {
+                        "id": "227fb0ea22f4797212e72ba94ea89c7b3fbc2a0c"
+                     }
+                  ],
+                  "recipe": {
+                     "id": kwargs["name"]
+                  }
+               }]}
 
     def create_profile(self, *args, **kwargs):
         save(os.path.join(self._client_cache.profiles_path, args[0]), "[settings]")
