@@ -63,6 +63,8 @@ class CIManager(object):
         return None
 
     def skip_builds(self):
+        if os.getenv("CONAN_IGNORE_SKIP_CI"):
+            return False
         pattern = "^.*\[skip ci\].*$"
         prog = re.compile(pattern)
         msg = self.get_commit_msg()
