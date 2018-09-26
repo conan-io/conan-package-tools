@@ -67,9 +67,11 @@ class CreateRunner(object):
                                                build_modes=self._build_policy,
                                                profile_name=self._profile_abs_path,
                                                test_folder=self._test_folder)
-
-                    package_id = r['installed'][0]['packages'][0]['id']
-                    self._uploader.upload_packages(self._reference, self._upload, package_id)
+                    for installed in r['installed']:
+                        if installed["recipe"]["id"] == str(self._reference):
+                            package_id = installed['packages'][0]['id']
+                            self._uploader.upload_packages(self._reference,
+                                                           self._upload, package_id)
 
 
 class DockerCreateRunner(object):

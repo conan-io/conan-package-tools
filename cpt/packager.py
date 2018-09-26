@@ -158,17 +158,13 @@ class ConanMultiPackager(object):
         else:
             if not os.path.exists("conanfile.py"):
                 raise Exception("Conanfile not found, specify a 'reference' parameter with name and version")
-            try:
-                conanfile = load_cf_class("./conanfile.py", self.conan_api)
-            except ConanException:  # Currently not able to load conanfiles with python requires,
-                # a reference is needed
-                self.reference = None
+
+            conanfile = load_cf_class("./conanfile.py", self.conan_api)
+            name, version = conanfile.name, conanfile.version
+            if name and version:
+                self.reference = ConanFileReference(name, version, self.username, self.channel)
             else:
-                name, version = conanfile.name, conanfile.version
-                if name and version:
-                    self.reference = ConanFileReference(name, version, self.username, self.channel)
-                else:
-                    self.reference = None
+                self.reference = None
 
         # If CONAN_DOCKER_IMAGE is speified, then use docker is True
         self.use_docker = (use_docker or os.getenv("CONAN_USE_DOCKER", False) or

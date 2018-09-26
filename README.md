@@ -960,7 +960,7 @@ Upload related parameters:
 
 The current commit message can contain special messages:
 
-- **[skip ci]**: git sWill skip the building of any package.
+- **[skip ci]**: Will skip the building of any package (unless `CONAN_IGNORE_SKIP_CI` is set)
 - **[build=XXX]**: Being XXX a build policy (see build_policy parameter reference)
 
 
@@ -1058,6 +1058,7 @@ This is especially useful for CI integration.
     - "outdated": Build only missing or if the available package is not built with the current recipe. Useful to upload new configurations, e.j packages for a new compiler without
       rebuild all packages.
 - **CONAN_BASE_PROFILE**: Apply options, settings, etc. to this profile instead of `default`.
+- **CONAN_IGNORE_SKIP_CI**: Ignore `[skip ci]` in commit message.
 - **CPT_TEST_FOLDER**: Custom test_package path, e.j .conan/test_package
 
 
