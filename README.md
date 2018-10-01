@@ -857,7 +857,6 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 
 ## ConanMultiPackager parameters reference
 
-- **args**: List with the parameters that will be passed to "conan test" command. e.j: args=['--build', 'all']. Default sys.argv[1:]
 - **username**: The username (part of the package reference, not the login_username)
 - **login_username**: The login username. Could take two possible values:
 

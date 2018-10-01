@@ -11,7 +11,7 @@ from cpt.profiles import load_profile, patch_default_base_profile
 
 class CreateRunner(object):
 
-    def __init__(self, profile_abs_path, reference, conan_api, uploader, args=None,
+    def __init__(self, profile_abs_path, reference, conan_api, uploader,
                  exclude_vcvars_precommand=False, build_policy=None, runner=None,
                  abs_folder=None, printer=None, upload=False, test_folder=None):
 
@@ -22,7 +22,6 @@ class CreateRunner(object):
         self._conan_api = conan_api
         self._profile_abs_path = profile_abs_path
         self._reference = reference
-        self._args = args
         self._exclude_vcvars_precommand = exclude_vcvars_precommand
         self._build_policy = build_policy
         self._runner = PrintRunner(runner or os.system, self.printer)
@@ -76,7 +75,7 @@ class CreateRunner(object):
 
 class DockerCreateRunner(object):
     def __init__(self, profile_text, base_profile_text, base_profile_name, reference,
-                 args=None, conan_pip_package=None, docker_image=None, sudo_docker_command=None,
+                 conan_pip_package=None, docker_image=None, sudo_docker_command=None,
                  sudo_pip_command=True,
                  docker_image_skip_update=False, build_policy=None,
                  docker_image_skip_pull=False,
@@ -88,7 +87,6 @@ class DockerCreateRunner(object):
                  test_folder=None):
 
         self.printer = Printer()
-        self._args = args
         self._upload = upload
         self._upload_retry = upload_retry
         self._reference = reference
@@ -199,7 +197,6 @@ class DockerCreateRunner(object):
     def get_env_vars(self):
         ret = {key: value for key, value in os.environ.items() if key.startswith("CONAN_") and
                key != "CONAN_USER_HOME"}
-        ret["CPT_ARGS"] = escape_env(self._args)
         ret["CONAN_REFERENCE"] = self._reference
 
         ret["CPT_PROFILE"] = escape_env(self._profile_text)

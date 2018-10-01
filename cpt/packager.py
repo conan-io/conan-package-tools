@@ -66,7 +66,7 @@ class ConanMultiPackager(object):
     """ Help to generate common builds (setting's combinations), adjust the environment,
     and run conan create command in docker containers"""
 
-    def __init__(self, args=None, username=None, channel=None, runner=None,
+    def __init__(self, username=None, channel=None, runner=None,
                  gcc_versions=None, visual_versions=None, visual_runtimes=None,
                  apple_clang_versions=None, archs=None,
                  use_docker=None, curpage=None, total_pages=None,
@@ -226,7 +226,6 @@ class ConanMultiPackager(object):
 
         self.runner = runner or os.system
         self.output_runner = ConanOutputRunner()
-        self.args = " ".join(args) if args else " ".join(sys.argv[1:])
 
         self.docker_entry_script = docker_entry_script or os.getenv("CONAN_DOCKER_ENTRY_SCRIPT")
 
@@ -452,7 +451,6 @@ class ConanMultiPackager(object):
                 profile_abs_path = save_profile_to_tmp(profile_text)
                 r = CreateRunner(profile_abs_path, build.reference, self.conan_api,
                                  self.uploader,
-                                 args=self.args,
                                  exclude_vcvars_precommand=self.exclude_vcvars_precommand,
                                  build_policy=self.build_policy,
                                  runner=self.runner,
@@ -464,7 +462,7 @@ class ConanMultiPackager(object):
             else:
                 docker_image = self._get_docker_image(build)
                 r = DockerCreateRunner(profile_text, base_profile_text, base_profile_name,
-                                       build.reference, args=self.args,
+                                       build.reference,
                                        conan_pip_package=self.conan_pip_package,
                                        docker_image=docker_image,
                                        sudo_docker_command=self.sudo_docker_command,
