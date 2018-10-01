@@ -13,6 +13,7 @@ from cpt.ci_manager import CIManager
 from cpt.printer import Printer
 from cpt.profiles import get_profiles, save_profile_to_tmp
 from cpt.remotes import RemotesManager
+from cpt.config import ConfigManager
 from cpt.tools import get_bool_from_env
 from cpt.builds_generator import BuildConf, BuildGenerator
 from cpt.runner import CreateRunner, DockerCreateRunner
@@ -95,7 +96,8 @@ class ConanMultiPackager(object):
                  client_cache=None,
                  ci_manager=None,
                  out=None,
-                 test_folder=None):
+                 test_folder=None,
+                 config_url=None):
 
         self.printer = Printer(out)
         self.printer.print_rule()
@@ -109,6 +111,7 @@ class ConanMultiPackager(object):
 
         self.ci_manager = ci_manager or CIManager(self.printer)
         self.remotes_manager = RemotesManager(self.conan_api, self.printer, remotes, upload)
+        self.config_manager = ConfigManager(self.conan_api, self.printer)
         self.username = username or os.getenv("CONAN_USERNAME", None)
 
         if not self.username:
@@ -254,6 +257,8 @@ class ConanMultiPackager(object):
 
         self.test_folder = test_folder or os.getenv("CPT_TEST_FOLDER", None)
 
+        self.config_url = config_url or os.getenv("CONAN_CONFIG_URL", None)
+
         def valid_pair(var, value):
             return (isinstance(value, six.string_types) or
                     isinstance(value, bool) or
@@ -382,6 +387,9 @@ class ConanMultiPackager(object):
                 with self.printer.foldable_output("pip_update"):
                     self.runner('%s pip install %s' % (self.sudo_pip_command,
                                                        self.conan_pip_package))
+            if self.config_url:
+                self.config_manager.install(url=self.config_url)
+
 
             self.run_builds(base_profile_name=base_profile_name)
 
