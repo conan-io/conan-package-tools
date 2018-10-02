@@ -356,6 +356,26 @@ Also, it's possible to run some internal script, before to build the package:
         builder.add_common_builds()
         builder.run()
 
+### Installing extra python packages before to build
+
+Maybe you need to install some python packages using pip before to build your conan package. To solve this situation
+you could use **pip_install**:
+
+**Example**:
+
+This example installs bincrafters-package-tools and conan-promote before to build:
+
+    from cpt.packager import ConanMultiPackager
+
+    if __name__ == "__main__":
+        builder = ConanMultiPackager(pip_install=["bincrafters-package-tools==0.17.0", "conan-promote==0.1.2"])
+        builder.add_common_builds()
+        builder.run()
+
+But if you prefer to use environment variables:
+
+    export CONAN_PIP_INSTALL="bincrafters-package-tools==0.17.0,conan-promote=0.1.2"
+
 
 ## Specifying a different base profile
 
@@ -915,6 +935,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **always_update_conan_in_docker**: If True, "conan package tools" and "conan" will be installed and upgraded in the docker image in every build execution.
   and the container won't be commited with the modifications.
 - **docker_entry_script**: Command to be executed before to build when running Docker.
+- **pip_install**: Package list to be installed by pip before to build. e.j ["foo", "bar"]
 - **docker_32_images**: If defined, and the current build is arch="x86" the docker image name will be appended with "-i386". e.j: "lasote/conangcc63-i386"
 - **curpage**: Current page of packages to create
 - **total_pages**: Total number of pages
@@ -1023,6 +1044,7 @@ This is especially useful for CI integration.
 - **CONAN_SKIP_CHECK_CREDENTIALS**: Conan will skip checking the user credentials before building the packages. And if no user/remote is specified, will try to upload with the
   already stored credentiales in the local cache. Default [False]
 - **CONAN_DOCKER_ENTRY_SCRIPT**: Command to be executed before to build when running Docker.
+- **CONAN_PIP_INSTALL**: Package list to be installed by pip before to build, comma separated, e.g. "pkg-foo==0.1.0,pkg-bar"
 - **CONAN_GCC_VERSIONS**: Gcc versions, comma separated, e.g. "4.6,4.8,5,6"
 - **CONAN_CLANG_VERSIONS**: Clang versions, comma separated, e.g. "3.8,3.9,4.0"
 - **CONAN_APPLE_CLANG_VERSIONS**: Apple clang versions, comma separated, e.g. "6.1,8.0"
