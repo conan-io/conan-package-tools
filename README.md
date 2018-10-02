@@ -900,6 +900,13 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
        remotes = [("https://api.bintray.com/conan/conan-community/conan", True, "remote1"),
                   ("https://api.bintray.com/conan/other/conan2", False, "remote2")]
        ```
+- **options**: Options used on package build:
+
+    - List of options:
+       ```
+       options = ["foobar:with_qux=True", "foobar:with_bar=False"]
+
+       ```
 
 - **gcc_versions**: List with a subset of gcc_versions. Default ["4.9", "5", "6", "7"]
 - **clang_versions**: List with a subset of clang_versions. Default ["3.8", "3.9", "4.0"]
@@ -1026,6 +1033,7 @@ This is especially useful for CI integration.
 - **CONAN_CLANG_VERSIONS**: Clang versions, comma separated, e.g. "3.8,3.9,4.0"
 - **CONAN_APPLE_CLANG_VERSIONS**: Apple clang versions, comma separated, e.g. "6.1,8.0"
 - **CONAN_ARCHS**: Architectures to build for, comma separated, e.g. "x86,x86_64"
+- **CONAN_OPTIONS**: Conan build options, comma separated, e.g. "foobar:with_bar=True,foobar:with_qux=False"
 - **CONAN_BUILD_TYPES**: Build types to build for, comma separated, e.g. "Release,Debug"
 - **CONAN_VISUAL_VERSIONS**: Visual versions, comma separated, e.g. "12,14"
 - **CONAN_VISUAL_RUNTIMES**: Visual runtimes, comma separated, e.g. "MT,MD"

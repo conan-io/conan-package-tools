@@ -68,7 +68,7 @@ class ConanMultiPackager(object):
 
     def __init__(self, username=None, channel=None, runner=None,
                  gcc_versions=None, visual_versions=None, visual_runtimes=None,
-                 apple_clang_versions=None, archs=None,
+                 apple_clang_versions=None, archs=None, options=None,
                  use_docker=None, curpage=None, total_pages=None,
                  docker_image=None, reference=None, password=None,
                  remotes=None,
@@ -175,7 +175,7 @@ class ConanMultiPackager(object):
                                               apple_clang_versions, clang_versions,
                                               visual_versions, visual_runtimes, vs10_x86_64_enabled,
                                               mingw_configurations, archs, allow_gcc_minors,
-                                              build_types)
+                                              build_types, options)
 
         build_policy = (build_policy or
                         self.ci_manager.get_commit_build_policy() or
