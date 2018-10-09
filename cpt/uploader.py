@@ -38,10 +38,10 @@ class Uploader(object):
                                       remote_name=remote_name,
                                       force=True,
                                       retry=int(self._upload_retry))
-            # Comming 1.8:
-            #else:
-            #    self.conan_api.upload(str(reference),
-            #                          all_packages=True,
-            #                          remote_name=remote_name,
-            #                          policy=UPLOAD_POLICY_FORCE,
-            #                          retry=int(self._upload_retry))
+            elif Version(client_version) < Version("1.9.0"):
+                from conans.client.cmd.uploader import UPLOAD_POLICY_FORCE
+                self.conan_api.upload(str(reference),
+                                      all_packages=True,
+                                      remote_name=remote_name,
+                                      policy=UPLOAD_POLICY_FORCE,
+                                      retry=int(self._upload_retry))
