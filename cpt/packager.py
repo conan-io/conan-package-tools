@@ -516,7 +516,7 @@ class ConanMultiPackager(object):
         if compiler_name == "gcc" and Version(compiler_version) > Version("5"):
             compiler_version = Version(compiler_version).major(fill=False)
 
-        return "conanio/conan%s%s" % (compiler_name, compiler_version.replace(".", ""))
+        return "conanio/%s%s" % (compiler_name, compiler_version.replace(".", ""))
 
     def _get_channel(self, specified_channel, stable_channel):
         if self.stable_branch_pattern:

@@ -69,7 +69,7 @@ class BuildGenerator(object):
    - CONAN_GCC_VERSIONS="5,6,7" if you are using environment variables.
    - gcc_versions=["5", "6", "7"] if you are using the constructor parameter.
 
-You can still keep using the same docker images, or use the new "conanio/conangcc5", "conanio/conangcc6", "conanio/conangcc7"
+You can still keep using the same docker images, or use the new "conanio/gcc5", "conanio/gcc6", "conanio/gcc7"
 
 If you still want to keep the old behavior, set the environment var CONAN_ALLOW_GCC_MINORS or pass the
 "allow_gcc_minors=True" parameter. But it is not recommended, if your packages are public most users
