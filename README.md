@@ -753,7 +753,7 @@ By adding builds to the **named_builds** dictionary, and passing **curpage** wit
         builder.named_builds = named_builds
         builder.run()
 
-named_builds not have a dictionary entry for x86 and another for x86_64:
+named_builds now have a dictionary entry for x86 and another for x86_64:
 
 - for **CONAN_CURRENT_PAGE="x86"** it would do all x86 builds
 - for **CONAN_CURRENT_PAGE="x86_64"** it would do all x86_64 builds
