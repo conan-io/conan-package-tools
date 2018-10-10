@@ -123,7 +123,7 @@ class AppTest(unittest.TestCase):
 
         packager.add({"arch": "x86", "compiler": "gcc", "compiler.version": "6"})
         packager.run_builds(1, 1)
-        self.assertIn("docker pull lasote/conangcc6-x86", self.runner.calls[0])
+        self.assertIn("docker pull conanio/conangcc6-x86", self.runner.calls[0])
 
         self.runner.reset()
         packager = ConanMultiPackager(["--build missing", "-r conan.io"],
@@ -137,7 +137,7 @@ class AppTest(unittest.TestCase):
 
         packager.add({"arch": "x86", "compiler": "gcc", "compiler.version": "6"})
         packager.run_builds(1, 1)
-        self.assertNotIn("docker pull lasote/conangcc6-i386", self.runner.calls[0])
+        self.assertNotIn("docker pull conanio/conangcc6-i386", self.runner.calls[0])
 
         self.runner.reset()
         with tools.environment_append({"CONAN_DOCKER_32_IMAGES": "1"}):
@@ -151,7 +151,7 @@ class AppTest(unittest.TestCase):
 
             packager.add({"arch": "x86", "compiler": "gcc", "compiler.version": "6"})
             packager.run_builds(1, 1)
-            self.assertIn("docker pull lasote/conangcc6-x86", self.runner.calls[0])
+            self.assertIn("docker pull conanio/conangcc6-x86", self.runner.calls[0])
 
         self.runner.reset()
         # Test the opossite
@@ -166,7 +166,7 @@ class AppTest(unittest.TestCase):
 
         packager.add({"arch": "x86", "compiler": "gcc", "compiler.version": "6"})
         packager.run_builds(1, 1)
-        self.assertIn("docker pull lasote/conangcc6", self.runner.calls[0])
+        self.assertIn("docker pull conanio/conangcc6", self.runner.calls[0])
 
     def test_docker_gcc(self):
         self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
@@ -182,11 +182,11 @@ class AppTest(unittest.TestCase):
         self._add_build(3, "gcc", "4.3")
 
         self.packager.run_builds(1, 2)
-        self.assertIn("docker pull lasote/conangcc43", self.runner.calls[0])
+        self.assertIn("docker pull conanio/conangcc43", self.runner.calls[0])
         self.assertIn('docker run ', self.runner.calls[1])
         self.assertIn('os=os1', self.runner.calls[4])
         self.packager.run_builds(1, 2)
-        self.assertIn("docker pull lasote/conangcc43", self.runner.calls[0])
+        self.assertIn("docker pull conanio/conangcc43", self.runner.calls[0])
 
         # Next build from 4.3 is cached, not pulls are performed
         self.assertIn('os=os3', self.runner.calls[5])
@@ -242,7 +242,7 @@ class AppTest(unittest.TestCase):
         self._add_build(3, "clang", "3.8")
 
         self.packager.run_builds(1, 2)
-        self.assertIn("docker pull lasote/conanclang38", self.runner.calls[0])
+        self.assertIn("docker pull conanio/conanclang38", self.runner.calls[0])
         self.assertIn('docker run ', self.runner.calls[1])
         self.assertIn('os=os1', self.runner.calls[4])
 
@@ -268,14 +268,14 @@ class AppTest(unittest.TestCase):
         self._add_build(6, "clang", "3.9")
 
         self.packager.run_builds(1, 2)
-        self.assertIn("docker pull lasote/conangcc5", self.runner.calls[0])
+        self.assertIn("docker pull conanio/conangcc5", self.runner.calls[0])
         self.assertIn('docker run ', self.runner.calls[1])
 
         self.assertIn('os=os1', self.runner.calls[4])
         self.assertIn('os=os3', self.runner.calls[5])
 
         self.packager.run_builds(2, 2)
-        self.assertIn("docker pull lasote/conanclang39", self.runner.calls[16])
+        self.assertIn("docker pull conanio/conanclang39", self.runner.calls[16])
         self.assertIn('docker run ', self.runner.calls[17])
         self.assertIn('os=os4', self.runner.calls[20])
         self.assertIn('os=os6', self.runner.calls[21])
