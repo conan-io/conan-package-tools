@@ -50,8 +50,8 @@ class Pkg(ConanFile):
 
 """
         self.save_conanfile(conanfile)
-        self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
-                                           "lasote", "mychannel",
+        self.packager = ConanMultiPackager(username="lasote",
+                                           channel="mychannel",
                                            visual_versions=[15],
                                            archs=["x86"],
                                            build_types=["Release"],
@@ -72,8 +72,8 @@ class Pkg(ConanFile):
 
 """
         self.save_conanfile(conanfile)
-        self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
-                                           "lasote", "mychannel",
+        self.packager = ConanMultiPackager(username="lasote",
+                                           channel="mychannel",
                                            visual_versions=[15],
                                            archs=["x86"],
                                            build_types=["Release"],
