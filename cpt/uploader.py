@@ -45,3 +45,7 @@ class Uploader(object):
                                       remote_name=remote_name,
                                       policy=UPLOAD_POLICY_FORCE,
                                       retry=int(self._upload_retry))
+            else:
+                self.printer.print_message("Upload skipped due to Conan/CPT version mismatch. ")
+                                           "Conan version installed: %s . "
+                                           "This version of CPT supports only Conan < 1.9.0" % client_version)
