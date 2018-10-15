@@ -12,10 +12,10 @@ from cpt.test.unit.utils import MockConanAPI, MockRunner, MockCIManager
 
 
 def platform_mock_for(so):
-     class PlatformInfoMock(object):
+    class PlatformInfoMock(object):
         def system(self):
             return so
-     return PlatformInfoMock()
+    return PlatformInfoMock()
 
 
 class AppTest(unittest.TestCase):
