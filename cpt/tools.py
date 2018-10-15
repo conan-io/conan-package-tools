@@ -8,4 +8,6 @@ def get_bool_from_env(var_name):
 
 
 def split_colon_env(varname):
+    if os.getenv(varname) is None:
+        return None
     return [a.strip() for a in list(filter(None, os.getenv(varname, "").split(",")))]
