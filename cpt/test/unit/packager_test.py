@@ -493,7 +493,8 @@ class AppTest(unittest.TestCase):
 
         self.assertEquals(builder.build_generator._gcc_versions, [])
 
-        with tools.environment_append({"CONAN_CLANG_VERSIONS": "4.8, 5"}):
+        with tools.environment_append({"CONAN_CLANG_VERSIONS": "4.8, 5",
+                                       "CONAN_APPLE_CLANG_VERSIONS": " "}):
             builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
                                          username="foo",
                                          reference="lib/1.0",
@@ -501,6 +502,8 @@ class AppTest(unittest.TestCase):
 
             self.assertEquals(builder.build_generator._gcc_versions, [])
             self.assertEquals(builder.build_generator._clang_versions, ["4.8", "5"])
+            self.assertEquals(builder.build_generator._clang_versions, ["4.8", "5"])
+            self.assertEquals(builder.build_generator._apple_clang_versions, [])
 
     def test_upload(self):
         runner = MockRunner()
