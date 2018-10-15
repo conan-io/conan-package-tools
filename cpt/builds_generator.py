@@ -49,13 +49,19 @@ class BuildGenerator(object):
 
         # If there are some GCC versions declared then we don't default the clang
         # versions
-        if not self._clang_versions and not self._gcc_versions:
-            self._clang_versions = default_clang_versions
+        if self._clang_versions is None:
+            if not self._gcc_versions:
+                self._clang_versions = default_clang_versions
+            else:
+                self._clang_versions = []
 
         # If there are some CLANG versions declared then we don't default the gcc
         # versions
-        if not self._gcc_versions and self._clang_versions == default_clang_versions:
-            self._gcc_versions = default_gcc_versions
+        if self._gcc_versions is None:
+            if self._clang_versions == default_clang_versions:
+                self._gcc_versions = default_gcc_versions
+            else:
+                self._gcc_versions = []
 
         if self._gcc_versions and not self._allow_gcc_minors:
             for a_version in self._gcc_versions:
@@ -79,29 +85,35 @@ won't be able to use them.
 
 """)
 
-        if visual_versions is not None:
-            self._visual_versions = visual_versions
-        else:
-            self._visual_versions = split_colon_env("CONAN_VISUAL_VERSIONS")
-            if not self._visual_versions and not mingw_configurations and not get_mingw_config_from_env():
+        self._visual_versions = visual_versions or split_colon_env("CONAN_VISUAL_VERSIONS")
+        if self._visual_versions is None:
+            if not mingw_configurations and not get_mingw_config_from_env():
                 self._visual_versions = default_visual_versions
-            elif mingw_configurations or get_mingw_config_from_env():
+            else:
                 self._visual_versions = []
+        elif mingw_configurations or get_mingw_config_from_env():
+            self._visual_versions = []
 
-        self._visual_runtimes = (visual_runtimes or split_colon_env("CONAN_VISUAL_RUNTIMES") or
-                                 default_visual_runtimes)
+        self._visual_runtimes = visual_runtimes or split_colon_env("CONAN_VISUAL_RUNTIMES")
+        if self._visual_runtimes is None:
+            self._visual_runtimes = default_visual_runtimes
 
-        self._apple_clang_versions = (apple_clang_versions or
-                                      split_colon_env("CONAN_APPLE_CLANG_VERSIONS") or
-                                      default_apple_clang_versions)
+        self._apple_clang_versions = apple_clang_versions or split_colon_env("CONAN_APPLE_CLANG_VERSIONS")
+
+        if self._apple_clang_versions is None:
+            self._apple_clang_versions = default_apple_clang_versions
 
         self._mingw_configurations = mingw_configurations or get_mingw_config_from_env()
 
         _default_archs = ["x86_64"] if self._os_name == "Darwin" else default_archs
 
-        self._archs = archs or split_colon_env("CONAN_ARCHS") or _default_archs
+        self._archs = archs or split_colon_env("CONAN_ARCHS")
+        if self._archs is None:
+            self._archs = _default_archs
 
-        self._build_types = build_types or split_colon_env("CONAN_BUILD_TYPES") or default_build_types
+        self._build_types = build_types or split_colon_env("CONAN_BUILD_TYPES")
+        if self._build_types is None:
+            self._build_types = default_build_types
 
     def get_builds(self, pure_c, shared_option_name, dll_with_static_runtime, reference=None):
 
