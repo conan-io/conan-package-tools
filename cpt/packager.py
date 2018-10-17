@@ -95,11 +95,14 @@ class ConanMultiPackager(object):
                  client_cache=None,
                  ci_manager=None,
                  out=None,
-                 test_folder=None):
+                 test_folder=None,
+                 cwd=None):
 
         self.printer = Printer(out)
         self.printer.print_rule()
         self.printer.print_ascci_art()
+
+        self.cwd = cwd or os.getcwd()
 
         if not conan_api:
             self.conan_api, self.client_cache, _ = Conan.factory()
@@ -156,10 +159,11 @@ class ConanMultiPackager(object):
                 name, version = self.partial_reference.split("/")
                 self.reference = ConanFileReference(name, version, self.username, self.channel)
         else:
-            if not os.path.exists("conanfile.py"):
-                raise Exception("Conanfile not found, specify a 'reference' parameter with name and version")
+            if not os.path.exists(os.path.join(self.cwd, "conanfile.py")):
+                raise Exception("Conanfile not found, specify a 'reference' "
+                                "parameter with name and version")
 
-            conanfile = load_cf_class("./conanfile.py", self.conan_api)
+            conanfile = load_cf_class(os.path.join(self.cwd, "conanfile.py"), self.conan_api)
             name, version = conanfile.name, conanfile.version
             if name and version:
                 self.reference = ConanFileReference(name, version, self.username, self.channel)
@@ -347,7 +351,7 @@ class ConanMultiPackager(object):
             raise Exception("Specify a CONAN_REFERENCE or name and version fields in the recipe")
 
         if shared_option_name is None:
-            if os.path.exists("conanfile.py"):
+            if os.path.exists(os.path.join(self.cwd, "conanfile.py")):
                 conanfile = load_cf_class("./conanfile.py", self.conan_api)
                 if hasattr(conanfile, "options") and "shared" in conanfile.options:
                     shared_option_name = "%s:shared" % self.reference.name
@@ -437,7 +441,6 @@ class ConanMultiPackager(object):
         pulled_docker_images = defaultdict(lambda: False)
 
         # FIXME: Remove in Conan 1.3, https://github.com/conan-io/conan/issues/2787
-        abs_folder = os.path.realpath(os.getcwd())
         for build in self.builds_in_current_page:
             base_profile_name = base_profile_name or os.getenv("CONAN_BASE_PROFILE")
             if base_profile_name:
@@ -456,7 +459,7 @@ class ConanMultiPackager(object):
                                  exclude_vcvars_precommand=self.exclude_vcvars_precommand,
                                  build_policy=self.build_policy,
                                  runner=self.runner,
-                                 abs_folder=abs_folder,
+                                 cwd=self.cwd,
                                  printer=self.printer,
                                  upload=self._upload_enabled(),
                                  test_folder=self.test_folder)

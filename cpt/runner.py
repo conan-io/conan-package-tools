@@ -13,10 +13,10 @@ class CreateRunner(object):
 
     def __init__(self, profile_abs_path, reference, conan_api, uploader, args=None,
                  exclude_vcvars_precommand=False, build_policy=None, runner=None,
-                 abs_folder=None, printer=None, upload=False, test_folder=None):
+                 cwd=None, printer=None, upload=False, test_folder=None):
 
         self.printer = printer or Printer()
-        self._abs_folder = abs_folder or os.getcwd()
+        self._cwd = cwd or os.getcwd()
         self._uploader = uploader
         self._upload = upload
         self._conan_api = conan_api
@@ -61,17 +61,21 @@ class CreateRunner(object):
                               "profile_name": self._profile_abs_path}
                     self.printer.print_message("Calling 'conan create'")
                     self.printer.print_dict(params)
-
-                    r = self._conan_api.create(".", name=name, version=version,
-                                               user=user, channel=channel,
-                                               build_modes=self._build_policy,
-                                               profile_name=self._profile_abs_path,
-                                               test_folder=self._test_folder)
-                    for installed in r['installed']:
-                        if installed["recipe"]["id"] == str(self._reference):
-                            package_id = installed['packages'][0]['id']
-                            self._uploader.upload_packages(self._reference,
-                                                           self._upload, package_id)
+                    with tools.chdir(self._cwd):
+                        r = self._conan_api.create(".", name=name, version=version,
+                                                   user=user, channel=channel,
+                                                   build_modes=self._build_policy,
+                                                   profile_name=self._profile_abs_path,
+                                                   test_folder=self._test_folder)
+                        for installed in r['installed']:
+                            if installed["recipe"]["id"] == str(self._reference):
+                                package_id = installed['packages'][0]['id']
+                                if installed['packages'][0]["built"]:
+                                    self._uploader.upload_packages(self._reference,
+                                                                   self._upload, package_id)
+                                else:
+                                    self.printer.print_message("Skipping upload for %s, "
+                                                               "it hasn't been built" % package_id)
 
 
 class DockerCreateRunner(object):
