@@ -315,12 +315,12 @@ And run the build.py:
 
     $ export CONAN_USERNAME=myuser
     $ export CONAN_GCC_VERSIONS=4.9
-    $ export CONAN_DOCKER_IMAGE=lasote/conangcc49
+    $ export CONAN_DOCKER_IMAGE=conanio/gcc49
     $ export CONAN_USE_DOCKER=1
     $ python build.py
 
 
-It will generate a set of build configurations (profiles) for gcc 4.9 and will run it inside a container of the ``lasote/conangcc49`` image.
+It will generate a set of build configurations (profiles) for gcc 4.9 and will run it inside a container of the ``conanio/gcc49`` image.
 
 If you want to run the arch="x86" build inside a docker container of 32 bits you can set the parameter ``docker_32_images`` in the
 ConanMultiPackager constructor or set the environment variable ``CONAN_DOCKER_32_IMAGES``. In this case, the docker image name to use
@@ -342,7 +342,7 @@ This example shows how to install *tzdata* package by apt-get, before to build t
 
 	if __name__ == "__main__":
         command = "sudo apt-get -qq update && sudo apt-get -qq install -y tzdata"
-	    builder = ConanMultiPackager(use_docker=True, docker_image='lasote/conangcc7', docker_entry_script=command)
+	    builder = ConanMultiPackager(use_docker=True, docker_image='conanio/gcc7', docker_entry_script=command)
 	    builder.add_common_builds()
 	    builder.run()
 
@@ -352,7 +352,7 @@ Also, it's possible to run some internal script, before to build the package:
 
     if __name__ == "__main__":
         command = "python bootstrap.py"
-        builder = ConanMultiPackager(use_docker=True, docker_image='lasote/conangcc7', docker_entry_script=command)
+        builder = ConanMultiPackager(use_docker=True, docker_image='conanio/gcc7', docker_entry_script=command)
         builder.add_common_builds()
         builder.run()
 
@@ -398,11 +398,11 @@ using a specific docker image etc.
 For example, if you declare the following environment variables:
 
     CONAN_GCC_VERSIONS=4.9
-    CONAN_DOCKER_IMAGE=lasote/conangcc49
+    CONAN_DOCKER_IMAGE=conanio/gcc49
 
 the ``add_common_builds()`` method will only add different build configurations for GCC=4.9 and will run them in a docker container.
 
-You can see working integrations with Travis and Appveyor in the zlib repository [here](https://github.com/lasote/conan-zlib)
+You can see working integrations with Travis and Appveyor in the zlib repository [here](https://github.com/conan-community/conan-zlib)
 
 
 ## Travis integration
@@ -441,17 +441,17 @@ Remember, you can use `conan new` command to generate the base files for appveyo
        include:
 
           - <<: *linux
-            env: CONAN_GCC_VERSIONS=4.9 CONAN_DOCKER_IMAGE=lasote/conangcc49
+            env: CONAN_GCC_VERSIONS=4.9 CONAN_DOCKER_IMAGE=conanio/gcc49
           - <<: *linux
-            env: CONAN_GCC_VERSIONS=5 CONAN_DOCKER_IMAGE=lasote/conangcc5
+            env: CONAN_GCC_VERSIONS=5 CONAN_DOCKER_IMAGE=conanio/gcc5
           - <<: *linux
-            env: CONAN_GCC_VERSIONS=6 CONAN_DOCKER_IMAGE=lasote/conangcc6
+            env: CONAN_GCC_VERSIONS=6 CONAN_DOCKER_IMAGE=conanio/gcc6
           - <<: *linux
-            env: CONAN_GCC_VERSIONS=7 CONAN_DOCKER_IMAGE=lasote/conangcc7
+            env: CONAN_GCC_VERSIONS=7 CONAN_DOCKER_IMAGE=conanio/gcc7
           - <<: *linux
-            env: CONAN_CLANG_VERSIONS=3.9 CONAN_DOCKER_IMAGE=lasote/conanclang39
+            env: CONAN_CLANG_VERSIONS=3.9 CONAN_DOCKER_IMAGE=conanio/clang39
           - <<: *linux
-            env: CONAN_CLANG_VERSIONS=4.0 CONAN_DOCKER_IMAGE=lasote/conanclang40
+            env: CONAN_CLANG_VERSIONS=4.0 CONAN_DOCKER_IMAGE=conanio/clang40
           - <<: *osx
             osx_image: xcode7.3
             env: CONAN_APPLE_CLANG_VERSIONS=7.3
@@ -500,34 +500,34 @@ You can also use multiples "pages" to split the builds in different jobs (Check 
        include:
 
           - <<: *linux
-            env: CONAN_GCC_VERSIONS=4.9 CONAN_DOCKER_IMAGE=lasote/conangcc49 CONAN_CURRENT_PAGE=1
+            env: CONAN_GCC_VERSIONS=4.9 CONAN_DOCKER_IMAGE=conanio/gcc49 CONAN_CURRENT_PAGE=1
 
           - <<: *linux
-            env: CONAN_GCC_VERSIONS=4.9 CONAN_DOCKER_IMAGE=lasote/conangcc49 CONAN_CURRENT_PAGE=2
+            env: CONAN_GCC_VERSIONS=4.9 CONAN_DOCKER_IMAGE=conanio/gcc49 CONAN_CURRENT_PAGE=2
 
           - <<: *linux
-            env: CONAN_GCC_VERSIONS=5 CONAN_DOCKER_IMAGE=lasote/conangcc5 CONAN_CURRENT_PAGE=1
+            env: CONAN_GCC_VERSIONS=5 CONAN_DOCKER_IMAGE=conanio/gcc5 CONAN_CURRENT_PAGE=1
 
            - <<: *linux
-            env: CONAN_GCC_VERSIONS=5 CONAN_DOCKER_IMAGE=lasote/conangcc5 CONAN_CURRENT_PAGE=2
+            env: CONAN_GCC_VERSIONS=5 CONAN_DOCKER_IMAGE=conanio/gcc5 CONAN_CURRENT_PAGE=2
 
           - <<: *linux
-            env: CONAN_GCC_VERSIONS=6 CONAN_DOCKER_IMAGE=lasote/conangcc6 CONAN_CURRENT_PAGE=1
+            env: CONAN_GCC_VERSIONS=6 CONAN_DOCKER_IMAGE=conanio/gcc6 CONAN_CURRENT_PAGE=1
 
           - <<: *linux
-            env: CONAN_GCC_VERSIONS=6 CONAN_DOCKER_IMAGE=lasote/conangcc6 CONAN_CURRENT_PAGE=2
+            env: CONAN_GCC_VERSIONS=6 CONAN_DOCKER_IMAGE=conanio/gcc6 CONAN_CURRENT_PAGE=2
 
           - <<: *linux
-            env: CONAN_CLANG_VERSIONS=3.9 CONAN_DOCKER_IMAGE=lasote/conanclang39 CONAN_CURRENT_PAGE=1
+            env: CONAN_CLANG_VERSIONS=3.9 CONAN_DOCKER_IMAGE=conanio/clang39 CONAN_CURRENT_PAGE=1
 
            - <<: *linux
-            env: CONAN_CLANG_VERSIONS=3.9 CONAN_DOCKER_IMAGE=lasote/conanclang39 CONAN_CURRENT_PAGE=2
+            env: CONAN_CLANG_VERSIONS=3.9 CONAN_DOCKER_IMAGE=conanio/clang39 CONAN_CURRENT_PAGE=2
 
           - <<: *linux
-            env: CONAN_CLANG_VERSIONS=4.0 CONAN_DOCKER_IMAGE=lasote/conanclang40 CONAN_CURRENT_PAGE=1
+            env: CONAN_CLANG_VERSIONS=4.0 CONAN_DOCKER_IMAGE=conanio/clang40 CONAN_CURRENT_PAGE=1
 
           - <<: *linux
-            env: CONAN_CLANG_VERSIONS=4.0 CONAN_DOCKER_IMAGE=lasote/conanclang40 CONAN_CURRENT_PAGE=2
+            env: CONAN_CLANG_VERSIONS=4.0 CONAN_DOCKER_IMAGE=conanio/clang40 CONAN_CURRENT_PAGE=2
 
           - <<: *osx
             osx_image: xcode7.3
@@ -753,7 +753,7 @@ By adding builds to the **named_builds** dictionary, and passing **curpage** wit
         builder.named_builds = named_builds
         builder.run()
 
-named_builds not have a dictionary entry for x86 and another for x86_64:
+named_builds now have a dictionary entry for x86 and another for x86_64:
 
 - for **CONAN_CURRENT_PAGE="x86"** it would do all x86 builds
 - for **CONAN_CURRENT_PAGE="x86_64"** it would do all x86_64 builds
@@ -835,7 +835,7 @@ Using **MINGW_CONFIGURATIONS** env variable in Appveyor:
 
     MINGW_CONFIGURATIONS: '4.9@x86_64@seh@posix, 4.9@x86_64@seh@win32'
 
-Check an example [here](https://github.com/lasote/conan-zlib/blob/release/1.2.8/appveyor.yml)
+Check an example [here](https://github.com/conan-community/conan-zlib/blob/release/1.2.8/appveyor.yml)
 
 
 ## Clang builds
@@ -857,7 +857,6 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 
 ## ConanMultiPackager parameters reference
 
-- **args**: List with the parameters that will be passed to "conan test" command. e.j: args=['--build', 'all']. Default sys.argv[1:]
 - **username**: The username (part of the package reference, not the login_username)
 - **login_username**: The login username. Could take two possible values:
 
@@ -901,6 +900,13 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
        remotes = [("https://api.bintray.com/conan/conan-community/conan", True, "remote1"),
                   ("https://api.bintray.com/conan/other/conan2", False, "remote2")]
        ```
+- **options**: Options used on package build:
+
+    - List of options:
+       ```
+       options = ["foobar:with_qux=True", "foobar:with_bar=False"]
+
+       ```
 
 - **gcc_versions**: List with a subset of gcc_versions. Default ["4.9", "5", "6", "7"]
 - **clang_versions**: List with a subset of clang_versions. Default ["3.8", "3.9", "4.0"]
@@ -915,7 +921,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **always_update_conan_in_docker**: If True, "conan package tools" and "conan" will be installed and upgraded in the docker image in every build execution.
   and the container won't be commited with the modifications.
 - **docker_entry_script**: Command to be executed before to build when running Docker.
-- **docker_32_images**: If defined, and the current build is arch="x86" the docker image name will be appended with "-i386". e.j: "lasote/conangcc63-i386"
+- **docker_32_images**: If defined, and the current build is arch="x86" the docker image name will be appended with "-i386". e.j: "conanio/gcc63-i386"
 - **curpage**: Current page of packages to create
 - **total_pages**: Total number of pages
 - **vs10_x86_64_enabled**: Flag indicating whether or not to build for VS10 64bits. Default [False]
@@ -1027,18 +1033,19 @@ This is especially useful for CI integration.
 - **CONAN_CLANG_VERSIONS**: Clang versions, comma separated, e.g. "3.8,3.9,4.0"
 - **CONAN_APPLE_CLANG_VERSIONS**: Apple clang versions, comma separated, e.g. "6.1,8.0"
 - **CONAN_ARCHS**: Architectures to build for, comma separated, e.g. "x86,x86_64"
+- **CONAN_OPTIONS**: Conan build options, comma separated, e.g. "foobar:with_bar=True,foobar:with_qux=False"
 - **CONAN_BUILD_TYPES**: Build types to build for, comma separated, e.g. "Release,Debug"
 - **CONAN_VISUAL_VERSIONS**: Visual versions, comma separated, e.g. "12,14"
 - **CONAN_VISUAL_RUNTIMES**: Visual runtimes, comma separated, e.g. "MT,MD"
 - **CONAN_USE_DOCKER**: If defined will use docker
 - **CONAN_CURRENT_PAGE**:  Current page of packages to create
 - **CONAN_TOTAL_PAGES**: Total number of pages
-- **CONAN_DOCKER_IMAGE**: If defined and docker is being used, it will use this dockerimage instead of the default images, e.g. "lasote/conangcc63"
+- **CONAN_DOCKER_IMAGE**: If defined and docker is being used, it will use this dockerimage instead of the default images, e.g. "conanio/gcc63"
 - **CONAN_DOCKER_IMAGE_SKIP_UPDATE**: If defined, it will skip the initialization update of "conan package tools" and "conan" in the docker image. By default is False.
 - **CONAN_DOCKER_IMAGE_SKIP_PULL**: If defined, it will skip the "docker pull" command, enabling a local image to be used, and without being overwritten.
 - **CONAN_ALWAYS_UPDATE_CONAN_DOCKER**: If defined, "conan package tools" and "conan" will be installed and upgraded in the docker image in every build execution
   and the container won't be commited with the modifications.
-- **CONAN_DOCKER_32_IMAGES**: If defined, and the current build is arch="x86" the docker image name will be appended with "-i386". e.j: "lasote/conangcc63-i386"
+- **CONAN_DOCKER_32_IMAGES**: If defined, and the current build is arch="x86" the docker image name will be appended with "-i386". e.j: "conanio/gcc63-i386"
 - **CONAN_STABLE_BRANCH_PATTERN**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *CONAN_STABLE_CHANNEL* channel. Default "master". E.j: "release/*"
 - **CONAN_STABLE_CHANNEL**: Stable channel name, default "stable"
 - **CONAN_CHANNEL**: Channel where your packages will be uploaded if the previous parameter doesn't match
@@ -1046,7 +1053,7 @@ This is especially useful for CI integration.
 - **MINGW_CONFIGURATIONS**: Specify a list of MinGW builds. See MinGW builds section.
 - **CONAN_BASH_PATH**: Path to a bash executable. Used only in windows to help the tools.run_in_windows_bash() function to locate our Cygwin/MSYS2 bash.
   Set it with the bash executable path if it’s not in the PATH or you want to use a different one.
-- **CONAN_PIP_USE_SUDO** Use "sudo" when invoking pip, by default it will use sudo when not using Windows. "False" to deactivate.
+- **CONAN_PIP_USE_SUDO** Use "sudo" when invoking pip, by default it will use sudo when not using Windows and not running docker image "conanio/". "False" to deactivate.
 - **CONAN_DOCKER_USE_SUDO** Use "sudo" when invoking docker, by default it will use sudo when not using Windows. "False" to deactivate.
 - **CONAN_ALLOW_GCC_MINORS** Declare this variable if you want to allow gcc >=5 versions with the minor (5.1, 6.3 etc).
 - **CONAN_EXCLUDE_VCVARS_PRECOMMAND** For Visual Studio builds, it exclude the vcvars call to set the environment.
@@ -1064,4 +1071,4 @@ This is especially useful for CI integration.
 
 # Full example
 
-You can see the full zlib example [here](https://github.com/lasote/conan-zlib)
+You can see the full zlib example [here](https://github.com/conan-community/conan-zlib)
