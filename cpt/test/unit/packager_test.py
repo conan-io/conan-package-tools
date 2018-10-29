@@ -721,6 +721,7 @@ class AppTest(unittest.TestCase):
         self.assertIn("pip", self.runner.calls[1])
 
 
+    @unittest.skipIf(sys.platform.startswith("win"), "Requires Linux")
     def test_pip_docker_sudo(self):
         self.packager = ConanMultiPackager(username="lasote",
                                             channel="mychannel",
