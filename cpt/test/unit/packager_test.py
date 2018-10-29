@@ -1,6 +1,7 @@
 import os
 import platform
 import unittest
+import sys
 
 from collections import defaultdict
 
@@ -184,6 +185,8 @@ class AppTest(unittest.TestCase):
         self.packager.run_builds(1, 2)
         self.assertIn("docker pull conanio/gcc43", self.runner.calls[0])
         self.assertIn('docker run ', self.runner.calls[1])
+        self.assertNotIn('sudo pip', self.runner.calls[1])
+        self.assertIn('pip install', self.runner.calls[1])
         self.assertIn('os=os1', self.runner.calls[4])
         self.packager.run_builds(1, 2)
         self.assertIn("docker pull conanio/gcc43", self.runner.calls[0])
@@ -687,3 +690,28 @@ class AppTest(unittest.TestCase):
                                          ci_manager=MockCIManager(current_branch=branch))
 
             self.assertEquals(builder.channel, expected_channel, "Not match for branch %s" % branch)
+
+    @unittest.skipIf(sys.platform.startswith("win"), "Requires Linux")
+    def test_sudo_pip_docker(self):
+        with tools.environment_append({"CONAN_PIP_USE_SUDO": "1"}):
+            self.packager = ConanMultiPackager(username="lasote",
+                                            channel="mychannel",
+                                            runner=self.runner,
+                                            conan_api=self.conan_api,
+                                            clang_versions=["3.8", "4.0"],
+                                            use_docker=True,
+                                            reference="zlib/1.2.11",
+                                            ci_manager=self.ci_manager)
+
+        self._add_build(1, "clang", "3.8")
+        self._add_build(2, "clang", "3.8")
+        self._add_build(3, "clang", "3.8")
+
+        self.packager.run_builds(1, 2)
+        self.assertIn("docker pull conanio/clang38", self.runner.calls[0])
+        self.assertIn('docker run ', self.runner.calls[1])
+        self.assertIn('sudo -E pip ', self.runner.calls[1])
+        self.assertIn('os=os1', self.runner.calls[4])
+
+        # Next build from 3.8 is cached, not pulls are performed
+        self.assertIn('os=os3', self.runner.calls[5])

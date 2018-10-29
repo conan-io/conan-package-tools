@@ -196,7 +196,7 @@ class ConanMultiPackager(object):
         self.sudo_pip_command = ""
         if "CONAN_PIP_USE_SUDO" in os.environ:
             self.sudo_pip_command = "sudo -E" if get_bool_from_env("CONAN_PIP_USE_SUDO") else ""
-        elif platform.system() != "Windows":
+        elif platform.system() != "Windows" and not self.use_docker:
             self.sudo_pip_command = "sudo -E"
 
         self.docker_shell = ""
