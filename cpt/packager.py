@@ -166,9 +166,11 @@ class ConanMultiPackager(object):
             else:
                 self.reference = None
 
+        self._docker_image = docker_image or os.getenv("CONAN_DOCKER_IMAGE", None)
+
         # If CONAN_DOCKER_IMAGE is speified, then use docker is True
         self.use_docker = (use_docker or os.getenv("CONAN_USE_DOCKER", False) or
-                           os.getenv("CONAN_DOCKER_IMAGE", None) is not None)
+                           self._docker_image is not None)
 
         os_name = self._platform_info.system() if not self.use_docker else "Linux"
         self.build_generator = BuildGenerator(reference, os_name, gcc_versions,
@@ -196,7 +198,7 @@ class ConanMultiPackager(object):
         self.sudo_pip_command = ""
         if "CONAN_PIP_USE_SUDO" in os.environ:
             self.sudo_pip_command = "sudo -E" if get_bool_from_env("CONAN_PIP_USE_SUDO") else ""
-        elif platform.system() != "Windows" and not self.use_docker:
+        elif platform.system() != "Windows" and 'conanio/' not in str(self._docker_image):
             self.sudo_pip_command = "sudo -E"
 
         self.docker_shell = ""
@@ -231,10 +233,6 @@ class ConanMultiPackager(object):
 
         os.environ["CONAN_CHANNEL"] = self.channel
 
-        # If CONAN_DOCKER_IMAGE is speified, then use docker is True
-        self.use_docker = use_docker or os.getenv("CONAN_USE_DOCKER", False) or \
-                          (os.getenv("CONAN_DOCKER_IMAGE", None) is not None)
-
         if docker_32_images is not None:
             self.docker_32_images = docker_32_images
         else:
@@ -242,7 +240,6 @@ class ConanMultiPackager(object):
 
         self.curpage = curpage or os.getenv("CONAN_CURRENT_PAGE", 1)
         self.total_pages = total_pages or os.getenv("CONAN_TOTAL_PAGES", 1)
-        self._docker_image = docker_image or os.getenv("CONAN_DOCKER_IMAGE", None)
 
         self.conan_pip_package = os.getenv("CONAN_PIP_PACKAGE", "conan==%s" % client_version)
         if self.conan_pip_package in ("0", "False"):

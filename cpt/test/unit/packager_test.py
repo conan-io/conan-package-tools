@@ -691,27 +691,59 @@ class AppTest(unittest.TestCase):
 
             self.assertEquals(builder.channel, expected_channel, "Not match for branch %s" % branch)
 
-    @unittest.skipIf(sys.platform.startswith("win"), "Requires Linux")
-    def test_sudo_pip_docker(self):
-        with tools.environment_append({"CONAN_PIP_USE_SUDO": "1"}):
-            self.packager = ConanMultiPackager(username="lasote",
+    def test_pip_conanio_image(self):
+        self.packager = ConanMultiPackager(username="lasote",
                                             channel="mychannel",
                                             runner=self.runner,
                                             conan_api=self.conan_api,
-                                            clang_versions=["3.8", "4.0"],
+                                            gcc_versions=["4.3", "5"],
                                             use_docker=True,
+                                            docker_image='conanio/gcc43',
                                             reference="zlib/1.2.11",
                                             ci_manager=self.ci_manager)
-
-        self._add_build(1, "clang", "3.8")
-        self._add_build(2, "clang", "3.8")
-        self._add_build(3, "clang", "3.8")
-
+        self._add_build(1, "gcc", "4.3")
         self.packager.run_builds(1, 2)
-        self.assertIn("docker pull conanio/clang38", self.runner.calls[0])
-        self.assertIn('docker run ', self.runner.calls[1])
-        self.assertIn('sudo -E pip ', self.runner.calls[1])
-        self.assertIn('os=os1', self.runner.calls[4])
+        self.assertNotIn("sudo -E pip", self.runner.calls[1])
+        self.assertIn("pip", self.runner.calls[1])
 
-        # Next build from 3.8 is cached, not pulls are performed
-        self.assertIn('os=os3', self.runner.calls[5])
+        self.runner.reset()
+        self.packager = ConanMultiPackager(username="lasote",
+                                            channel="mychannel",
+                                            runner=self.runner,
+                                            conan_api=self.conan_api,
+                                            gcc_versions=["4.3", "5"],
+                                            docker_image='conanio/gcc43',
+                                            reference="zlib/1.2.11",
+                                            ci_manager=self.ci_manager)
+        self._add_build(1, "gcc", "4.3")
+        self.packager.run_builds(1, 2)
+        self.assertNotIn("sudo -E pip", self.runner.calls[1])
+        self.assertIn("pip", self.runner.calls[1])
+
+
+    def test_pip_docker_sudo(self):
+        self.packager = ConanMultiPackager(username="lasote",
+                                            channel="mychannel",
+                                            runner=self.runner,
+                                            conan_api=self.conan_api,
+                                            gcc_versions=["4.3", "5"],
+                                            docker_image='foobar/gcc43',
+                                            reference="zlib/1.2.11",
+                                            ci_manager=self.ci_manager)
+        self._add_build(1, "gcc", "4.3")
+        self.packager.run_builds(1, 2)
+        self.assertIn("sudo -E pip", self.runner.calls[1])
+
+        self.runner.reset()
+        with tools.environment_append({"CONAN_PIP_USE_SUDO": "True"}):
+            self.packager = ConanMultiPackager(username="lasote",
+                                                channel="mychannel",
+                                                runner=self.runner,
+                                                conan_api=self.conan_api,
+                                                gcc_versions=["4.3", "5"],
+                                                docker_image='conanio/gcc43',
+                                                reference="zlib/1.2.11",
+                                                ci_manager=self.ci_manager)
+        self._add_build(1, "gcc", "4.3")
+        self.packager.run_builds(1, 2)
+        self.assertIn("sudo -E pip", self.runner.calls[1])
