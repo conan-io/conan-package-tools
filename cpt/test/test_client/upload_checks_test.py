@@ -26,7 +26,7 @@ class Pkg(ConanFile):
         tc.save({"conanfile.py": self.conanfile})
         with environment_append({"CONAN_UPLOAD": ts.fake_url, "CONAN_LOGIN_USERNAME": "user",
                                  "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user"}):
-            mulitpackager = get_patched_multipackager(tc)
+            mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True)
             mulitpackager.add({}, {"shared": True})
             mulitpackager.add({}, {"shared": False})
             mulitpackager.run()
@@ -34,7 +34,8 @@ class Pkg(ConanFile):
             self.assertIn("Uploading package 2/2", tc.out)
 
             # With the same cache and server try to rebuild them with policy missing
-            mulitpackager = get_patched_multipackager(tc, build_policy="missing")
+            mulitpackager = get_patched_multipackager(tc, build_policy="missing",
+                                                      exclude_vcvars_precommand=True)
             mulitpackager.add({}, {"shared": True})
             mulitpackager.add({}, {"shared": False})
             mulitpackager.run()
@@ -43,7 +44,7 @@ class Pkg(ConanFile):
             self.assertNotIn("HALLO", tc.out)
 
             # Without any build policy they get built
-            mulitpackager = get_patched_multipackager(tc)
+            mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True)
             mulitpackager.add({}, {"shared": True})
             mulitpackager.add({}, {"shared": False})
             mulitpackager.run()
