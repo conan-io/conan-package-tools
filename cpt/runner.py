@@ -84,7 +84,8 @@ class DockerCreateRunner(object):
                  runner=None,
                  docker_shell="", docker_conan_home="",
                  docker_platform_param="", lcow_user_workaround="",
-                 test_folder=None):
+                 test_folder=None,
+                 pip_install=None):
 
         self.printer = Printer()
         self._upload = upload
@@ -107,6 +108,7 @@ class DockerCreateRunner(object):
         self._lcow_user_workaround = lcow_user_workaround
         self._runner = PrintRunner(runner, self.printer)
         self._test_folder = test_folder
+        self._pip_install = pip_install
 
     def _pip_update_conan_command(self):
         commands = []
@@ -121,6 +123,9 @@ class DockerCreateRunner(object):
                                                               self._conan_pip_package))
         else:
             commands.append("%s pip install conan --upgrade --no-cache" % self._sudo_pip_command)
+
+        if self._pip_install:
+            commands.append("%s pip install %s --upgrade --no-cache" % (self._sudo_pip_command, " ".join(self._pip_install)))
 
         command = " && ".join(commands)
         return command

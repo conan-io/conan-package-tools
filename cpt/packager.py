@@ -18,6 +18,8 @@ from cpt.ci_manager import CIManager
 from cpt.printer import Printer
 from cpt.profiles import get_profiles, save_profile_to_tmp
 from cpt.remotes import RemotesManager
+from cpt.tools import get_bool_from_env, split_colon_env
+from cpt.builds_generator import BuildConf, BuildGenerator
 from cpt.config import ConfigManager
 from cpt.runner import CreateRunner, DockerCreateRunner
 from cpt.tools import get_bool_from_env
@@ -90,6 +92,7 @@ class ConanMultiPackager(object):
                  docker_image_skip_pull=False,
                  docker_entry_script=None,
                  docker_32_images=None,
+                 pip_install=None,
                  build_policy=None,
                  always_update_conan_in_docker=False,
                  conan_api=None,
@@ -233,6 +236,8 @@ class ConanMultiPackager(object):
         self.output_runner = ConanOutputRunner()
 
         self.docker_entry_script = docker_entry_script or os.getenv("CONAN_DOCKER_ENTRY_SCRIPT")
+
+        self.pip_install = pip_install or split_colon_env("CONAN_PIP_INSTALL")
 
         os.environ["CONAN_CHANNEL"] = self.channel
 
@@ -414,7 +419,7 @@ class ConanMultiPackager(object):
         with tools.environment_append(env_vars):
             self.printer.print_message("Running builds...")
             if self.ci_manager.skip_builds():
-                print("Skipped builds due [skip ci] commit message")
+                self.printer.print_message("Skipped builds due [skip ci] commit message")
                 return 99
             if not self.skip_check_credentials and self._upload_enabled():
                 self.remotes_manager.add_remotes_to_conan()
@@ -423,9 +428,12 @@ class ConanMultiPackager(object):
                 with self.printer.foldable_output("pip_update"):
                     self.runner('%s pip install %s' % (self.sudo_pip_command,
                                                        self.conan_pip_package))
+                    if self.pip_install:
+                        packages = " ".join(self.pip_install)
+                        self.printer.print_message("Install extra python packages: {}".format(packages))
+                        self.runner('%s pip install %s' % (self.sudo_pip_command, packages))
             if self.config_url:
                 self.config_manager.install(url=self.config_url)
-
 
             self.run_builds(base_profile_name=base_profile_name)
 
@@ -523,7 +531,8 @@ class ConanMultiPackager(object):
                                        docker_conan_home=self.docker_conan_home,
                                        docker_platform_param=self.docker_platform_param,
                                        lcow_user_workaround=self.lcow_user_workaround,
-                                       test_folder=self.test_folder)
+                                       test_folder=self.test_folder,
+                                       pip_install=self.pip_install)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
                       docker_entry_script=self.docker_entry_script)
