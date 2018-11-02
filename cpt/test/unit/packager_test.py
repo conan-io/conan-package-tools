@@ -1,6 +1,7 @@
 import os
 import platform
 import unittest
+import sys
 
 from collections import defaultdict
 
@@ -24,8 +25,8 @@ class AppTest(unittest.TestCase):
         self.runner = MockRunner()
         self.conan_api = MockConanAPI()
         self.ci_manager = MockCIManager()
-        self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
-                                           "lasote", "mychannel",
+        self.packager = ConanMultiPackager(username="lasote",
+                                           channel="mychannel",
                                            runner=self.runner,
                                            conan_api=self.conan_api,
                                            reference="lib/1.0",
@@ -40,6 +41,45 @@ class AppTest(unittest.TestCase):
                            "compiler.version": version or "4.3"},
                           {"option%d" % number: "value%d" % number,
                            "option%d" % number: "value%d" % number})
+
+    def test_remove_build_if(self):
+        self.packager.add({"arch": "x86", "build_type": "Release", "compiler": "gcc", "compiler.version": "6"})
+        self.packager.add({"arch": "x86", "build_type": "Debug", "compiler": "gcc", "compiler.version": "6"})
+        self.packager.add({"arch": "x86_64", "build_type": "Release", "compiler": "gcc", "compiler.version": "7"})
+        self.packager.add({"arch": "x86_64", "build_type": "Debug", "compiler": "gcc", "compiler.version": "7"})
+
+        self.packager.remove_build_if(lambda build: build.settings["compiler.version"] == "6")
+
+        packager_expected = ConanMultiPackager(["--build missing", "-r conan.io"],
+                                               "lasote", "mychannel",
+                                               runner=self.runner,
+                                               conan_api=self.conan_api,
+                                               reference="lib/1.0",
+                                               ci_manager=self.ci_manager)
+
+        packager_expected.add({"arch": "x86", "build_type": "Release", "compiler": "gcc", "compiler.version": "6"})
+        packager_expected.add({"arch": "x86", "build_type": "Debug", "compiler": "gcc", "compiler.version": "6"})
+
+        self.assertEqual([tuple(a) for a in self.packager.items], packager_expected.items)
+
+    def test_update_build_if(self):
+        self.packager.add({"os": "Windows"})
+        self.packager.add({"os": "Linux"})
+
+        self.packager.update_build_if(lambda build: build.settings["os"] == "Windows",
+                                      new_build_requires={"*": ["7zip_installer/0.1.0@conan/stable"]})
+
+        packager_expected = ConanMultiPackager(["--build missing", "-r conan.io"],
+                                               "lasote", "mychannel",
+                                               runner=self.runner,
+                                               conan_api=self.conan_api,
+                                               reference="lib/1.0",
+                                               ci_manager=self.ci_manager)
+
+        packager_expected.add({"os": "Windows"}, {}, {}, {"*": ["7zip_installer/0.1.0@conan/stable"]})
+        packager_expected.add({"os": "Linux"})
+
+        self.assertEqual([tuple(a) for a in self.packager.items], packager_expected.items)
 
     def test_full_profile(self):
         self.packager.add({"os": "Windows", "compiler": "gcc"},
@@ -103,8 +143,8 @@ class AppTest(unittest.TestCase):
     def test_deprecation_gcc(self):
 
         with self.assertRaisesRegexp(Exception, "DEPRECATED GCC MINOR VERSIONS!"):
-            ConanMultiPackager(["--build missing", "-r conan.io"],
-                               "lasote", "mychannel",
+            ConanMultiPackager(username="lasote",
+                               channel="mychannel",
                                runner=self.runner,
                                conan_api=self.conan_api,
                                gcc_versions=["4.3", "5.4"],
@@ -113,8 +153,8 @@ class AppTest(unittest.TestCase):
                                ci_manager=self.ci_manager)
 
     def test_32bits_images(self):
-        packager = ConanMultiPackager(["--build missing", "-r conan.io"],
-                                      "lasote", "mychannel",
+        packager = ConanMultiPackager(username="lasote",
+                                      channel="mychannel",
                                       runner=self.runner,
                                       use_docker=True,
                                       docker_32_images=True,
@@ -123,11 +163,11 @@ class AppTest(unittest.TestCase):
 
         packager.add({"arch": "x86", "compiler": "gcc", "compiler.version": "6"})
         packager.run_builds(1, 1)
-        self.assertIn("docker pull lasote/conangcc6-x86", self.runner.calls[0])
+        self.assertIn("docker pull conanio/gcc6-x86", self.runner.calls[0])
 
         self.runner.reset()
-        packager = ConanMultiPackager(["--build missing", "-r conan.io"],
-                                      "lasote", "mychannel",
+        packager = ConanMultiPackager(username="lasote",
+                                      channel="mychannel",
                                       runner=self.runner,
                                       conan_api=self.conan_api,
                                       use_docker=True,
@@ -137,12 +177,12 @@ class AppTest(unittest.TestCase):
 
         packager.add({"arch": "x86", "compiler": "gcc", "compiler.version": "6"})
         packager.run_builds(1, 1)
-        self.assertNotIn("docker pull lasote/conangcc6-i386", self.runner.calls[0])
+        self.assertNotIn("docker pull conanio/gcc6-i386", self.runner.calls[0])
 
         self.runner.reset()
         with tools.environment_append({"CONAN_DOCKER_32_IMAGES": "1"}):
-            packager = ConanMultiPackager(["--build missing", "-r conan.io"],
-                                          "lasote", "mychannel",
+            packager = ConanMultiPackager(username="lasote",
+                                          channel="mychannel",
                                           runner=self.runner,
                                           conan_api=self.conan_api,
                                           use_docker=True,
@@ -151,12 +191,12 @@ class AppTest(unittest.TestCase):
 
             packager.add({"arch": "x86", "compiler": "gcc", "compiler.version": "6"})
             packager.run_builds(1, 1)
-            self.assertIn("docker pull lasote/conangcc6-x86", self.runner.calls[0])
+            self.assertIn("docker pull conanio/gcc6-x86", self.runner.calls[0])
 
         self.runner.reset()
         # Test the opossite
-        packager = ConanMultiPackager(["--build missing", "-r conan.io"],
-                                      "lasote", "mychannel",
+        packager = ConanMultiPackager(username="lasote",
+                                      channel="mychannel",
                                       runner=self.runner,
                                       conan_api=self.conan_api,
                                       use_docker=True,
@@ -166,11 +206,11 @@ class AppTest(unittest.TestCase):
 
         packager.add({"arch": "x86", "compiler": "gcc", "compiler.version": "6"})
         packager.run_builds(1, 1)
-        self.assertIn("docker pull lasote/conangcc6", self.runner.calls[0])
+        self.assertIn("docker pull conanio/gcc6", self.runner.calls[0])
 
     def test_docker_gcc(self):
-        self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
-                                           "lasote", "mychannel",
+        self.packager = ConanMultiPackager(username="lasote",
+                                           channel="mychannel",
                                            runner=self.runner,
                                            conan_api=self.conan_api,
                                            gcc_versions=["4.3", "5"],
@@ -182,11 +222,13 @@ class AppTest(unittest.TestCase):
         self._add_build(3, "gcc", "4.3")
 
         self.packager.run_builds(1, 2)
-        self.assertIn("docker pull lasote/conangcc43", self.runner.calls[0])
+        self.assertIn("docker pull conanio/gcc43", self.runner.calls[0])
         self.assertIn('docker run ', self.runner.calls[1])
+        self.assertNotIn('sudo pip', self.runner.calls[1])
+        self.assertIn('pip install', self.runner.calls[1])
         self.assertIn('os=os1', self.runner.calls[4])
         self.packager.run_builds(1, 2)
-        self.assertIn("docker pull lasote/conangcc43", self.runner.calls[0])
+        self.assertIn("docker pull conanio/gcc43", self.runner.calls[0])
 
         # Next build from 4.3 is cached, not pulls are performed
         self.assertIn('os=os3', self.runner.calls[5])
@@ -194,8 +236,8 @@ class AppTest(unittest.TestCase):
         for the_bool in ["True", "False"]:
             self.runner.reset()
             with tools.environment_append({"CONAN_DOCKER_USE_SUDO": the_bool}):
-                self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
-                                                   "lasote", "mychannel",
+                self.packager = ConanMultiPackager(username="lasote",
+                                                   channel="mychannel",
                                                    runner=self.runner,
                                                    conan_api=self.conan_api,
                                                    gcc_versions=["4.3", "5"],
@@ -211,8 +253,8 @@ class AppTest(unittest.TestCase):
                     self.assertIn("docker run", self.runner.calls[-1])
             self.runner.reset()
             with tools.environment_append({"CONAN_PIP_USE_SUDO": the_bool}):
-                self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
-                                                   "lasote", "mychannel",
+                self.packager = ConanMultiPackager(username="lasote",
+                                                   channel="mychannel",
                                                    runner=self.runner,
                                                    conan_api=self.conan_api,
                                                    gcc_versions=["4.3", "5"],
@@ -228,8 +270,8 @@ class AppTest(unittest.TestCase):
                     self.assertIn("pip", self.runner.calls[1])
 
     def test_docker_clang(self):
-        self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
-                                           "lasote", "mychannel",
+        self.packager = ConanMultiPackager(username="lasote",
+                                           channel="mychannel",
                                            runner=self.runner,
                                            conan_api=self.conan_api,
                                            clang_versions=["3.8", "4.0"],
@@ -242,7 +284,7 @@ class AppTest(unittest.TestCase):
         self._add_build(3, "clang", "3.8")
 
         self.packager.run_builds(1, 2)
-        self.assertIn("docker pull lasote/conanclang38", self.runner.calls[0])
+        self.assertIn("docker pull conanio/clang38", self.runner.calls[0])
         self.assertIn('docker run ', self.runner.calls[1])
         self.assertIn('os=os1', self.runner.calls[4])
 
@@ -250,8 +292,8 @@ class AppTest(unittest.TestCase):
         self.assertIn('os=os3', self.runner.calls[5])
 
     def test_docker_gcc_and_clang(self):
-        self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
-                                           "lasote", "mychannel",
+        self.packager = ConanMultiPackager(username="lasote",
+                                           channel="mychannel",
                                            runner=self.runner,
                                            conan_api=self.conan_api,
                                            gcc_versions=["5", "6"],
@@ -268,20 +310,21 @@ class AppTest(unittest.TestCase):
         self._add_build(6, "clang", "3.9")
 
         self.packager.run_builds(1, 2)
-        self.assertIn("docker pull lasote/conangcc5", self.runner.calls[0])
+        self.assertIn("docker pull conanio/gcc5", self.runner.calls[0])
         self.assertIn('docker run ', self.runner.calls[1])
 
         self.assertIn('os=os1', self.runner.calls[4])
         self.assertIn('os=os3', self.runner.calls[5])
 
         self.packager.run_builds(2, 2)
-        self.assertIn("docker pull lasote/conanclang39", self.runner.calls[16])
+        self.assertIn("docker pull conanio/clang39", self.runner.calls[16])
         self.assertIn('docker run ', self.runner.calls[17])
         self.assertIn('os=os4', self.runner.calls[20])
         self.assertIn('os=os6', self.runner.calls[21])
 
     def test_upload_false(self):
-        packager = ConanMultiPackager(["--build missing", "-r conan.io"], "lasote", "mychannel",
+        packager = ConanMultiPackager(username="lasote",
+                                      channel="mychannel",
                                       upload=False, reference="zlib/1.2.11",
                                       ci_manager=self.ci_manager)
         self.assertFalse(packager._upload_enabled())
@@ -289,8 +332,8 @@ class AppTest(unittest.TestCase):
     def test_docker_env_propagated(self):
         # test env
         with tools.environment_append({"CONAN_FAKE_VAR": "32"}):
-            self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
-                                               "lasote", "mychannel",
+            self.packager = ConanMultiPackager(username="lasote",
+                                               channel="mychannel",
                                                runner=self.runner,
                                                conan_api=self.conan_api,
                                                gcc_versions=["5", "6"],
@@ -303,8 +346,8 @@ class AppTest(unittest.TestCase):
             self.assertIn('-e CONAN_FAKE_VAR="32"', self.runner.calls[-1])
 
     def test_docker_invalid(self):
-        self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
-                                           "lasote", "mychannel",
+        self.packager = ConanMultiPackager(username="lasote",
+                                           channel="mychannel",
                                            runner=self.runner,
                                            conan_api=self.conan_api,
                                            use_docker=True,
@@ -317,8 +360,8 @@ class AppTest(unittest.TestCase):
         self.assertRaises(Exception, self.packager.run_builds)
 
     def test_assign_builds_retrocompatibility(self):
-        self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
-                                           "lasote", "mychannel",
+        self.packager = ConanMultiPackager(username="lasote",
+                                           channel="mychannel",
                                            runner=self.runner,
                                            conan_api=self.conan_api,
                                            gcc_versions=["4.3", "5"],
@@ -686,3 +729,61 @@ class AppTest(unittest.TestCase):
                                          ci_manager=MockCIManager(current_branch=branch))
 
             self.assertEquals(builder.channel, expected_channel, "Not match for branch %s" % branch)
+
+    def test_pip_conanio_image(self):
+        self.packager = ConanMultiPackager(username="lasote",
+                                            channel="mychannel",
+                                            runner=self.runner,
+                                            conan_api=self.conan_api,
+                                            gcc_versions=["4.3", "5"],
+                                            use_docker=True,
+                                            docker_image='conanio/gcc43',
+                                            reference="zlib/1.2.11",
+                                            ci_manager=self.ci_manager)
+        self._add_build(1, "gcc", "4.3")
+        self.packager.run_builds(1, 2)
+        self.assertNotIn("sudo -E pip", self.runner.calls[1])
+        self.assertIn("pip", self.runner.calls[1])
+
+        self.runner.reset()
+        self.packager = ConanMultiPackager(username="lasote",
+                                            channel="mychannel",
+                                            runner=self.runner,
+                                            conan_api=self.conan_api,
+                                            gcc_versions=["4.3", "5"],
+                                            docker_image='conanio/gcc43',
+                                            reference="zlib/1.2.11",
+                                            ci_manager=self.ci_manager)
+        self._add_build(1, "gcc", "4.3")
+        self.packager.run_builds(1, 2)
+        self.assertNotIn("sudo -E pip", self.runner.calls[1])
+        self.assertIn("pip", self.runner.calls[1])
+
+
+    @unittest.skipIf(sys.platform.startswith("win"), "Requires Linux")
+    def test_pip_docker_sudo(self):
+        self.packager = ConanMultiPackager(username="lasote",
+                                            channel="mychannel",
+                                            runner=self.runner,
+                                            conan_api=self.conan_api,
+                                            gcc_versions=["4.3", "5"],
+                                            docker_image='foobar/gcc43',
+                                            reference="zlib/1.2.11",
+                                            ci_manager=self.ci_manager)
+        self._add_build(1, "gcc", "4.3")
+        self.packager.run_builds(1, 2)
+        self.assertIn("sudo -E pip", self.runner.calls[1])
+
+        self.runner.reset()
+        with tools.environment_append({"CONAN_PIP_USE_SUDO": "True"}):
+            self.packager = ConanMultiPackager(username="lasote",
+                                                channel="mychannel",
+                                                runner=self.runner,
+                                                conan_api=self.conan_api,
+                                                gcc_versions=["4.3", "5"],
+                                                docker_image='conanio/gcc43',
+                                                reference="zlib/1.2.11",
+                                                ci_manager=self.ci_manager)
+        self._add_build(1, "gcc", "4.3")
+        self.packager.run_builds(1, 2)
+        self.assertIn("sudo -E pip", self.runner.calls[1])

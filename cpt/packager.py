@@ -5,21 +5,22 @@ import sys
 from collections import defaultdict
 
 import six
-from conans.errors import ConanException
-
+from conans import __version__ as client_version, tools
+from conans.client.conan_api import Conan
+from conans.client.runner import ConanRunner
+from conans.model.ref import ConanFileReference
 from conans.model.version import Version
+
+from cpt import NEWEST_CONAN_SUPPORTED
 from cpt.auth import AuthManager
+from cpt.builds_generator import BuildConf, BuildGenerator
 from cpt.ci_manager import CIManager
 from cpt.printer import Printer
 from cpt.profiles import get_profiles, save_profile_to_tmp
 from cpt.remotes import RemotesManager
-from cpt.tools import get_bool_from_env
-from cpt.builds_generator import BuildConf, BuildGenerator
+from cpt.config import ConfigManager
 from cpt.runner import CreateRunner, DockerCreateRunner
-from conans.client.conan_api import Conan
-from conans.client.runner import ConanRunner
-from conans.model.ref import ConanFileReference
-from conans import __version__ as client_version, tools
+from cpt.tools import get_bool_from_env
 from cpt.uploader import Uploader
 
 
@@ -66,9 +67,9 @@ class ConanMultiPackager(object):
     """ Help to generate common builds (setting's combinations), adjust the environment,
     and run conan create command in docker containers"""
 
-    def __init__(self, args=None, username=None, channel=None, runner=None,
+    def __init__(self, username=None, channel=None, runner=None,
                  gcc_versions=None, visual_versions=None, visual_runtimes=None,
-                 apple_clang_versions=None, archs=None,
+                 apple_clang_versions=None, archs=None, options=None,
                  use_docker=None, curpage=None, total_pages=None,
                  docker_image=None, reference=None, password=None,
                  remotes=None,
@@ -96,7 +97,8 @@ class ConanMultiPackager(object):
                  ci_manager=None,
                  out=None,
                  test_folder=None,
-                 cwd=None):
+                 cwd=None,
+                 config_url=None):
 
         self.printer = Printer(out)
         self.printer.print_rule()
@@ -112,6 +114,7 @@ class ConanMultiPackager(object):
 
         self.ci_manager = ci_manager or CIManager(self.printer)
         self.remotes_manager = RemotesManager(self.conan_api, self.printer, remotes, upload)
+        self.config_manager = ConfigManager(self.conan_api, self.printer)
         self.username = username or os.getenv("CONAN_USERNAME", None)
 
         if not self.username:
@@ -170,16 +173,18 @@ class ConanMultiPackager(object):
             else:
                 self.reference = None
 
+        self._docker_image = docker_image or os.getenv("CONAN_DOCKER_IMAGE", None)
+
         # If CONAN_DOCKER_IMAGE is speified, then use docker is True
         self.use_docker = (use_docker or os.getenv("CONAN_USE_DOCKER", False) or
-                           os.getenv("CONAN_DOCKER_IMAGE", None) is not None)
+                           self._docker_image is not None)
 
         os_name = self._platform_info.system() if not self.use_docker else "Linux"
         self.build_generator = BuildGenerator(reference, os_name, gcc_versions,
                                               apple_clang_versions, clang_versions,
                                               visual_versions, visual_runtimes, vs10_x86_64_enabled,
                                               mingw_configurations, archs, allow_gcc_minors,
-                                              build_types)
+                                              build_types, options)
 
         build_policy = (build_policy or
                         self.ci_manager.get_commit_build_policy() or
@@ -200,7 +205,7 @@ class ConanMultiPackager(object):
         self.sudo_pip_command = ""
         if "CONAN_PIP_USE_SUDO" in os.environ:
             self.sudo_pip_command = "sudo -E" if get_bool_from_env("CONAN_PIP_USE_SUDO") else ""
-        elif platform.system() != "Windows":
+        elif platform.system() != "Windows" and self._docker_image and 'conanio/' not in str(self._docker_image):
             self.sudo_pip_command = "sudo -E"
 
         self.docker_shell = ""
@@ -230,15 +235,10 @@ class ConanMultiPackager(object):
 
         self.runner = runner or os.system
         self.output_runner = ConanOutputRunner()
-        self.args = " ".join(args) if args else " ".join(sys.argv[1:])
 
         self.docker_entry_script = docker_entry_script or os.getenv("CONAN_DOCKER_ENTRY_SCRIPT")
 
         os.environ["CONAN_CHANNEL"] = self.channel
-
-        # If CONAN_DOCKER_IMAGE is speified, then use docker is True
-        self.use_docker = use_docker or os.getenv("CONAN_USE_DOCKER", False) or \
-                          (os.getenv("CONAN_DOCKER_IMAGE", None) is not None)
 
         if docker_32_images is not None:
             self.docker_32_images = docker_32_images
@@ -247,7 +247,6 @@ class ConanMultiPackager(object):
 
         self.curpage = curpage or os.getenv("CONAN_CURRENT_PAGE", 1)
         self.total_pages = total_pages or os.getenv("CONAN_TOTAL_PAGES", 1)
-        self._docker_image = docker_image or os.getenv("CONAN_DOCKER_IMAGE", None)
 
         self.conan_pip_package = os.getenv("CONAN_PIP_PACKAGE", "conan==%s" % client_version)
         if self.conan_pip_package in ("0", "False"):
@@ -258,6 +257,8 @@ class ConanMultiPackager(object):
 
         self.test_folder = test_folder or os.getenv("CPT_TEST_FOLDER", None)
 
+        self.config_url = config_url or os.getenv("CONAN_CONFIG_URL", None)
+
         def valid_pair(var, value):
             return (isinstance(value, six.string_types) or
                     isinstance(value, bool) or
@@ -266,6 +267,18 @@ class ConanMultiPackager(object):
             self.printer.print_dict({var: value
                                      for var, value in self.__dict__.items()
                                      if valid_pair(var, value)})
+
+        self._newest_supported_conan_version = Version(NEWEST_CONAN_SUPPORTED).minor(fill=False)
+        self._client_conan_version = client_version
+
+    def _check_conan_version(self):
+        tmp = self._newest_supported_conan_version
+        if Version(self._client_conan_version).minor(fill=False) > tmp:
+            msg = "Conan/CPT version mismatch. Conan version installed: " \
+                  "%s . This version of CPT supports only Conan < %s" \
+                  "" % (self._client_conan_version, str(tmp))
+            self.printer.print_message(msg)
+            raise Exception(msg)
 
     # For Docker on Windows, including Linux containers on Windows
     @property
@@ -371,7 +384,35 @@ class ConanMultiPackager(object):
         reference = reference or self.reference
         self._builds.append(BuildConf(settings, options, env_vars, build_requires, reference))
 
+    def remove_build_if(self, predicate):
+        filtered_builds = []
+        for build in self.items:
+            if predicate(build):
+                filtered_builds.append(build)
+
+        self._builds = filtered_builds
+
+    def update_build_if(self, predicate, new_settings=None, new_options=None, new_env_vars=None,
+                        new_build_requires=None, new_reference=None):
+        updated_builds = []
+        for build in self.items:
+            if predicate(build):
+                if new_settings:
+                    build.settings.update(new_settings)
+                if new_options:
+                    build.options.update(new_options)
+                if new_build_requires:
+                    build.build_requires.update(new_build_requires)
+                if new_env_vars:
+                    build.env_vars.update(new_env_vars)
+                if new_reference:
+                    build.reference = new_reference
+            updated_builds.append(build)
+        self._builds = updated_builds
+
     def run(self, base_profile_name=None):
+        self._check_conan_version()
+
         env_vars = self.auth_manager.env_vars()
         env_vars.update(self.remotes_manager.env_vars())
         with tools.environment_append(env_vars):
@@ -386,6 +427,9 @@ class ConanMultiPackager(object):
                 with self.printer.foldable_output("pip_update"):
                     self.runner('%s pip install %s' % (self.sudo_pip_command,
                                                        self.conan_pip_package))
+            if self.config_url:
+                self.config_manager.install(url=self.config_url)
+
 
             self.run_builds(base_profile_name=base_profile_name)
 
@@ -455,7 +499,6 @@ class ConanMultiPackager(object):
                 profile_abs_path = save_profile_to_tmp(profile_text)
                 r = CreateRunner(profile_abs_path, build.reference, self.conan_api,
                                  self.uploader,
-                                 args=self.args,
                                  exclude_vcvars_precommand=self.exclude_vcvars_precommand,
                                  build_policy=self.build_policy,
                                  runner=self.runner,
@@ -467,7 +510,7 @@ class ConanMultiPackager(object):
             else:
                 docker_image = self._get_docker_image(build)
                 r = DockerCreateRunner(profile_text, base_profile_text, base_profile_name,
-                                       build.reference, args=self.args,
+                                       build.reference,
                                        conan_pip_package=self.conan_pip_package,
                                        docker_image=docker_image,
                                        sudo_docker_command=self.sudo_docker_command,
@@ -519,7 +562,7 @@ class ConanMultiPackager(object):
         if compiler_name == "gcc" and Version(compiler_version) > Version("5"):
             compiler_version = Version(compiler_version).major(fill=False)
 
-        return "lasote/conan%s%s" % (compiler_name, compiler_version.replace(".", ""))
+        return "conanio/%s%s" % (compiler_name, compiler_version.replace(".", ""))
 
     def _get_channel(self, specified_channel, stable_channel):
         if self.stable_branch_pattern:
