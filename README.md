@@ -357,6 +357,24 @@ Also, it's possible to run some internal script, before to build the package:
         builder.run()
 
 
+### Installing custom Conan config
+
+To solve custom profiles and remotes, Conan provides the [config](https://docs.conan.io/en/latest/reference/commands/consumer/config.html) feature where is possible to edit the conan.conf or install config files.
+
+If you need to run `conan config install <url>` before to build there is the argument `config_url` in CPT:
+
+    from cpt.packager import ConanMultiPackager
+
+    if __name__ == "__main__":
+        config_url = "https://github.com/bincrafters/conan-config.git"
+        builder = ConanMultiPackager(config_url=config_url)
+        builder.add_common_builds()
+        builder.run()
+
+But if are not interested to update your build.py script, it's possible to use environment variables instead:
+
+    export CONAN_CONFIG_URL=https://github.com/bincrafters/conan-config.git
+
 ## Specifying a different base profile
 
 The options, settings and environment variables that the ``add_common_builds()`` method generate, are applied into the `default` profile
@@ -938,6 +956,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
     - "outdated": Build only missing or if the available package is not built with the current recipe. Useful to upload new configurations, e.j packages for a new compiler without
       rebuild all packages.
 - **test_folder**: Custom test folder consumed by Conan create, e.j .conan/test_package
+- **config_url**: Conan config URL be installed before to build e.j https://github.com/bincrafters/conan-config.git
 
 Upload related parameters:
 
@@ -1064,6 +1083,7 @@ This is especially useful for CI integration.
     - "missing": Build only missing packages.
     - "outdated": Build only missing or if the available package is not built with the current recipe. Useful to upload new configurations, e.j packages for a new compiler without
       rebuild all packages.
+- **CONAN_CONFIG_URL**: Conan config URL be installed before to build e.j https://github.com/bincrafters/conan-config.git
 - **CONAN_BASE_PROFILE**: Apply options, settings, etc. to this profile instead of `default`.
 - **CONAN_IGNORE_SKIP_CI**: Ignore `[skip ci]` in commit message.
 - **CPT_TEST_FOLDER**: Custom test_package path, e.j .conan/test_package

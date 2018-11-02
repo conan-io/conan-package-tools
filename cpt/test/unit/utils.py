@@ -55,6 +55,9 @@ class MockConanAPI(object):
         save(os.path.join(self._client_cache.profiles_path, args[0]), "[settings]")
         self.calls.append(Action("create_profile", args, kwargs))
 
+    def config_install(self, *args, **kwargs):
+        self.calls.append(Action("config_install", args, kwargs))
+
     def remote_list(self, *args, **kwargs):
         self.calls.append(Action("remote_list", args, kwargs))
         return []
