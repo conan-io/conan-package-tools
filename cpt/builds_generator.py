@@ -33,12 +33,29 @@ def get_mingw_config_from_env():
     return ret
 
 
+def get_env_visual_toolsets():
+    ret = {}
+    var = split_colon_env("CONAN_VISUAL_TOOLSETS")
+    if not var:
+        return None
+    for toolset_versions in var:
+        tmp = toolset_versions.split("=")
+        if len(tmp) != 2:
+            raise Exception("Invalid value for CONAN_VISUAL_TOOLSETS env variable, use "
+                            "'14=v140;v140_xp,12=v120_xp'")
+        visual_version, tmp_toolsets = tmp
+        toolsets = tmp_toolsets.split(";")
+        ret[visual_version] = toolsets
+    return ret
+
+
 class BuildGenerator(object):
 
     def __init__(self, reference, os_name, gcc_versions, apple_clang_versions, clang_versions,
-                 visual_versions, visual_runtimes, vs10_x86_64_enabled, mingw_configurations,
-                 archs, allow_gcc_minors,  build_types, options):
+                 visual_versions, visual_runtimes, visual_toolsets, vs10_x86_64_enabled,
+                 mingw_configurations, archs, allow_gcc_minors,  build_types, options):
 
+        self._visual_toolsets = visual_toolsets
         self._os_name = os_name
         self._reference = reference
         self._vs10_x86_64_enabled = vs10_x86_64_enabled
@@ -132,8 +149,9 @@ won't be able to use them.
             else:
                 builds = []
             builds.extend(get_visual_builds(self._visual_versions, self._archs,
-                                            self._visual_runtimes, shared_option_name,
-                                            dll_with_static_runtime, self._vs10_x86_64_enabled,
+                                            self._visual_runtimes, self._visual_toolsets,
+                                            shared_option_name, dll_with_static_runtime,
+                                            self._vs10_x86_64_enabled,
                                             self._build_types, self._options, ref))
             return builds
         elif self._os_name == "Linux":
@@ -211,28 +229,39 @@ def _make_mingw_builds(settings, options, build_requires, build_types, reference
     return builds
 
 
-def get_visual_builds(visual_versions, archs, visual_runtimes, shared_option_name,
-                      dll_with_static_runtime, vs10_x86_64_enabled, build_types, options, reference=None):
+def get_visual_builds(visual_versions, archs, visual_runtimes, visual_toolsets, shared_option_name,
+                      dll_with_static_runtime, vs10_x86_64_enabled, build_types, options,
+                      reference=None):
+
+    visual_toolsets = visual_toolsets or get_env_visual_toolsets()
     ret = []
     for visual_version in visual_versions:
         visual_version = str(visual_version)
         for arch in archs:
             if not vs10_x86_64_enabled and arch == "x86_64" and visual_version == "10":
                 continue
-            visual_builds = get_visual_builds_for_version(visual_runtimes, visual_version, arch,
-                                                          shared_option_name,
-                                                          dll_with_static_runtime, build_types,
-                                                          options, reference)
-
-            ret.extend(visual_builds)
+            if not visual_toolsets or not visual_toolsets.get(visual_version):
+                toolsets = [None]
+            else:
+                toolsets = visual_toolsets.get(visual_version)
+            for toolset in toolsets:
+                visual_builds = get_visual_builds_for_version(visual_runtimes, visual_version, arch,
+                                                              shared_option_name,
+                                                              dll_with_static_runtime, build_types,
+                                                              options, reference, toolset=toolset)
+                ret.extend(visual_builds)
     return ret
 
 
 def get_visual_builds_for_version(visual_runtimes, visual_version, arch, shared_option_name,
-                                  dll_with_static_runtime, build_types, options, reference=None):
+                                  dll_with_static_runtime, build_types, options, reference=None,
+                                  toolset=None):
     base_set = {"compiler": "Visual Studio",
                 "compiler.version": visual_version,
                 "arch": arch}
+
+    if toolset:
+        base_set["compiler.toolset"] = toolset
     sets = []
 
     debug_builds = set(['Debug'])

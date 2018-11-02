@@ -2,7 +2,8 @@ import os
 import sys
 from collections import namedtuple
 
-from conans import tools
+from conans import tools, __version__ as client_version
+from conans.model.version import Version
 
 from cpt import __version__ as package_tools_version
 from cpt.printer import Printer
@@ -13,10 +14,10 @@ class CreateRunner(object):
 
     def __init__(self, profile_abs_path, reference, conan_api, uploader,
                  exclude_vcvars_precommand=False, build_policy=None, runner=None,
-                 abs_folder=None, printer=None, upload=False, test_folder=None):
+                 cwd=None, printer=None, upload=False, test_folder=None):
 
         self.printer = printer or Printer()
-        self._abs_folder = abs_folder or os.getcwd()
+        self._cwd = cwd or os.getcwd()
         self._uploader = uploader
         self._upload = upload
         self._conan_api = conan_api
@@ -60,17 +61,34 @@ class CreateRunner(object):
                               "profile_name": self._profile_abs_path}
                     self.printer.print_message("Calling 'conan create'")
                     self.printer.print_dict(params)
-
-                    r = self._conan_api.create(".", name=name, version=version,
-                                               user=user, channel=channel,
-                                               build_modes=self._build_policy,
-                                               profile_name=self._profile_abs_path,
-                                               test_folder=self._test_folder)
-                    for installed in r['installed']:
-                        if installed["recipe"]["id"] == str(self._reference):
-                            package_id = installed['packages'][0]['id']
-                            self._uploader.upload_packages(self._reference,
-                                                           self._upload, package_id)
+                    with tools.chdir(self._cwd):
+                        if Version(client_version) >= "1.8.0":
+                            from conans.errors import ConanInvalidConfiguration
+                            exc_class = ConanInvalidConfiguration
+                        else:
+                            exc_class = None
+                        
+                        try:
+                            r = self._conan_api.create(".", name=name, version=version,
+                                                       user=user, channel=channel,
+                                                       build_modes=self._build_policy,
+                                                       profile_name=self._profile_abs_path,
+                                                       test_folder=self._test_folder)
+                        except exc_class as e:
+                            self.printer.print_rule()
+                            self.printer.print_message("Skipped configuration by the recipe: "
+                                                       "%s" % str(e))
+                            self.printer.print_rule()
+                            return
+                        for installed in r['installed']:
+                            if installed["recipe"]["id"] == str(self._reference):
+                                package_id = installed['packages'][0]['id']
+                                if installed['packages'][0]["built"]:
+                                    self._uploader.upload_packages(self._reference,
+                                                                   self._upload, package_id)
+                                else:
+                                    self.printer.print_message("Skipping upload for %s, "
+                                                               "it hasn't been built" % package_id)
 
 
 class DockerCreateRunner(object):
@@ -84,7 +102,8 @@ class DockerCreateRunner(object):
                  runner=None,
                  docker_shell="", docker_conan_home="",
                  docker_platform_param="", lcow_user_workaround="",
-                 test_folder=None):
+                 test_folder=None,
+                 pip_install=None):
 
         self.printer = Printer()
         self._upload = upload
@@ -107,6 +126,7 @@ class DockerCreateRunner(object):
         self._lcow_user_workaround = lcow_user_workaround
         self._runner = PrintRunner(runner, self.printer)
         self._test_folder = test_folder
+        self._pip_install = pip_install
 
     def _pip_update_conan_command(self):
         commands = []
@@ -121,6 +141,9 @@ class DockerCreateRunner(object):
                                                               self._conan_pip_package))
         else:
             commands.append("%s pip install conan --upgrade --no-cache" % self._sudo_pip_command)
+
+        if self._pip_install:
+            commands.append("%s pip install %s --upgrade --no-cache" % (self._sudo_pip_command, " ".join(self._pip_install)))
 
         command = " && ".join(commands)
         return command

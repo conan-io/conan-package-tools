@@ -215,7 +215,8 @@ You can adjust other constructor parameters to control the build configurations 
 
 - **gcc_versions**: Generate only build configurations for the specified gcc versions (Ignored if the current machine is not Linux)
 - **visual_versions**: Generate only build configurations for the specified Visual Studio versions (Ignore if the current machine is not Windows)
-- **visual_runtimes**: Generate only build configurations for the specified runtimes, (only for Visual Studio)
+- **visual_runtimes**: Generate only build configurations for the specified runtimes. (only for Visual Studio)
+- **visual_toolsets**: Specify the toolsets per each specified Visual Studio version. (only for Visual Studio)
 - **apple_clang_versions**: Generate only build configurations for the specified apple clang versions (Ignored if the current machine is not OSX)
 - **archs**: Generate build configurations for the specified architectures, by default, ["x86", "x86_64"].
 - **build_types**: Generate build configurations for the specified build_types, by default ["Debug", "Release"].
@@ -225,6 +226,7 @@ Or you can adjust environment variables:
 - **CONAN_GCC_VERSIONS**
 - **CONAN_VISUAL_VERSIONS**
 - **CONAN_VISUAL_RUNTIMES**
+- **CONAN_VISUAL_TOOLSETS**
 - **CONAN_APPLE_CLANG_VERSIONS**
 - **CONAN_CLANG_VERSIONS**
 - **CONAN_ARCHS**
@@ -356,6 +358,44 @@ Also, it's possible to run some internal script, before to build the package:
         builder.add_common_builds()
         builder.run()
 
+### Installing extra python packages before to build
+
+Maybe you need to install some python packages using pip before to build your conan package. To solve this situation
+you could use **pip_install**:
+
+**Example**:
+
+This example installs bincrafters-package-tools and conan-promote before to build:
+
+    from cpt.packager import ConanMultiPackager
+
+    if __name__ == "__main__":
+        builder = ConanMultiPackager(pip_install=["bincrafters-package-tools==0.17.0", "conan-promote==0.1.2"])
+        builder.add_common_builds()
+        builder.run()
+
+But if you prefer to use environment variables:
+
+    export CONAN_PIP_INSTALL="bincrafters-package-tools==0.17.0,conan-promote=0.1.2"
+
+
+### Installing custom Conan config
+
+To solve custom profiles and remotes, Conan provides the [config](https://docs.conan.io/en/latest/reference/commands/consumer/config.html) feature where is possible to edit the conan.conf or install config files.
+
+If you need to run `conan config install <url>` before to build there is the argument `config_url` in CPT:
+
+    from cpt.packager import ConanMultiPackager
+
+    if __name__ == "__main__":
+        config_url = "https://github.com/bincrafters/conan-config.git"
+        builder = ConanMultiPackager(config_url=config_url)
+        builder.add_common_builds()
+        builder.run()
+
+But if are not interested to update your build.py script, it's possible to use environment variables instead:
+
+    export CONAN_CONFIG_URL=https://github.com/bincrafters/conan-config.git
 
 ## Specifying a different base profile
 
@@ -921,6 +961,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **always_update_conan_in_docker**: If True, "conan package tools" and "conan" will be installed and upgraded in the docker image in every build execution.
   and the container won't be commited with the modifications.
 - **docker_entry_script**: Command to be executed before to build when running Docker.
+- **pip_install**: Package list to be installed by pip before to build. e.j ["foo", "bar"]
 - **docker_32_images**: If defined, and the current build is arch="x86" the docker image name will be appended with "-i386". e.j: "conanio/gcc63-i386"
 - **curpage**: Current page of packages to create
 - **total_pages**: Total number of pages
@@ -938,6 +979,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
     - "outdated": Build only missing or if the available package is not built with the current recipe. Useful to upload new configurations, e.j packages for a new compiler without
       rebuild all packages.
 - **test_folder**: Custom test folder consumed by Conan create, e.j .conan/test_package
+- **config_url**: Conan config URL be installed before to build e.j https://github.com/bincrafters/conan-config.git
 
 Upload related parameters:
 
@@ -1029,6 +1071,7 @@ This is especially useful for CI integration.
 - **CONAN_SKIP_CHECK_CREDENTIALS**: Conan will skip checking the user credentials before building the packages. And if no user/remote is specified, will try to upload with the
   already stored credentiales in the local cache. Default [False]
 - **CONAN_DOCKER_ENTRY_SCRIPT**: Command to be executed before to build when running Docker.
+- **CONAN_PIP_INSTALL**: Package list to be installed by pip before to build, comma separated, e.g. "pkg-foo==0.1.0,pkg-bar"
 - **CONAN_GCC_VERSIONS**: Gcc versions, comma separated, e.g. "4.6,4.8,5,6"
 - **CONAN_CLANG_VERSIONS**: Clang versions, comma separated, e.g. "3.8,3.9,4.0"
 - **CONAN_APPLE_CLANG_VERSIONS**: Apple clang versions, comma separated, e.g. "6.1,8.0"
@@ -1037,6 +1080,7 @@ This is especially useful for CI integration.
 - **CONAN_BUILD_TYPES**: Build types to build for, comma separated, e.g. "Release,Debug"
 - **CONAN_VISUAL_VERSIONS**: Visual versions, comma separated, e.g. "12,14"
 - **CONAN_VISUAL_RUNTIMES**: Visual runtimes, comma separated, e.g. "MT,MD"
+- **CONAN_VISUAL_TOOLSETS**: Map Visual versions to toolsets, e.g. `14=v140;v140_xp,12=v120_xp`
 - **CONAN_USE_DOCKER**: If defined will use docker
 - **CONAN_CURRENT_PAGE**:  Current page of packages to create
 - **CONAN_TOTAL_PAGES**: Total number of pages
@@ -1064,6 +1108,7 @@ This is especially useful for CI integration.
     - "missing": Build only missing packages.
     - "outdated": Build only missing or if the available package is not built with the current recipe. Useful to upload new configurations, e.j packages for a new compiler without
       rebuild all packages.
+- **CONAN_CONFIG_URL**: Conan config URL be installed before to build e.j https://github.com/bincrafters/conan-config.git
 - **CONAN_BASE_PROFILE**: Apply options, settings, etc. to this profile instead of `default`.
 - **CONAN_IGNORE_SKIP_CI**: Ignore `[skip ci]` in commit message.
 - **CPT_TEST_FOLDER**: Custom test_package path, e.j .conan/test_package
