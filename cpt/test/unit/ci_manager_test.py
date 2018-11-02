@@ -137,6 +137,14 @@ class CIManagerTest(unittest.TestCase):
             manager = CIManager(self.printer)
             self.assertRaises(Exception, manager.get_commit_build_policy)
 
+        # Complex messages
+        m = "double travis pages again due to timeout, travis taking longer " \
+            "now [skip appveyor] [build=missing]"
+        with tools.environment_append({"TRAVIS": "1",
+                                       "TRAVIS_COMMIT_MESSAGE": m}):
+            manager = CIManager(self.printer)
+            self.assertEquals(manager.get_commit_build_policy(), "missing")
+
     def test_bamboo_env_vars(self):
         self.assertIsNone(os.getenv('CONAN_LOGIN_USERNAME'))
 

@@ -5,22 +5,22 @@ import sys
 from collections import defaultdict
 
 import six
-from conans.errors import ConanException
-
+from conans import __version__ as client_version, tools
+from conans.client.conan_api import Conan
+from conans.client.runner import ConanRunner
+from conans.model.ref import ConanFileReference
 from conans.model.version import Version
+
+from cpt import NEWEST_CONAN_SUPPORTED
 from cpt.auth import AuthManager
+from cpt.builds_generator import BuildConf, BuildGenerator
 from cpt.ci_manager import CIManager
 from cpt.printer import Printer
 from cpt.profiles import get_profiles, save_profile_to_tmp
 from cpt.remotes import RemotesManager
 from cpt.config import ConfigManager
-from cpt.tools import get_bool_from_env
-from cpt.builds_generator import BuildConf, BuildGenerator
 from cpt.runner import CreateRunner, DockerCreateRunner
-from conans.client.conan_api import Conan
-from conans.client.runner import ConanRunner
-from conans.model.ref import ConanFileReference
-from conans import __version__ as client_version, tools
+from cpt.tools import get_bool_from_env
 from cpt.uploader import Uploader
 
 
@@ -264,6 +264,18 @@ class ConanMultiPackager(object):
                                      for var, value in self.__dict__.items()
                                      if valid_pair(var, value)})
 
+        self._newest_supported_conan_version = Version(NEWEST_CONAN_SUPPORTED).minor(fill=False)
+        self._client_conan_version = client_version
+
+    def _check_conan_version(self):
+        tmp = self._newest_supported_conan_version
+        if Version(self._client_conan_version).minor(fill=False) > tmp:
+            msg = "Conan/CPT version mismatch. Conan version installed: " \
+                  "%s . This version of CPT supports only Conan < %s" \
+                  "" % (self._client_conan_version, str(tmp))
+            self.printer.print_message(msg)
+            raise Exception(msg)
+
     # For Docker on Windows, including Linux containers on Windows
     @property
     def is_lcow(self):
@@ -369,6 +381,8 @@ class ConanMultiPackager(object):
         self._builds.append(BuildConf(settings, options, env_vars, build_requires, reference))
 
     def run(self, base_profile_name=None):
+        self._check_conan_version()
+
         env_vars = self.auth_manager.env_vars()
         env_vars.update(self.remotes_manager.env_vars())
         with tools.environment_append(env_vars):
