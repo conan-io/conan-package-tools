@@ -6,6 +6,11 @@ python:
 os: linux
 sudo: required
 dist: trusty
+cache:
+  apt: true
+  directories:
+    - $HOME/.cache/pip
+    - /usr/local/Cellar
 
 matrix:
     include:
