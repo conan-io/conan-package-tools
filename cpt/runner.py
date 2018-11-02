@@ -6,6 +6,7 @@ from conans import tools, __version__ as client_version
 from conans.model.version import Version
 
 from cpt import __version__ as package_tools_version
+from cpt.config import ConfigManager
 from cpt.printer import Printer
 from cpt.profiles import load_profile, patch_default_base_profile
 
@@ -14,7 +15,7 @@ class CreateRunner(object):
 
     def __init__(self, profile_abs_path, reference, conan_api, uploader,
                  exclude_vcvars_precommand=False, build_policy=None, runner=None,
-                 cwd=None, printer=None, upload=False, test_folder=None):
+                 cwd=None, printer=None, upload=False, test_folder=None, config_url=None):
 
         self.printer = printer or Printer()
         self._cwd = cwd or os.getcwd()
@@ -28,6 +29,7 @@ class CreateRunner(object):
         self._runner = PrintRunner(runner or os.system, self.printer)
         self._uploader.remote_manager.add_remotes_to_conan()
         self._test_folder = test_folder
+        self._config_url = config_url
 
         patch_default_base_profile(conan_api, profile_abs_path)
         self._profile = load_profile(profile_abs_path, self._conan_api._client_cache)
@@ -37,6 +39,10 @@ class CreateRunner(object):
         return self._profile.settings
 
     def run(self):
+
+        if self._config_url:
+            ConfigManager(self._conan_api, self.printer).install(url=self._config_url)
+
         context = tools.no_op()
         compiler = self.settings.get("compiler", None)
         if not self._exclude_vcvars_precommand:
@@ -103,7 +109,8 @@ class DockerCreateRunner(object):
                  docker_shell="", docker_conan_home="",
                  docker_platform_param="", lcow_user_workaround="",
                  test_folder=None,
-                 pip_install=None):
+                 pip_install=None,
+                 config_url=None):
 
         self.printer = Printer()
         self._upload = upload
@@ -127,6 +134,7 @@ class DockerCreateRunner(object):
         self._runner = PrintRunner(runner, self.printer)
         self._test_folder = test_folder
         self._pip_install = pip_install
+        self._config_url = config_url
 
     def _pip_update_conan_command(self):
         commands = []
@@ -188,6 +196,7 @@ class DockerCreateRunner(object):
             update_command = self._pip_update_conan_command() + " && "
         else:
             update_command = ""
+
         command = ('%s docker run --rm -v "%s:%s/project" %s %s %s %s '
                    '"%s cd project && '
                    '%s run_create_in_docker "' % (self._sudo_docker_command,
@@ -232,6 +241,7 @@ class DockerCreateRunner(object):
         ret["CPT_UPLOAD_RETRY"] = self._upload_retry
         ret["CPT_BUILD_POLICY"] = escape_env(self._build_policy)
         ret["CPT_TEST_FOLDER"] = escape_env(self._test_folder)
+        ret["CPT_CONFIG_URL"] = escape_env(self._config_url)
 
         ret.update({key: value for key, value in os.environ.items() if key.startswith("PIP_")})
 

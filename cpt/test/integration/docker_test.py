@@ -40,9 +40,10 @@ class Pkg(ConanFile):
                                        "CONAN_LOGIN_USERNAME": CONAN_LOGIN_UPLOAD,
                                        "CONAN_USERNAME": "lasote",
                                        "CONAN_UPLOAD": CONAN_UPLOAD_URL,
-                                       "CONAN_PASSWORD": CONAN_UPLOAD_PASSWORD}):
-            self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
-                                               channel="mychannel",
+                                       "CONAN_PASSWORD": CONAN_UPLOAD_PASSWORD,
+                                       "CONAN_CONFIG_URL": "https://conan.jfrog.io/conan/"
+                                                           "testing_files/empty_zip.zip"}):
+            self.packager = ConanMultiPackager(channel="mychannel",
                                                gcc_versions=["6"],
                                                archs=["x86", "x86_64"],
                                                build_types=["Release"],
@@ -61,7 +62,7 @@ class Pkg(ConanFile):
             packages = self.api.search_packages(ref, remote="upload_repo")["results"][0]["items"][0]["packages"]
             self.assertEquals(len(packages), 2)
             self.api.authenticate(name=CONAN_LOGIN_UPLOAD, password=CONAN_UPLOAD_PASSWORD,
-                              remote="upload_repo")
+                                  remote="upload_repo")
             self.api.remove(search_pattern, remote="upload_repo", force=True)
             self.assertEquals(self.api.search_recipes(search_pattern)["results"], [])
         else:
@@ -82,8 +83,7 @@ class Pkg(ConanFile):
                                        "CONAN_USERNAME": "lasote",
                                        "CONAN_PASSWORD": CONAN_UPLOAD_PASSWORD,
                                        "CONAN_UPLOAD_ONLY_WHEN_STABLE": "1"}):
-            self.packager = ConanMultiPackager(["--build missing", "-r conan.io"],
-                                               channel="mychannel",
+            self.packager = ConanMultiPackager(channel="mychannel",
                                                gcc_versions=["6"],
                                                archs=["x86", "x86_64"],
                                                build_types=["Release"],
