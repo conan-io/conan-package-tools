@@ -15,7 +15,6 @@ from cpt import NEWEST_CONAN_SUPPORTED
 from cpt.auth import AuthManager
 from cpt.builds_generator import BuildConf, BuildGenerator
 from cpt.ci_manager import CIManager
-from cpt.config import ConfigManager
 from cpt.printer import Printer
 from cpt.profiles import get_profiles, save_profile_to_tmp
 from cpt.remotes import RemotesManager
@@ -117,7 +116,6 @@ class ConanMultiPackager(object):
 
         self.ci_manager = ci_manager or CIManager(self.printer)
         self.remotes_manager = RemotesManager(self.conan_api, self.printer, remotes, upload)
-        self.config_manager = ConfigManager(self.conan_api, self.printer)
         self.username = username or os.getenv("CONAN_USERNAME", None)
 
         if not self.username:
@@ -261,9 +259,9 @@ class ConanMultiPackager(object):
 
         self.builds_in_current_page = []
 
-        self.test_folder = test_folder or os.getenv("CPT_TEST_FOLDER", None)
+        self.test_folder = test_folder or os.getenv("CPT_TEST_FOLDER")
 
-        self.config_url = config_url or os.getenv("CONAN_CONFIG_URL", None)
+        self.config_url = config_url or os.getenv("CONAN_CONFIG_URL")
 
         def valid_pair(var, value):
             return (isinstance(value, six.string_types) or
@@ -437,8 +435,6 @@ class ConanMultiPackager(object):
                         packages = " ".join(self.pip_install)
                         self.printer.print_message("Install extra python packages: {}".format(packages))
                         self.runner('%s pip install %s' % (self.sudo_pip_command, packages))
-            if self.config_url:
-                self.config_manager.install(url=self.config_url)
 
             self.run_builds(base_profile_name=base_profile_name)
 
@@ -514,7 +510,8 @@ class ConanMultiPackager(object):
                                  cwd=self.cwd,
                                  printer=self.printer,
                                  upload=self._upload_enabled(),
-                                 test_folder=self.test_folder)
+                                 test_folder=self.test_folder,
+                                 config_url=self.config_url)
                 r.run()
             else:
                 docker_image = self._get_docker_image(build)
@@ -536,7 +533,8 @@ class ConanMultiPackager(object):
                                        docker_platform_param=self.docker_platform_param,
                                        lcow_user_workaround=self.lcow_user_workaround,
                                        test_folder=self.test_folder,
-                                       pip_install=self.pip_install)
+                                       pip_install=self.pip_install,
+                                       config_url=self.config_url)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
                       docker_entry_script=self.docker_entry_script)
