@@ -32,5 +32,4 @@ class Pkg(ConanFile):
             mulitpackager.add({"arch": "x86"}, {})
             mulitpackager.run()
             self.assertIn("Uploading package 1/1", tc.out)
-            self.assertIn(">> Skipped configuration by the recipe: lib/1.0@user/testing: "
-                          "Invalid configuration: This library doesn't support x86", tc.out)
+            self.assertIn("Invalid configuration: This library doesn't support x86", tc.out)
