@@ -70,6 +70,7 @@ class ConanMultiPackager(object):
 
     def __init__(self, username=None, channel=None, runner=None,
                  gcc_versions=None, visual_versions=None, visual_runtimes=None,
+                 visual_toolsets=None,
                  apple_clang_versions=None, archs=None, options=None,
                  use_docker=None, curpage=None, total_pages=None,
                  docker_image=None, reference=None, password=None,
@@ -184,7 +185,8 @@ class ConanMultiPackager(object):
         os_name = self._platform_info.system() if not self.use_docker else "Linux"
         self.build_generator = BuildGenerator(reference, os_name, gcc_versions,
                                               apple_clang_versions, clang_versions,
-                                              visual_versions, visual_runtimes, vs10_x86_64_enabled,
+                                              visual_versions, visual_runtimes, visual_toolsets,
+                                              vs10_x86_64_enabled,
                                               mingw_configurations, archs, allow_gcc_minors,
                                               build_types, options)
 
