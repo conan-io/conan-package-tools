@@ -1,5 +1,7 @@
 import unittest
 
+from conans import tools
+
 from cpt.builds_generator import get_visual_builds, get_mingw_builds, get_osx_apple_clang_builds, get_linux_gcc_builds, get_linux_clang_builds
 from conans.model.ref import ConanFileReference
 
@@ -435,7 +437,9 @@ class GeneratorsTest(unittest.TestCase):
 
     def test_visual_build_generator(self):
         ref = ConanFileReference.loads("lib/1.0@conan/stable")
-        builds = get_visual_builds(visual_versions=["10", "14"], archs=["x86"], visual_runtimes=["MDd", "MTd"],
+        builds = get_visual_builds(visual_versions=["10", "14"],
+                                   archs=["x86"], visual_runtimes=["MDd", "MTd"],
+                                   visual_toolsets=None,
                                    shared_option_name=None,
                                    dll_with_static_runtime=False,
                                    vs10_x86_64_enabled=True,
@@ -451,7 +455,8 @@ class GeneratorsTest(unittest.TestCase):
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
-        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MDd"],
+        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"],
+                                   visual_runtimes=["MDd"], visual_toolsets=None,
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=True,
                                    vs10_x86_64_enabled=True,
@@ -470,7 +475,9 @@ class GeneratorsTest(unittest.TestCase):
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
-        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MDd"],
+        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"],
+                                   visual_runtimes=["MDd"],
+                                   visual_toolsets=None,
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=True,
                                    vs10_x86_64_enabled=False,
@@ -484,7 +491,9 @@ class GeneratorsTest(unittest.TestCase):
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
-        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MTd"],
+        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"],
+                                   visual_runtimes=["MTd"],
+                                   visual_toolsets=None,
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=False,
                                    vs10_x86_64_enabled=False,
@@ -496,7 +505,9 @@ class GeneratorsTest(unittest.TestCase):
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
-        builds = get_visual_builds(visual_versions=["10", "14"], archs=["x86"], visual_runtimes=["MDd", "MTd"],
+        builds = get_visual_builds(visual_versions=["10", "14"], archs=["x86"],
+                                   visual_runtimes=["MDd", "MTd"],
+                                   visual_toolsets=None,
                                    shared_option_name=None,
                                    dll_with_static_runtime=False,
                                    vs10_x86_64_enabled=True,
@@ -515,7 +526,9 @@ class GeneratorsTest(unittest.TestCase):
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
-        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MDd"],
+        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"],
+                                   visual_runtimes=["MDd"],
+                                   visual_toolsets=None,
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=True,
                                    vs10_x86_64_enabled=True,
@@ -538,7 +551,9 @@ class GeneratorsTest(unittest.TestCase):
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
-        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MDd"],
+        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"],
+                                   visual_runtimes=["MDd"],
+                                   visual_toolsets=None,
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=True,
                                    vs10_x86_64_enabled=False,
@@ -554,7 +569,9 @@ class GeneratorsTest(unittest.TestCase):
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
-        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MTd"],
+        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"],
+                                   visual_runtimes=["MTd"],
+                                   visual_toolsets=None,
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=False,
                                    vs10_x86_64_enabled=False,
@@ -569,7 +586,9 @@ class GeneratorsTest(unittest.TestCase):
 
         #############
 
-        builds = get_visual_builds(visual_versions=["10", "14"], archs=["x86_64"], visual_runtimes=["MD", "MT"],
+        builds = get_visual_builds(visual_versions=["10", "14"], archs=["x86_64"],
+                                   visual_runtimes=["MD", "MT"],
+                                   visual_toolsets=None,
                                    shared_option_name=None,
                                    dll_with_static_runtime=False,
                                    vs10_x86_64_enabled=True,
@@ -588,7 +607,9 @@ class GeneratorsTest(unittest.TestCase):
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
-        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MD"],
+        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"],
+                                   visual_runtimes=["MD"],
+                                   visual_toolsets=None,
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=True,
                                    vs10_x86_64_enabled=True,
@@ -611,7 +632,9 @@ class GeneratorsTest(unittest.TestCase):
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
-        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MD"],
+        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"],
+                                   visual_runtimes=["MD"],
+                                   visual_toolsets=None,
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=True,
                                    vs10_x86_64_enabled=False,
@@ -627,7 +650,9 @@ class GeneratorsTest(unittest.TestCase):
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
-        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MT"],
+        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"],
+                                   visual_runtimes=["MT"],
+                                   visual_toolsets=None,
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=False,
                                    vs10_x86_64_enabled=False,
@@ -642,7 +667,9 @@ class GeneratorsTest(unittest.TestCase):
 
         #############
 
-        builds = get_visual_builds(visual_versions=["10", "14"], archs=["x86_64"], visual_runtimes=["MD", "MT"],
+        builds = get_visual_builds(visual_versions=["10", "14"], archs=["x86_64"],
+                                   visual_runtimes=["MD", "MT"],
+                                   visual_toolsets=None,
                                    shared_option_name=None,
                                    dll_with_static_runtime=False,
                                    vs10_x86_64_enabled=True,
@@ -661,7 +688,9 @@ class GeneratorsTest(unittest.TestCase):
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
-        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MD"],
+        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"],
+                                   visual_runtimes=["MD"],
+                                   visual_toolsets=None,
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=True,
                                    vs10_x86_64_enabled=True,
@@ -684,7 +713,9 @@ class GeneratorsTest(unittest.TestCase):
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
-        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MD"],
+        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"],
+                                   visual_runtimes=["MD"],
+                                   visual_toolsets=None,
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=True,
                                    vs10_x86_64_enabled=False,
@@ -700,7 +731,8 @@ class GeneratorsTest(unittest.TestCase):
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
-        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MT"],
+        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"],
+                                   visual_runtimes=["MT"], visual_toolsets=None,
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=False,
                                    vs10_x86_64_enabled=False,
@@ -715,7 +747,8 @@ class GeneratorsTest(unittest.TestCase):
 
         #############
 
-        builds = get_visual_builds(visual_versions=["10", "14"], archs=["x86_64"], visual_runtimes=["MD", "MT"],
+        builds = get_visual_builds(visual_versions=["10", "14"], archs=["x86_64"],
+                                   visual_runtimes=["MD", "MT"], visual_toolsets=None,
                                    shared_option_name=None,
                                    dll_with_static_runtime=False,
                                    vs10_x86_64_enabled=True,
@@ -734,7 +767,8 @@ class GeneratorsTest(unittest.TestCase):
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
-        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MD"],
+        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"],
+                                   visual_runtimes=["MD"], visual_toolsets=None,
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=True,
                                    vs10_x86_64_enabled=True,
@@ -757,7 +791,8 @@ class GeneratorsTest(unittest.TestCase):
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
-        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MD"],
+        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"],
+                                   visual_runtimes=["MD"], visual_toolsets=None,
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=True,
                                    vs10_x86_64_enabled=False,
@@ -773,7 +808,8 @@ class GeneratorsTest(unittest.TestCase):
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
-        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MT"],
+        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"],
+                                   visual_runtimes=["MT"], visual_toolsets=None,
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=False,
                                    vs10_x86_64_enabled=False,
@@ -788,7 +824,8 @@ class GeneratorsTest(unittest.TestCase):
 
         #############
 
-        builds = get_visual_builds(visual_versions=["10", "14"], archs=["x86"], visual_runtimes=["MD", "MDd"],
+        builds = get_visual_builds(visual_versions=["10", "14"], archs=["x86"],
+                                   visual_runtimes=["MD", "MDd"], visual_toolsets=None,
                                    shared_option_name=None,
                                    dll_with_static_runtime=False,
                                    vs10_x86_64_enabled=True,
@@ -810,7 +847,8 @@ class GeneratorsTest(unittest.TestCase):
 
         #############
 
-        builds = get_visual_builds(visual_versions=["10", "14"], archs=["x86"], visual_runtimes=["MDd", "MTd"],
+        builds = get_visual_builds(visual_versions=["10", "14"], archs=["x86"],
+                                   visual_runtimes=["MDd", "MTd"], visual_toolsets=None,
                                    shared_option_name=None,
                                    dll_with_static_runtime=False,
                                    vs10_x86_64_enabled=True,
@@ -830,7 +868,8 @@ class GeneratorsTest(unittest.TestCase):
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
-        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MDd"],
+        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"],
+                                   visual_runtimes=["MDd"], visual_toolsets=None,
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=True,
                                    vs10_x86_64_enabled=True,
@@ -853,7 +892,8 @@ class GeneratorsTest(unittest.TestCase):
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
-        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"], visual_runtimes=["MDd"],
+        builds = get_visual_builds(visual_versions=["10"], archs=["x86", "x86_64"],
+                                   visual_runtimes=["MDd"], visual_toolsets=None,
                                    shared_option_name="libpng:shared",
                                    dll_with_static_runtime=True,
                                    vs10_x86_64_enabled=False,
@@ -866,5 +906,52 @@ class GeneratorsTest(unittest.TestCase):
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
               'compiler.version': '10'},
              {'libpng:shared': True, "pkg:shared": False, "pkg:fPIC": False}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+    def test_visual_toolsets(self):
+
+        builds = get_visual_builds(visual_versions=["15"], archs=["x86"],
+                                   visual_runtimes=["MDd"], visual_toolsets={"15": ["v140",
+                                                                                    "v140_xp"]},
+                                   shared_option_name=None,
+                                   dll_with_static_runtime=True,
+                                   vs10_x86_64_enabled=False,
+                                   build_types=["Debug", "Release", "RelWithDebInfo", "MinSizeRel"],
+                                   options={})
+        expected = [
+            ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
+              'compiler.version': '15', 'compiler.toolset': 'v140'},
+             {}, {}, {}, None),
+            ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
+              'compiler.version': '15', 'compiler.toolset': 'v140_xp'},
+             {}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        # Same with environment passing None in the parameter
+        with tools.environment_append({"CONAN_VISUAL_TOOLSETS": "15=v140;v140_xp,11=v140;v140_xp"}):
+            builds = get_visual_builds(visual_versions=["15"], archs=["x86"],
+                                       visual_runtimes=["MDd"], visual_toolsets=None,
+                                       shared_option_name=None,
+                                       dll_with_static_runtime=True,
+                                       vs10_x86_64_enabled=False,
+                                       build_types=["Debug", "Release", "RelWithDebInfo", "MinSizeRel"],
+                                       options={})
+            self.assertEquals([tuple(a) for a in builds], expected)
+
+        # Invalid mapping generates builds without toolsets (visual 10 != visual 15)
+        builds = get_visual_builds(visual_versions=["15"], archs=["x86"],
+                                   visual_runtimes=["MDd"], visual_toolsets={"10": ["v140",
+                                                                                    "v140_xp"]},
+                                   shared_option_name=None,
+                                   dll_with_static_runtime=True,
+                                   vs10_x86_64_enabled=False,
+                                   build_types=["Debug", "Release", "RelWithDebInfo", "MinSizeRel"],
+                                   options={})
+        expected = [
+            ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
+              'compiler.version': '15'},
+             {}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
