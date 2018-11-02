@@ -6,7 +6,7 @@ from cpt.packager import ConanMultiPackager
 
 def get_patched_multipackager(tc, *args, **kwargs):
     tc.init_dynamic_vars()
-    conan_api = Conan(tc.client_cache, tc.user_io, tc.runner, tc.remote_manager, tc.plugin_manager,
+    conan_api = Conan(tc.client_cache, tc.user_io, tc.runner, tc.remote_manager, tc.hook_manager,
                       interactive=False)
 
     class Printer(object):

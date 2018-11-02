@@ -50,8 +50,7 @@ class AppTest(unittest.TestCase):
 
         self.packager.remove_build_if(lambda build: build.settings["compiler.version"] == "6")
 
-        packager_expected = ConanMultiPackager(["--build missing", "-r conan.io"],
-                                               "lasote", "mychannel",
+        packager_expected = ConanMultiPackager("lasote", "mychannel",
                                                runner=self.runner,
                                                conan_api=self.conan_api,
                                                reference="lib/1.0",
@@ -69,8 +68,7 @@ class AppTest(unittest.TestCase):
         self.packager.update_build_if(lambda build: build.settings["os"] == "Windows",
                                       new_build_requires={"*": ["7zip_installer/0.1.0@conan/stable"]})
 
-        packager_expected = ConanMultiPackager(["--build missing", "-r conan.io"],
-                                               "lasote", "mychannel",
+        packager_expected = ConanMultiPackager("lasote", "mychannel",
                                                runner=self.runner,
                                                conan_api=self.conan_api,
                                                reference="lib/1.0",
