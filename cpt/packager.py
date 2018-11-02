@@ -380,6 +380,32 @@ class ConanMultiPackager(object):
         reference = reference or self.reference
         self._builds.append(BuildConf(settings, options, env_vars, build_requires, reference))
 
+    def remove_build_if(self, predicate):
+        filtered_builds = []
+        for build in self.items:
+            if predicate(build):
+                filtered_builds.append(build)
+
+        self._builds = filtered_builds
+
+    def update_build_if(self, predicate, new_settings=None, new_options=None, new_env_vars=None,
+                        new_build_requires=None, new_reference=None):
+        updated_builds = []
+        for build in self.items:
+            if predicate(build):
+                if new_settings:
+                    build.settings.update(new_settings)
+                if new_options:
+                    build.options.update(new_options)
+                if new_build_requires:
+                    build.build_requires.update(new_build_requires)
+                if new_env_vars:
+                    build.env_vars.update(new_env_vars)
+                if new_reference:
+                    build.reference = new_reference
+            updated_builds.append(build)
+        self._builds = updated_builds
+
     def run(self, base_profile_name=None):
         self._check_conan_version()
 

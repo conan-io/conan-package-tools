@@ -42,6 +42,45 @@ class AppTest(unittest.TestCase):
                           {"option%d" % number: "value%d" % number,
                            "option%d" % number: "value%d" % number})
 
+    def test_remove_build_if(self):
+        self.packager.add({"arch": "x86", "build_type": "Release", "compiler": "gcc", "compiler.version": "6"})
+        self.packager.add({"arch": "x86", "build_type": "Debug", "compiler": "gcc", "compiler.version": "6"})
+        self.packager.add({"arch": "x86_64", "build_type": "Release", "compiler": "gcc", "compiler.version": "7"})
+        self.packager.add({"arch": "x86_64", "build_type": "Debug", "compiler": "gcc", "compiler.version": "7"})
+
+        self.packager.remove_build_if(lambda build: build.settings["compiler.version"] == "6")
+
+        packager_expected = ConanMultiPackager(["--build missing", "-r conan.io"],
+                                               "lasote", "mychannel",
+                                               runner=self.runner,
+                                               conan_api=self.conan_api,
+                                               reference="lib/1.0",
+                                               ci_manager=self.ci_manager)
+
+        packager_expected.add({"arch": "x86", "build_type": "Release", "compiler": "gcc", "compiler.version": "6"})
+        packager_expected.add({"arch": "x86", "build_type": "Debug", "compiler": "gcc", "compiler.version": "6"})
+
+        self.assertEqual([tuple(a) for a in self.packager.items], packager_expected.items)
+
+    def test_update_build_if(self):
+        self.packager.add({"os": "Windows"})
+        self.packager.add({"os": "Linux"})
+
+        self.packager.update_build_if(lambda build: build.settings["os"] == "Windows",
+                                      new_build_requires={"*": ["7zip_installer/0.1.0@conan/stable"]})
+
+        packager_expected = ConanMultiPackager(["--build missing", "-r conan.io"],
+                                               "lasote", "mychannel",
+                                               runner=self.runner,
+                                               conan_api=self.conan_api,
+                                               reference="lib/1.0",
+                                               ci_manager=self.ci_manager)
+
+        packager_expected.add({"os": "Windows"}, {}, {}, {"*": ["7zip_installer/0.1.0@conan/stable"]})
+        packager_expected.add({"os": "Linux"})
+
+        self.assertEqual([tuple(a) for a in self.packager.items], packager_expected.items)
+
     def test_full_profile(self):
         self.packager.add({"os": "Windows", "compiler": "gcc"},
                           {"option1": "One"},
