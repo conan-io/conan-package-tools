@@ -1,5 +1,3 @@
-
-
 class Uploader(object):
 
     def __init__(self, conan_api, remote_manager, auth_manager, printer, upload_retry):
@@ -43,3 +41,7 @@ class Uploader(object):
                                       all_packages=True,
                                       remote_name=remote_name,
                                       retry=int(self._upload_retry))
+            else:
+                self.printer.print_message("Upload skipped due to Conan/CPT version mismatch. "
+                                           "Conan version installed: %s . "
+                                           "This version of CPT supports only Conan < 1.9.0" % client_version)
