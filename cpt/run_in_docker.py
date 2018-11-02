@@ -38,11 +38,12 @@ def run():
         tools.save(os.path.join(client_cache.profiles_path, base_profile_name),
                    base_profile_text)
 
-    upload = os.getenv("CPT_UPLOAD_ENABLED", None)
+    upload = os.getenv("CPT_UPLOAD_ENABLED")
     runner = CreateRunner(abs_profile_path, reference, conan_api, uploader,
                           build_policy=build_policy, printer=printer, upload=upload,
                           test_folder=test_folder, config_url=config_url)
     runner.run()
+
 
 if __name__ == '__main__':
     run()
