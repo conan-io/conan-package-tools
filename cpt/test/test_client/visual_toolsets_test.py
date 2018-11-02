@@ -36,6 +36,8 @@ class Pkg(ConanFile):
                 self.assertIn("Uploading package 2/4", tc.out)
                 self.assertIn("Uploading package 3/4", tc.out)
                 self.assertIn("Uploading package 4/4", tc.out)
+                self.assertIn("compiler.toolset=v140", tc.out)
+                self.assertIn("compiler.toolset=v140_xp", tc.out)
             else:
                 self.assertIn("Uploading package 1/2", tc.out)
                 self.assertIn("Uploading package 2/2", tc.out)
