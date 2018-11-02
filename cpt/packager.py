@@ -15,14 +15,13 @@ from cpt import NEWEST_CONAN_SUPPORTED
 from cpt.auth import AuthManager
 from cpt.builds_generator import BuildConf, BuildGenerator
 from cpt.ci_manager import CIManager
+from cpt.config import ConfigManager
 from cpt.printer import Printer
 from cpt.profiles import get_profiles, save_profile_to_tmp
 from cpt.remotes import RemotesManager
-from cpt.tools import get_bool_from_env, split_colon_env
-from cpt.builds_generator import BuildConf, BuildGenerator
-from cpt.config import ConfigManager
 from cpt.runner import CreateRunner, DockerCreateRunner
 from cpt.tools import get_bool_from_env
+from cpt.tools import split_colon_env
 from cpt.uploader import Uploader
 
 
