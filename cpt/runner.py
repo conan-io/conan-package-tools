@@ -2,7 +2,8 @@ import os
 import sys
 from collections import namedtuple
 
-from conans import tools
+from conans import tools, __version__ as client_version
+from conans.model.version import Version
 
 from cpt import __version__ as package_tools_version
 from cpt.printer import Printer
@@ -61,11 +62,24 @@ class CreateRunner(object):
                     self.printer.print_message("Calling 'conan create'")
                     self.printer.print_dict(params)
                     with tools.chdir(self._cwd):
-                        r = self._conan_api.create(".", name=name, version=version,
-                                                   user=user, channel=channel,
-                                                   build_modes=self._build_policy,
-                                                   profile_name=self._profile_abs_path,
-                                                   test_folder=self._test_folder)
+                        if Version(client_version) >= "1.8.0":
+                            from conans.errors import ConanInvalidConfiguration
+                            exc_class = ConanInvalidConfiguration
+                        else:
+                            exc_class = None
+                        
+                        try:
+                            r = self._conan_api.create(".", name=name, version=version,
+                                                       user=user, channel=channel,
+                                                       build_modes=self._build_policy,
+                                                       profile_name=self._profile_abs_path,
+                                                       test_folder=self._test_folder)
+                        except exc_class as e:
+                            self.printer.print_rule()
+                            self.printer.print_message("Skipped configuration by the recipe: "
+                                                       "%s" % str(e))
+                            self.printer.print_rule()
+                            return
                         for installed in r['installed']:
                             if installed["recipe"]["id"] == str(self._reference):
                                 package_id = installed['packages'][0]['id']

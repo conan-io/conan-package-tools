@@ -108,8 +108,8 @@ class Printer(object):
 
         if len(table):
             self.printer(tabulate(table, headers=list(compiler_headers) + list(option_headers),
-                             # showindex=True,
-                             tablefmt='psql'))
+                                  # showindex=True,
+                                  tablefmt='psql'))
             self.printer("\n")
         else:
             self.printer("There are no jobs!\n")
