@@ -45,8 +45,8 @@ class AppTest(unittest.TestCase):
     def test_remove_build_if(self):
         self.packager.add({"arch": "x86", "build_type": "Release", "compiler": "gcc", "compiler.version": "6"})
         self.packager.add({"arch": "x86", "build_type": "Debug", "compiler": "gcc", "compiler.version": "6"})
-        self.packager.add({"arch": "x86_64", "build_type": "Release", "compiler": "gcc", "compiler.version": "7"})
-        self.packager.add({"arch": "x86_64", "build_type": "Debug", "compiler": "gcc", "compiler.version": "7"})
+        self.packager.add({"arch": "x86", "build_type": "Release", "compiler": "gcc", "compiler.version": "7"})
+        self.packager.add({"arch": "x86", "build_type": "Debug", "compiler": "gcc", "compiler.version": "7"})
 
         self.packager.remove_build_if(lambda build: build.settings["compiler.version"] == "6")
 
