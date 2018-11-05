@@ -391,7 +391,7 @@ class ConanMultiPackager(object):
     def remove_build_if(self, predicate):
         filtered_builds = []
         for build in self.items:
-            if predicate(build):
+            if not predicate(build):
                 filtered_builds.append(build)
 
         self._builds = filtered_builds
