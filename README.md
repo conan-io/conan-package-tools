@@ -277,9 +277,32 @@ if __name__ == "__main__":
     builder.run()
 ```
 
-## Filtering the configurations
+## Filtering or modifying the configurations
 
-You can use **builder.add_common_builds** method and remove then some configurations. EX: Remove the GCC 4.6 packages with build_type=Debug:
+
+Use the `remove_build_if` helper with a lambda function to filter configurations:
+
+
+    from cpt.packager import ConanMultiPackager
+    
+    builder = ConanMultiPackager(username="myuser")
+    builder.add_common_builds()
+    builder.remove_build_if(lambda build: build.settings["compiler.version"] == "4.6" and settings["build_type"] == "Debug")
+
+Use the `update_build_if` helper with a lambda function to alter configurations:
+
+
+    from cpt.packager import ConanMultiPackager
+    
+    builder = ConanMultiPackager(username="myuser")
+    builder.add_common_builds()
+    builder.update_build_if(lambda build: build.settings["os"] == "Windows",
+                            new_build_requires={"*": ["7zip_installer/0.1.0@conan/stable"]})
+    # Also avaiable parameters: 
+    #    new_settings, new_options, new_env_vars, new_build_requires, new_reference                       
+     
+
+Or you can directly iterate the builds to do any change. EX: Remove the GCC 4.6 packages with build_type=Debug:
 
     from cpt.packager import ConanMultiPackager
 
@@ -292,6 +315,7 @@ You can use **builder.add_common_builds** method and remove then some configurat
                  filtered_builds.append([settings, options, env_vars, build_requires])
         builder.builds = filtered_builds
         builder.run()
+
 
 
 ## Using Docker
