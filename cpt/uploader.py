@@ -39,7 +39,9 @@ class Uploader(object):
                                       force=True,
                                       retry=int(self._upload_retry))
             elif Version(client_version) < Version("1.10.0"):
+                from conans.client.cmd import uploader
                 self.conan_api.upload(str(reference),
                                       all_packages=True,
                                       remote_name=remote_name,
-                                      retry=int(self._upload_retry))
+                                      retry=int(self._upload_retry),
+                                      policy=uploader.UPLOAD_POLICY_FORCE)
