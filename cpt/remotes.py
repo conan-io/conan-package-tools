@@ -28,7 +28,7 @@ class RemotesManager(object):
         if remotes_input:
             if isinstance(remotes_input, string_types):
                 for n, r in enumerate(remotes_input.split(",")):
-                    self._remotes.append(Remote(r.strip(), True, "remote%s" % n))
+                    self._remotes.append(self._get_remote_from_str(r, "CONAN_REMOTES", "remote%s" % n))
             elif hasattr(remotes_input, '__iter__'):
                 for n, r in enumerate(remotes_input):
                     if isinstance(r, string_types):
@@ -46,7 +46,7 @@ class RemotesManager(object):
 
         if upload_input:
             if isinstance(upload_input, string_types):
-                self._upload = Remote(upload_input, True, "upload_repo")
+                self._upload = self._get_remote_from_str(upload_input, "CONAN_UPLOAD", "upload_repo")
             elif hasattr(upload_input, '__iter__'):
                 if len(upload_input) != 3:
                     raise Exception("Incorrect 'upload' argument, check README")
