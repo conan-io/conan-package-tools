@@ -1,6 +1,8 @@
 import os
 import unittest
 
+from conans.util.files import mkdir_tmp
+
 from conans import tools
 from conans.client.conan_api import ConanAPIV1
 from conans.test.utils.tools import TestBufferConanOutput
@@ -33,7 +35,7 @@ class BaseTest(unittest.TestCase):
 
     def setUp(self):
         self.old_folder = os.getcwd()
-        self.tmp_folder = tools.mkdir_tmp()
+        self.tmp_folder = mkdir_tmp()
         os.chmod(self.tmp_folder, 0o777)
         self.conan_home = self.tmp_folder
         os.chdir(self.tmp_folder)

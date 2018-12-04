@@ -57,7 +57,11 @@ class CreateRunner(object):
             self.printer.print_profile(tools.load(self._profile_abs_path))
 
             with self.printer.foldable_output("conan_create"):
-                name, version, user, channel = self._reference
+                if client_version < Version("1.10.0"):
+                    name, version, user, channel= self._reference
+                else:
+                    name, version, user, channel, _ = self._reference
+
                 if self._build_policy:
                     self._build_policy = [self._build_policy]
                 # https://github.com/conan-io/conan-package-tools/issues/184
