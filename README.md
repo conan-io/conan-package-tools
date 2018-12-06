@@ -287,7 +287,7 @@ Use the `remove_build_if` helper with a lambda function to filter configurations
     
     builder = ConanMultiPackager(username="myuser")
     builder.add_common_builds()
-    builder.remove_build_if(lambda build: build.settings["compiler.version"] == "4.6" and settings["build_type"] == "Debug")
+    builder.remove_build_if(lambda build: build.settings["compiler.version"] == "4.6" and build.settings["build_type"] == "Debug")
 
 Use the `update_build_if` helper with a lambda function to alter configurations:
 
