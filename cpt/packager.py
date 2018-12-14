@@ -231,7 +231,7 @@ class ConanMultiPackager(object):
         self.exclude_vcvars_precommand = (exclude_vcvars_precommand or
                                           os.getenv("CONAN_EXCLUDE_VCVARS_PRECOMMAND", False))
         self._docker_image_skip_update = (docker_image_skip_update or
-                                          os.getenv("CONAN_DOCKER_IMAGE_SKIP_UPDATE", False))
+                                          os.getenv("CONAN_DOCKER_IMAGE_SKIP_UPDATE", True))
         self._docker_image_skip_pull = (docker_image_skip_pull or
                                         os.getenv("CONAN_DOCKER_IMAGE_SKIP_PULL", False))
 
