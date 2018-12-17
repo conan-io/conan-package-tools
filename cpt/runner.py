@@ -160,10 +160,11 @@ class DockerCreateRunner(object):
         command = " && ".join(commands)
         return command
 
-    def run(self, pull_image=True, docker_entry_script=None):
+    def run(self, pull_image=True, docker_entry_script=None, docker_args=None):
         envs = self.get_env_vars()
         env_vars_text = " ".join(['-e %s="%s"' % (key, value)
                                  for key, value in envs.items() if value])
+        docker_args_str = " ".join(docker_args)
 
         # Run the build
         if pull_image:
@@ -201,11 +202,12 @@ class DockerCreateRunner(object):
         else:
             update_command = ""
 
-        command = ('%s docker run --rm -v "%s:%s/project" %s %s %s %s '
+        command = ('%s docker run --rm -v "%s:%s/project" %s %s %s %s %s '
                    '"%s cd project && '
                    '%s run_create_in_docker "' % (self._sudo_docker_command,
                                                   os.getcwd(),
                                                   self._docker_conan_home,
+                                                  docker_args_str,
                                                   env_vars_text,
                                                   self._docker_platform_param,
                                                   self._docker_image,

@@ -91,6 +91,7 @@ class ConanMultiPackager(object):
                  docker_image_skip_pull=False,
                  docker_entry_script=None,
                  docker_32_images=None,
+                 docker_args=None,
                  pip_install=None,
                  build_policy=None,
                  always_update_conan_in_docker=False,
@@ -248,6 +249,12 @@ class ConanMultiPackager(object):
             self.docker_32_images = docker_32_images
         else:
             self.docker_32_images = os.getenv("CONAN_DOCKER_32_IMAGES", False)
+
+        docker_args = docker_args or split_colon_env("CPT_DOCKER_ARGS")
+
+        if docker_args is None:
+            docker_args = []
+        self.docker_args = docker_args
 
         self.curpage = curpage or os.getenv("CONAN_CURRENT_PAGE", 1)
         self.total_pages = total_pages or os.getenv("CONAN_TOTAL_PAGES", 1)
@@ -537,7 +544,8 @@ class ConanMultiPackager(object):
                                        config_url=self.config_url)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
-                      docker_entry_script=self.docker_entry_script)
+                      docker_entry_script=self.docker_entry_script,
+                      docker_args=self.docker_args)
                 pulled_docker_images[docker_image] = True
 
     def _get_docker_image(self, build):

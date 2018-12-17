@@ -343,6 +343,22 @@ class AppTest(unittest.TestCase):
             self.packager.run_builds(1, 1)
             self.assertIn('-e CONAN_FAKE_VAR="32"', self.runner.calls[-1])
 
+    def test_docker_args(self):
+        # test env
+        with tools.environment_append({"CPT_DOCKER_ARGS": "-m,2gb,--isolation=hyperv"}):
+            self.packager = ConanMultiPackager(username="lasote",
+                                               channel="mychannel",
+                                               runner=self.runner,
+                                               conan_api=self.conan_api,
+                                               gcc_versions=["5", "6"],
+                                               clang_versions=["3.9", "4.0"],
+                                               use_docker=True,
+                                               reference="zlib/1.2.11",
+                                               ci_manager=self.ci_manager)
+            self._add_build(1, "gcc", "5")
+            self.packager.run_builds(1, 1)
+            self.assertIn('-m 2gb --isolation=hyperv', self.runner.calls[-1])
+
     def test_docker_invalid(self):
         self.packager = ConanMultiPackager(username="lasote",
                                            channel="mychannel",
