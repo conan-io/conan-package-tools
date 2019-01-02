@@ -109,6 +109,13 @@ class GenericManager(object):
     def is_pull_request(self):
         return None
 
+    def is_tag(self):
+        try:
+            subprocess.check_call("git describe --exact-match --tags HEAD", shell=True)
+            return True
+        except Exception:
+            pass
+        return False
 
 class TravisManager(GenericManager):
 
@@ -125,6 +132,8 @@ class TravisManager(GenericManager):
     def is_pull_request(self):
         return os.getenv("TRAVIS_PULL_REQUEST", "false") != "false"
 
+    def is_tag(self):
+        return os.getenv("TRAVIS_TAG", None)
 
 class AppveyorManager(GenericManager):
 
@@ -149,6 +158,9 @@ class AppveyorManager(GenericManager):
     def is_pull_request(self):
         return os.getenv("APPVEYOR_PULL_REQUEST_NUMBER", None)
 
+    def is_tag(self):
+        return os.getenv("APPVEYOR_REPO_TAG", "false") != "false"
+
 
 class BambooManager(GenericManager):
 
@@ -161,7 +173,6 @@ class BambooManager(GenericManager):
             if result != None and os.getenv(result.group(1), None) == None:
                 self.printer.print_message("de-bambooized CONAN env var : %s " % result.group(1))
                 os.environ[result.group(1)] = os.environ[var]
-
 
     def get_branch(self):
         return os.getenv("bamboo_planRepository_branch", None)
@@ -179,6 +190,9 @@ class CircleCiManager(GenericManager):
     def is_pull_request(self):
         return os.getenv("CIRCLE_PULL_REQUEST", None)
 
+    def is_tag(self):
+        return os.getenv("CIRCLE_TAG", None)
+
 
 class GitlabManager(GenericManager):
 
@@ -188,6 +202,12 @@ class GitlabManager(GenericManager):
 
     def get_branch(self):
         return os.getenv("CI_BUILD_REF_NAME", None)
+
+    def is_pull_request(self):
+        return os.getenv("CI_MERGE_REQUEST_ID", None)
+
+    def is_tag(self):
+        return os.getenv("CI_COMMIT_TAG", None)
 
 
 class JenkinsManager(GenericManager):
