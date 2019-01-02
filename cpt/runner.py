@@ -58,7 +58,7 @@ class CreateRunner(object):
 
             with self.printer.foldable_output("conan_create"):
                 if client_version < Version("1.10.0"):
-                    name, version, user, channel= self._reference
+                    name, version, user, channel = self._reference
                 else:
                     name, version, user, channel, _ = self._reference
 

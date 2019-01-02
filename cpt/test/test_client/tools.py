@@ -1,13 +1,20 @@
 import six
+from conans import __version__ as client_version
 from conans.client.conan_api import Conan
+from conans.model.version import Version
 
 from cpt.packager import ConanMultiPackager
 
 
 def get_patched_multipackager(tc, *args, **kwargs):
     tc.init_dynamic_vars()
+
+    extra_init_kwargs = {}
+    if Version(client_version) >= Version("1.11"):
+        extra_init_kwargs.update({'requester': tc.requester})
+
     conan_api = Conan(tc.client_cache, tc.user_io, tc.runner, tc.remote_manager, tc.hook_manager,
-                      interactive=False)
+                      interactive=False, **extra_init_kwargs)
 
     class Printer(object):
 
