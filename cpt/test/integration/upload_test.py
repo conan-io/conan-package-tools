@@ -127,3 +127,15 @@ class Pkg(ConanFile):
             self.assertNotIn("already exist, keeping the current remote and its name", self.output)
             repo = self.api.get_remote_by_name("upload_repo")
             self.assertEquals(repo.url, "https://api.bintray.com/conan/conan-community/conan")
+
+    def test_upload_when_tag_is_false(self):
+        self.save_conanfile(self.conanfile)
+        with tools.environment_append({"CONAN_PASSWORD": "mypass",
+                                       "CONAN_UPLOAD_ONLY_WHEN_TAG": "1"}):
+            mp = ConanMultiPackager(username="lasote", out=self.output.write,
+                                    channel="my_channel",
+                                    ci_manager=self.ci_manager,
+                                    upload="https://api.bintray.com/conan/conan-community/conan",)
+            mp.add({}, {}, {})
+            mp.run()
+            self.assertIn("Skipping upload, not tag branch", self.output)

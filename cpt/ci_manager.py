@@ -81,6 +81,9 @@ class CIManager(object):
     def is_pull_request(self):
         return self.manager.is_pull_request()
 
+    def is_tag(self):
+        return self.manager.is_tag()
+
 
 class GenericManager(object):
 
