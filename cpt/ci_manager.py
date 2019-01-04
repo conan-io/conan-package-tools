@@ -83,6 +83,9 @@ class CIManager(object):
     def is_tag(self):
         return self.manager.is_tag()
 
+    def get_commit_id(self):
+        return self.manager.get_commit_id()
+
 
 class GenericManager(object):
     def __init__(self, printer):
@@ -91,6 +94,13 @@ class GenericManager(object):
     def get_commit_msg(self):
         try:
             msg = subprocess.check_output("git log -1 --format=%s%n%b", shell=True).decode().strip()
+            return msg
+        except Exception:
+            pass
+
+    def get_commit_id(self):
+        try:
+            msg = subprocess.check_output("git rev-parse HEAD", shell=True).decode().strip()
             return msg
         except Exception:
             pass
@@ -128,6 +138,9 @@ class TravisManager(GenericManager):
     def get_commit_msg(self):
         return os.getenv("TRAVIS_COMMIT_MESSAGE", None)
 
+    def get_commit_id(self):
+        return os.getenv("TRAVIS_COMMIT", None)
+
     def get_branch(self):
         return os.getenv("TRAVIS_BRANCH", None)
 
@@ -150,6 +163,9 @@ class AppveyorManager(GenericManager):
             if extended:
                 return commit + " " + extended
         return commit
+
+    def get_commit_id(self):
+        return os.getenv("APPVEYOR_REPO_COMMIT", None)
 
     def get_branch(self):
         if self.is_pull_request():
@@ -184,6 +200,9 @@ class CircleCiManager(GenericManager):
         super(CircleCiManager, self).__init__(printer)
         self.printer.print_message("CI detected: Circle CI")
 
+    def get_commit_id(self):
+        return os.getenv("CIRCLE_SHA1", None)
+
     def get_branch(self):
         return os.getenv("CIRCLE_BRANCH", None)
 
@@ -199,6 +218,12 @@ class GitlabManager(GenericManager):
         super(GitlabManager, self).__init__(printer)
         self.printer.print_message("CI detected: Gitlab")
 
+    def get_commit_msg(self):
+        return os.getenv("CI_COMMIT_TITLE", None)
+
+    def get_commit_id(self):
+        return os.getenv("CI_COMMIT_SHA", None)
+
     def get_branch(self):
         return os.getenv("CI_BUILD_REF_NAME", None)
 
@@ -213,6 +238,9 @@ class JenkinsManager(GenericManager):
     def __init__(self, printer):
         super(JenkinsManager, self).__init__(printer)
         self.printer.print_message("CI detected: Jenkins")
+
+    def get_commit_id(self):
+        return os.getenv("GIT_COMMIT", None)
 
     def get_branch(self):
         return os.getenv("BRANCH_NAME", None)
