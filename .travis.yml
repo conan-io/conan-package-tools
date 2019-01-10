@@ -1,10 +1,10 @@
+cache: pip
 language: python
 python:
     - 2.7
     - 3.6
 os: linux
-sudo: required
-dist: trusty
+dist: xenial
 
 matrix:
     include:
