@@ -602,6 +602,9 @@ class ConanMultiPackager(object):
                 return stable_channel
 
         if self.ci_manager.is_tag() and upload_when_tag:
+            self.printer.print_message("Info",
+                                           "Redefined channel by branch tag, "
+                                           "setting CONAN_CHANNEL to '%s'" % stable_channel)
             return stable_channel
 
         return specified_channel

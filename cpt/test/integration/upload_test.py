@@ -1,11 +1,15 @@
+import os
+import zipfile
+
 from conans.client import tools
 from conans.errors import ConanException
 from conans.test.utils.test_files import temp_folder
-from conans.test.utils.tools import TestClient
+from conans.test.utils.tools import TestClient, TestServer
 
 from cpt.test.integration.base import BaseTest
 from cpt.packager import ConanMultiPackager
 from cpt.test.unit.utils import MockCIManager
+from cpt.test.test_client.tools import get_patched_multipackager
 
 
 class UploadTest(BaseTest):
@@ -139,3 +143,26 @@ class Pkg(ConanFile):
             mp.add({}, {}, {})
             mp.run()
             self.assertIn("Skipping upload, not tag branch", self.output)
+
+    def test_upload_when_tag_is_true(self):
+        ts = TestServer(users={"user": "password"})
+        tc = TestClient(servers={"default": ts}, users={"default": [("user", "password")]})
+        tc.save({"conanfile.py": self.conanfile})
+
+        zip_path = os.path.join(tc.current_folder, 'config.zip')
+        zipf = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED)
+        zipf.close()
+
+        with tools.environment_append({"CONAN_UPLOAD": ts.fake_url, "CONAN_LOGIN_USERNAME": "user",
+                                 "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user",
+                                 "CONAN_CONFIG_URL": zip_path, "CONAN_UPLOAD_ONLY_WHEN_TAG": "1",
+                                 "TRAVIS": "1", "TRAVIS_TAG": "0.1"}):
+
+            mp = get_patched_multipackager(tc)
+            mp.add_common_builds(shared_option_name=False)
+            mp.run()
+
+            self.assertNotIn("Skipping upload, not tag branch", tc.out)
+            self.assertIn("Redefined channel by branch tag", tc.out)
+            self.assertIn("Uploading packages for 'lib/1.0@user/stable'", tc.out)
+            self.assertIn("Uploading package 1/1: 5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9 to 'default'", tc.out)
