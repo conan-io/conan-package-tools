@@ -28,7 +28,6 @@ def is_circle_ci():
 
 
 class CIManager(object):
-
     def __init__(self, printer):
 
         self.manager = None
@@ -86,7 +85,6 @@ class CIManager(object):
 
 
 class GenericManager(object):
-
     def __init__(self, printer):
         self.printer = printer
 
@@ -114,14 +112,15 @@ class GenericManager(object):
 
     def is_tag(self):
         try:
-            subprocess.check_call("git describe --exact-match --tags HEAD", shell=True)
-            return True
+            return True if \
+                subprocess.check_output("git tag -l --points-at HEAD",
+                                        shell=True).decode().splitlines() else False
         except Exception:
             pass
         return False
 
-class TravisManager(GenericManager):
 
+class TravisManager(GenericManager):
     def __init__(self, printer):
         super(TravisManager, self).__init__(printer)
         self.printer.print_message("- CI detected: Travis CI")
@@ -138,8 +137,8 @@ class TravisManager(GenericManager):
     def is_tag(self):
         return os.getenv("TRAVIS_TAG", None)
 
-class AppveyorManager(GenericManager):
 
+class AppveyorManager(GenericManager):
     def __init__(self, printer):
         super(AppveyorManager, self).__init__(printer)
         self.printer.print_message("- CI detected: Appveyor")
@@ -166,7 +165,6 @@ class AppveyorManager(GenericManager):
 
 
 class BambooManager(GenericManager):
-
     def __init__(self, printer):
         super(BambooManager, self).__init__(printer)
         self.printer.print_message("CI detected: Bamboo")
@@ -182,7 +180,6 @@ class BambooManager(GenericManager):
 
 
 class CircleCiManager(GenericManager):
-
     def __init__(self, printer):
         super(CircleCiManager, self).__init__(printer)
         self.printer.print_message("CI detected: Circle CI")
@@ -198,7 +195,6 @@ class CircleCiManager(GenericManager):
 
 
 class GitlabManager(GenericManager):
-
     def __init__(self, printer):
         super(GitlabManager, self).__init__(printer)
         self.printer.print_message("CI detected: Gitlab")
@@ -214,7 +210,6 @@ class GitlabManager(GenericManager):
 
 
 class JenkinsManager(GenericManager):
-
     def __init__(self, printer):
         super(JenkinsManager, self).__init__(printer)
         self.printer.print_message("CI detected: Jenkins")
