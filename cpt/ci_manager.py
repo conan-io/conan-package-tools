@@ -28,7 +28,6 @@ def is_circle_ci():
 
 
 class CIManager(object):
-
     def __init__(self, printer):
 
         self.manager = None
@@ -81,9 +80,11 @@ class CIManager(object):
     def is_pull_request(self):
         return self.manager.is_pull_request()
 
+    def is_tag(self):
+        return self.manager.is_tag()
+
 
 class GenericManager(object):
-
     def __init__(self, printer):
         self.printer = printer
 
@@ -109,9 +110,17 @@ class GenericManager(object):
     def is_pull_request(self):
         return None
 
+    def is_tag(self):
+        try:
+            return True if \
+                subprocess.check_output("git tag -l --points-at HEAD",
+                                        shell=True).decode().splitlines() else False
+        except Exception:
+            pass
+        return False
+
 
 class TravisManager(GenericManager):
-
     def __init__(self, printer):
         super(TravisManager, self).__init__(printer)
         self.printer.print_message("- CI detected: Travis CI")
@@ -125,9 +134,11 @@ class TravisManager(GenericManager):
     def is_pull_request(self):
         return os.getenv("TRAVIS_PULL_REQUEST", "false") != "false"
 
+    def is_tag(self):
+        return os.getenv("TRAVIS_TAG", None)
+
 
 class AppveyorManager(GenericManager):
-
     def __init__(self, printer):
         super(AppveyorManager, self).__init__(printer)
         self.printer.print_message("- CI detected: Appveyor")
@@ -149,9 +160,11 @@ class AppveyorManager(GenericManager):
     def is_pull_request(self):
         return os.getenv("APPVEYOR_PULL_REQUEST_NUMBER", None)
 
+    def is_tag(self):
+        return os.getenv("APPVEYOR_REPO_TAG", "false") != "false"
+
 
 class BambooManager(GenericManager):
-
     def __init__(self, printer):
         super(BambooManager, self).__init__(printer)
         self.printer.print_message("CI detected: Bamboo")
@@ -162,13 +175,11 @@ class BambooManager(GenericManager):
                 self.printer.print_message("de-bambooized CONAN env var : %s " % result.group(1))
                 os.environ[result.group(1)] = os.environ[var]
 
-
     def get_branch(self):
         return os.getenv("bamboo_planRepository_branch", None)
 
 
 class CircleCiManager(GenericManager):
-
     def __init__(self, printer):
         super(CircleCiManager, self).__init__(printer)
         self.printer.print_message("CI detected: Circle CI")
@@ -179,9 +190,11 @@ class CircleCiManager(GenericManager):
     def is_pull_request(self):
         return os.getenv("CIRCLE_PULL_REQUEST", None)
 
+    def is_tag(self):
+        return os.getenv("CIRCLE_TAG", None)
+
 
 class GitlabManager(GenericManager):
-
     def __init__(self, printer):
         super(GitlabManager, self).__init__(printer)
         self.printer.print_message("CI detected: Gitlab")
@@ -189,9 +202,14 @@ class GitlabManager(GenericManager):
     def get_branch(self):
         return os.getenv("CI_BUILD_REF_NAME", None)
 
+    def is_pull_request(self):
+        return os.getenv("CI_MERGE_REQUEST_ID", None)
+
+    def is_tag(self):
+        return os.getenv("CI_COMMIT_TAG", None)
+
 
 class JenkinsManager(GenericManager):
-
     def __init__(self, printer):
         super(JenkinsManager, self).__init__(printer)
         self.printer.print_message("CI detected: Jenkins")

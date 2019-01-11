@@ -83,6 +83,7 @@ class ConanMultiPackager(object):
                  clang_versions=None,
                  login_username=None,
                  upload_only_when_stable=None,
+                 upload_only_when_tag=None,
                  build_types=None,
                  skip_check_credentials=False,
                  allow_gcc_minors=False,
@@ -136,6 +137,11 @@ class ConanMultiPackager(object):
         else:
             self.upload_only_when_stable = get_bool_from_env("CONAN_UPLOAD_ONLY_WHEN_STABLE")
 
+        if upload_only_when_tag is not None:
+            self.upload_only_when_tag = upload_only_when_tag
+        else:
+            self.upload_only_when_tag = get_bool_from_env("CONAN_UPLOAD_ONLY_WHEN_TAG")
+
         self.uploader = Uploader(self.conan_api, self.remotes_manager, self.auth_manager,
                                  self.printer, self.upload_retry)
 
@@ -153,7 +159,7 @@ class ConanMultiPackager(object):
         self.specified_channel = self.specified_channel.rstrip()
         self.stable_channel = stable_channel or os.getenv("CONAN_STABLE_CHANNEL", "stable")
         self.stable_channel = self.stable_channel.rstrip()
-        self.channel = self._get_channel(self.specified_channel, self.stable_channel)
+        self.channel = self._get_channel(self.specified_channel, self.stable_channel, self.upload_only_when_tag)
         self.partial_reference = reference or os.getenv("CONAN_REFERENCE", None)
 
         if self.partial_reference:
@@ -445,8 +451,12 @@ class ConanMultiPackager(object):
         if not self.auth_manager.credentials_ready(self.remotes_manager.upload_remote_name):
             return False
 
+        if self.upload_only_when_tag and not self.ci_manager.is_tag():
+            self.printer.print_message("Skipping upload, not tag branch")
+            return False
+
         st_channel = self.stable_channel or "stable"
-        if self.upload_only_when_stable and self.channel != st_channel:
+        if self.upload_only_when_stable and self.channel != st_channel and not self.upload_only_when_tag:
             self.printer.print_message("Skipping upload, not stable channel")
             return False
 
@@ -572,7 +582,7 @@ class ConanMultiPackager(object):
 
         return "conanio/%s%s" % (compiler_name, compiler_version.replace(".", ""))
 
-    def _get_channel(self, specified_channel, stable_channel):
+    def _get_channel(self, specified_channel, stable_channel, upload_when_tag):
         if self.stable_branch_pattern:
             stable_patterns = [self.stable_branch_pattern]
         else:
@@ -590,5 +600,11 @@ class ConanMultiPackager(object):
                                            "setting CONAN_CHANNEL to '%s'" % (pattern,
                                                                               stable_channel))
                 return stable_channel
+
+        if self.ci_manager.is_tag() and upload_when_tag:
+            self.printer.print_message("Info",
+                                           "Redefined channel by branch tag, "
+                                           "setting CONAN_CHANNEL to '%s'" % stable_channel)
+            return stable_channel
 
         return specified_channel

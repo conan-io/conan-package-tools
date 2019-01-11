@@ -284,7 +284,7 @@ Use the `remove_build_if` helper with a lambda function to filter configurations
 
 
     from cpt.packager import ConanMultiPackager
-    
+
     builder = ConanMultiPackager(username="myuser")
     builder.add_common_builds()
     builder.remove_build_if(lambda build: build.settings["compiler.version"] == "4.6" and build.settings["build_type"] == "Debug")
@@ -293,14 +293,14 @@ Use the `update_build_if` helper with a lambda function to alter configurations:
 
 
     from cpt.packager import ConanMultiPackager
-    
+
     builder = ConanMultiPackager(username="myuser")
     builder.add_common_builds()
     builder.update_build_if(lambda build: build.settings["os"] == "Windows",
                             new_build_requires={"*": ["7zip_installer/0.1.0@conan/stable"]})
-    # Also avaiable parameters: 
-    #    new_settings, new_options, new_env_vars, new_build_requires, new_reference                       
-     
+    # Also avaiable parameters:
+    #    new_settings, new_options, new_env_vars, new_build_requires, new_reference
+
 
 Or you can directly iterate the builds to do any change. EX: Remove the GCC 4.6 packages with build_type=Debug:
 
@@ -990,8 +990,9 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **curpage**: Current page of packages to create
 - **total_pages**: Total number of pages
 - **vs10_x86_64_enabled**: Flag indicating whether or not to build for VS10 64bits. Default [False]
-- **upload_retry**: Num retries in upload in case of failure.             
+- **upload_retry**: Num retries in upload in case of failure.
 - **upload_only_when_stable**: Will try to upload only if the channel is the stable channel. Default [False]
+- **upload_only_when_tag**: Will try to upload only if the branch is a tag. Default [False]
 - **build_types**: List containing specific build types. Default ["Release", "Debug"]
 - **skip_check_credentials**: Conan will skip checking the user credentials before building the packages. And if no user/remote is specified, will try to upload with the
   already stored credentiales in the local cache. Default [False]
@@ -1022,7 +1023,7 @@ Upload related parameters:
 
 - **reference**: Reference of the package to upload. Ex: "zlib/1.2.8". If not specified it will be read from the `conanfile.py`.
 - **remote**: Alternative remote name. Default "default"
-- **stable_branch_pattern**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *stable* channel. 
+- **stable_branch_pattern**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *stable* channel.
   By default it will check the following patterns: ``["master$", "release*", "stable*"]``
 - **stable_channel**: Stable channel, default "stable".
 - **channel**: Channel where your packages will be uploaded if previous parameter doesn't match
@@ -1091,6 +1092,7 @@ This is especially useful for CI integration.
 
 - **CONAN_UPLOAD_RETRY**: If defined, in case of fail retries to upload again the specified times
 - **CONAN_UPLOAD_ONLY_WHEN_STABLE**: If defined, will try to upload the packages only when the current channel is the stable one.
+- **CONAN_UPLOAD_ONLY_WHEN_TAG**: If defined, will try to upload the packages only when the current branch is a tag.
 
 - **CONAN_SKIP_CHECK_CREDENTIALS**: Conan will skip checking the user credentials before building the packages. And if no user/remote is specified, will try to upload with the
   already stored credentiales in the local cache. Default [False]
