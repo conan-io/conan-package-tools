@@ -317,6 +317,25 @@ Or you can directly iterate the builds to do any change. EX: Remove the GCC 4.6 
         builder.run()
 
 
+## Package Version based on Commit Checksum
+
+Sometimes you want to use Conan as [in-source](https://docs.conan.io/en/latest/creating_packages/package_repo.html) but you do not need to specify a version in the recipe, it could be configured by your build environment. Usually you could use the branch name as the package version, but if you want to create unique packages for each new build, upload it and do not override on your remote, you will need to use a new version for each build. In this case, the branch name will not be enough, so a possible approach is to use your current commit checksum as version:
+
+
+    from cpt.packager import ConanMultiPackager
+    from cpt.ci_manager import CIManager
+    from cpt.printer import Printer
+
+
+    if __name__ == "__main__":
+        printer = Printer()
+        ci_manager = CIManager(printer)
+        builder = ConanMultiPackager(reference="mypackage/{}".format(ci_manager.get_commit_id()[:7]))
+        builder.add_common_builds()
+        builder.run()
+
+As SHA-1 is 40 digits long, you could format the result to short size
+
 
 ## Using Docker
 
