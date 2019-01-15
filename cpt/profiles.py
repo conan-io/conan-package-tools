@@ -3,8 +3,9 @@ import tempfile
 
 from conans.client import tools
 from conans.client.profile_loader import _load_profile
+from conans.model.version import Version
 from conans.util.files import save
-
+from conans import __version__ as conan_version
 
 def get_profiles(client_cache, build_config, base_profile_name=None):
 
@@ -52,8 +53,13 @@ def patch_default_base_profile(conan_api, profile_abs_path):
     is other, we have to change the include"""
     text = tools.load(profile_abs_path)
     if "include(default)" in text:  # User didn't specified a custom profile
-        default_profile_name = os.path.basename(conan_api._client_cache.default_profile_path)
-        if not os.path.exists(conan_api._client_cache.default_profile_path):
+        if Version(conan_version) < Version("1.12.0-dev"):
+            cache = conan_api._client_cache
+        else:
+            cache = conan_api._cache
+
+        default_profile_name = os.path.basename(cache.default_profile_path)
+        if not os.path.exists(cache.default_profile_path):
             conan_api.create_profile(default_profile_name, detect=True)
 
         if default_profile_name != "default":  # User have a different default profile name
