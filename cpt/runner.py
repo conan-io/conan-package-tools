@@ -32,7 +32,13 @@ class CreateRunner(object):
         self._config_url = config_url
 
         patch_default_base_profile(conan_api, profile_abs_path)
-        self._profile = load_profile(profile_abs_path, self._conan_api._client_cache)
+
+        if Version(client_version) < Version("1.12.0-dev"):
+            cache = self._conan_api._client_cache
+        else:
+            cache = self._conan_api._cache
+
+        self._profile = load_profile(profile_abs_path, cache)
 
     @property
     def settings(self):

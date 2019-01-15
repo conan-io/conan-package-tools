@@ -34,7 +34,7 @@ class MockConanAPI(object):
 
     def __init__(self):
         self.calls = []
-        self._client_cache = MockConanCache()
+        self._client_cache = self._cache = MockConanCache()
 
     def create(self, *args, **kwargs):
         self.calls.append(Action("create", args, kwargs))
