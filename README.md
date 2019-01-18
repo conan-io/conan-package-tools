@@ -401,6 +401,15 @@ Also, it's possible to run some internal script, before to build the package:
         builder.add_common_builds()
         builder.run()
 
+### Using with your own Docker images
+The default location inside the Docker container is `/home/conan` on Linux and
+`C:\Users\ContainerAdministrator` on Windows. This is fine if you use the conan
+Docker images but if you are using your own image, these locations probably won't
+exist.
+
+To use a different location, you can use the option `docker_conan_home` or the
+environment variable `CONAN_DOCKER_HOME`.
+
 ### Installing extra python packages before to build
 
 Maybe you need to install some python packages using pip before to build your conan package. To solve this situation
@@ -999,6 +1008,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **mingw_configurations**: Configurations for MinGW
 - **archs**: List containing specific architectures to build for. Default ["x86", "x86_64"]
 - **use_docker**: Use docker for package creation in Linux systems.
+- **docker_conan_home**: Location where package source files will be copied to inside the Docker container
 - **docker_image_skip_update**: If defined, it will skip the initialization update of "conan package tools" and "conan" in the docker image. By default is False.
 - **docker_image_skip_pull**: If defined, it will skip the "docker pull" command, enabling a local image to be used, and without being overwritten.
 - **always_update_conan_in_docker**: If True, "conan package tools" and "conan" will be installed and upgraded in the docker image in every build execution.
@@ -1130,6 +1140,7 @@ This is especially useful for CI integration.
 - **CONAN_CURRENT_PAGE**:  Current page of packages to create
 - **CONAN_TOTAL_PAGES**: Total number of pages
 - **CONAN_DOCKER_IMAGE**: If defined and docker is being used, it will use this dockerimage instead of the default images, e.g. "conanio/gcc63"
+- **CONAN_DOCKER_HOME**: Location where package source files will be copied to inside the Docker container
 - **CONAN_DOCKER_IMAGE_SKIP_UPDATE**: If defined, it will skip the initialization update of "conan package tools" and "conan" in the docker image. By default is False.
 - **CONAN_DOCKER_IMAGE_SKIP_PULL**: If defined, it will skip the "docker pull" command, enabling a local image to be used, and without being overwritten.
 - **CONAN_ALWAYS_UPDATE_CONAN_DOCKER**: If defined, "conan package tools" and "conan" will be installed and upgraded in the docker image in every build execution
