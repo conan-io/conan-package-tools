@@ -92,6 +92,7 @@ class ConanMultiPackager(object):
                  docker_image_skip_pull=False,
                  docker_entry_script=None,
                  docker_32_images=None,
+                 docker_conan_home=None,
                  pip_install=None,
                  build_policy=None,
                  always_update_conan_in_docker=False,
@@ -186,6 +187,8 @@ class ConanMultiPackager(object):
         self.use_docker = (use_docker or os.getenv("CONAN_USE_DOCKER", False) or
                            self._docker_image is not None)
 
+        self.docker_conan_home = docker_conan_home or os.getenv("CONAN_DOCKER_HOME", None)
+
         os_name = self._platform_info.system() if not self.use_docker else "Linux"
         self.build_generator = BuildGenerator(reference, os_name, gcc_versions,
                                               apple_clang_versions, clang_versions,
@@ -217,13 +220,14 @@ class ConanMultiPackager(object):
             self.sudo_pip_command = "sudo -E"
 
         self.docker_shell = ""
-        self.docker_conan_home = ""
 
         if self.is_wcow:
-            self.docker_conan_home = "C:/Users/ContainerAdministrator"
+            if self.docker_conan_home is None:
+                self.docker_conan_home = "C:/Users/ContainerAdministrator"
             self.docker_shell = "cmd /C"
         else:
-            self.docker_conan_home = "/home/conan"
+            if self.docker_conan_home is None:
+                self.docker_conan_home = "/home/conan"
             self.docker_shell = "/bin/sh -c"
 
         self.docker_platform_param = ""
