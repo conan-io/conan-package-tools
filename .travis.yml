@@ -1,23 +1,129 @@
-cache: pip
+sudo: false
 language: python
-python:
-    - 2.7
-    - 3.6
-os: linux
-dist: xenial
+dist: trusty
 
-matrix:
-    include:
-        - language: generic
-          os: osx
-          env: PYVER=py27
+jobs:
+  fast_finish: true
+  include:
 
-# command to install dependencies
+    - stage: Conan develop - Linux
+      name: Conan develop - Linux - Python 3.7
+      python: 3.7
+      env: TOXENV=py37-conandev
+      dist: xenial
+      sudo: true
+    - name: Conan develop - Linux - Python 2.7
+      python: 2.7
+      env: TOXENV=py27-conandev
+
+    - stage: Conan 1.12 - Linux
+      python: 2.7
+      env: TOXENV=py27-conan120
+    - python: 3.4
+      env: TOXENV=py34-conan120
+    - python: 3.6
+      env: TOXENV=py36-conan120
+    - python: 3.7
+      env: TOXENV=py37-conan120
+      dist: xenial
+      sudo: true
+
+    - stage: Conan 1.11 - Linux
+      python: 2.7
+      env: TOXENV=py27-conan111
+    - python: 3.4
+      env: TOXENV=py34-conan111
+    - python: 3.6
+      env: TOXENV=py36-conan111
+    - python: 3.7
+      env: TOXENV=py37-conan111
+      dist: xenial
+      sudo: true
+
+    - stage: Conan 1.10 - Linux
+      python: 2.7
+      env: TOXENV=py27-conan110
+    - python: 3.4
+      env: TOXENV=py34-conan110
+    - python: 3.6
+      env: TOXENV=py36-conan110
+    - python: 3.7
+      env: TOXENV=py37-conan110
+      dist: xenial
+      sudo: true
+
+    - stage: Conan 1.9 - Linux
+      python: 2.7
+      env: TOXENV=py27-conan109
+    - python: 3.4
+      env: TOXENV=py34-conan109
+    - python: 3.6
+      env: TOXENV=py36-conan109
+    - python: 3.7
+      env: TOXENV=py37-conan109
+      dist: xenial
+      sudo: true
+
+    # Macos is slow, only if everything has passed
+    - stage: Macos - all Conan versions
+      language: generic
+      os: osx
+      osx_image: xcode8.3
+      env: PYVER=py27 TOXENV=py27-conan120
+    - language: generic
+      os: osx
+      osx_image: xcode8.3
+      env: PYVER=py37 TOXENV=py37-conan120
+
+    - language: generic
+      os: osx
+      osx_image: xcode8.3
+      env: PYVER=py27 TOXENV=py27-conan111
+    - language: generic
+      os: osx
+      osx_image: xcode8.3
+      env: PYVER=py37 TOXENV=py37-conan111
+
+    - language: generic
+      os: osx
+      osx_image: xcode8.3
+      env: PYVER=py27 TOXENV=py27-conan110
+    - language: generic
+      os: osx
+      osx_image: xcode8.3
+      env: PYVER=py37 TOXENV=py37-conan110
+
+    - language: generic
+      os: osx
+      osx_image: xcode8.3
+      env: PYVER=py27 TOXENV=py27-conan109
+    - language: generic
+      os: osx
+      osx_image: xcode8.3
+      env: PYVER=py37 TOXENV=py37-conan109
+
+    - name: Conan develop - Mac - Python 3.7
+      language: generic
+      os: osx
+      osx_image: xcode8.3
+      env: PYVER=py37 TOXENV=py37-conandev
+
+before_install:
+  - .ci/travis/before_install.sh
+
 install:
-  - ./.ci/travis/install.sh
-before_script:
-  - export PYTHONPATH=$PYTHONPATH:$(pwd)
-  - export CONAN_TEST_SUITE=1
-# command to run tests
+  - |
+    if [[ "$(uname -s)" == 'Darwin' ]]; then
+      if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
+      pyenv activate conan;
+    fi
+  - pip install --upgrade pip
+  - pip install -r .ci/travis/requirements_travis.txt
+
 script:
-  - ./.ci/travis/run.sh
+  - |
+    if [[ "$(uname -s)" == 'Darwin' ]]; then
+      if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
+      pyenv activate conan
+    fi
+  - tox
