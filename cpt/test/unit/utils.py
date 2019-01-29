@@ -1,9 +1,11 @@
 import os
 from collections import namedtuple
 
+from conans import __version__ as conan_version
 from conans import tools
 from conans.test.utils.test_files import temp_folder
 from conans.util.files import save
+from conans.model.version import Version
 
 
 class MockRunner(object):
@@ -80,7 +82,10 @@ class MockConanAPI(object):
         if call.name != "create":
             raise Exception("Invalid test, not contains a create: %s" % self.calls)
         from conans.client.profile_loader import read_profile
-        profile_name = call.kwargs["profile_name"]
+        if Version(conan_version) < Version("1.12.0"):
+            profile_name = call.kwargs["profile_name"]
+        else:
+            profile_name = call.kwargs["profile_names"][0]
         tools.replace_in_file(profile_name, "include", "#include")
         return read_profile(profile_name, os.path.dirname(profile_name), None)[0]
 
