@@ -50,3 +50,7 @@ fi
 
 pip install -r cpt/requirements.txt
 pip install -r cpt/requirements_test.txt
+
+if [[ "$(uname -s)" == 'Darwin' ]]; then
+    pip install conan -U
+fi
