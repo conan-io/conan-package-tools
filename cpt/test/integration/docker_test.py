@@ -20,7 +20,7 @@ class DockerTest(BaseTest):
     @unittest.skipUnless(sys.platform.startswith("linux"), "Requires Linux")
     def test_docker(self):
         if not os.getenv("PYPI_PASSWORD", None):
-            return()
+            return
         self.deploy_pip()
         ci_manager = MockCIManager()
         unique_ref = "zlib/%s" % str(time.time())
