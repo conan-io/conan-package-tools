@@ -33,5 +33,6 @@ environment:
 install:
   - .ci/appveyor/install.bat
 test_script:
+  - set
   - .ci/appveyor/test.bat
 
