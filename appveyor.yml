@@ -1,11 +1,42 @@
+build: false
+
 environment:
   matrix:
     - PYTHON: "C:\\Python27"
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      TOXENV: py27-conan120
     - PYTHON: "C:\\Python35"
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      TOXENV: py35-conan120
 
-build: false
+    - PYTHON: "C:\\Python27"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      TOXENV: py27-conan120
+    - PYTHON: "C:\\Python35"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      TOXENV: py35-conan120
+
+    - PYTHON: "C:\\Python27"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      TOXENV: py27-conan111
+    - PYTHON: "C:\\Python35"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      TOXENV: py35-conan111
+
+    - PYTHON: "C:\\Python27"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      TOXENV: py27-conan110
+    - PYTHON: "C:\\Python35"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      TOXENV: py35-conan110
+
+    - PYTHON: "C:\\Python27"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      TOXENV: py27-conan109
+    - PYTHON: "C:\\Python35"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      TOXENV: py35-conan109
+
 install:
   - .ci/appveyor/install.bat
 test_script:
