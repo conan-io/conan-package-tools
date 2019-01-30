@@ -96,18 +96,7 @@ before_install:
   - .ci/travis/before_install.sh
 
 install:
-  - |
-    if [[ "$(uname -s)" == 'Darwin' ]]; then
-      if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
-      pyenv activate conan;
-    fi
-  - pip install --upgrade pip
-  - pip install -r .ci/travis/requirements_travis.txt
+  - .ci/travis/install.sh
 
 script:
-  - |
-    if [[ "$(uname -s)" == 'Darwin' ]]; then
-      if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
-      pyenv activate conan
-    fi
-  - tox
+  - .ci/travis/run.sh
