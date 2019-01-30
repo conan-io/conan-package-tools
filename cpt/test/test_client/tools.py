@@ -14,7 +14,7 @@ def get_patched_multipackager(tc, *args, **kwargs):
     if Version(client_version) >= Version("1.11"):
         extra_init_kwargs.update({'requester': tc.requester})
 
-    if Version(conan_version) < Version("1.12.0-dev"):
+    if Version(conan_version) < Version("1.12.0"):
         cache = tc.client_cache
     else:
         cache = tc.cache

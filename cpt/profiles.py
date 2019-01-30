@@ -53,7 +53,7 @@ def patch_default_base_profile(conan_api, profile_abs_path):
     is other, we have to change the include"""
     text = tools.load(profile_abs_path)
     if "include(default)" in text:  # User didn't specified a custom profile
-        if Version(conan_version) < Version("1.12.0-dev"):
+        if Version(conan_version) < Version("1.12.0"):
             cache = conan_api._client_cache
         else:
             cache = conan_api._cache
