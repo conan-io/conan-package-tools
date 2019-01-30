@@ -92,9 +92,6 @@ jobs:
       osx_image: xcode8.3
       env: PYVER=py37 TOXENV=py37-conan109
 
-before_install:
-  - .ci/travis/before_install.sh
-
 install:
   - .ci/travis/install.sh
 
