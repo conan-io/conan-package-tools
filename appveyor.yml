@@ -11,13 +11,6 @@ environment:
 
     - PYTHON: "C:\\Python27"
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      TOXENV: py27-conan120
-    - PYTHON: "C:\\Python35"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      TOXENV: py35-conan120
-
-    - PYTHON: "C:\\Python27"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       TOXENV: py27-conan111
     - PYTHON: "C:\\Python35"
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
