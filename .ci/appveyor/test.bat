@@ -1,3 +1,3 @@
 conan user
 mkdir %HOMEPATH%/.conan/data
-tox
+tox -e %TOXENV%
