@@ -6,91 +6,30 @@ jobs:
   fast_finish: true
   include:
 
+    - stage: Conan Development - Linux
+      python: 2.7
+      env: TOXENV=py27-conandev
+    - python: 3.7
+      env: TOXENV=py37-conandev
+      dist: xenial
+
     - stage: Conan 1.12 - Linux
       python: 2.7
       env: TOXENV=py27-conan120
-    - python: 3.4
-      env: TOXENV=py34-conan120
-    - python: 3.6
-      env: TOXENV=py36-conan120
     - python: 3.7
       env: TOXENV=py37-conan120
       dist: xenial
-      sudo: true
-
-    - stage: Conan 1.11 - Linux
-      python: 2.7
-      env: TOXENV=py27-conan111
-    - python: 3.4
-      env: TOXENV=py34-conan111
-    - python: 3.6
-      env: TOXENV=py36-conan111
-    - python: 3.7
-      env: TOXENV=py37-conan111
-      dist: xenial
-      sudo: true
-
-    - stage: Conan 1.10 - Linux
-      python: 2.7
-      env: TOXENV=py27-conan110
-    - python: 3.4
-      env: TOXENV=py34-conan110
-    - python: 3.6
-      env: TOXENV=py36-conan110
-    - python: 3.7
-      env: TOXENV=py37-conan110
-      dist: xenial
-      sudo: true
-
-    - stage: Conan 1.9 - Linux
-      python: 2.7
-      env: TOXENV=py27-conan109
-    - python: 3.4
-      env: TOXENV=py34-conan109
-    - python: 3.6
-      env: TOXENV=py36-conan109
-    - python: 3.7
-      env: TOXENV=py37-conan109
-      dist: xenial
-      sudo: true
 
     # Macos is slow, only if everything has passed
     - stage: Macos - all Conan versions
       language: generic
       os: osx
       osx_image: xcode8.3
-      env: PYVER=py27 TOXENV=py27-conan120
+      env: PYVER=py27 TOXENV=py27-conandev
     - language: generic
       os: osx
       osx_image: xcode8.3
-      env: PYVER=py37 TOXENV=py37-conan120
-
-    - language: generic
-      os: osx
-      osx_image: xcode8.3
-      env: PYVER=py27 TOXENV=py27-conan111
-    - language: generic
-      os: osx
-      osx_image: xcode8.3
-      env: PYVER=py37 TOXENV=py37-conan111
-
-    - language: generic
-      os: osx
-      osx_image: xcode8.3
-      env: PYVER=py27 TOXENV=py27-conan110
-    - language: generic
-      os: osx
-      osx_image: xcode8.3
-      env: PYVER=py37 TOXENV=py37-conan110
-
-    - language: generic
-      os: osx
-      osx_image: xcode8.3
-      env: PYVER=py27 TOXENV=py27-conan109
-    - language: generic
-      os: osx
-      osx_image: xcode8.3
-      env: PYVER=py37 TOXENV=py37-conan109
+      env: PYVER=py37 TOXENV=py37-conandev
 
 install:
   - .ci/travis/install.sh

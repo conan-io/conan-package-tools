@@ -17,22 +17,6 @@ if [[ "$(uname -s)" == 'Darwin' ]]; then
             pyenv install 2.7.10
             pyenv virtualenv 2.7.10 conan
             ;;
-        py33)
-            pyenv install 3.3.6
-            pyenv virtualenv 3.3.6 conan
-            ;;
-        py34)
-            pyenv install 3.4.3
-            pyenv virtualenv 3.4.3 conan
-            ;;
-        py35)
-            pyenv install 3.5.0
-            pyenv virtualenv 3.5.0 conan
-            ;;
-        py36)
-            pyenv install 3.6.0
-            pyenv virtualenv 3.6.0 conan
-            ;;
         py37)
             pyenv install 3.7.1
             pyenv virtualenv 3.7.1 conan
@@ -50,7 +34,3 @@ fi
 
 pip install -r cpt/requirements.txt
 pip install -r cpt/requirements_test.txt
-
-if [[ "$(uname -s)" == 'Darwin' ]]; then
-    pip install conan -U
-fi
