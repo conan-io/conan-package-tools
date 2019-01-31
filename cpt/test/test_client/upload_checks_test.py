@@ -1,4 +1,6 @@
 import unittest
+import os
+import zipfile
 
 from conans.client.tools import environment_append
 from conans.test.utils.tools import TestClient, TestServer
@@ -53,3 +55,48 @@ class Pkg(ConanFile):
             self.assertIn("Uploading package 1/2", tc.out)
             self.assertIn("Uploading package 2/2", tc.out)
             self.assertIn("HALLO", tc.out)
+
+    def test_upload_when_tag_is_false(self):
+        ts = TestServer(users={"user": "password"})
+        tc = TestClient(servers={"default": ts}, users={"default": [("user", "password")]})
+        tc.save({"conanfile.py": self.conanfile})
+
+        zip_path = os.path.join(tc.current_folder, 'config.zip')
+        zipf = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED)
+        zipf.close()
+
+        with environment_append({"CONAN_UPLOAD": ts.fake_url, "CONAN_LOGIN_USERNAME": "user",
+                                 "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user",
+                                 "CONAN_CONFIG_URL": zip_path, "CONAN_UPLOAD_ONLY_WHEN_TAG": "1"}):
+
+            mp = get_patched_multipackager(tc, exclude_vcvars_precommand=True)
+            mp.add_common_builds(shared_option_name=False)
+            mp.run()
+
+            self.assertNotIn("Redefined channel by branch tag", tc.out)
+            self.assertNotIn("Uploading packages for 'lib/1.0@user/stable'", tc.out)
+            self.assertNotIn("Uploading package 1/1: 5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9 to 'default'", tc.out)
+            self.assertIn("Skipping upload, not tag branch", tc.out)
+
+    def test_upload_when_tag_is_true(self):
+        ts = TestServer(users={"user": "password"})
+        tc = TestClient(servers={"default": ts}, users={"default": [("user", "password")]})
+        tc.save({"conanfile.py": self.conanfile})
+
+        zip_path = os.path.join(tc.current_folder, 'config.zip')
+        zipf = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED)
+        zipf.close()
+
+        with environment_append({"CONAN_UPLOAD": ts.fake_url, "CONAN_LOGIN_USERNAME": "user",
+                                 "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user",
+                                 "CONAN_CONFIG_URL": zip_path, "CONAN_UPLOAD_ONLY_WHEN_TAG": "1",
+                                 "TRAVIS": "1", "TRAVIS_TAG": "0.1"}):
+
+            mp = get_patched_multipackager(tc, exclude_vcvars_precommand=True)
+            mp.add_common_builds(shared_option_name=False)
+            mp.run()
+
+            self.assertNotIn("Skipping upload, not tag branch", tc.out)
+            self.assertIn("Redefined channel by branch tag", tc.out)
+            self.assertIn("Uploading packages for 'lib/1.0@user/stable'", tc.out)
+            self.assertIn("Uploading package 1/1: 5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9 to 'default'", tc.out)

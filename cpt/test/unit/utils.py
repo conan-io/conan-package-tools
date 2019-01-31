@@ -1,9 +1,11 @@
 import os
 from collections import namedtuple
 
+from conans import __version__ as conan_version
 from conans import tools
 from conans.test.utils.test_files import temp_folder
 from conans.util.files import save
+from conans.model.version import Version
 
 
 class MockRunner(object):
@@ -34,7 +36,7 @@ class MockConanAPI(object):
 
     def __init__(self):
         self.calls = []
-        self._client_cache = MockConanCache()
+        self._client_cache = self._cache = MockConanCache()
 
     def create(self, *args, **kwargs):
         self.calls.append(Action("create", args, kwargs))
@@ -80,7 +82,10 @@ class MockConanAPI(object):
         if call.name != "create":
             raise Exception("Invalid test, not contains a create: %s" % self.calls)
         from conans.client.profile_loader import read_profile
-        profile_name = call.kwargs["profile_name"]
+        if Version(conan_version) < Version("1.12.0"):
+            profile_name = call.kwargs["profile_name"]
+        else:
+            profile_name = call.kwargs["profile_names"][0]
         tools.replace_in_file(profile_name, "include", "#include")
         return read_profile(profile_name, os.path.dirname(profile_name), None)[0]
 
@@ -99,11 +104,12 @@ class MockConanAPI(object):
 
 class MockCIManager(object):
 
-    def __init__(self, current_branch=None, build_policy=None, skip_builds=False, is_pull_request=False):
+    def __init__(self, current_branch=None, build_policy=None, skip_builds=False, is_pull_request=False, is_tag=False):
         self._current_branch = current_branch
         self._build_policy = build_policy
         self._skip_builds = skip_builds
         self._is_pr = is_pull_request
+        self._is_tag = is_tag
 
     def get_commit_build_policy(self):
         return self._build_policy
@@ -113,6 +119,9 @@ class MockCIManager(object):
 
     def is_pull_request(self):
         return self._is_pr
+
+    def is_tag(self):
+        return self._is_tag
 
     def get_branch(self):
         return self._current_branch

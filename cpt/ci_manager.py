@@ -28,7 +28,6 @@ def is_circle_ci():
 
 
 class CIManager(object):
-
     def __init__(self, printer):
 
         self.manager = None
@@ -81,15 +80,27 @@ class CIManager(object):
     def is_pull_request(self):
         return self.manager.is_pull_request()
 
+    def is_tag(self):
+        return self.manager.is_tag()
+
+    def get_commit_id(self):
+        return self.manager.get_commit_id()
+
 
 class GenericManager(object):
-
     def __init__(self, printer):
         self.printer = printer
 
     def get_commit_msg(self):
         try:
             msg = subprocess.check_output("git log -1 --format=%s%n%b", shell=True).decode().strip()
+            return msg
+        except Exception:
+            pass
+
+    def get_commit_id(self):
+        try:
+            msg = subprocess.check_output("git rev-parse HEAD", shell=True).decode().strip()
             return msg
         except Exception:
             pass
@@ -109,9 +120,17 @@ class GenericManager(object):
     def is_pull_request(self):
         return None
 
+    def is_tag(self):
+        try:
+            return True if \
+                subprocess.check_output("git tag -l --points-at HEAD",
+                                        shell=True).decode().splitlines() else False
+        except Exception:
+            pass
+        return False
+
 
 class TravisManager(GenericManager):
-
     def __init__(self, printer):
         super(TravisManager, self).__init__(printer)
         self.printer.print_message("- CI detected: Travis CI")
@@ -119,15 +138,20 @@ class TravisManager(GenericManager):
     def get_commit_msg(self):
         return os.getenv("TRAVIS_COMMIT_MESSAGE", None)
 
+    def get_commit_id(self):
+        return os.getenv("TRAVIS_COMMIT", None)
+
     def get_branch(self):
         return os.getenv("TRAVIS_BRANCH", None)
 
     def is_pull_request(self):
         return os.getenv("TRAVIS_PULL_REQUEST", "false") != "false"
 
+    def is_tag(self):
+        return os.getenv("TRAVIS_TAG", None)
+
 
 class AppveyorManager(GenericManager):
-
     def __init__(self, printer):
         super(AppveyorManager, self).__init__(printer)
         self.printer.print_message("- CI detected: Appveyor")
@@ -140,6 +164,9 @@ class AppveyorManager(GenericManager):
                 return commit + " " + extended
         return commit
 
+    def get_commit_id(self):
+        return os.getenv("APPVEYOR_REPO_COMMIT", None)
+
     def get_branch(self):
         if self.is_pull_request():
             return None
@@ -149,29 +176,32 @@ class AppveyorManager(GenericManager):
     def is_pull_request(self):
         return os.getenv("APPVEYOR_PULL_REQUEST_NUMBER", None)
 
+    def is_tag(self):
+        return os.getenv("APPVEYOR_REPO_TAG", "false") != "false"
+
 
 class BambooManager(GenericManager):
-
     def __init__(self, printer):
         super(BambooManager, self).__init__(printer)
         self.printer.print_message("CI detected: Bamboo")
 
         for var in list(os.environ.keys()):
-            result = re.match('\Abamboo_(CONAN.*)', var)
+            result = re.match('\A[bB][aA][mM][bB][oO][oO]_(CONAN.*)', var)
             if result != None and os.getenv(result.group(1), None) == None:
                 self.printer.print_message("de-bambooized CONAN env var : %s " % result.group(1))
                 os.environ[result.group(1)] = os.environ[var]
-
 
     def get_branch(self):
         return os.getenv("bamboo_planRepository_branch", None)
 
 
 class CircleCiManager(GenericManager):
-
     def __init__(self, printer):
         super(CircleCiManager, self).__init__(printer)
         self.printer.print_message("CI detected: Circle CI")
+
+    def get_commit_id(self):
+        return os.getenv("CIRCLE_SHA1", None)
 
     def get_branch(self):
         return os.getenv("CIRCLE_BRANCH", None)
@@ -179,22 +209,38 @@ class CircleCiManager(GenericManager):
     def is_pull_request(self):
         return os.getenv("CIRCLE_PULL_REQUEST", None)
 
+    def is_tag(self):
+        return os.getenv("CIRCLE_TAG", None)
+
 
 class GitlabManager(GenericManager):
-
     def __init__(self, printer):
         super(GitlabManager, self).__init__(printer)
         self.printer.print_message("CI detected: Gitlab")
 
+    def get_commit_msg(self):
+        return os.getenv("CI_COMMIT_TITLE", None)
+
+    def get_commit_id(self):
+        return os.getenv("CI_COMMIT_SHA", None)
+
     def get_branch(self):
         return os.getenv("CI_BUILD_REF_NAME", None)
 
+    def is_pull_request(self):
+        return os.getenv("CI_MERGE_REQUEST_ID", None)
+
+    def is_tag(self):
+        return os.getenv("CI_COMMIT_TAG", None)
+
 
 class JenkinsManager(GenericManager):
-
     def __init__(self, printer):
         super(JenkinsManager, self).__init__(printer)
         self.printer.print_message("CI detected: Jenkins")
+
+    def get_commit_id(self):
+        return os.getenv("GIT_COMMIT", None)
 
     def get_branch(self):
         return os.getenv("BRANCH_NAME", None)

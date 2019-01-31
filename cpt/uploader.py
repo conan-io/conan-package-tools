@@ -36,7 +36,7 @@ class Uploader(object):
                                       remote_name=remote_name,
                                       force=True,
                                       retry=int(self._upload_retry))
-            elif Version(client_version) < Version("1.12.0"):
+            elif Version(client_version) < Version("1.13.0"):
                 self.conan_api.upload(str(reference),
                                       all_packages=True,
                                       remote_name=remote_name,

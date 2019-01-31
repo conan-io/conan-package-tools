@@ -20,7 +20,7 @@ class DockerTest(BaseTest):
     @unittest.skipUnless(sys.platform.startswith("linux"), "Requires Linux")
     def test_docker(self):
         if not os.getenv("PYPI_PASSWORD", None):
-            return 
+            return
         self.deploy_pip()
         ci_manager = MockCIManager()
         unique_ref = "zlib/%s" % str(time.time())
@@ -68,6 +68,8 @@ class Pkg(ConanFile):
         else:
             results = self.api.search_recipes(search_pattern, remote_name="upload_repo")["results"][0]["items"]
             self.assertEquals(len(results), 1)
+            if Version(client_version) >= Version("1.12.0"):
+                ref = repr(ref)
             packages = self.api.search_packages(ref, remote_name="upload_repo")["results"][0]["items"][0]["packages"]
             self.assertEquals(len(packages), 2)
             self.api.authenticate(name=CONAN_LOGIN_UPLOAD, password=CONAN_UPLOAD_PASSWORD,

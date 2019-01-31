@@ -26,7 +26,7 @@ class CIManagerTest(unittest.TestCase):
     def test_skip(self):
         with tools.environment_append({"TRAVIS": "1",
                                        "TRAVIS_COMMIT_MESSAGE": "[skip ci]",
-                                       "TRAVIS_BRANCH": "mybranch",
+                                       "TRAVIS_BRANCH": "mybranch"
                                        }):
             packager = ConanMultiPackager(username="dori", reference="lib/1.0")
             # Constructor skipped
@@ -45,20 +45,24 @@ class CIManagerTest(unittest.TestCase):
         with tools.environment_append({"TRAVIS": "1",
                                        "TRAVIS_COMMIT_MESSAGE": "msg",
                                        "TRAVIS_BRANCH": "mybranch",
+                                       "TRAVIS_COMMIT": "506c89117650bb12252db26d35b8c2385411f175"
                                        }):
             manager = CIManager(self.printer)
             self.assertEquals(manager.get_branch(), "mybranch")
             self.assertEquals(manager.get_commit_msg(), "msg")
+            self.assertEquals(manager.get_commit_id(), "506c89117650bb12252db26d35b8c2385411f175")
 
         # Appveyor
         with tools.environment_append({"APPVEYOR": "1",
                                        "APPVEYOR_REPO_COMMIT_MESSAGE": "msg",
                                        "APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED": "more",
                                        "APPVEYOR_REPO_BRANCH": "mybranch",
+                                       "APPVEYOR_REPO_COMMIT": "506c89117650bb12252db26d35b8c2385411f175",
                                        }):
             manager = CIManager(self.printer)
             self.assertEquals(manager.get_branch(), "mybranch")
             self.assertEquals(manager.get_commit_msg(), "msg more")
+            self.assertEquals(manager.get_commit_id(), "506c89117650bb12252db26d35b8c2385411f175")
 
         # Appveyor PULL REQUEST
         with tools.environment_append({"APPVEYOR": "1",
@@ -66,10 +70,12 @@ class CIManagerTest(unittest.TestCase):
                                        "APPVEYOR_REPO_COMMIT_MESSAGE": "msg",
                                        "APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED": "more",
                                        "APPVEYOR_REPO_BRANCH": "mybranch",
+                                       "APPVEYOR_REPO_COMMIT": "506c89117650bb12252db26d35b8c2385411f175",
                                        }):
             manager = CIManager(self.printer)
             self.assertIsNone(manager.get_branch())
             self.assertEquals(manager.get_commit_msg(), "msg more")
+            self.assertEquals(manager.get_commit_id(), "506c89117650bb12252db26d35b8c2385411f175")
 
         # Appveyor no extended
         with tools.environment_append({"APPVEYOR": "1",
@@ -84,26 +90,33 @@ class CIManagerTest(unittest.TestCase):
         # Circle CI
         with tools.environment_append({"CIRCLECI": "1",
                                        "CIRCLE_BRANCH": "mybranch",
+                                       "CIRCLE_SHA1": "506c89117650bb12252db26d35b8c2385411f175",
                                        }):
             manager = CIManager(self.printer)
             self.assertEquals(manager.get_branch(), "mybranch")
             self.assertIsNotNone(manager.get_commit_msg())
+            self.assertEquals(manager.get_commit_id(), "506c89117650bb12252db26d35b8c2385411f175")
 
         # Gitlab
         with tools.environment_append({"GITLAB_CI": "1",
                                        "CI_BUILD_REF_NAME": "mybranch",
+                                       "CI_COMMIT_TITLE": "foo bar",
+                                       "CI_COMMIT_SHA": "506c89117650bb12252db26d35b8c2385411f175",
                                        }):
             manager = CIManager(self.printer)
             self.assertEquals(manager.get_branch(), "mybranch")
             self.assertIsNotNone(manager.get_commit_msg())
+            self.assertEquals(manager.get_commit_id(), "506c89117650bb12252db26d35b8c2385411f175")
 
         # Jenkins
         with tools.environment_append({"JENKINS_URL": "1",
                                        "BRANCH_NAME": "mybranch",
+                                       "GIT_COMMIT": "506c89117650bb12252db26d35b8c2385411f175",
                                        }):
             manager = CIManager(self.printer)
             self.assertEquals(manager.get_branch(), "mybranch")
             self.assertIsNotNone(manager.get_commit_msg())
+            self.assertEquals(manager.get_commit_id(), "506c89117650bb12252db26d35b8c2385411f175")
 
     def test_build_policy(self):
         # Travis
@@ -154,7 +167,20 @@ class CIManagerTest(unittest.TestCase):
                                        "bamboo_CONAN_USER_VAR": "bamboo",
                                        "CONAN_USER_VAR": "foobar"}):
             manager = CIManager(self.printer)
-            self.assertEquals(manager.get_branch(), "mybranch") # checks that manager is Bamboo 
+            self.assertEquals(manager.get_branch(), "mybranch") # checks that manager is Bamboo
 
             self.assertEquals(os.getenv('CONAN_LOGIN_USERNAME'), "bamboo")
             self.assertEquals(os.getenv('CONAN_USER_VAR'), "foobar")
+
+        with tools.environment_append({"bamboo_buildNumber": "xx",
+                                       "bamboo_planRepository_branch": "mybranch",
+                                       "BAMBOO_CONAN_LOGIN_USERNAME": "bamboo",
+                                       "BAMBOO_CONAN_USER_VAR": "bamboo",
+                                       "CONAN_USER_VAR": "foobar"}):
+            manager = CIManager(self.printer)
+            self.assertEquals(manager.get_branch(), "mybranch") # checks that manager is Bamboo
+
+            self.assertEquals(os.getenv('CONAN_LOGIN_USERNAME'), "bamboo")
+            self.assertEquals(os.getenv('CONAN_USER_VAR'), "foobar")
+
+
