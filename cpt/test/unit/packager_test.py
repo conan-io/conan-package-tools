@@ -343,6 +343,38 @@ class AppTest(unittest.TestCase):
             self.packager.run_builds(1, 1)
             self.assertIn('-e CONAN_FAKE_VAR="32"', self.runner.calls[-1])
 
+    def test_docker_home_env(self):
+        with tools.environment_append({"CONAN_DOCKER_HOME": "/some/dir"}):
+            self.packager = ConanMultiPackager(username="lasote",
+                                               channel="mychannel",
+                                               runner=self.runner,
+                                               conan_api=self.conan_api,
+                                               gcc_versions=["5", "6"],
+                                               clang_versions=["3.9", "4.0"],
+                                               use_docker=True,
+                                               reference="zlib/1.2.11",
+                                               ci_manager=self.ci_manager)
+            self._add_build(1, "gcc", "5")
+            self.packager.run_builds(1, 1)
+            self.assertIn('-e CONAN_DOCKER_HOME="/some/dir"',
+                          self.runner.calls[-1])
+            self.assertEquals(self.packager.docker_conan_home, "/some/dir")
+
+    def test_docker_home_opt(self):
+        self.packager = ConanMultiPackager(username="lasote",
+                                           channel="mychannel",
+                                           runner=self.runner,
+                                           conan_api=self.conan_api,
+                                           gcc_versions=["5", "6"],
+                                           clang_versions=["3.9", "4.0"],
+                                           use_docker=True,
+                                           docker_conan_home="/some/dir",
+                                           reference="zlib/1.2.11",
+                                           ci_manager=self.ci_manager)
+        self._add_build(1, "gcc", "5")
+        self.packager.run_builds(1, 1)
+        self.assertEquals(self.packager.docker_conan_home, "/some/dir")
+
     def test_docker_invalid(self):
         self.packager = ConanMultiPackager(username="lasote",
                                            channel="mychannel",

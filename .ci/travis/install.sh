@@ -34,8 +34,8 @@ if [[ "$(uname -s)" == 'Darwin' ]]; then
             pyenv virtualenv 3.6.0 conan
             ;;
         py37)
-            pyenv install 3.7.0
-            pyenv virtualenv 3.7.0 conan
+            pyenv install 3.7.1
+            pyenv virtualenv 3.7.1 conan
             ;;
 
     esac
