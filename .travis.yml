@@ -2,7 +2,7 @@ cache: pip
 language: python
 python:
     - 2.7
-    - 3.6
+    - 3.7
 os: linux
 dist: xenial
 
@@ -11,6 +11,9 @@ matrix:
         - language: generic
           os: osx
           env: PYVER=py27
+        - language: generic
+          os: osx
+          env: PYVER=py37
 
 # command to install dependencies
 install:
