@@ -1,26 +1,38 @@
-cache: pip
+sudo: false
 language: python
-python:
-    - 2.7
-    - 3.7
-os: linux
-dist: xenial
+dist: trusty
 
-matrix:
-    include:
-        - language: generic
-          os: osx
-          env: PYVER=py27
-        - language: generic
-          os: osx
-          env: PYVER=py37
+jobs:
+  fast_finish: true
+  include:
 
-# command to install dependencies
+    - stage: Conan Latest - Linux
+      python: 2.7
+      env: TOXENV=py27-conanlatest
+    - python: 3.7
+      env: TOXENV=py37-conanlatest
+      dist: xenial
+
+    - stage: Conan Development - Linux
+      python: 2.7
+      env: TOXENV=py27-conandev
+    - python: 3.7
+      env: TOXENV=py37-conandev
+      dist: xenial
+
+    # Macos is slow, only if everything has passed
+    - stage: Macos - all Conan versions
+      language: generic
+      os: osx
+      osx_image: xcode8.3
+      env: PYVER=py27 TOXENV=py27-conanlatest
+    - language: generic
+      os: osx
+      osx_image: xcode8.3
+      env: PYVER=py37 TOXENV=py37-conanlatest
+
 install:
-  - ./.ci/travis/install.sh
-before_script:
-  - export PYTHONPATH=$PYTHONPATH:$(pwd)
-  - export CONAN_TEST_SUITE=1
-# command to run tests
+  - .ci/travis/install.sh
+
 script:
-  - ./.ci/travis/run.sh
+  - .ci/travis/run.sh
