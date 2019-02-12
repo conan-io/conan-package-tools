@@ -116,6 +116,23 @@ class Pkg(ConanFile):
         self.packager.add_common_builds(shared_option_name=False)
         self.assertNotIn("lib2:shared", self.packager.items[0].options)
 
+    def test_auto_managed_subdirectory(self):
+        conanfile = """from conans import ConanFile
+
+class Pkg(ConanFile):
+    name = "lib"
+    version = "1.0"
+    settings = "os", "compiler", "build_type", "arch"
+    options = {"shared": [True, False]}
+
+"""
+        cwd = os.path.join(self.tmp_folder, "subdirectory")
+        tools.save(os.path.join(cwd, "conanfile.py"), conanfile)
+        self.packager = ConanMultiPackager(username="lasote", cwd=cwd)
+        self.packager.add_common_builds()
+        self.assertGreater(len(self.packager.items), 0)
+        self.assertIn("lib:shared", self.packager.items[0].options)
+
     def test_exported_files(self):
         conanfile = """from conans import ConanFile
 
