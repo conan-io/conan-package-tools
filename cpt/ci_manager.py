@@ -27,6 +27,14 @@ def is_circle_ci():
     return os.getenv("CIRCLECI", False)
 
 
+def is_azure_pipelines():
+    return os.getenv("SYSTEM_TEAMFOUNDATIONCOLLECTIONURI", False)
+
+
+def is_shippable():
+    return os.getenv("SHIPPABLE", False)
+
+
 class CIManager(object):
     def __init__(self, printer):
 
@@ -44,6 +52,10 @@ class CIManager(object):
             self.manager = GitlabManager(printer)
         elif is_jenkins():
             self.manager = JenkinsManager(printer)
+        elif is_azure_pipelines():
+            self.manager = AzurePipelinesManager(printer)
+        elif is_shippable():
+            self.manager = ShippableManager(printer)
         else:
             self.manager = GenericManager(printer)
 
@@ -244,3 +256,43 @@ class JenkinsManager(GenericManager):
 
     def get_branch(self):
         return os.getenv("BRANCH_NAME", None)
+
+
+class AzurePipelinesManager(GenericManager):
+    def __init__(self, printer):
+        super(AzurePipelinesManager, self).__init__(printer)
+        self.printer.print_message("CI detected: Azure Pipelines")
+
+    def get_commit_msg(self):
+        return os.getenv("BUILD_SOURCEVERSIONMESSAGE", None)
+
+    def get_commit_id(self):
+        return os.getenv("BUILD_SOURCEVERSION", None)
+
+    def get_branch(self):
+        return os.getenv("BUILD_SOURCEBRANCHNAME", None)
+
+    def is_pull_request(self):
+        return os.getenv("BUILD_REASON", "false") == "PullRequest"
+
+
+class ShippableManager(GenericManager):
+
+    def __init__(self, printer):
+        super(ShippableManager, self).__init__(printer)
+        self.printer.print_message("CI detected: Shippable")
+
+    def get_commit_msg(self):
+        return os.getenv("COMMIT_MESSAGE", None)
+
+    def get_commit_id(self):
+        return os.getenv("COMMIT", None)
+
+    def get_branch(self):
+        return os.getenv("BRANCH", None)
+
+    def is_pull_request(self):
+        return os.getenv("IS_PULL_REQUEST", None) == "true"
+
+    def is_tag(self):
+        return os.getenv("IS_GIT_TAG", None) == "true"

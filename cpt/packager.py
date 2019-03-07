@@ -379,7 +379,7 @@ class ConanMultiPackager(object):
 
         if shared_option_name is None:
             if os.path.exists(os.path.join(self.cwd, "conanfile.py")):
-                conanfile = load_cf_class("./conanfile.py", self.conan_api)
+                conanfile = load_cf_class(os.path.join(self.cwd, "conanfile.py"), self.conan_api)
                 if hasattr(conanfile, "options") and conanfile.options and "shared" in conanfile.options:
                     shared_option_name = "%s:shared" % self.reference.name
 
