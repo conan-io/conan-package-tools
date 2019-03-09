@@ -102,7 +102,8 @@ class ConanMultiPackager(object):
                  out=None,
                  test_folder=None,
                  cwd=None,
-                 config_url=None):
+                 config_url=None,
+                 upload_dependencies=None):
 
         self.printer = Printer(out)
         self.printer.print_rule()
@@ -251,6 +252,12 @@ class ConanMultiPackager(object):
         self.docker_entry_script = docker_entry_script or os.getenv("CONAN_DOCKER_ENTRY_SCRIPT")
 
         self.pip_install = pip_install or split_colon_env("CONAN_PIP_INSTALL")
+
+        self.upload_dependencies = upload_dependencies or split_colon_env("CONAN_UPLOAD_DEPENDENCIES")
+        if not isinstance(self.upload_dependencies, list):
+            self.upload_dependencies = [self.upload_dependencies]
+        if "all" in self.upload_dependencies and len(self.upload_dependencies) > 1:
+            raise Exception("Upload dependencies only accepts or 'all' or package references. Do not mix both!")
 
         os.environ["CONAN_CHANNEL"] = self.channel
 
@@ -525,7 +532,8 @@ class ConanMultiPackager(object):
                                  printer=self.printer,
                                  upload=self._upload_enabled(),
                                  test_folder=self.test_folder,
-                                 config_url=self.config_url)
+                                 config_url=self.config_url,
+                                 upload_dependencies=self.upload_dependencies)
                 r.run()
             else:
                 docker_image = self._get_docker_image(build)
@@ -548,7 +556,8 @@ class ConanMultiPackager(object):
                                        lcow_user_workaround=self.lcow_user_workaround,
                                        test_folder=self.test_folder,
                                        pip_install=self.pip_install,
-                                       config_url=self.config_url)
+                                       config_url=self.config_url,
+                                       upload_dependencies=self.upload_dependencies)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
                       docker_entry_script=self.docker_entry_script)
