@@ -253,10 +253,10 @@ class ConanMultiPackager(object):
 
         self.pip_install = pip_install or split_colon_env("CONAN_PIP_INSTALL")
 
-        self.upload_dependencies = upload_dependencies or split_colon_env("CONAN_UPLOAD_DEPENDENCIES")
-        if not isinstance(self.upload_dependencies, list):
-            self.upload_dependencies = [self.upload_dependencies]
-        if "all" in self.upload_dependencies and len(self.upload_dependencies) > 1:
+        self.upload_dependencies = upload_dependencies or split_colon_env("CONAN_UPLOAD_DEPENDENCIES") or ""
+        if isinstance(self.upload_dependencies, list):
+            self.upload_dependencies = ",".join(self.upload_dependencies)
+        if "all" in self.upload_dependencies and self.upload_dependencies != "all":
             raise Exception("Upload dependencies only accepts or 'all' or package references. Do not mix both!")
 
         os.environ["CONAN_CHANNEL"] = self.channel

@@ -151,12 +151,16 @@ class Pkg(ConanFile):
         with environment_append({"CONAN_UPLOAD":  self._server.fake_url,
                                  "CONAN_LOGIN_USERNAME": "user",
                                  "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user"}):
-            mulitpackager = get_patched_multipackager(self._client, exclude_vcvars_precommand=True)
+            mulitpackager = get_patched_multipackager(self._client, username="user",
+                                                      channel="testing",
+                                                      exclude_vcvars_precommand=True)
             mulitpackager.add({}, {})
             mulitpackager.run()
             self.assertIn("Uploading package 1/1", self._client.out)
 
-            mulitpackager = get_patched_multipackager(self._client, build_policy="missing",
+            mulitpackager = get_patched_multipackager(self._client, username="user",
+                                                      channel="testing",
+                                                      build_policy="missing",
                                                       exclude_vcvars_precommand=True)
             mulitpackager.add({}, {})
             mulitpackager.run()
@@ -179,7 +183,9 @@ class Pkg(ConanFile):
                                  "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user",
                                  "CONAN_UPLOAD_DEPENDENCIES": "all"}):
 
-            mulitpackager = get_patched_multipackager(self._client, exclude_vcvars_precommand=True)
+            mulitpackager = get_patched_multipackager(self._client, username="user",
+                                                      channel="testing",
+                                                      exclude_vcvars_precommand=True)
             mulitpackager.add({}, {})
             mulitpackager.run()
 
@@ -211,7 +217,9 @@ class Pkg(ConanFile):
                                  "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user",
                                  "CONAN_UPLOAD_DEPENDENCIES": "foo/1.0.0@bar/testing"}):
 
-            mulitpackager = get_patched_multipackager(self._client, exclude_vcvars_precommand=True)
+            mulitpackager = get_patched_multipackager(self._client, username="user",
+                                                      channel="testing",
+                                                      exclude_vcvars_precommand=True)
             mulitpackager.add({}, {})
             mulitpackager.run()
 
@@ -233,7 +241,9 @@ class Pkg(ConanFile):
                                  "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user",
                                  "CONAN_UPLOAD_DEPENDENCIES": "foo/*"}):
 
-            mulitpackager = get_patched_multipackager(self._client, exclude_vcvars_precommand=True)
+            mulitpackager = get_patched_multipackager(self._client, username="user",
+                                                      channel="testing",
+                                                      exclude_vcvars_precommand=True)
             mulitpackager.add({}, {})
             mulitpackager.run()
 
