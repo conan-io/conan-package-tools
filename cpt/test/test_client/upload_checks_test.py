@@ -142,40 +142,10 @@ class Pkg(ConanFile):
         self._client = TestClient(servers={"default": self._server},
                                  users={"default": [("user", "password")]})
         self._client.save({"conanfile_bar.py": self.conanfile_bar})
-        self._client.run("create conanfile_bar.py foo/stable")
+        self._client.run("export conanfile_bar.py foo/stable")
         self._client.save({"conanfile_foo.py": self.conanfile_foo})
-        self._client.run("create conanfile_foo.py bar/testing")
+        self._client.run("export conanfile_foo.py bar/testing")
         self._client.save({"conanfile.py": self.conanfile})
-
-    def test_dont_upload_non_built_packages(self):
-        with environment_append({"CONAN_UPLOAD":  self._server.fake_url,
-                                 "CONAN_LOGIN_USERNAME": "user",
-                                 "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user"}):
-            mulitpackager = get_patched_multipackager(self._client, username="user",
-                                                      channel="testing",
-                                                      exclude_vcvars_precommand=True)
-            mulitpackager.add({}, {})
-            mulitpackager.run()
-            self.assertIn("Uploading package 1/1", self._client.out)
-
-            mulitpackager = get_patched_multipackager(self._client, username="user",
-                                                      channel="testing",
-                                                      build_policy="missing",
-                                                      exclude_vcvars_precommand=True)
-            mulitpackager.add({}, {})
-            mulitpackager.run()
-            self.assertIn("Skipping upload for f88b82969cca9c4bf43f9effe1157e641f38f16d", self._client.out)
-            self.assertNotIn("BUILDING", self._client.out)
-
-            mulitpackager = get_patched_multipackager(self._client, exclude_vcvars_precommand=True)
-            mulitpackager.add({}, {})
-            mulitpackager.run()
-            self.assertNotIn("Skipping upload for f88b82969cca9c4bf43f9effe1157e641f38f16d", self._client.out)
-            self.assertIn("Uploading foobar/2.0@user/testing", self._client.out)
-            self.assertIn("Uploading package 1/1", self._client.out)
-            self.assertNotIn("Uploading bar/0.1.0@foo/stable", self._client.out)
-            self.assertNotIn("Uploading foo/1.0.0@bar/testing", self._client.out)
-            self.assertIn("BUILDING", self._client.out)
 
     def test_upload_all_dependencies(self):
         with environment_append({"CONAN_UPLOAD":  self._server.fake_url,
@@ -185,6 +155,7 @@ class Pkg(ConanFile):
 
             mulitpackager = get_patched_multipackager(self._client, username="user",
                                                       channel="testing",
+                                                      build_policy="missing",
                                                       exclude_vcvars_precommand=True)
             mulitpackager.add({}, {})
             mulitpackager.run()
@@ -219,6 +190,7 @@ class Pkg(ConanFile):
 
             mulitpackager = get_patched_multipackager(self._client, username="user",
                                                       channel="testing",
+                                                      build_policy="missing",
                                                       exclude_vcvars_precommand=True)
             mulitpackager.add({}, {})
             mulitpackager.run()
@@ -243,6 +215,7 @@ class Pkg(ConanFile):
 
             mulitpackager = get_patched_multipackager(self._client, username="user",
                                                       channel="testing",
+                                                      build_policy="missing",
                                                       exclude_vcvars_precommand=True)
             mulitpackager.add({}, {})
             mulitpackager.run()

@@ -108,19 +108,17 @@ class CreateRunner(object):
                             self.printer.print_rule()
                             return
                         for installed in r['installed']:
-                            if installed["recipe"]["id"] == str(self._reference):
+                            reference = installed["recipe"]["id"]
+                            if (reference == str(self._reference)) or \
+                               (reference in self._upload_dependencies) or \
+                               ("all" in self._upload_dependencies):
                                 package_id = installed['packages'][0]['id']
                                 if installed['packages'][0]["built"]:
-                                    self._uploader.upload_packages(self._reference,
+                                    self._uploader.upload_packages(reference,
                                                                    self._upload, package_id)
                                 else:
                                     self.printer.print_message("Skipping upload for %s, "
                                                                "it hasn't been built" % package_id)
-                            elif (installed["recipe"]["id"] in self._upload_dependencies) or \
-                                 ("all" in self._upload_dependencies):
-                                reference = installed["recipe"]["id"]
-                                package_id = installed['packages'][0]['id']
-                                self._uploader.upload_packages(reference, self._upload, package_id)
 
 
 class DockerCreateRunner(object):
