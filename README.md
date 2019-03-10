@@ -430,6 +430,17 @@ But if you prefer to use environment variables:
 
     export CONAN_PIP_INSTALL="bincrafters-package-tools==0.17.0,conan-promote=0.1.2"
 
+### Passing additional Docker parameters during build
+When running `conan create` step in Docker, you might want to run the container with additional parameters: for example, with `.conan/data` directory being mounted to parent system to avoid redownloading/rebuilding dependencies. For this you can use `docker_build_options` parameter
+
+    builder = ConanMultiPackager(
+      docker_build_options='--mount type=bind,source=$HOME/cached/conan-data,destination=/home/conan/.conan/data',
+      ...
+
+When run, this will translate to something like this:
+
+    sudo -E docker run ... --mount type=bind,source=$HOME/cached/conan-data,destination=/home/conan/.conan/data  conanio/gcc6 /bin/sh -c "cd project &&  run_create_in_docker"
+
 
 ### Installing custom Conan config
 
@@ -445,7 +456,7 @@ If you need to run `conan config install <url>` before to build there is the arg
         builder.add_common_builds()
         builder.run()
 
-But if are not interested to update your build.py script, it's possible to use environment variables instead:
+But if you are not interested to update your build.py script, it's possible to use environment variables instead:
 
     export CONAN_CONFIG_URL=https://github.com/bincrafters/conan-config.git
 
@@ -1008,6 +1019,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **mingw_configurations**: Configurations for MinGW
 - **archs**: List containing specific architectures to build for. Default ["x86", "x86_64"]
 - **use_docker**: Use docker for package creation in Linux systems.
+- **docker_build_options**: Pass additional parameters for docker when running the create step.
 - **docker_conan_home**: Location where package source files will be copied to inside the Docker container
 - **docker_image_skip_update**: If defined, it will skip the initialization update of "conan package tools" and "conan" in the docker image. By default is False.
 - **docker_image_skip_pull**: If defined, it will skip the "docker pull" command, enabling a local image to be used, and without being overwritten.

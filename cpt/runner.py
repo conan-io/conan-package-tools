@@ -124,7 +124,8 @@ class DockerCreateRunner(object):
                  upload=False, upload_retry=None,
                  runner=None,
                  docker_shell="", docker_conan_home="",
-                 docker_platform_param="", lcow_user_workaround="",
+                 docker_platform_param="", docker_build_options="",
+                 lcow_user_workaround="",
                  test_folder=None,
                  pip_install=None,
                  config_url=None):
@@ -147,6 +148,7 @@ class DockerCreateRunner(object):
         self._docker_shell = docker_shell
         self._docker_conan_home = docker_conan_home
         self._docker_platform_param = docker_platform_param
+        self._docker_build_options = docker_build_options or ""
         self._lcow_user_workaround = lcow_user_workaround
         self._runner = PrintRunner(runner, self.printer)
         self._test_folder = test_folder
@@ -214,12 +216,13 @@ class DockerCreateRunner(object):
         else:
             update_command = ""
 
-        command = ('%s docker run --rm -v "%s:%s/project" %s %s %s %s '
+        command = ('%s docker run --rm -v "%s:%s/project" %s %s %s %s %s '
                    '"%s cd project && '
                    '%s run_create_in_docker "' % (self._sudo_docker_command,
                                                   os.getcwd(),
                                                   self._docker_conan_home,
                                                   env_vars_text,
+                                                  self._docker_build_options,
                                                   self._docker_platform_param,
                                                   self._docker_image,
                                                   self._docker_shell,

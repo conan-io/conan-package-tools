@@ -88,6 +88,7 @@ class ConanMultiPackager(object):
                  skip_check_credentials=False,
                  allow_gcc_minors=False,
                  exclude_vcvars_precommand=False,
+                 docker_build_options=None,
                  docker_image_skip_update=False,
                  docker_image_skip_pull=False,
                  docker_entry_script=None,
@@ -247,6 +248,8 @@ class ConanMultiPackager(object):
 
         self.runner = runner or os.system
         self.output_runner = ConanOutputRunner()
+
+        self.docker_build_options = docker_build_options or os.getenv("CONAN_DOCKER_BUILD_OPTIONS")
 
         self.docker_entry_script = docker_entry_script or os.getenv("CONAN_DOCKER_ENTRY_SCRIPT")
 
@@ -545,6 +548,7 @@ class ConanMultiPackager(object):
                                        docker_shell=self.docker_shell,
                                        docker_conan_home=self.docker_conan_home,
                                        docker_platform_param=self.docker_platform_param,
+                                       docker_build_options=self.docker_build_options,
                                        lcow_user_workaround=self.lcow_user_workaround,
                                        test_folder=self.test_folder,
                                        pip_install=self.pip_install,
