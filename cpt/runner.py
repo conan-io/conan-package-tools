@@ -109,9 +109,10 @@ class CreateRunner(object):
                             return
                         for installed in r['installed']:
                             reference = installed["recipe"]["id"]
-                            if (reference == str(self._reference)) or \
+                            if ((reference == str(self._reference)) or \
                                (reference in self._upload_dependencies) or \
-                               ("all" in self._upload_dependencies):
+                               ("all" in self._upload_dependencies)) and \
+                               installed['packages']:
                                 package_id = installed['packages'][0]['id']
                                 if installed['packages'][0]["built"]:
                                     self._uploader.upload_packages(reference,
