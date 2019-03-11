@@ -1,5 +1,6 @@
 import os
 import sys
+import tempfile
 import time
 import unittest
 
@@ -31,12 +32,17 @@ class Pkg(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
 
 """
+        tmp_dir = tempfile.mkdtemp()
+        tmp_dir_ref = os.path.join(tmp_dir, unique_ref)
+        self.assertFalse(os.path.exists(tmp_dir_ref))
+
         self.save_conanfile(conanfile)
         the_version = version.replace("-", ".")  # Canonical name for artifactory repo
         pip = "--extra-index-url %s/simple conan-package-tools==%s " % (PYPI_TESTING_REPO, the_version)
         with tools.environment_append({"CONAN_USE_DOCKER": "1",
                                        "CONAN_DOCKER_USE_SUDO": "1",
                                        "CONAN_PIP_PACKAGE": pip,
+                                       "CONAN_DOCKER_RUN_OPTIONS": "--mount type=bind,source="+tmp_dir+",destination=/home/conan/.conan/data",
                                        "CONAN_LOGIN_USERNAME": CONAN_LOGIN_UPLOAD,
                                        "CONAN_USERNAME": "lasote",
                                        "CONAN_UPLOAD": CONAN_UPLOAD_URL,
@@ -51,6 +57,8 @@ class Pkg(ConanFile):
                                                ci_manager=ci_manager)
             self.packager.add_common_builds()
             self.packager.run()
+
+        self.assertTrue(os.path.exists(tmp_dir_ref))
 
         search_pattern = "%s*" % unique_ref
         ref = ConanFileReference.loads("%s@lasote/mychannel" % unique_ref)
@@ -103,4 +111,3 @@ class Pkg(ConanFile):
             results = self.api.search_recipes(search_pattern, remote_name="upload_repo")["results"]
             self.assertEquals(len(results), 0)
             self.api.remove(search_pattern, remote_name="upload_repo", force=True)
-
