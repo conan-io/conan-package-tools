@@ -128,9 +128,10 @@ class DockerCreateRunner(object):
                  lcow_user_workaround="",
                  test_folder=None,
                  pip_install=None,
-                 config_url=None):
+                 config_url=None,
+                 printer=None):
 
-        self.printer = Printer()
+        self.printer = printer or Printer()
         self._upload = upload
         self._upload_retry = upload_retry
         self._reference = reference

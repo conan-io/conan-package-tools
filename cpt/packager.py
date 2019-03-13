@@ -267,7 +267,7 @@ class ConanMultiPackager(object):
 
         self.conan_pip_package = os.getenv("CONAN_PIP_PACKAGE", "conan==%s" % client_version)
         if self.conan_pip_package in ("0", "False"):
-            self.conan_pip_package = False
+            self.conan_pip_package = ""
         self.vs10_x86_64_enabled = vs10_x86_64_enabled
 
         self.builds_in_current_page = []
@@ -552,7 +552,8 @@ class ConanMultiPackager(object):
                                        lcow_user_workaround=self.lcow_user_workaround,
                                        test_folder=self.test_folder,
                                        pip_install=self.pip_install,
-                                       config_url=self.config_url)
+                                       config_url=self.config_url,
+                                       printer=self.printer)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
                       docker_entry_script=self.docker_entry_script)

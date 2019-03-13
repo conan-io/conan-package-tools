@@ -1,6 +1,5 @@
 import os
 import sys
-import tempfile
 import time
 import unittest
 
@@ -18,7 +17,11 @@ from cpt.test.unit.utils import MockCIManager
 
 class DockerTest(BaseTest):
 
-    @unittest.skipUnless(sys.platform.startswith("linux"), "Requires Linux")
+    @property
+    def is_linux_and_have_docker(self):
+        return sys.platform.startswith("linux") and tools.which("docker")
+
+    @unittest.skipUnless(is_linux_and_have_docker, "Requires Linux and Docker")
     def test_docker(self):
         if not os.getenv("PYPI_PASSWORD", None):
             return
@@ -32,17 +35,12 @@ class Pkg(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
 
 """
-        tmp_dir = tempfile.mkdtemp()
-        tmp_dir_ref = os.path.join(tmp_dir, unique_ref)
-        self.assertFalse(os.path.exists(tmp_dir_ref))
-
         self.save_conanfile(conanfile)
         the_version = version.replace("-", ".")  # Canonical name for artifactory repo
         pip = "--extra-index-url %s/simple conan-package-tools==%s " % (PYPI_TESTING_REPO, the_version)
         with tools.environment_append({"CONAN_USE_DOCKER": "1",
                                        "CONAN_DOCKER_USE_SUDO": "1",
                                        "CONAN_PIP_PACKAGE": pip,
-                                       "CONAN_DOCKER_RUN_OPTIONS": "--mount type=bind,source="+tmp_dir+",destination=/home/conan/.conan/data",
                                        "CONAN_LOGIN_USERNAME": CONAN_LOGIN_UPLOAD,
                                        "CONAN_USERNAME": "lasote",
                                        "CONAN_UPLOAD": CONAN_UPLOAD_URL,
@@ -57,8 +55,6 @@ class Pkg(ConanFile):
                                                ci_manager=ci_manager)
             self.packager.add_common_builds()
             self.packager.run()
-
-        self.assertTrue(os.path.exists(tmp_dir_ref))
 
         search_pattern = "%s*" % unique_ref
         ref = ConanFileReference.loads("%s@lasote/mychannel" % unique_ref)
@@ -111,3 +107,49 @@ class Pkg(ConanFile):
             results = self.api.search_recipes(search_pattern, remote_name="upload_repo")["results"]
             self.assertEquals(len(results), 0)
             self.api.remove(search_pattern, remote_name="upload_repo", force=True)
+
+
+    @unittest.skipUnless(is_linux_and_have_docker, "Requires Linux and Docker")
+    def test_docker_run_options(self):
+        """ Run docker run --rm ... and look for extra option
+        """
+        conanfile = """from conans import ConanFile
+import os
+
+class Pkg(ConanFile):
+    settings = "os", "compiler", "build_type", "arch"
+
+    def build(self):
+        pass
+"""
+        self.save_conanfile(conanfile)
+        # Validate by Environemnt Variable
+        with tools.environment_append({"CONAN_USERNAME": "bar",
+                                       "CONAN_DOCKER_IMAGE": "conanio/gcc8",
+                                       "CONAN_DOCKER_USE_SUDO": "1",
+                                       "CONAN_REFERENCE": "foo/0.0.1@bar/testing",
+                                       "CONAN_DOCKER_RUN_OPTIONS": "--network=host"
+                                       }):
+            self.packager = ConanMultiPackager(gcc_versions=["8"],
+                                               archs=["x86_64"],
+                                               build_types=["Release"],
+                                               out=self.output.write)
+            self.packager.add({})
+            self.packager.run()
+            self.assertIn("--network=host  conanio/gcc8", self.output)
+
+        # Validate by parameter
+        with tools.environment_append({"CONAN_USERNAME": "bar",
+                                       "CONAN_DOCKER_IMAGE": "conanio/gcc8",
+                                       "CONAN_DOCKER_USE_SUDO": "1",
+                                       "CONAN_REFERENCE": "foo/0.0.1@bar/testing"
+                                       }):
+
+            self.packager = ConanMultiPackager(gcc_versions=["8"],
+                                               archs=["x86_64"],
+                                               build_types=["Release"],
+                                               docker_run_options="--cpus=1",
+                                               out=self.output.write)
+            self.packager.add({})
+            self.packager.run()
+            self.assertIn("--cpus=1  conanio/gcc8", self.output)
