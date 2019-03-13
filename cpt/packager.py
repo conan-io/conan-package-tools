@@ -371,6 +371,9 @@ class ConanMultiPackager(object):
                 else:
                     self._named_builds.setdefault(key, []).append(BuildConf(*values))
 
+    def login(self, remote_name):
+        self.auth_manager.login(remote_name)
+
     def add_common_builds(self, shared_option_name=None, pure_c=True,
                           dll_with_static_runtime=False, reference=None):
 

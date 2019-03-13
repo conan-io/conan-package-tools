@@ -1075,8 +1075,7 @@ The current commit message can contain special messages:
     - **pure_c**: ConanMultiPackager won't generate different builds for the **libstdc++** c++ standard library, because it is a pure C library.
     - **dll_with_static_runtime**: generate also build for "MT" runtime when the library is shared.
 
-- **login(remote_name, user=None, password=None, force=False)**: Performs a `conan user` command in the specified remote. If `force` the login will be called
- every time, otherwise, for the same remote, ConanMultiPackager will call `conan user` only once even with multiple calls to the login() method.
+- **login(remote_name)**: Performs a `conan user` command in the specified remote.
 
 - **add(settings=None, options=None, env_vars=None, build_requires=None)**: Add a new build configuration, so a new binary package will be built for the specified configuration.
 
