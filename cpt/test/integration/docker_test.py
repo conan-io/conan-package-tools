@@ -4,7 +4,7 @@ import time
 import unittest
 
 from conans import __version__ as client_version
-from conans.client import tools
+from conans import tools
 from conans.model.ref import ConanFileReference
 from conans.model.version import Version
 
@@ -15,13 +15,13 @@ from cpt.test.integration.base import BaseTest, PYPI_TESTING_REPO, CONAN_UPLOAD_
 from cpt.test.unit.utils import MockCIManager
 
 
+def is_linux_and_have_docker():
+    return tools.os_info.is_linux and tools.which("docker")
+
+
 class DockerTest(BaseTest):
 
-    @property
-    def is_linux_and_have_docker(self):
-        return sys.platform.startswith("linux") and tools.which("docker")
-
-    @unittest.skipUnless(is_linux_and_have_docker, "Requires Linux and Docker")
+    @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
     def test_docker(self):
         if not os.getenv("PYPI_PASSWORD", None):
             return
@@ -109,10 +109,8 @@ class Pkg(ConanFile):
             self.api.remove(search_pattern, remote_name="upload_repo", force=True)
 
 
-    @unittest.skipUnless(is_linux_and_have_docker, "Requires Linux and Docker")
+    @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
     def test_docker_run_options(self):
-        """ Run docker run --rm ... and look for extra option
-        """
         conanfile = """from conans import ConanFile
 import os
 
@@ -126,7 +124,7 @@ class Pkg(ConanFile):
         # Validate by Environemnt Variable
         with tools.environment_append({"CONAN_USERNAME": "bar",
                                        "CONAN_DOCKER_IMAGE": "conanio/gcc8",
-                                       "CONAN_DOCKER_USE_SUDO": "1",
+                                       "CONAN_DOCKER_USE_SUDO": "0",
                                        "CONAN_REFERENCE": "foo/0.0.1@bar/testing",
                                        "CONAN_DOCKER_RUN_OPTIONS": "--network=host"
                                        }):
@@ -141,7 +139,7 @@ class Pkg(ConanFile):
         # Validate by parameter
         with tools.environment_append({"CONAN_USERNAME": "bar",
                                        "CONAN_DOCKER_IMAGE": "conanio/gcc8",
-                                       "CONAN_DOCKER_USE_SUDO": "1",
+                                       "CONAN_DOCKER_USE_SUDO": "0",
                                        "CONAN_REFERENCE": "foo/0.0.1@bar/testing"
                                        }):
 

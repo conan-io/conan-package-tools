@@ -249,7 +249,7 @@ class ConanMultiPackager(object):
         self.runner = runner or os.system
         self.output_runner = ConanOutputRunner()
 
-        self.docker_run_options = docker_run_options or os.getenv("CONAN_DOCKER_RUN_OPTIONS")
+        self.docker_run_options = docker_run_options or os.getenv("CONAN_DOCKER_RUN_OPTIONS", "")
 
         self.docker_entry_script = docker_entry_script or os.getenv("CONAN_DOCKER_ENTRY_SCRIPT")
 
