@@ -103,8 +103,6 @@ class Pkg(ConanFile):
             self.assertIn("Uploading package 1/1: 5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9 to 'default'", tc.out)
 
     def test_upload_only_recipe(self):
-        """ When CONAN_UPLOAD_ONLY_RECIPE is TRUE, binary must not be uploaded.
-        """
         ts = TestServer(users={"user": "password"})
         tc = TestClient(servers={"default": ts}, users={"default": [("user", "password")]})
         tc.save({"conanfile.py": self.conanfile})
@@ -118,9 +116,9 @@ class Pkg(ConanFile):
             mulitpackager.add({}, {"shared": False})
             mulitpackager.run()
 
-            self.assertIn(" Uploading packages for 'lib/1.0@user/testing'", tc.out)
-            self.assertIn("Uploading lib/1.0@user/testing to remote", tc.out)
-            self.assertIn("Uploaded conan recipe 'lib/1.0@user/testing'", tc.out)
+            self.assertIn(" Uploading packages for 'lib/1.0@user/mychannel'", tc.out)
+            self.assertIn("Uploading lib/1.0@user/mychannel to remote", tc.out)
+            self.assertIn("Uploaded conan recipe 'lib/1.0@user/mychannel'", tc.out)
             self.assertNotIn("Uploading package 1/2", tc.out)
             self.assertNotIn("Uploading package 2/2", tc.out)
 
@@ -133,8 +131,8 @@ class Pkg(ConanFile):
             mulitpackager.add({}, {"shared": False})
             mulitpackager.run()
 
-            self.assertIn(" Uploading packages for 'lib/1.0@user/testing'", tc.out)
-            self.assertIn("Uploading lib/1.0@user/testing to remote", tc.out)
+            self.assertIn(" Uploading packages for 'lib/1.0@user/mychannel'", tc.out)
+            self.assertIn("Uploading lib/1.0@user/mychannel to remote", tc.out)
             self.assertIn("Recipe is up to date, upload skipped", tc.out)
             self.assertIn("Uploading package 1/2", tc.out)
             self.assertIn("Uploading package 2/2", tc.out)
