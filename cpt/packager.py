@@ -219,6 +219,8 @@ class ConanMultiPackager(object):
         elif platform.system() != "Windows" and self._docker_image and 'conanio/' not in str(self._docker_image):
             self.sudo_pip_command = "sudo -E"
         self.pip_command = os.getenv("CONAN_PIP_COMMAND", "pip")
+        if not tools.which(self.pip_command) or not "pip" in self.pip_command:
+            raise Exception("CONAN_PIP_COMMAND: '{}' is not a valid pip command.".format(self.pip_command))
 
         self.docker_shell = ""
 

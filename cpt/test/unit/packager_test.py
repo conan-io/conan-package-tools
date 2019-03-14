@@ -845,7 +845,7 @@ class AppTest(unittest.TestCase):
         with tools.environment_append({"CONAN_USERNAME": "foobar",
                                        "CONAN_PIP_PACKAGE": "conan==0.1.0",
                                        "CONAN_PIP_INSTALL": "foobar==0.1.0",
-                                       "CONAN_PIP_COMMAND": "/usr/bin/pip3"}):
+                                       "CONAN_PIP_COMMAND": "pip3"}):
             output = TestBufferConanOutput()
             self.packager = ConanMultiPackager(username="lasote",
                                                channel="mychannel",
@@ -857,5 +857,26 @@ class AppTest(unittest.TestCase):
             self.packager.add_common_builds()
             self.packager.run()
             self.assertIn("[pip_update]", output)
-            self.assertIn(" /usr/bin/pip3 install conan==0.1.0", self.runner.calls)
-            self.assertIn(" /usr/bin/pip3 install foobar==0.1.0", self.runner.calls)
+            self.assertIn(" pip3 install conan==0.1.0", self.runner.calls)
+            self.assertIn(" pip3 install foobar==0.1.0", self.runner.calls)
+
+    def test_invalid_pip_command(self):
+        """ CPT should not accept invalid `pip` command when CONAN_PIP_COMMAND is declared.
+        """
+        with tools.environment_append({"CONAN_USERNAME": "foobar",
+                                       "CONAN_PIP_PACKAGE": "conan==0.1.0",
+                                       "CONAN_PIP_COMMAND": "/bin/bash"}):
+            output = TestBufferConanOutput()
+            with self.assertRaises(Exception) as context:
+                self.packager = ConanMultiPackager(username="lasote",
+                                                channel="mychannel",
+                                                reference="lib/1.0",
+                                                ci_manager=self.ci_manager,
+                                                out=output.write,
+                                                conan_api=self.conan_api,
+                                                runner=self.runner)
+                self.packager.add_common_builds()
+                self.packager.run()
+
+                self.assertTrue("CONAN_PIP_COMMAND: '/bin/bash' is not a valid pip command" in context.exception)
+            self.assertNotIn("[pip_update]", output)
