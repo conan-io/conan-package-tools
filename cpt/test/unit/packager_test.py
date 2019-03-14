@@ -836,8 +836,8 @@ class AppTest(unittest.TestCase):
             self.packager.add_common_builds()
             self.packager.run()
             self.assertIn("[pip_update]", output)
-            self.assertIn(" pip install conan==1.0.0-dev", self.runner.calls)
-            self.assertIn(" pip install foobar==0.1.0", self.runner.calls)
+            self.assertIn(" pip install -q conan==1.0.0-dev", self.runner.calls)
+            self.assertIn(" pip install -q foobar==0.1.0", self.runner.calls)
 
     def test_custom_pip_command(self):
         """ CPT should run custom `pip` path when CONAN_PIP_COMMAND is declared.
@@ -858,8 +858,8 @@ class AppTest(unittest.TestCase):
             self.packager.add_common_builds()
             self.packager.run()
             self.assertIn("[pip_update]", output)
-            self.assertIn(" {} install conan==0.1.0".format(pip), self.runner.calls)
-            self.assertIn(" {} install foobar==0.1.0".format(pip), self.runner.calls)
+            self.assertIn(" {} install -q conan==0.1.0".format(pip), self.runner.calls)
+            self.assertIn(" {} install -q foobar==0.1.0".format(pip), self.runner.calls)
 
     def test_invalid_pip_command(self):
         """ CPT should not accept invalid `pip` command when CONAN_PIP_COMMAND is declared.

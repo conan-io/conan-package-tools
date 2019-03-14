@@ -443,13 +443,13 @@ class ConanMultiPackager(object):
                 self.auth_manager.login(self.remotes_manager.upload_remote_name)
             if self.conan_pip_package and not self.use_docker:
                 with self.printer.foldable_output("pip_update"):
-                    self.runner('%s %s install %s' % (self.sudo_pip_command,
+                    self.runner('%s %s install -q %s' % (self.sudo_pip_command,
                                                       self.pip_command,
                                                       self.conan_pip_package))
                     if self.pip_install:
                         packages = " ".join(self.pip_install)
                         self.printer.print_message("Install extra python packages: {}".format(packages))
-                        self.runner('%s %s install %s' % (self.sudo_pip_command,
+                        self.runner('%s %s install -q %s' % (self.sudo_pip_command,
                                                           self.pip_command, packages))
 
             self.run_builds(base_profile_name=base_profile_name)
