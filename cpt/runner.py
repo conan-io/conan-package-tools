@@ -15,7 +15,7 @@ class CreateRunner(object):
 
     def __init__(self, profile_abs_path, reference, conan_api, uploader,
                  exclude_vcvars_precommand=False, build_policy=None, runner=None,
-                 cwd=None, printer=None, upload=False, test_folder=None, config_url=None):
+                 cwd=None, printer=None, upload=False, upload_only_recipe=None ,test_folder=None, config_url=None):
 
         self.printer = printer or Printer()
         self._cwd = cwd or os.getcwd()
@@ -30,6 +30,7 @@ class CreateRunner(object):
         self._uploader.remote_manager.add_remotes_to_conan()
         self._test_folder = test_folder
         self._config_url = config_url
+        self._upload_only_recipe = upload_only_recipe
 
         patch_default_base_profile(conan_api, profile_abs_path)
 
@@ -107,8 +108,11 @@ class CreateRunner(object):
                             if installed["recipe"]["id"] == str(self._reference):
                                 package_id = installed['packages'][0]['id']
                                 if installed['packages'][0]["built"]:
-                                    self._uploader.upload_packages(self._reference,
-                                                                   self._upload, package_id)
+                                    if self._upload_only_recipe:
+                                        self._uploader.upload_recipe(self._reference, self._upload)
+                                    else:
+                                        self._uploader.upload_packages(self._reference,
+                                                                    self._upload, package_id)
                                 else:
                                     self.printer.print_message("Skipping upload for %s, "
                                                                "it hasn't been built" % package_id)
@@ -121,7 +125,7 @@ class DockerCreateRunner(object):
                  docker_image_skip_update=False, build_policy=None,
                  docker_image_skip_pull=False,
                  always_update_conan_in_docker=False,
-                 upload=False, upload_retry=None,
+                 upload=False, upload_retry=None, upload_only_recipe=None,
                  runner=None,
                  docker_shell="", docker_conan_home="",
                  docker_platform_param="", lcow_user_workaround="",
@@ -132,6 +136,7 @@ class DockerCreateRunner(object):
         self.printer = Printer()
         self._upload = upload
         self._upload_retry = upload_retry
+        self._upload_only_recipe = upload_only_recipe
         self._reference = reference
         self._conan_pip_package = conan_pip_package
         self._build_policy = build_policy
@@ -256,6 +261,7 @@ class DockerCreateRunner(object):
         ret["CONAN_TEMP_TEST_FOLDER"] = "1"  # test package folder to a temp one
         ret["CPT_UPLOAD_ENABLED"] = self._upload
         ret["CPT_UPLOAD_RETRY"] = self._upload_retry
+        ret["CPT_UPLOAD_ONLY_RECIPE"] = self._upload_only_recipe
         ret["CPT_BUILD_POLICY"] = escape_env(self._build_policy)
         ret["CPT_TEST_FOLDER"] = escape_env(self._test_folder)
         ret["CPT_CONFIG_URL"] = escape_env(self._config_url)
