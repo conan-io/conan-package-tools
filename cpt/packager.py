@@ -527,7 +527,7 @@ class ConanMultiPackager(object):
                                  cwd=self.cwd,
                                  printer=self.printer,
                                  upload=self._upload_enabled(),
-                                 upload_retry=self.upload_retry,
+                                 upload_only_recipe=self.upload_only_recipe,
                                  test_folder=self.test_folder,
                                  config_url=self.config_url)
                 r.run()
@@ -545,7 +545,7 @@ class ConanMultiPackager(object):
                                        always_update_conan_in_docker=self._update_conan_in_docker,
                                        upload=self._upload_enabled(),
                                        upload_retry=self.upload_retry,
-                                       upload_only_recipe=self.upload_only_recipe
+                                       upload_only_recipe=self.upload_only_recipe,
                                        runner=self.runner,
                                        docker_shell=self.docker_shell,
                                        docker_conan_home=self.docker_conan_home,
