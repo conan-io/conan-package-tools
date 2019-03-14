@@ -102,7 +102,7 @@ class Pkg(ConanFile):
             self.assertIn("Uploading packages for 'lib/1.0@user/stable'", tc.out)
             self.assertIn("Uploading package 1/1: 5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9 to 'default'", tc.out)
 
-    def test_upload_only_recipe(self):
+    def test_upload_only_recipe_env_var(self):
         ts = TestServer(users={"user": "password"})
         tc = TestClient(servers={"default": ts}, users={"default": [("user", "password")]})
         tc.save({"conanfile.py": self.conanfile})
@@ -127,6 +127,41 @@ class Pkg(ConanFile):
                                 "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user",
                                 "CONAN_UPLOAD_ONLY_RECIPE": "FALSE"}):
             mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True)
+            mulitpackager.add({}, {"shared": True})
+            mulitpackager.add({}, {"shared": False})
+            mulitpackager.run()
+
+            self.assertIn(" Uploading packages for 'lib/1.0@user/mychannel'", tc.out)
+            self.assertIn("Uploading lib/1.0@user/mychannel to remote", tc.out)
+            self.assertIn("Recipe is up to date, upload skipped", tc.out)
+            self.assertIn("Uploading package 1/2", tc.out)
+            self.assertIn("Uploading package 2/2", tc.out)
+
+    def test_upload_only_recipe_params(self):
+        ts = TestServer(users={"user": "password"})
+        tc = TestClient(servers={"default": ts}, users={"default": [("user", "password")]})
+        tc.save({"conanfile.py": self.conanfile})
+
+        # Upload only the recipe
+        with environment_append({"CONAN_UPLOAD": ts.fake_url, "CONAN_LOGIN_USERNAME": "user",
+                                "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user"}):
+            mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True,
+                                                      upload_only_recipe=True)
+            mulitpackager.add({}, {"shared": True})
+            mulitpackager.add({}, {"shared": False})
+            mulitpackager.run()
+
+            self.assertIn(" Uploading packages for 'lib/1.0@user/mychannel'", tc.out)
+            self.assertIn("Uploading lib/1.0@user/mychannel to remote", tc.out)
+            self.assertIn("Uploaded conan recipe 'lib/1.0@user/mychannel'", tc.out)
+            self.assertNotIn("Uploading package 1/2", tc.out)
+            self.assertNotIn("Uploading package 2/2", tc.out)
+
+        # Re-use cache the upload the binary packages
+        with environment_append({"CONAN_UPLOAD": ts.fake_url, "CONAN_LOGIN_USERNAME": "user",
+                                "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user"}):
+            mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True,
+                                                      upload_only_recipe=False)
             mulitpackager.add({}, {"shared": True})
             mulitpackager.add({}, {"shared": False})
             mulitpackager.run()
