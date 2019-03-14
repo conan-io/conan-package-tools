@@ -842,10 +842,11 @@ class AppTest(unittest.TestCase):
     def test_custom_pip_command(self):
         """ CPT should run custom `pip` path when CONAN_PIP_COMMAND is declared.
         """
+        pip = "pip3" if tools.which("pip3") else "pip2"
         with tools.environment_append({"CONAN_USERNAME": "foobar",
                                        "CONAN_PIP_PACKAGE": "conan==0.1.0",
                                        "CONAN_PIP_INSTALL": "foobar==0.1.0",
-                                       "CONAN_PIP_COMMAND": "pip3"}):
+                                       "CONAN_PIP_COMMAND": pip}):
             output = TestBufferConanOutput()
             self.packager = ConanMultiPackager(username="lasote",
                                                channel="mychannel",
@@ -857,8 +858,8 @@ class AppTest(unittest.TestCase):
             self.packager.add_common_builds()
             self.packager.run()
             self.assertIn("[pip_update]", output)
-            self.assertIn(" pip3 install conan==0.1.0", self.runner.calls)
-            self.assertIn(" pip3 install foobar==0.1.0", self.runner.calls)
+            self.assertIn(" {} install conan==0.1.0".format(pip), self.runner.calls)
+            self.assertIn(" {} install foobar==0.1.0".format(pip), self.runner.calls)
 
     def test_invalid_pip_command(self):
         """ CPT should not accept invalid `pip` command when CONAN_PIP_COMMAND is declared.
