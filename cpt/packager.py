@@ -144,7 +144,7 @@ class ConanMultiPackager(object):
         else:
             self.upload_only_when_tag = get_bool_from_env("CONAN_UPLOAD_ONLY_WHEN_TAG")
 
-        self.upload_only_recipe = upload_only_when_tag or get_bool_from_env("CONAN_UPLOAD_ONLY_RECIPE")
+        self.upload_only_recipe = upload_only_recipe or get_bool_from_env("CONAN_UPLOAD_ONLY_RECIPE")
 
         self.uploader = Uploader(self.conan_api, self.remotes_manager, self.auth_manager,
                                  self.printer, self.upload_retry)
