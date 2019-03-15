@@ -46,7 +46,7 @@ class Pkg(ConanFile):
             self.assertIn("Uploading package 1/2", tc.out)
             self.assertIn("Uploading package 2/2", tc.out)
             self.assertIn("OLD", tc.out)
-            self.assertIn("Removing outdated packages for 'lib/1.0@user/testing'", tc.out)
+            self.assertIn("Removing outdated packages for 'lib/1.0@user/mychannel'", tc.out)
 
     def test_remove_updated_packages_params(self):
         ts = TestServer(users={"user": "password"})
@@ -63,4 +63,4 @@ class Pkg(ConanFile):
             self.assertIn("Uploading package 1/2", tc.out)
             self.assertIn("Uploading package 2/2", tc.out)
             self.assertIn("OLD", tc.out)
-            self.assertIn("Removing outdated packages for 'lib/1.0@user/testing'", tc.out)
+            self.assertIn("Removing outdated packages for 'lib/1.0@user/mychannel'", tc.out)
