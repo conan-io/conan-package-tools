@@ -832,7 +832,8 @@ class AppTest(unittest.TestCase):
                                                ci_manager=self.ci_manager,
                                                out=output.write,
                                                conan_api=self.conan_api,
-                                               runner=self.runner)
+                                               runner=self.runner,
+                                               exclude_vcvars_precommand=True)
             self.packager.add_common_builds()
             self.packager.run()
             self.assertIn("[pip_update]", output)
@@ -854,7 +855,8 @@ class AppTest(unittest.TestCase):
                                                ci_manager=self.ci_manager,
                                                out=output.write,
                                                conan_api=self.conan_api,
-                                               runner=self.runner)
+                                               runner=self.runner,
+                                               exclude_vcvars_precommand=True)
             self.packager.add_common_builds()
             self.packager.run()
             self.assertIn("[pip_update]", output)
@@ -875,7 +877,8 @@ class AppTest(unittest.TestCase):
                                                 ci_manager=self.ci_manager,
                                                 out=output.write,
                                                 conan_api=self.conan_api,
-                                                runner=self.runner)
+                                                runner=self.runner,
+                                                exclude_vcvars_precommand=True)
                 self.packager.add_common_builds()
                 self.packager.run()
 
