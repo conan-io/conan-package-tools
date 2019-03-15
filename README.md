@@ -1032,6 +1032,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
     - "missing": Build only missing packages.
     - "outdated": Build only missing or if the available package is not built with the current recipe. Useful to upload new configurations, e.j packages for a new compiler without
       rebuild all packages.
+- **remove_outdated_packages**: Remove all outdated packages from remote after to upload a package. Default [False]
 - **test_folder**: Custom test folder consumed by Conan create, e.j .conan/test_package
 - **config_url**: Conan config URL be installed before to build e.j https://github.com/bincrafters/conan-config.git
 
@@ -1167,6 +1168,7 @@ This is especially useful for CI integration.
 - **CONAN_CONFIG_URL**: Conan config URL be installed before to build e.j https://github.com/bincrafters/conan-config.git
 - **CONAN_BASE_PROFILE**: Apply options, settings, etc. to this profile instead of `default`.
 - **CONAN_IGNORE_SKIP_CI**: Ignore `[skip ci]` in commit message.
+- **CONAN_REMOVE_OUTDATED_PACKAGES**: Remove all outdated packages from remote after to upload a package. Default [False]
 - **CPT_TEST_FOLDER**: Custom test_package path, e.j .conan/test_package
 
 

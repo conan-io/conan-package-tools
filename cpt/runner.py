@@ -13,13 +13,14 @@ from cpt.profiles import load_profile, patch_default_base_profile
 
 class CreateRunner(object):
 
-    def __init__(self, profile_abs_path, reference, conan_api, uploader,
+    def __init__(self, profile_abs_path, reference, conan_api, uploader, eraser,
                  exclude_vcvars_precommand=False, build_policy=None, runner=None,
                  cwd=None, printer=None, upload=False, test_folder=None, config_url=None):
 
         self.printer = printer or Printer()
         self._cwd = cwd or os.getcwd()
         self._uploader = uploader
+        self._eraser = eraser
         self._upload = upload
         self._conan_api = conan_api
         self._profile_abs_path = profile_abs_path
@@ -104,11 +105,13 @@ class CreateRunner(object):
                             self.printer.print_rule()
                             return
                         for installed in r['installed']:
-                            if installed["recipe"]["id"] == str(self._reference):
+                            str_ref = str(self._reference)
+                            if installed["recipe"]["id"] == str_ref:
                                 package_id = installed['packages'][0]['id']
                                 if installed['packages'][0]["built"]:
                                     self._uploader.upload_packages(self._reference,
                                                                    self._upload, package_id)
+                                    self._eraser.remove_outdated_packages(str_ref)
                                 else:
                                     self.printer.print_message("Skipping upload for %s, "
                                                                "it hasn't been built" % package_id)
@@ -121,6 +124,7 @@ class DockerCreateRunner(object):
                  docker_image_skip_update=False, build_policy=None,
                  docker_image_skip_pull=False,
                  always_update_conan_in_docker=False,
+                 remove_outdated_packages=False,
                  upload=False, upload_retry=None,
                  runner=None,
                  docker_shell="", docker_conan_home="",
@@ -137,6 +141,7 @@ class DockerCreateRunner(object):
         self._build_policy = build_policy
         self._docker_image = docker_image
         self._always_update_conan_in_docker = always_update_conan_in_docker
+        self._remove_outdated_packages = remove_outdated_packages
         self._docker_image_skip_update = docker_image_skip_update
         self._docker_image_skip_pull = docker_image_skip_pull
         self._sudo_docker_command = sudo_docker_command or ""
@@ -256,6 +261,7 @@ class DockerCreateRunner(object):
         ret["CONAN_TEMP_TEST_FOLDER"] = "1"  # test package folder to a temp one
         ret["CPT_UPLOAD_ENABLED"] = self._upload
         ret["CPT_UPLOAD_RETRY"] = self._upload_retry
+        ret["CPT_REMOVE_OUTDATED_PACKAGES"] = self._remove_outdated_packages
         ret["CPT_BUILD_POLICY"] = escape_env(self._build_policy)
         ret["CPT_TEST_FOLDER"] = escape_env(self._test_folder)
         ret["CPT_CONFIG_URL"] = escape_env(self._config_url)

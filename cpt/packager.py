@@ -22,6 +22,7 @@ from cpt.runner import CreateRunner, DockerCreateRunner
 from cpt.tools import get_bool_from_env
 from cpt.tools import split_colon_env
 from cpt.uploader import Uploader
+from cpt.eraser import Eraser
 
 
 def load_cf_class(path, conan_api):
@@ -95,6 +96,7 @@ class ConanMultiPackager(object):
                  docker_conan_home=None,
                  pip_install=None,
                  build_policy=None,
+                 remove_outdated_packages=False,
                  always_update_conan_in_docker=False,
                  conan_api=None,
                  client_cache=None,
@@ -129,6 +131,11 @@ class ConanMultiPackager(object):
         self.auth_manager = AuthManager(self.conan_api, self.printer, login_username, password,
                                         default_username=self.username,
                                         skip_check_credentials=self.skip_check_credentials)
+
+        self._remove_outdated_packages = remove_outdated_packages or \
+                                        get_bool_from_env("CONAN_REMOVE_OUTDATED_PACKAGES")
+        self.eraser = Eraser(self.conan_api, self.remotes_manager, self.auth_manager, self.printer,
+                             self._remove_outdated_packages)
 
         # Upload related variables
         self.upload_retry = upload_retry or os.getenv("CONAN_UPLOAD_RETRY", 3)
@@ -518,6 +525,7 @@ class ConanMultiPackager(object):
                 profile_abs_path = save_profile_to_tmp(profile_text)
                 r = CreateRunner(profile_abs_path, build.reference, self.conan_api,
                                  self.uploader,
+                                 eraser=self.eraser,
                                  exclude_vcvars_precommand=self.exclude_vcvars_precommand,
                                  build_policy=self.build_policy,
                                  runner=self.runner,
@@ -539,6 +547,7 @@ class ConanMultiPackager(object):
                                        docker_image_skip_pull=self._docker_image_skip_pull,
                                        build_policy=self.build_policy,
                                        always_update_conan_in_docker=self._update_conan_in_docker,
+                                       remove_outdated_packages=self._remove_outdated_packages,
                                        upload=self._upload_enabled(),
                                        upload_retry=self.upload_retry,
                                        runner=self.runner,
