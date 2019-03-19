@@ -164,6 +164,7 @@ class ConanMultiPackager(object):
         self.stable_channel = self.stable_channel.rstrip()
         self.channel = self._get_channel(self.specified_channel, self.stable_channel, self.upload_only_when_tag)
         self.partial_reference = reference or os.getenv("CONAN_REFERENCE", None)
+        self.conanfile = conanfile or os.getenv("CONAN_CONANFILE", "conanfile.py")
 
         if self.partial_reference:
             if "@" in self.partial_reference:
@@ -172,11 +173,11 @@ class ConanMultiPackager(object):
                 name, version = self.partial_reference.split("/")
                 self.reference = ConanFileReference(name, version, self.username, self.channel)
         else:
-            if not os.path.exists(os.path.join(self.cwd, "conanfile.py")):
+            if not os.path.exists(os.path.join(self.cwd, self.conanfile)):
                 raise Exception("Conanfile not found, specify a 'reference' "
                                 "parameter with name and version")
 
-            conanfile = load_cf_class(os.path.join(self.cwd, "conanfile.py"), self.conan_api)
+            conanfile = load_cf_class(os.path.join(self.cwd, self.conanfile), self.conan_api)
             name, version = conanfile.name, conanfile.version
             if name and version:
                 self.reference = ConanFileReference(name, version, self.username, self.channel)
@@ -393,8 +394,8 @@ class ConanMultiPackager(object):
             raise Exception("Specify a CONAN_REFERENCE or name and version fields in the recipe")
 
         if shared_option_name is None:
-            if os.path.exists(os.path.join(self.cwd, "conanfile.py")):
-                conanfile = load_cf_class(os.path.join(self.cwd, "conanfile.py"), self.conan_api)
+            if os.path.exists(os.path.join(self.cwd, self.conanfile)):
+                conanfile = load_cf_class(os.path.join(self.cwd, self.conanfile), self.conan_api)
                 if hasattr(conanfile, "options") and conanfile.options and "shared" in conanfile.options:
                     shared_option_name = "%s:shared" % self.reference.name
 
@@ -543,7 +544,8 @@ class ConanMultiPackager(object):
                                  upload=self._upload_enabled(),
                                  test_folder=self.test_folder,
                                  config_url=self.config_url,
-                                 upload_dependencies=self.upload_dependencies)
+                                 upload_dependencies=self.upload_dependencies,
+                                 conanfile=self.conanfile)
                 r.run()
             else:
                 docker_image = self._get_docker_image(build)
@@ -567,7 +569,8 @@ class ConanMultiPackager(object):
                                        test_folder=self.test_folder,
                                        pip_install=self.pip_install,
                                        config_url=self.config_url,
-                                       upload_dependencies=self.upload_dependencies)
+                                       upload_dependencies=self.upload_dependencies,
+                                       conanfile=self.conanfile)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
                       docker_entry_script=self.docker_entry_script)
