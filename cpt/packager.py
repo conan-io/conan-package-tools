@@ -103,7 +103,8 @@ class ConanMultiPackager(object):
                  out=None,
                  test_folder=None,
                  cwd=None,
-                 config_url=None):
+                 config_url=None,
+                 upload_dependencies=None):
 
         self.printer = Printer(out)
         self.printer.print_rule()
@@ -219,6 +220,10 @@ class ConanMultiPackager(object):
             self.sudo_pip_command = "sudo -E" if get_bool_from_env("CONAN_PIP_USE_SUDO") else ""
         elif platform.system() != "Windows" and self._docker_image and 'conanio/' not in str(self._docker_image):
             self.sudo_pip_command = "sudo -E"
+        self.pip_command = os.getenv("CONAN_PIP_COMMAND", "pip")
+        pip_found = True if tools.os_info.is_windows else tools.which(self.pip_command)
+        if not pip_found or not "pip" in self.pip_command:
+            raise Exception("CONAN_PIP_COMMAND: '{}' is not a valid pip command.".format(self.pip_command))
 
         self.docker_shell = ""
 
@@ -254,6 +259,12 @@ class ConanMultiPackager(object):
         self.docker_entry_script = docker_entry_script or os.getenv("CONAN_DOCKER_ENTRY_SCRIPT")
 
         self.pip_install = pip_install or split_colon_env("CONAN_PIP_INSTALL")
+
+        self.upload_dependencies = upload_dependencies or split_colon_env("CONAN_UPLOAD_DEPENDENCIES") or ""
+        if isinstance(self.upload_dependencies, list):
+            self.upload_dependencies = ",".join(self.upload_dependencies)
+        if "all" in self.upload_dependencies and self.upload_dependencies != "all":
+            raise Exception("Upload dependencies only accepts or 'all' or package references. Do not mix both!")
 
         os.environ["CONAN_CHANNEL"] = self.channel
 
@@ -374,6 +385,9 @@ class ConanMultiPackager(object):
                 else:
                     self._named_builds.setdefault(key, []).append(BuildConf(*values))
 
+    def login(self, remote_name):
+        self.auth_manager.login(remote_name)
+
     def add_common_builds(self, shared_option_name=None, pure_c=True,
                           dll_with_static_runtime=False, reference=None):
 
@@ -442,12 +456,14 @@ class ConanMultiPackager(object):
                 self.auth_manager.login(self.remotes_manager.upload_remote_name)
             if self.conan_pip_package and not self.use_docker:
                 with self.printer.foldable_output("pip_update"):
-                    self.runner('%s pip install %s' % (self.sudo_pip_command,
-                                                       self.conan_pip_package))
+                    self.runner('%s %s install -q %s' % (self.sudo_pip_command,
+                                                      self.pip_command,
+                                                      self.conan_pip_package))
                     if self.pip_install:
                         packages = " ".join(self.pip_install)
                         self.printer.print_message("Install extra python packages: {}".format(packages))
-                        self.runner('%s pip install %s' % (self.sudo_pip_command, packages))
+                        self.runner('%s %s install -q %s' % (self.sudo_pip_command,
+                                                          self.pip_command, packages))
 
             self.run_builds(base_profile_name=base_profile_name)
 
@@ -528,7 +544,8 @@ class ConanMultiPackager(object):
                                  printer=self.printer,
                                  upload=self._upload_enabled(),
                                  test_folder=self.test_folder,
-                                 config_url=self.config_url)
+                                 config_url=self.config_url,
+                                 upload_dependencies=self.upload_dependencies)
                 r.run()
             else:
                 docker_image = self._get_docker_image(build)
@@ -553,7 +570,8 @@ class ConanMultiPackager(object):
                                        test_folder=self.test_folder,
                                        pip_install=self.pip_install,
                                        config_url=self.config_url,
-                                       printer=self.printer)
+                                       printer=self.printer,
+                                       upload_dependencies=self.upload_dependencies)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
                       docker_entry_script=self.docker_entry_script)
