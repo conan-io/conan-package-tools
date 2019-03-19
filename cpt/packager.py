@@ -98,6 +98,7 @@ class ConanMultiPackager(object):
                  always_update_conan_in_docker=False,
                  conan_api=None,
                  client_cache=None,
+                 conanfile=None,
                  ci_manager=None,
                  out=None,
                  test_folder=None,
