@@ -101,3 +101,133 @@ class Pkg(ConanFile):
             self.assertIn("Redefined channel by branch tag", tc.out)
             self.assertIn("Uploading packages for 'lib/1.0@user/stable'", tc.out)
             self.assertIn("Uploading package 1/1: 5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9 to 'default'", tc.out)
+
+
+class UploadDependenciesTest(unittest.TestCase):
+
+    conanfile_bar = """from conans import ConanFile
+class Pkg(ConanFile):
+    name = "bar"
+    version = "0.1.0"
+
+    def build(self):
+        pass
+    """
+
+    conanfile_foo = """from conans import ConanFile
+class Pkg(ConanFile):
+    name = "foo"
+    version = "1.0.0"
+    options = {"shared": [True, False]}
+    default_options = "shared=True"
+
+    def build(self):
+        pass
+    """
+
+    conanfile = """from conans import ConanFile
+class Pkg(ConanFile):
+    name = "foobar"
+    version = "2.0"
+    requires = "bar/0.1.0@foo/stable", "foo/1.0.0@bar/testing"
+
+    def build(self):
+        self.output.warn("BUILDING")
+"""
+
+    def setUp(self):
+        self._server = TestServer(users={"user": "password"},
+                                  write_permissions=[("bar/0.1.0@foo/stable", "user"),
+                                                     ("foo/1.0.0@bar/testing", "user")])
+        self._client = TestClient(servers={"default": self._server},
+                                 users={"default": [("user", "password")]})
+        self._client.save({"conanfile_bar.py": self.conanfile_bar})
+        self._client.run("export conanfile_bar.py foo/stable")
+        self._client.save({"conanfile_foo.py": self.conanfile_foo})
+        self._client.run("export conanfile_foo.py bar/testing")
+        self._client.save({"conanfile.py": self.conanfile})
+
+    def test_upload_all_dependencies(self):
+        with environment_append({"CONAN_UPLOAD":  self._server.fake_url,
+                                 "CONAN_LOGIN_USERNAME": "user",
+                                 "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user",
+                                 "CONAN_UPLOAD_DEPENDENCIES": "all"}):
+
+            mulitpackager = get_patched_multipackager(self._client, username="user",
+                                                      channel="testing",
+                                                      build_policy="missing",
+                                                      exclude_vcvars_precommand=True)
+            mulitpackager.add({}, {})
+            mulitpackager.run()
+
+            self.assertIn("Uploading packages for 'foobar/2.0@user/testing'", self._client.out)
+            self.assertIn("Uploaded conan recipe 'foobar/2.0@user/testing'", self._client.out)
+            self.assertIn("Uploading package 1/1: f88b82969cca9c4bf43f9effe1157e641f38f16d", self._client.out)
+
+            self.assertIn("Uploading packages for 'bar/0.1.0@foo/stable'", self._client.out)
+            self.assertIn("Uploaded conan recipe 'bar/0.1.0@foo/stable'", self._client.out)
+            self.assertIn("Uploading package 1/1: 5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9", self._client.out)
+
+            self.assertIn("Uploading packages for 'foo/1.0.0@bar/testing'", self._client.out)
+            self.assertIn("Uploaded conan recipe 'foo/1.0.0@bar/testing'", self._client.out)
+            self.assertIn("Uploading package 1/1: 2a623e3082a38f90cd2c3d12081161412de331b0", self._client.out)
+
+    def test_invalid_upload_dependencies(self):
+        with environment_append({"CONAN_UPLOAD":  self._server.fake_url,
+                                 "CONAN_LOGIN_USERNAME": "user",
+                                 "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user",
+                                 "CONAN_UPLOAD_DEPENDENCIES": "all,bar/0.1.0@foo/stable"}):
+            with self.assertRaises(Exception) as context:
+                get_patched_multipackager(self._client, exclude_vcvars_precommand=True)
+            self.assertIn("Upload dependencies only accepts or 'all' or package references. Do not mix both!", str(context.exception))
+
+
+    def test_upload_specific_dependencies(self):
+        with environment_append({"CONAN_UPLOAD":  self._server.fake_url,
+                                 "CONAN_LOGIN_USERNAME": "user",
+                                 "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user",
+                                 "CONAN_UPLOAD_DEPENDENCIES": "foo/1.0.0@bar/testing"}):
+
+            mulitpackager = get_patched_multipackager(self._client, username="user",
+                                                      channel="testing",
+                                                      build_policy="missing",
+                                                      exclude_vcvars_precommand=True)
+            mulitpackager.add({}, {})
+            mulitpackager.run()
+
+            self.assertIn("Uploading packages for 'foobar/2.0@user/testing'", self._client.out)
+            self.assertIn("Uploaded conan recipe 'foobar/2.0@user/testing'", self._client.out)
+            self.assertIn("Uploading package 1/1: f88b82969cca9c4bf43f9effe1157e641f38f16d", self._client.out)
+
+            self.assertNotIn("Uploading packages for 'bar/0.1.0@foo/stable'", self._client.out)
+            self.assertNotIn("Uploaded conan recipe 'bar/0.1.0@foo/stable'", self._client.out)
+            self.assertNotIn("Uploading package 1/1: 5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9", self._client.out)
+
+            self.assertIn("Uploading packages for 'foo/1.0.0@bar/testing'", self._client.out)
+            self.assertIn("Uploaded conan recipe 'foo/1.0.0@bar/testing'", self._client.out)
+            self.assertIn("Uploading package 1/1: 2a623e3082a38f90cd2c3d12081161412de331b0", self._client.out)
+
+    def test_upload_regex_dependencies(self):
+        with environment_append({"CONAN_UPLOAD":  self._server.fake_url,
+                                 "CONAN_LOGIN_USERNAME": "user",
+                                 "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user",
+                                 "CONAN_UPLOAD_DEPENDENCIES": "foo/*"}):
+
+            mulitpackager = get_patched_multipackager(self._client, username="user",
+                                                      channel="testing",
+                                                      build_policy="missing",
+                                                      exclude_vcvars_precommand=True)
+            mulitpackager.add({}, {})
+            mulitpackager.run()
+
+            self.assertIn("Uploading packages for 'foobar/2.0@user/testing'", self._client.out)
+            self.assertIn("Uploaded conan recipe 'foobar/2.0@user/testing'", self._client.out)
+            self.assertIn("Uploading package 1/1: f88b82969cca9c4bf43f9effe1157e641f38f16d", self._client.out)
+
+            self.assertNotIn("Uploading packages for 'bar/0.1.0@foo/stable'", self._client.out)
+            self.assertNotIn("Uploaded conan recipe 'bar/0.1.0@foo/stable'", self._client.out)
+            self.assertNotIn("Uploading package 1/1: 5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9", self._client.out)
+
+            self.assertNotIn("Uploading packages for 'foo/1.0.0@bar/testing'", self._client.out)
+            self.assertNotIn("Uploaded conan recipe 'foo/1.0.0@bar/testing'", self._client.out)
+            self.assertNotIn("Uploading package 1/1: 2a623e3082a38f90cd2c3d12081161412de331b0", self._client.out)

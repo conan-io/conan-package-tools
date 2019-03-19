@@ -15,7 +15,8 @@ class CreateRunner(object):
 
     def __init__(self, profile_abs_path, reference, conan_api, uploader,
                  exclude_vcvars_precommand=False, build_policy=None, runner=None,
-                 cwd=None, printer=None, upload=False, test_folder=None, config_url=None):
+                 cwd=None, printer=None, upload=False, test_folder=None, config_url=None,
+                 upload_dependencies=None):
 
         self.printer = printer or Printer()
         self._cwd = cwd or os.getcwd()
@@ -30,6 +31,9 @@ class CreateRunner(object):
         self._uploader.remote_manager.add_remotes_to_conan()
         self._test_folder = test_folder
         self._config_url = config_url
+        self._upload_dependencies = upload_dependencies.split(",") if \
+                                    isinstance(upload_dependencies, str) else \
+                                    upload_dependencies
 
         patch_default_base_profile(conan_api, profile_abs_path)
 
@@ -104,10 +108,14 @@ class CreateRunner(object):
                             self.printer.print_rule()
                             return
                         for installed in r['installed']:
-                            if installed["recipe"]["id"] == str(self._reference):
+                            reference = installed["recipe"]["id"]
+                            if ((reference == str(self._reference)) or \
+                               (reference in self._upload_dependencies) or \
+                               ("all" in self._upload_dependencies)) and \
+                               installed['packages']:
                                 package_id = installed['packages'][0]['id']
                                 if installed['packages'][0]["built"]:
-                                    self._uploader.upload_packages(self._reference,
+                                    self._uploader.upload_packages(reference,
                                                                    self._upload, package_id)
                                 else:
                                     self.printer.print_message("Skipping upload for %s, "
@@ -127,7 +135,8 @@ class DockerCreateRunner(object):
                  docker_platform_param="", lcow_user_workaround="",
                  test_folder=None,
                  pip_install=None,
-                 config_url=None):
+                 config_url=None,
+                 upload_dependencies=None):
 
         self.printer = Printer()
         self._upload = upload
@@ -152,6 +161,7 @@ class DockerCreateRunner(object):
         self._test_folder = test_folder
         self._pip_install = pip_install
         self._config_url = config_url
+        self._upload_dependencies = upload_dependencies
 
     def _pip_update_conan_command(self):
         commands = []
@@ -259,6 +269,7 @@ class DockerCreateRunner(object):
         ret["CPT_BUILD_POLICY"] = escape_env(self._build_policy)
         ret["CPT_TEST_FOLDER"] = escape_env(self._test_folder)
         ret["CPT_CONFIG_URL"] = escape_env(self._config_url)
+        ret["CPT_UPLOAD_DEPENDENCIES"] = escape_env(self._upload_dependencies)
 
         ret.update({key: value for key, value in os.environ.items() if key.startswith("PIP_")})
 

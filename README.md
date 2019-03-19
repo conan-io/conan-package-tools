@@ -798,6 +798,26 @@ You can upload the generated packages automatically to a conan-server using the 
         CONAN_STABLE_BRANCH_PATTERN: "release/*"
 
 
+## Upload dependencies ([#237](https://github.com/conan-io/conan-package-tools/issues/237))
+
+Sometimes your dependencies are not available in remotes and you need to pass ``--build=missing`` to build them.
+The problem is that you will need to fix one-by-one, updating the CI script, instead of just uploading all built packages.
+
+Now you can upload **ALL** of your dependencies together, in addition to your package, to the same remote. To do this, you need to define:
+
+    CONAN_UPLOAD_DEPENDENCIES="all"
+
+Or, set it in ``ConanMultiPackager`` arguments:
+
+    ConanMultiPackager(upload_dependencies="all")
+
+However, maybe you want to upload **ONLY** specified packages by their names:
+
+    CONAN_UPLOAD_DEPENDENCIES="foo/0.1@user/channel,bar/1.2@bar/channel"
+
+Or,
+
+    ConanMultiPackager(upload_dependencies=["foo/0.1@user/channel", "bar/1.2@bar/channel"])
 
 ## Pagination
 
@@ -1022,6 +1042,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **upload_retry**: Num retries in upload in case of failure.
 - **upload_only_when_stable**: Will try to upload only if the channel is the stable channel. Default [False]
 - **upload_only_when_tag**: Will try to upload only if the branch is a tag. Default [False]
+- **upload_dependencies**: Will try to upload dependencies to your remote. Default [False]
 - **build_types**: List containing specific build types. Default ["Release", "Debug"]
 - **skip_check_credentials**: Conan will skip checking the user credentials before building the packages. And if no user/remote is specified, will try to upload with the
   already stored credentiales in the local cache. Default [False]
@@ -1121,6 +1142,7 @@ This is especially useful for CI integration.
 - **CONAN_UPLOAD_RETRY**: If defined, in case of fail retries to upload again the specified times
 - **CONAN_UPLOAD_ONLY_WHEN_STABLE**: If defined, will try to upload the packages only when the current channel is the stable one.
 - **CONAN_UPLOAD_ONLY_WHEN_TAG**: If defined, will try to upload the packages only when the current branch is a tag.
+- **CONAN_UPLOAD_DEPENDENCIES**: If defined, will try to upload the listed package dependencies to your remote.
 
 - **CONAN_SKIP_CHECK_CREDENTIALS**: Conan will skip checking the user credentials before building the packages. And if no user/remote is specified, will try to upload with the
   already stored credentiales in the local cache. Default [False]
