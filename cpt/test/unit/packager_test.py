@@ -8,6 +8,7 @@ from collections import defaultdict
 from cpt.builds_generator import BuildConf
 from cpt.packager import ConanMultiPackager
 from conans import tools
+from conans.test.utils.tools import TestBufferConanOutput
 from conans.model.ref import ConanFileReference
 from cpt.test.unit.utils import MockConanAPI, MockRunner, MockCIManager
 
@@ -817,3 +818,69 @@ class AppTest(unittest.TestCase):
         self._add_build(1, "gcc", "4.3")
         self.packager.run_builds(1, 2)
         self.assertIn("sudo -E pip", self.runner.calls[1])
+
+    def test_regular_pip_command(self):
+        """ CPT Should call `pip` when CONAN_PIP_PACKAGE or CONAN_PIP_INSTALL are declared.
+        """
+        with tools.environment_append({"CONAN_USERNAME": "foobar",
+                                       "CONAN_PIP_PACKAGE": "conan==1.0.0-dev",
+                                       "CONAN_PIP_INSTALL": "foobar==0.1.0"}):
+            output = TestBufferConanOutput()
+            self.packager = ConanMultiPackager(username="lasote",
+                                               channel="mychannel",
+                                               reference="lib/1.0",
+                                               ci_manager=self.ci_manager,
+                                               out=output.write,
+                                               conan_api=self.conan_api,
+                                               runner=self.runner,
+                                               exclude_vcvars_precommand=True)
+            self.packager.add_common_builds()
+            self.packager.run()
+            self.assertIn("[pip_update]", output)
+            self.assertIn(" pip install -q conan==1.0.0-dev", self.runner.calls)
+            self.assertIn(" pip install -q foobar==0.1.0", self.runner.calls)
+
+    def test_custom_pip_command(self):
+        """ CPT should run custom `pip` path when CONAN_PIP_COMMAND is declared.
+        """
+        pip = "pip3" if tools.which("pip3") else "pip2"
+        with tools.environment_append({"CONAN_USERNAME": "foobar",
+                                       "CONAN_PIP_PACKAGE": "conan==0.1.0",
+                                       "CONAN_PIP_INSTALL": "foobar==0.1.0",
+                                       "CONAN_PIP_COMMAND": pip}):
+            output = TestBufferConanOutput()
+            self.packager = ConanMultiPackager(username="lasote",
+                                               channel="mychannel",
+                                               reference="lib/1.0",
+                                               ci_manager=self.ci_manager,
+                                               out=output.write,
+                                               conan_api=self.conan_api,
+                                               runner=self.runner,
+                                               exclude_vcvars_precommand=True)
+            self.packager.add_common_builds()
+            self.packager.run()
+            self.assertIn("[pip_update]", output)
+            self.assertIn(" {} install -q conan==0.1.0".format(pip), self.runner.calls)
+            self.assertIn(" {} install -q foobar==0.1.0".format(pip), self.runner.calls)
+
+    def test_invalid_pip_command(self):
+        """ CPT should not accept invalid `pip` command when CONAN_PIP_COMMAND is declared.
+        """
+        with tools.environment_append({"CONAN_USERNAME": "foobar",
+                                       "CONAN_PIP_PACKAGE": "conan==0.1.0",
+                                       "CONAN_PIP_COMMAND": "/bin/bash"}):
+            output = TestBufferConanOutput()
+            with self.assertRaises(Exception) as context:
+                self.packager = ConanMultiPackager(username="lasote",
+                                                channel="mychannel",
+                                                reference="lib/1.0",
+                                                ci_manager=self.ci_manager,
+                                                out=output.write,
+                                                conan_api=self.conan_api,
+                                                runner=self.runner,
+                                                exclude_vcvars_precommand=True)
+                self.packager.add_common_builds()
+                self.packager.run()
+
+                self.assertTrue("CONAN_PIP_COMMAND: '/bin/bash' is not a valid pip command" in context.exception)
+            self.assertNotIn("[pip_update]", output)
