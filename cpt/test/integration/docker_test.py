@@ -126,7 +126,7 @@ class Pkg(ConanFile):
                                        "CONAN_DOCKER_IMAGE": "conanio/gcc8",
                                        "CONAN_DOCKER_USE_SUDO": "0",
                                        "CONAN_REFERENCE": "foo/0.0.1@bar/testing",
-                                       "CONAN_DOCKER_RUN_OPTIONS": "--network=host"
+                                       "CONAN_DOCKER_RUN_OPTIONS": "--network=host, --add-host=google.com:8.8.8.8"
                                        }):
             self.packager = ConanMultiPackager(gcc_versions=["8"],
                                                archs=["x86_64"],
@@ -134,7 +134,7 @@ class Pkg(ConanFile):
                                                out=self.output.write)
             self.packager.add({})
             self.packager.run()
-            self.assertIn("--network=host  conanio/gcc8", self.output)
+            self.assertIn("--network=host --add-host=google.com:8.8.8.8  conanio/gcc8", self.output)
 
         # Validate by parameter
         with tools.environment_append({"CONAN_USERNAME": "bar",
