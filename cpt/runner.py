@@ -200,8 +200,9 @@ class DockerCreateRunner(object):
                 with self.printer.foldable_output("update conan"):
                     try:
                         command = '%s docker run %s --name conan_runner ' \
-                                  ' %s %s "%s"' % (self._sudo_docker_command,
+                                  ' %s %s %s "%s"' % (self._sudo_docker_command,
                                                    env_vars_text,
+                                                   self._docker_run_options,
                                                    self._docker_image,
                                                    self._docker_shell,
                                                    self._pip_update_conan_command())
