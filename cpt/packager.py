@@ -219,6 +219,10 @@ class ConanMultiPackager(object):
             self.sudo_pip_command = "sudo -E" if get_bool_from_env("CONAN_PIP_USE_SUDO") else ""
         elif platform.system() != "Windows" and self._docker_image and 'conanio/' not in str(self._docker_image):
             self.sudo_pip_command = "sudo -E"
+        self.pip_command = os.getenv("CONAN_PIP_COMMAND", "pip")
+        pip_found = True if tools.os_info.is_windows else tools.which(self.pip_command)
+        if not pip_found or not "pip" in self.pip_command:
+            raise Exception("CONAN_PIP_COMMAND: '{}' is not a valid pip command.".format(self.pip_command))
 
         self.docker_shell = ""
 
@@ -449,12 +453,14 @@ class ConanMultiPackager(object):
                 self.auth_manager.login(self.remotes_manager.upload_remote_name)
             if self.conan_pip_package and not self.use_docker:
                 with self.printer.foldable_output("pip_update"):
-                    self.runner('%s pip install %s' % (self.sudo_pip_command,
-                                                       self.conan_pip_package))
+                    self.runner('%s %s install -q %s' % (self.sudo_pip_command,
+                                                      self.pip_command,
+                                                      self.conan_pip_package))
                     if self.pip_install:
                         packages = " ".join(self.pip_install)
                         self.printer.print_message("Install extra python packages: {}".format(packages))
-                        self.runner('%s pip install %s' % (self.sudo_pip_command, packages))
+                        self.runner('%s %s install -q %s' % (self.sudo_pip_command,
+                                                          self.pip_command, packages))
 
             self.run_builds(base_profile_name=base_profile_name)
 
