@@ -31,10 +31,11 @@ class CreateRunner(object):
         self._uploader.remote_manager.add_remotes_to_conan()
         self._test_folder = test_folder
         self._config_url = config_url
+        self._conanfile = conanfile
         self._upload_dependencies = upload_dependencies.split(",") if \
                                     isinstance(upload_dependencies, str) else \
                                     upload_dependencies
-        self._conanfile = conanfile
+
 
         patch_default_base_profile(conan_api, profile_abs_path)
 

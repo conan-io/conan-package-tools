@@ -151,8 +151,7 @@ class ConanMultiPackager(object):
         self._builds = []
         self._named_builds = {}
 
-        self._update_conan_in_docker = (always_update_conan_in_docker or
-                                        os.getenv("CONAN_ALWAYS_UPDATE_CONAN_DOCKER", False))
+        self._update_conan_in_docker = always_update_conan_in_docker or get_bool_from_env("CONAN_ALWAYS_UPDATE_CONAN_DOCKER")
 
         self._platform_info = platform_info or PlatformInfo()
 
