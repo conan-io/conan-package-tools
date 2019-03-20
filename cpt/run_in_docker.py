@@ -34,6 +34,7 @@ def run():
     base_profile_text = unscape_env(os.getenv("CPT_BASE_PROFILE"))
     config_url = unscape_env(os.getenv("CPT_CONFIG_URL"))
     upload_dependencies = unscape_env(os.getenv("CPT_UPLOAD_DEPENDENCIES"))
+    conanfile = unscape_env(os.getenv("CPT_CONANFILE"))
     if base_profile_text:
         base_profile_name = unscape_env(os.getenv("CPT_BASE_PROFILE_NAME"))
         tools.save(os.path.join(client_cache.profiles_path, base_profile_name),
@@ -43,7 +44,7 @@ def run():
     runner = CreateRunner(abs_profile_path, reference, conan_api, uploader,
                           build_policy=build_policy, printer=printer, upload=upload,
                           test_folder=test_folder, config_url=config_url,
-                          upload_dependencies=upload_dependencies)
+                          upload_dependencies=upload_dependencies, conanfile=conanfile)
     runner.run()
 
 
