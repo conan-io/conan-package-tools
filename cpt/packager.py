@@ -125,8 +125,7 @@ class ConanMultiPackager(object):
         if not self.username:
             raise Exception("Instance ConanMultiPackage with 'username' parameter or use "
                             "CONAN_USERNAME env variable")
-        self.skip_check_credentials = skip_check_credentials or \
-                                      os.getenv("CONAN_SKIP_CHECK_CREDENTIALS", False)
+        self.skip_check_credentials = skip_check_credentials or get_bool_from_env("CONAN_SKIP_CHECK_CREDENTIALS")
 
         self.auth_manager = AuthManager(self.conan_api, self.printer, login_username, password,
                                         default_username=self.username,
