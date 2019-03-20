@@ -798,8 +798,6 @@ You can upload the generated packages automatically to a conan-server using the 
         CONAN_STABLE_BRANCH_PATTERN: "release/*"
 
 
-<<<<<<< HEAD
-=======
 ## Upload dependencies ([#237](https://github.com/conan-io/conan-package-tools/issues/237))
 
 Sometimes your dependencies are not available in remotes and you need to pass ``--build=missing`` to build them.
@@ -821,7 +819,6 @@ Or,
 
     ConanMultiPackager(upload_dependencies=["foo/0.1@user/channel", "bar/1.2@bar/channel"])
 
->>>>>>> upstream/develop
 ## Pagination
 
 Sometimes, if your library is big or complex enough in terms of compilation time, the CI server could reach the maximum time of execution,
