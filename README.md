@@ -1,4 +1,9 @@
-# Conan Package Tools [![Build Status](https://travis-ci.org/conan-io/conan-package-tools.svg?branch=master)](https://travis-ci.org/conan-io/conan-package-tools)
+[![Build Status Travis](https://travis-ci.org/conan-io/conan-package-tools.svg?branch=master)](https://travis-ci.org/conan-io/conan-package-tools)
+[![Build status Appveyor](https://ci.appveyor.com/api/projects/status/github/conan-io/conan-package-tools?svg=true)](https://ci.appveyor.com/project/ConanCIintegration/conan-package-tools)
+[![codecov](https://codecov.io/gh/conan-io/conan-package-tools/branch/master/graph/badge.svg)](https://codecov.io/gh/conan-io/conan-package-tools)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/conan-package-tools.svg?style=plastic)
+
+# Conan Package Tools
 
 
 ## Introduction
