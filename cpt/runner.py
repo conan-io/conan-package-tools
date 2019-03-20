@@ -16,7 +16,7 @@ class CreateRunner(object):
     def __init__(self, profile_abs_path, reference, conan_api, uploader,
                  exclude_vcvars_precommand=False, build_policy=None, runner=None,
                  cwd=None, printer=None, upload=False, test_folder=None, config_url=None,
-                 upload_dependencies=None):
+                 upload_dependencies=None, conanfile=None):
 
         self.printer = printer or Printer()
         self._cwd = cwd or os.getcwd()
@@ -31,9 +31,11 @@ class CreateRunner(object):
         self._uploader.remote_manager.add_remotes_to_conan()
         self._test_folder = test_folder
         self._config_url = config_url
+        self._conanfile = conanfile
         self._upload_dependencies = upload_dependencies.split(",") if \
                                     isinstance(upload_dependencies, str) else \
                                     upload_dependencies
+
 
         patch_default_base_profile(conan_api, profile_abs_path)
 
@@ -90,13 +92,13 @@ class CreateRunner(object):
 
                         try:
                             if client_version < Version("1.12.0"):
-                                r = self._conan_api.create(".", name=name, version=version,
+                                r = self._conan_api.create(self._conanfile, name=name, version=version,
                                                         user=user, channel=channel,
                                                         build_modes=self._build_policy,
                                                         profile_name=self._profile_abs_path,
                                                         test_folder=self._test_folder)
                             else:
-                                r = self._conan_api.create(".", name=name, version=version,
+                                r = self._conan_api.create(self._conanfile, name=name, version=version,
                                                         user=user, channel=channel,
                                                         build_modes=self._build_policy,
                                                         profile_names=[self._profile_abs_path],
@@ -138,7 +140,8 @@ class DockerCreateRunner(object):
                  pip_install=None,
                  config_url=None,
                  printer=None,
-                 upload_dependencies=None):
+                 upload_dependencies=None,
+                 conanfile=None):
 
         self.printer = printer or Printer()
         self._upload = upload
@@ -165,6 +168,7 @@ class DockerCreateRunner(object):
         self._pip_install = pip_install
         self._config_url = config_url
         self._upload_dependencies = upload_dependencies
+        self._conanfile = conanfile
 
     def _pip_update_conan_command(self):
         commands = []
@@ -275,6 +279,7 @@ class DockerCreateRunner(object):
         ret["CPT_TEST_FOLDER"] = escape_env(self._test_folder)
         ret["CPT_CONFIG_URL"] = escape_env(self._config_url)
         ret["CPT_UPLOAD_DEPENDENCIES"] = escape_env(self._upload_dependencies)
+        ret["CPT_CONANFILE"] = escape_env(self._conanfile)
 
         ret.update({key: value for key, value in os.environ.items() if key.startswith("PIP_")})
 
