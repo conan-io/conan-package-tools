@@ -8,13 +8,13 @@ import six
 from conans import __version__ as client_version, tools
 from conans.client.conan_api import Conan
 from conans.client.runner import ConanRunner
-from conans.model.ref import ConanFileReference
 from conans.model.version import Version
 
 from cpt import NEWEST_CONAN_SUPPORTED
 from cpt.auth import AuthManager
 from cpt.builds_generator import BuildConf, BuildGenerator
 from cpt.ci_manager import CIManager
+from cpt.lazy_objects import LazyConanFileReference, LazyPackageOption
 from cpt.printer import Printer
 from cpt.profiles import get_profiles, save_profile_to_tmp
 from cpt.remotes import RemotesManager
@@ -22,14 +22,6 @@ from cpt.runner import CreateRunner, DockerCreateRunner
 from cpt.tools import get_bool_from_env
 from cpt.tools import split_colon_env
 from cpt.uploader import Uploader
-
-
-def load_cf_class(path, conan_api):
-    if Version(client_version) < Version("1.7.0"):
-        from conans.client.loader_parse import load_conanfile_class
-        return load_conanfile_class(path)
-    else:
-        return conan_api._loader.load_class(path)
 
 
 class PlatformInfo(object):
@@ -161,26 +153,12 @@ class ConanMultiPackager(object):
         self.stable_channel = stable_channel or os.getenv("CONAN_STABLE_CHANNEL", "stable")
         self.stable_channel = self.stable_channel.rstrip()
         self.channel = self._get_channel(self.specified_channel, self.stable_channel, self.upload_only_when_tag)
-        self.partial_reference = reference or os.getenv("CONAN_REFERENCE", None)
         self.conanfile = conanfile or os.getenv("CONAN_CONANFILE", "conanfile.py")
-
-        if self.partial_reference:
-            if "@" in self.partial_reference:
-                self.reference = ConanFileReference.loads(self.partial_reference)
-            else:
-                name, version = self.partial_reference.split("/")
-                self.reference = ConanFileReference(name, version, self.username, self.channel)
-        else:
-            if not os.path.exists(os.path.join(self.cwd, self.conanfile)):
-                raise Exception("Conanfile not found, specify a 'reference' "
-                                "parameter with name and version")
-
-            conanfile = load_cf_class(os.path.join(self.cwd, self.conanfile), self.conan_api)
-            name, version = conanfile.name, conanfile.version
-            if name and version:
-                self.reference = ConanFileReference(name, version, self.username, self.channel)
-            else:
-                self.reference = None
+        self.reference = LazyConanFileReference(
+            self.conan_api, self.cwd, self.conanfile,
+            reference or os.getenv("CONAN_REFERENCE", None),
+            self.username, self.channel
+        )
 
         self._docker_image = docker_image or os.getenv("CONAN_DOCKER_IMAGE", None)
 
@@ -388,14 +366,11 @@ class ConanMultiPackager(object):
     def add_common_builds(self, shared_option_name=None, pure_c=True,
                           dll_with_static_runtime=False, reference=None):
 
-        if not reference and not self.reference:
-            raise Exception("Specify a CONAN_REFERENCE or name and version fields in the recipe")
-
         if shared_option_name is None:
             if os.path.exists(os.path.join(self.cwd, self.conanfile)):
-                conanfile = load_cf_class(os.path.join(self.cwd, self.conanfile), self.conan_api)
-                if hasattr(conanfile, "options") and conanfile.options and "shared" in conanfile.options:
-                    shared_option_name = "%s:shared" % self.reference.name
+                shared_option_name = LazyPackageOption(
+                    "shared", self.conan_api, self.cwd, self.conanfile, self.reference
+                )
 
         tmp = self.build_generator.get_builds(pure_c, shared_option_name, dll_with_static_runtime,
                                               reference or self.reference)
@@ -407,8 +382,11 @@ class ConanMultiPackager(object):
         env_vars = env_vars or {}
         build_requires = build_requires or {}
         if reference:
-            reference = ConanFileReference.loads("%s@%s/%s" % (reference,
-                                                               self.username, self.channel))
+            reference = LazyConanFileReference(
+                self.conan_api, self.cwd, self.conanfile,
+                "%s@%s/%s" % (reference, self.username, self.channel),
+                self.username, self.channel
+            )
         reference = reference or self.reference
         self._builds.append(BuildConf(settings, options, env_vars, build_requires, reference))
 

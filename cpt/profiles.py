@@ -7,6 +7,11 @@ from conans.model.version import Version
 from conans.util.files import save
 from conans import __version__ as conan_version
 
+
+def actual_options(options):
+    return [opt for opt in options.items() if str(opt[0])]
+
+
 def get_profiles(client_cache, build_config, base_profile_name=None):
 
     base_profile_text = ""
@@ -31,7 +36,7 @@ include(%s)
         return "\n".join(["%s=%s" % (k, v) for k, v in items])
 
     settings = pairs_lines(sorted(build_config.settings.items()))
-    options = pairs_lines(build_config.options.items())
+    options = pairs_lines(actual_options(build_config.options))
     env_vars = pairs_lines(build_config.env_vars.items())
     br_lines = ""
     for pattern, build_requires in build_config.build_requires.items():
