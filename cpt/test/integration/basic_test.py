@@ -192,3 +192,27 @@ class Pkg(ConanFile):
             self.packager.add_common_builds()
             self.packager.run()
 
+    def test_custom_conanfile(self):
+        conanfile = """from conans import ConanFile
+class Pkg(ConanFile):
+    name = "lib"
+    version = "1.2"
+    settings = "os", "compiler", "build_type", "arch"
+"""
+        tools.save(os.path.join(self.tmp_folder, "foobar.py"), conanfile)
+        with tools.environment_append({"CONAN_CONANFILE": "foobar.py"}):
+            self.packager = ConanMultiPackager(username="pepe",
+                                               channel="mychannel",
+                                               out=self.output.write)
+            self.packager.add({}, {}, {}, {})
+            self.packager.run()
+        self.assertIn("conanfile                 | foobar.py", self.output)
+
+        tools.save(os.path.join(self.tmp_folder, "custom_recipe.py"), conanfile)
+        self.packager = ConanMultiPackager(username="pepe",
+                                           channel="mychannel",
+                                           conanfile="custom_recipe.py",
+                                           out=self.output.write)
+        self.packager.add({}, {}, {}, {})
+        self.packager.run()
+        self.assertIn("conanfile                 | custom_recipe.py", self.output)
