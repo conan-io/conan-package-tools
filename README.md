@@ -431,15 +431,15 @@ But if you prefer to use environment variables:
     export CONAN_PIP_INSTALL="bincrafters-package-tools==0.17.0,conan-promote=0.1.2"
 
 ### Passing additional Docker parameters during build
-When running `conan create` step in Docker, you might want to run the container with additional parameters: for example, with `.conan/data` directory being mounted to parent system to avoid redownloading/rebuilding dependencies. For this you can use `docker_run_options` parameter (or `CONAN_DOCKER_RUN_OPTIONS` envvar)
+When running `conan create` step in Docker, you might want to run the container with a different Docker network. For this you can use `docker_run_options` parameter (or `CONAN_DOCKER_RUN_OPTIONS` envvar)
 
     builder = ConanMultiPackager(
-      docker_run_options='--mount type=bind,source=$HOME/cached/conan-data,destination=/home/conan/.conan/data',
+      docker_run_options='--network bridge --privileged',
       ...
 
 When run, this will translate to something like this:
 
-    sudo -E docker run ... --mount type=bind,source=$HOME/cached/conan-data,destination=/home/conan/.conan/data  conanio/gcc6 /bin/sh -c "cd project &&  run_create_in_docker"
+    sudo -E docker run ... --network bridge --privileged conanio/gcc6 /bin/sh -c "cd project &&  run_create_in_docker"
 
 
 ### Installing custom Conan config
