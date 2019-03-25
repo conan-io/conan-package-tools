@@ -139,14 +139,16 @@ class DockerCreateRunner(object):
                  upload=False, upload_retry=None, upload_only_recipe=None,
                  runner=None,
                  docker_shell="", docker_conan_home="",
-                 docker_platform_param="", lcow_user_workaround="",
+                 docker_platform_param="", docker_run_options="",
+                 lcow_user_workaround="",
                  test_folder=None,
                  pip_install=None,
                  config_url=None,
+                 printer=None,
                  upload_dependencies=None,
                  conanfile=None):
 
-        self.printer = Printer()
+        self.printer = printer or Printer()
         self._upload = upload
         self._upload_retry = upload_retry
         self._upload_only_recipe = upload_only_recipe
@@ -165,6 +167,7 @@ class DockerCreateRunner(object):
         self._docker_shell = docker_shell
         self._docker_conan_home = docker_conan_home
         self._docker_platform_param = docker_platform_param
+        self._docker_run_options = docker_run_options or ""
         self._lcow_user_workaround = lcow_user_workaround
         self._runner = PrintRunner(runner, self.printer)
         self._test_folder = test_folder
@@ -207,8 +210,9 @@ class DockerCreateRunner(object):
                 with self.printer.foldable_output("update conan"):
                     try:
                         command = '%s docker run %s --name conan_runner ' \
-                                  ' %s %s "%s"' % (self._sudo_docker_command,
+                                  ' %s %s %s "%s"' % (self._sudo_docker_command,
                                                    env_vars_text,
+                                                   self._docker_run_options,
                                                    self._docker_image,
                                                    self._docker_shell,
                                                    self._pip_update_conan_command())
@@ -234,12 +238,13 @@ class DockerCreateRunner(object):
         else:
             update_command = ""
 
-        command = ('%s docker run --rm -v "%s:%s/project" %s %s %s %s '
+        command = ('%s docker run --rm -v "%s:%s/project" %s %s %s %s %s '
                    '"%s cd project && '
                    '%s run_create_in_docker "' % (self._sudo_docker_command,
                                                   os.getcwd(),
                                                   self._docker_conan_home,
                                                   env_vars_text,
+                                                  self._docker_run_options,
                                                   self._docker_platform_param,
                                                   self._docker_image,
                                                   self._docker_shell,

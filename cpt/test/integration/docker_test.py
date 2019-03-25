@@ -4,7 +4,7 @@ import time
 import unittest
 
 from conans import __version__ as client_version
-from conans.client import tools
+from conans import tools
 from conans.model.ref import ConanFileReference
 from conans.model.version import Version
 
@@ -15,9 +15,13 @@ from cpt.test.integration.base import BaseTest, PYPI_TESTING_REPO, CONAN_UPLOAD_
 from cpt.test.unit.utils import MockCIManager
 
 
+def is_linux_and_have_docker():
+    return tools.os_info.is_linux and tools.which("docker")
+
+
 class DockerTest(BaseTest):
 
-    @unittest.skipUnless(sys.platform.startswith("linux"), "Requires Linux")
+    @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
     def test_docker(self):
         if not os.getenv("PYPI_PASSWORD", None):
             return
@@ -104,3 +108,46 @@ class Pkg(ConanFile):
             self.assertEquals(len(results), 0)
             self.api.remove(search_pattern, remote_name="upload_repo", force=True)
 
+
+    @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
+    def test_docker_run_options(self):
+        conanfile = """from conans import ConanFile
+import os
+
+class Pkg(ConanFile):
+    settings = "os", "compiler", "build_type", "arch"
+
+    def build(self):
+        pass
+"""
+        self.save_conanfile(conanfile)
+        # Validate by Environemnt Variable
+        with tools.environment_append({"CONAN_USERNAME": "bar",
+                                       "CONAN_DOCKER_IMAGE": "conanio/gcc8",
+                                       "CONAN_DOCKER_USE_SUDO": "0",
+                                       "CONAN_REFERENCE": "foo/0.0.1@bar/testing",
+                                       "CONAN_DOCKER_RUN_OPTIONS": "--network=host, --add-host=google.com:8.8.8.8"
+                                       }):
+            self.packager = ConanMultiPackager(gcc_versions=["8"],
+                                               archs=["x86_64"],
+                                               build_types=["Release"],
+                                               out=self.output.write)
+            self.packager.add({})
+            self.packager.run()
+            self.assertIn("--network=host --add-host=google.com:8.8.8.8  conanio/gcc8", self.output)
+
+        # Validate by parameter
+        with tools.environment_append({"CONAN_USERNAME": "bar",
+                                       "CONAN_DOCKER_IMAGE": "conanio/gcc8",
+                                       "CONAN_DOCKER_USE_SUDO": "0",
+                                       "CONAN_REFERENCE": "foo/0.0.1@bar/testing"
+                                       }):
+
+            self.packager = ConanMultiPackager(gcc_versions=["8"],
+                                               archs=["x86_64"],
+                                               build_types=["Release"],
+                                               docker_run_options="--cpus=1",
+                                               out=self.output.write)
+            self.packager.add({})
+            self.packager.run()
+            self.assertIn("--cpus=1  conanio/gcc8", self.output)

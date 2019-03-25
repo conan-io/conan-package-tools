@@ -89,6 +89,7 @@ class ConanMultiPackager(object):
                  skip_check_credentials=False,
                  allow_gcc_minors=False,
                  exclude_vcvars_precommand=False,
+                 docker_run_options=None,
                  docker_image_skip_update=False,
                  docker_image_skip_pull=False,
                  docker_entry_script=None,
@@ -256,6 +257,10 @@ class ConanMultiPackager(object):
         self.runner = runner or os.system
         self.output_runner = ConanOutputRunner()
 
+        self.docker_run_options = docker_run_options or split_colon_env("CONAN_DOCKER_RUN_OPTIONS")
+        if isinstance(self.docker_run_options, list):
+            self.docker_run_options = " ".join(self.docker_run_options)
+
         self.docker_entry_script = docker_entry_script or os.getenv("CONAN_DOCKER_ENTRY_SCRIPT")
 
         self.pip_install = pip_install or split_colon_env("CONAN_PIP_INSTALL")
@@ -278,7 +283,7 @@ class ConanMultiPackager(object):
 
         self.conan_pip_package = os.getenv("CONAN_PIP_PACKAGE", "conan==%s" % client_version)
         if self.conan_pip_package in ("0", "False"):
-            self.conan_pip_package = False
+            self.conan_pip_package = ""
         self.vs10_x86_64_enabled = vs10_x86_64_enabled
 
         self.builds_in_current_page = []
@@ -568,10 +573,12 @@ class ConanMultiPackager(object):
                                        docker_shell=self.docker_shell,
                                        docker_conan_home=self.docker_conan_home,
                                        docker_platform_param=self.docker_platform_param,
+                                       docker_run_options=self.docker_run_options,
                                        lcow_user_workaround=self.lcow_user_workaround,
                                        test_folder=self.test_folder,
                                        pip_install=self.pip_install,
                                        config_url=self.config_url,
+                                       printer=self.printer,
                                        upload_dependencies=self.upload_dependencies,
                                        conanfile=self.conanfile)
 
