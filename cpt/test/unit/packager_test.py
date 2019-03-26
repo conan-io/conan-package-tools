@@ -469,8 +469,6 @@ class AppTest(unittest.TestCase):
                                      reference="lib/1.0@lasote/mychannel",
                                      ci_manager=self.ci_manager)
 
-        builder.add({}, {}, {}, {})
-        builder.run_builds()
         self.assertEquals(self.conan_api.calls[1].args[1], "url1")
         self.assertEquals(self.conan_api.calls[1].kwargs["insert"], -1)
         self.assertEquals(self.conan_api.calls[3].args[1], "url2")
@@ -485,8 +483,6 @@ class AppTest(unittest.TestCase):
                                      reference="lib/1.0@lasote/mychannel",
                                      ci_manager=self.ci_manager)
 
-        builder.add({}, {}, {}, {})
-        builder.run_builds()
         self.assertEquals(self.conan_api.calls[1].args[1], "myurl1")
         self.assertEquals(self.conan_api.calls[1].kwargs["insert"], -1)
 
@@ -502,8 +498,6 @@ class AppTest(unittest.TestCase):
                                      reference="lib/1.0@lasote/mychannel",
                                      ci_manager=self.ci_manager)
 
-        builder.add({}, {}, {}, {})
-        builder.run_builds()
         self.assertEquals(self.conan_api.calls[1].args[0], "my_cool_name1")
         self.assertEquals(self.conan_api.calls[1].args[1], "u1")
         self.assertEquals(self.conan_api.calls[1].kwargs["insert"], -1)
@@ -710,7 +704,7 @@ class AppTest(unittest.TestCase):
 
         # When activated, check credentials before to create the profiles
         self.assertEqual(self.conan_api.calls[2].name, 'authenticate')
-        self.assertEqual(self.conan_api.calls[5].name, 'create_profile')
+        self.assertEqual(self.conan_api.calls[3].name, 'create_profile')
 
         self.conan_api = MockConanAPI()
         # If we skip the credentials check, the login will be performed just before the upload
@@ -725,7 +719,7 @@ class AppTest(unittest.TestCase):
                                      ci_manager=self.ci_manager)
         builder.add_common_builds()
         builder.run()
-        self.assertNotEqual(self.conan_api.calls[0].name, 'authenticate')
+        self.assertNotEqual(self.conan_api.calls[2].name, 'authenticate')
 
         # No upload, no authenticate
         self.conan_api = MockConanAPI()
