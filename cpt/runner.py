@@ -140,6 +140,7 @@ class DockerCreateRunner(object):
                  runner=None,
                  docker_shell="", docker_conan_home="",
                  docker_platform_param="", docker_run_options="",
+                 docker_selinux=None,
                  lcow_user_workaround="",
                  test_folder=None,
                  pip_install=None,
@@ -168,6 +169,7 @@ class DockerCreateRunner(object):
         self._docker_conan_home = docker_conan_home
         self._docker_platform_param = docker_platform_param
         self._docker_run_options = docker_run_options or ""
+        self._docker_selinux = docker_selinux
         self._lcow_user_workaround = lcow_user_workaround
         self._runner = PrintRunner(runner, self.printer)
         self._test_folder = test_folder
@@ -237,12 +239,14 @@ class DockerCreateRunner(object):
             update_command = self._pip_update_conan_command() + " && "
         else:
             update_command = ""
+        volume_options = ":z" if self._docker_selinux else ""
 
-        command = ('%s docker run --rm -v "%s:%s/project" %s %s %s %s %s '
+        command = ('%s docker run --rm -v "%s:%s/project%s" %s %s %s %s %s '
                    '"%s cd project && '
                    '%s run_create_in_docker "' % (self._sudo_docker_command,
                                                   os.getcwd(),
                                                   self._docker_conan_home,
+                                                  volume_options,
                                                   env_vars_text,
                                                   self._docker_run_options,
                                                   self._docker_platform_param,

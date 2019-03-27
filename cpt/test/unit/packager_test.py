@@ -884,3 +884,30 @@ class AppTest(unittest.TestCase):
 
                 self.assertTrue("CONAN_PIP_COMMAND: '/bin/bash' is not a valid pip command" in context.exception)
             self.assertNotIn("[pip_update]", output)
+
+    def test_selinux_option(self):
+        """ CPT should accept selinux option to customize docker run
+        """
+        self.packager = ConanMultiPackager(username="lasote",
+                                            channel="mychannel",
+                                            reference="lib/1.0",
+                                            runner=self.runner,
+                                            exclude_vcvars_precommand=True)
+        self.assertFalse(self.packager.docker_selinux)
+
+        with tools.environment_append({"CONAN_USERNAME": "foobar",
+                                       "CONAN_DOCKER_SELINUX": "TRUE"}):
+            self.packager = ConanMultiPackager(username="lasote",
+                                            channel="mychannel",
+                                            reference="lib/1.0",
+                                            runner=self.runner,
+                                            exclude_vcvars_precommand=True)
+            self.assertTrue(self.packager.docker_selinux)
+
+        self.packager = ConanMultiPackager(username="lasote",
+                                            channel="mychannel",
+                                            reference="lib/1.0",
+                                            runner=self.runner,
+                                            exclude_vcvars_precommand=True,
+                                            docker_selinux=True)
+        self.assertTrue(self.packager.docker_selinux)
