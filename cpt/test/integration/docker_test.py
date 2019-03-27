@@ -10,6 +10,7 @@ from conans.model.version import Version
 
 from cpt import __version__ as version
 from cpt.packager import ConanMultiPackager
+from cpt.runner import DockerCreateRunner
 from cpt.test.integration.base import BaseTest, PYPI_TESTING_REPO, CONAN_UPLOAD_URL, \
     CONAN_UPLOAD_PASSWORD, CONAN_LOGIN_UPLOAD
 from cpt.test.unit.utils import MockCIManager
@@ -108,7 +109,6 @@ class Pkg(ConanFile):
             self.assertEquals(len(results), 0)
             self.api.remove(search_pattern, remote_name="upload_repo", force=True)
 
-
     @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
     def test_docker_run_options(self):
         conanfile = """from conans import ConanFile
@@ -151,3 +151,5 @@ class Pkg(ConanFile):
             self.packager.add({})
             self.packager.run()
             self.assertIn("--cpus=1  conanio/gcc8", self.output)
+            if DockerCreateRunner.is_selinux_running():
+                self.assertIn("/home/conan/project:z", self.output)

@@ -1,5 +1,6 @@
 import os
 import sys
+import subprocess
 from collections import namedtuple
 
 from conans import tools, __version__ as client_version
@@ -196,6 +197,13 @@ class DockerCreateRunner(object):
         command = " && ".join(commands)
         return command
 
+    @staticmethod
+    def is_selinux_running():
+        if tools.which("getenforce"):
+            output = subprocess.check_output("getenforce", shell=True)
+            return "Enforcing" in output.decode()
+        return False
+
     def run(self, pull_image=True, docker_entry_script=None):
         envs = self.get_env_vars()
         env_vars_text = " ".join(['-e %s="%s"' % (key, value)
@@ -237,12 +245,14 @@ class DockerCreateRunner(object):
             update_command = self._pip_update_conan_command() + " && "
         else:
             update_command = ""
+        volume_options = ":z" if DockerCreateRunner.is_selinux_running() else ""
 
-        command = ('%s docker run --rm -v "%s:%s/project" %s %s %s %s %s '
+        command = ('%s docker run --rm -v "%s:%s/project%s" %s %s %s %s %s '
                    '"%s cd project && '
                    '%s run_create_in_docker "' % (self._sudo_docker_command,
                                                   os.getcwd(),
                                                   self._docker_conan_home,
+                                                  volume_options,
                                                   env_vars_text,
                                                   self._docker_run_options,
                                                   self._docker_platform_param,
