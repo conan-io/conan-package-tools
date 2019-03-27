@@ -151,31 +151,3 @@ class Pkg(ConanFile):
             self.packager.add({})
             self.packager.run()
             self.assertIn("--cpus=1  conanio/gcc8", self.output)
-
-    @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
-    def test_docker_selinux(self):
-        """ Docker selinux must mount volume with :z
-        """
-        conanfile = """from conans import ConanFile
-import os
-
-class Pkg(ConanFile):
-    settings = "os", "compiler", "build_type", "arch"
-
-    def build(self):
-        pass
-"""
-        self.save_conanfile(conanfile)
-        # Validate by Environemnt Variable
-        with tools.environment_append({"CONAN_USERNAME": "bar",
-                                       "CONAN_DOCKER_IMAGE": "conanio/gcc8",
-                                       "CONAN_REFERENCE": "foo/0.0.1@bar/testing",
-                                       "CONAN_DOCKER_SELINUX": "TRUE"
-                                       }):
-            self.packager = ConanMultiPackager(gcc_versions=["8"],
-                                               archs=["x86_64"],
-                                               build_types=["Release"],
-                                               out=self.output.write)
-            self.packager.add({})
-            self.packager.run()
-            self.assertIn(":/home/conan/project:z", self.output)

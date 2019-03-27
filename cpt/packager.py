@@ -95,7 +95,6 @@ class ConanMultiPackager(object):
                  docker_entry_script=None,
                  docker_32_images=None,
                  docker_conan_home=None,
-                 docker_selinux=None,
                  pip_install=None,
                  build_policy=None,
                  always_update_conan_in_docker=False,
@@ -292,8 +291,6 @@ class ConanMultiPackager(object):
         self.test_folder = test_folder or os.getenv("CPT_TEST_FOLDER")
 
         self.config_url = config_url or os.getenv("CONAN_CONFIG_URL")
-
-        self.docker_selinux = docker_selinux or os.getenv("CONAN_DOCKER_SELINUX")
 
         def valid_pair(var, value):
             return (isinstance(value, six.string_types) or
@@ -577,7 +574,6 @@ class ConanMultiPackager(object):
                                        docker_conan_home=self.docker_conan_home,
                                        docker_platform_param=self.docker_platform_param,
                                        docker_run_options=self.docker_run_options,
-                                       docker_selinux=self.docker_selinux,
                                        lcow_user_workaround=self.lcow_user_workaround,
                                        test_folder=self.test_folder,
                                        pip_install=self.pip_install,
