@@ -115,7 +115,8 @@ class CreateRunner(object):
                         for installed in r['installed']:
                             reference = installed["recipe"]["id"]
                             if client_version >= Version("1.10.0"):
-                                reference = str(ConanFileReference.loads(installed["recipe"]["id"]).copy_clear_rev())
+                                reference = ConanFileReference.loads(reference)
+                                reference = str(reference.copy_clear_rev())
                             if ((reference == str(self._reference)) or \
                                (reference in self._upload_dependencies) or \
                                ("all" in self._upload_dependencies)) and \

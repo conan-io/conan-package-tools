@@ -4,6 +4,7 @@ import zipfile
 
 from conans.client.tools import environment_append
 from conans.test.utils.tools import TestClient, TestServer
+from cpt.test.unit.utils import MockCIManager
 
 from cpt.test.test_client.tools import get_patched_multipackager
 
@@ -20,6 +21,8 @@ class Pkg(ConanFile):
     def build(self):
         self.output.warn("HALLO")
 """
+    def setUp(self):
+        self._ci_manager = MockCIManager()
 
     def test_dont_upload_non_built_packages(self):
 
@@ -111,7 +114,8 @@ class Pkg(ConanFile):
         with environment_append({"CONAN_UPLOAD": ts.fake_url, "CONAN_LOGIN_USERNAME": "user",
                                 "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user",
                                 "CONAN_UPLOAD_ONLY_RECIPE": "TRUE", "CONAN_CHANNEL": "mychannel"}):
-            mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True)
+            mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True,
+                                                      ci_manager=self._ci_manager)
             mulitpackager.add({}, {"shared": True})
             mulitpackager.add({}, {"shared": False})
             mulitpackager.run()
@@ -126,7 +130,8 @@ class Pkg(ConanFile):
         with environment_append({"CONAN_UPLOAD": ts.fake_url, "CONAN_LOGIN_USERNAME": "user",
                                 "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user",
                                 "CONAN_UPLOAD_ONLY_RECIPE": "FALSE", "CONAN_CHANNEL": "mychannel"}):
-            mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True)
+            mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True,
+                                                      ci_manager=self._ci_manager)
             mulitpackager.add({}, {"shared": True})
             mulitpackager.add({}, {"shared": False})
             mulitpackager.run()
@@ -147,7 +152,8 @@ class Pkg(ConanFile):
                                 "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user",
                                 "CONAN_CHANNEL": "mychannel"}):
             mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True,
-                                                      upload_only_recipe=True)
+                                                      upload_only_recipe=True,
+                                                      ci_manager=self._ci_manager)
             mulitpackager.add({}, {"shared": True})
             mulitpackager.add({}, {"shared": False})
             mulitpackager.run()
@@ -163,7 +169,8 @@ class Pkg(ConanFile):
                                 "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user",
                                 "CONAN_CHANNEL": "mychannel"}):
             mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True,
-                                                      upload_only_recipe=False)
+                                                      upload_only_recipe=False,
+                                                      ci_manager=self._ci_manager)
             mulitpackager.add({}, {"shared": True})
             mulitpackager.add({}, {"shared": False})
             mulitpackager.run()
@@ -181,7 +188,8 @@ class Pkg(ConanFile):
         with environment_append({"CONAN_UPLOAD": ts.fake_url, "CONAN_LOGIN_USERNAME": "user",
                                  "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user",
                                  "CONAN_REVISIONS_ENABLED": "1"}):
-            mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True)
+            mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True,
+                                                      ci_manager=self._ci_manager)
             mulitpackager.add({}, {"shared": True})
             mulitpackager.add({}, {"shared": False})
             mulitpackager.run()
@@ -190,6 +198,7 @@ class Pkg(ConanFile):
             self.assertIn("Uploading package 1/2", tc.out)
             self.assertIn("Uploading package 2/2", tc.out)
             self.assertIn("HALLO", tc.out)
+
 
 class UploadDependenciesTest(unittest.TestCase):
 
@@ -224,6 +233,7 @@ class Pkg(ConanFile):
 """
 
     def setUp(self):
+        self._ci_manager = MockCIManager()
         self._server = TestServer(users={"user": "password"},
                                   write_permissions=[("bar/0.1.0@foo/stable", "user"),
                                                      ("foo/1.0.0@bar/testing", "user")])
@@ -244,7 +254,8 @@ class Pkg(ConanFile):
             mulitpackager = get_patched_multipackager(self._client, username="user",
                                                       channel="testing",
                                                       build_policy="missing",
-                                                      exclude_vcvars_precommand=True)
+                                                      exclude_vcvars_precommand=True,
+                                                      ci_manager=self._ci_manager)
             mulitpackager.add({}, {})
             mulitpackager.run()
 
@@ -279,7 +290,8 @@ class Pkg(ConanFile):
             mulitpackager = get_patched_multipackager(self._client, username="user",
                                                       channel="testing",
                                                       build_policy="missing",
-                                                      exclude_vcvars_precommand=True)
+                                                      exclude_vcvars_precommand=True,
+                                                      ci_manager=self._ci_manager)
             mulitpackager.add({}, {})
             mulitpackager.run()
 
@@ -304,7 +316,8 @@ class Pkg(ConanFile):
             mulitpackager = get_patched_multipackager(self._client, username="user",
                                                       channel="testing",
                                                       build_policy="missing",
-                                                      exclude_vcvars_precommand=True)
+                                                      exclude_vcvars_precommand=True,
+                                                      ci_manager=self._ci_manager)
             mulitpackager.add({}, {})
             mulitpackager.run()
 
