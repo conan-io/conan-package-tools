@@ -113,7 +113,7 @@ class CreateRunner(object):
                             return
                         for installed in r['installed']:
                             reference = installed["recipe"]["id"]
-                            if ((reference == str(self._reference)) or \
+                            if ((str(self._reference) in reference) or \
                                (reference in self._upload_dependencies) or \
                                ("all" in self._upload_dependencies)) and \
                                installed['packages']:

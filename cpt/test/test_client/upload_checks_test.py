@@ -110,7 +110,7 @@ class Pkg(ConanFile):
         # Upload only the recipe
         with environment_append({"CONAN_UPLOAD": ts.fake_url, "CONAN_LOGIN_USERNAME": "user",
                                 "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user",
-                                "CONAN_UPLOAD_ONLY_RECIPE": "TRUE"}):
+                                "CONAN_UPLOAD_ONLY_RECIPE": "TRUE", "CONAN_CHANNEL": "mychannel"}):
             mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True)
             mulitpackager.add({}, {"shared": True})
             mulitpackager.add({}, {"shared": False})
@@ -125,7 +125,7 @@ class Pkg(ConanFile):
         # Re-use cache the upload the binary packages
         with environment_append({"CONAN_UPLOAD": ts.fake_url, "CONAN_LOGIN_USERNAME": "user",
                                 "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user",
-                                "CONAN_UPLOAD_ONLY_RECIPE": "FALSE"}):
+                                "CONAN_UPLOAD_ONLY_RECIPE": "FALSE", "CONAN_CHANNEL": "mychannel"}):
             mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True)
             mulitpackager.add({}, {"shared": True})
             mulitpackager.add({}, {"shared": False})
@@ -144,7 +144,8 @@ class Pkg(ConanFile):
 
         # Upload only the recipe
         with environment_append({"CONAN_UPLOAD": ts.fake_url, "CONAN_LOGIN_USERNAME": "user",
-                                "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user"}):
+                                "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user",
+                                "CONAN_CHANNEL": "mychannel"}):
             mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True,
                                                       upload_only_recipe=True)
             mulitpackager.add({}, {"shared": True})
@@ -159,7 +160,8 @@ class Pkg(ConanFile):
 
         # Re-use cache the upload the binary packages
         with environment_append({"CONAN_UPLOAD": ts.fake_url, "CONAN_LOGIN_USERNAME": "user",
-                                "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user"}):
+                                "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user",
+                                "CONAN_CHANNEL": "mychannel"}):
             mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True,
                                                       upload_only_recipe=False)
             mulitpackager.add({}, {"shared": True})
@@ -171,6 +173,23 @@ class Pkg(ConanFile):
             self.assertIn("Recipe is up to date, upload skipped", tc.out)
             self.assertIn("Uploading package 1/2", tc.out)
             self.assertIn("Uploading package 2/2", tc.out)
+
+    def test_upload_package_revisions(self):
+        ts = TestServer(users={"user": "password"})
+        tc = TestClient(servers={"default": ts}, users={"default": [("user", "password")]})
+        tc.save({"conanfile.py": self.conanfile})
+        with environment_append({"CONAN_UPLOAD": ts.fake_url, "CONAN_LOGIN_USERNAME": "user",
+                                 "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user",
+                                 "CONAN_REVISIONS_ENABLED": "1"}):
+            mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True)
+            mulitpackager.add({}, {"shared": True})
+            mulitpackager.add({}, {"shared": False})
+            mulitpackager.run()
+            self.assertNotIn("Skipping upload for 5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9", tc.out)
+            self.assertNotIn("Skipping upload for 2a623e3082a38f90cd2c3d12081161412de331b0", tc.out)
+            self.assertIn("Uploading package 1/2", tc.out)
+            self.assertIn("Uploading package 2/2", tc.out)
+            self.assertIn("HALLO", tc.out)
 
 class UploadDependenciesTest(unittest.TestCase):
 
