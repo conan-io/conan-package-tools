@@ -8,16 +8,16 @@ jobs:
 
     - stage: Conan Latest - Linux
       python: 2.7
-      env: TOXENV=py27-conanlatest
+      env: TOXENV=py27-conan-latest
     - python: 3.7
-      env: TOXENV=py37-conanlatest
+      env: TOXENV=py37-conan-latest
       dist: xenial
 
     - stage: Conan Development - Linux
       python: 2.7
-      env: TOXENV=py27-conandev
+      env: TOXENV=py27-conan-dev
     - python: 3.7
-      env: TOXENV=py37-conandev
+      env: TOXENV=py37-conan-dev
       dist: xenial
 
     # Macos is slow, only if everything has passed
@@ -25,14 +25,17 @@ jobs:
       language: generic
       os: osx
       osx_image: xcode8.3
-      env: PYVER=py27 TOXENV=py27-conanlatest
+      env: PYVER=py27 TOXENV=py27-conan-latest
     - language: generic
       os: osx
       osx_image: xcode8.3
-      env: PYVER=py37 TOXENV=py37-conanlatest
+      env: PYVER=py37 TOXENV=py37-conan-latest
 
 install:
   - .ci/travis/install.sh
 
 script:
   - .ci/travis/run.sh
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
