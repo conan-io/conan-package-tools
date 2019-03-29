@@ -15,10 +15,6 @@ def is_linux_and_have_docker():
     return tools.os_info.is_linux and tools.which("docker")
 
 
-def is_travis_running():
-    return os.getenv("TRAVIS", False)
-
-
 class DockerTest(BaseTest):
 
     CONAN_SERVER_ADDRESS = "http://0.0.0.0:9300"

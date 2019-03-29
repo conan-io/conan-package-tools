@@ -149,7 +149,7 @@ class DockerCreateRunner(object):
                  pip_install=None,
                  config_url=None,
                  printer=None,
-                 upload_dependencies=[],
+                 upload_dependencies=None,
                  conanfile=None):
 
         self.printer = printer or Printer()
@@ -177,7 +177,7 @@ class DockerCreateRunner(object):
         self._test_folder = test_folder
         self._pip_install = pip_install
         self._config_url = config_url
-        self._upload_dependencies = upload_dependencies
+        self._upload_dependencies = upload_dependencies or []
         self._conanfile = conanfile
 
     def _pip_update_conan_command(self):
