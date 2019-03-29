@@ -46,18 +46,6 @@ class BaseTest(unittest.TestCase):
         self.api, self.client_cache, _ = ConanAPIV1.factory()
         print("Testing with Conan Folder=%s" % self.client_cache.conan_folder)
 
-    def deploy_pip(self):
-        if os.getenv("PYPI_PASSWORD", None):
-            conf_path = os.path.expanduser("~/.pypirc")
-            if not os.path.exists(conf_path):
-                tools.save(conf_path, pypi_template)
-            ret = os.system("cd %s && ls && python setup.py sdist upload -r pypi_testing_conan" % self.old_folder)
-            if ret != 0:
-                raise Exception("Failed publishing conan package tools")
-            self.output.write("Deployed pip package")
-        else:
-            raise Exception("Skipped deploy of pip package!")
-
     def tearDown(self):
         os.chdir(self.old_folder)
         os.environ.clear()
