@@ -435,6 +435,17 @@ But if you prefer to use environment variables:
 
     export CONAN_PIP_INSTALL="bincrafters-package-tools==0.17.0,conan-promote=0.1.2"
 
+### Passing additional Docker parameters during build
+When running `conan create` step in Docker, you might want to run the container with a different Docker network. For this you can use `docker_run_options` parameter (or `CONAN_DOCKER_RUN_OPTIONS` envvar)
+
+    builder = ConanMultiPackager(
+      docker_run_options='--network bridge --privileged',
+      ...
+
+When run, this will translate to something like this:
+
+    sudo -E docker run ... --network bridge --privileged conanio/gcc6 /bin/sh -c "cd project &&  run_create_in_docker"
+
 
 ### Installing custom Conan config
 
@@ -450,7 +461,7 @@ If you need to run `conan config install <url>` before to build there is the arg
         builder.add_common_builds()
         builder.run()
 
-But if are not interested to update your build.py script, it's possible to use environment variables instead:
+But if you are not interested to update your build.py script, it's possible to use environment variables instead:
 
     export CONAN_CONFIG_URL=https://github.com/bincrafters/conan-config.git
 
@@ -803,6 +814,26 @@ You can upload the generated packages automatically to a conan-server using the 
         CONAN_STABLE_BRANCH_PATTERN: "release/*"
 
 
+## Upload dependencies ([#237](https://github.com/conan-io/conan-package-tools/issues/237))
+
+Sometimes your dependencies are not available in remotes and you need to pass ``--build=missing`` to build them.
+The problem is that you will need to fix one-by-one, updating the CI script, instead of just uploading all built packages.
+
+Now you can upload **ALL** of your dependencies together, in addition to your package, to the same remote. To do this, you need to define:
+
+    CONAN_UPLOAD_DEPENDENCIES="all"
+
+Or, set it in ``ConanMultiPackager`` arguments:
+
+    ConanMultiPackager(upload_dependencies="all")
+
+However, maybe you want to upload **ONLY** specified packages by their names:
+
+    CONAN_UPLOAD_DEPENDENCIES="foo/0.1@user/channel,bar/1.2@bar/channel"
+
+Or,
+
+    ConanMultiPackager(upload_dependencies=["foo/0.1@user/channel", "bar/1.2@bar/channel"])
 
 ## Pagination
 
@@ -1013,6 +1044,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **mingw_configurations**: Configurations for MinGW
 - **archs**: List containing specific architectures to build for. Default ["x86", "x86_64"]
 - **use_docker**: Use docker for package creation in Linux systems.
+- **docker_run_options**: Pass additional parameters for docker when running the create step.
 - **docker_conan_home**: Location where package source files will be copied to inside the Docker container
 - **docker_image_skip_update**: If defined, it will skip the initialization update of "conan package tools" and "conan" in the docker image. By default is False.
 - **docker_image_skip_pull**: If defined, it will skip the "docker pull" command, enabling a local image to be used, and without being overwritten.
@@ -1027,6 +1059,8 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **upload_retry**: Num retries in upload in case of failure.
 - **upload_only_when_stable**: Will try to upload only if the channel is the stable channel. Default [False]
 - **upload_only_when_tag**: Will try to upload only if the branch is a tag. Default [False]
+- **upload_only_recipe**: If defined, will try to upload **only** the recipes. The built packages will **not** be uploaded. Default [False]
+- **upload_dependencies**: Will try to upload dependencies to your remote. Default [False]
 - **build_types**: List containing specific build types. Default ["Release", "Debug"]
 - **skip_check_credentials**: Conan will skip checking the user credentials before building the packages. And if no user/remote is specified, will try to upload with the
   already stored credentiales in the local cache. Default [False]
@@ -1038,6 +1072,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
     - "outdated": Build only missing or if the available package is not built with the current recipe. Useful to upload new configurations, e.j packages for a new compiler without
       rebuild all packages.
 - **test_folder**: Custom test folder consumed by Conan create, e.j .conan/test_package
+- **conanfile**: Custom conanfile consumed by Conan create. e.j. conanfile.py
 - **config_url**: Conan config URL be installed before to build e.j https://github.com/bincrafters/conan-config.git
 
 Upload related parameters:
@@ -1080,8 +1115,7 @@ The current commit message can contain special messages:
     - **pure_c**: ConanMultiPackager won't generate different builds for the **libstdc++** c++ standard library, because it is a pure C library.
     - **dll_with_static_runtime**: generate also build for "MT" runtime when the library is shared.
 
-- **login(remote_name, user=None, password=None, force=False)**: Performs a `conan user` command in the specified remote. If `force` the login will be called
- every time, otherwise, for the same remote, ConanMultiPackager will call `conan user` only once even with multiple calls to the login() method.
+- **login(remote_name)**: Performs a `conan user` command in the specified remote.
 
 - **add(settings=None, options=None, env_vars=None, build_requires=None)**: Add a new build configuration, so a new binary package will be built for the specified configuration.
 
@@ -1127,6 +1161,8 @@ This is especially useful for CI integration.
 - **CONAN_UPLOAD_RETRY**: If defined, in case of fail retries to upload again the specified times
 - **CONAN_UPLOAD_ONLY_WHEN_STABLE**: If defined, will try to upload the packages only when the current channel is the stable one.
 - **CONAN_UPLOAD_ONLY_WHEN_TAG**: If defined, will try to upload the packages only when the current branch is a tag.
+- **CONAN_UPLOAD_ONLY_RECIPE**: If defined, will try to upload **only** the recipes. The built packages will **not** be uploaded.
+- **CONAN_UPLOAD_DEPENDENCIES**: If defined, will try to upload the listed package dependencies to your remote.
 
 - **CONAN_SKIP_CHECK_CREDENTIALS**: Conan will skip checking the user credentials before building the packages. And if no user/remote is specified, will try to upload with the
   already stored credentiales in the local cache. Default [False]
@@ -1146,6 +1182,7 @@ This is especially useful for CI integration.
 - **CONAN_TOTAL_PAGES**: Total number of pages
 - **CONAN_DOCKER_IMAGE**: If defined and docker is being used, it will use this dockerimage instead of the default images, e.g. "conanio/gcc63"
 - **CONAN_DOCKER_HOME**: Location where package source files will be copied to inside the Docker container
+- **CONAN_DOCKER_RUN_OPTIONS**: Pass additional parameters for docker when running the create step
 - **CONAN_DOCKER_IMAGE_SKIP_UPDATE**: If defined, it will skip the initialization update of "conan package tools" and "conan" in the docker image. By default is False.
 - **CONAN_DOCKER_IMAGE_SKIP_PULL**: If defined, it will skip the "docker pull" command, enabling a local image to be used, and without being overwritten.
 - **CONAN_ALWAYS_UPDATE_CONAN_DOCKER**: If defined, "conan package tools" and "conan" will be installed and upgraded in the docker image in every build execution
@@ -1159,6 +1196,7 @@ This is especially useful for CI integration.
 - **CONAN_BASH_PATH**: Path to a bash executable. Used only in windows to help the tools.run_in_windows_bash() function to locate our Cygwin/MSYS2 bash.
   Set it with the bash executable path if it’s not in the PATH or you want to use a different one.
 - **CONAN_PIP_USE_SUDO** Use "sudo" when invoking pip, by default it will use sudo when not using Windows and not running docker image "conanio/". "False" to deactivate.
+- **CONAN_PIP_COMMAND** Run custom `pip` command when updating Conan. e.g. "/usr/bin/pip2"
 - **CONAN_DOCKER_USE_SUDO** Use "sudo" when invoking docker, by default it will use sudo when not using Windows. "False" to deactivate.
 - **CONAN_ALLOW_GCC_MINORS** Declare this variable if you want to allow gcc >=5 versions with the minor (5.1, 6.3 etc).
 - **CONAN_EXCLUDE_VCVARS_PRECOMMAND** For Visual Studio builds, it exclude the vcvars call to set the environment.
@@ -1172,6 +1210,7 @@ This is especially useful for CI integration.
 - **CONAN_CONFIG_URL**: Conan config URL be installed before to build e.j https://github.com/bincrafters/conan-config.git
 - **CONAN_BASE_PROFILE**: Apply options, settings, etc. to this profile instead of `default`.
 - **CONAN_IGNORE_SKIP_CI**: Ignore `[skip ci]` in commit message.
+- **CONAN_CONANFILE**: Custom conanfile consumed by Conan create. e.j. conanfile.py
 - **CPT_TEST_FOLDER**: Custom test_package path, e.j .conan/test_package
 
 

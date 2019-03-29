@@ -270,7 +270,10 @@ class AzurePipelinesManager(GenericManager):
         return os.getenv("BUILD_SOURCEVERSION", None)
 
     def get_branch(self):
-        return os.getenv("BUILD_SOURCEBRANCHNAME", None)
+        branch = os.getenv("BUILD_SOURCEBRANCH", None)
+        if branch.startswith("refs/heads/"):
+            branch = branch[11:]
+        return branch
 
     def is_pull_request(self):
         return os.getenv("BUILD_REASON", "false") == "PullRequest"

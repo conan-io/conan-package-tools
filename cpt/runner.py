@@ -4,6 +4,7 @@ from collections import namedtuple
 
 from conans import tools, __version__ as client_version
 from conans.model.version import Version
+from conans.model.ref import ConanFileReference
 
 from cpt import __version__ as package_tools_version
 from cpt.config import ConfigManager
@@ -15,7 +16,9 @@ class CreateRunner(object):
 
     def __init__(self, profile_abs_path, reference, conan_api, uploader,
                  exclude_vcvars_precommand=False, build_policy=None, runner=None,
-                 cwd=None, printer=None, upload=False, test_folder=None, config_url=None):
+                 cwd=None, printer=None, upload=False, upload_only_recipe=None,
+                 test_folder=None, config_url=None,
+                 upload_dependencies=None, conanfile=None):
 
         self.printer = printer or Printer()
         self._cwd = cwd or os.getcwd()
@@ -30,6 +33,11 @@ class CreateRunner(object):
         self._uploader.remote_manager.add_remotes_to_conan()
         self._test_folder = test_folder
         self._config_url = config_url
+        self._upload_only_recipe = upload_only_recipe
+        self._conanfile = conanfile
+        self._upload_dependencies = upload_dependencies.split(",") if \
+                                    isinstance(upload_dependencies, str) else \
+                                    upload_dependencies
 
         patch_default_base_profile(conan_api, profile_abs_path)
 
@@ -86,13 +94,13 @@ class CreateRunner(object):
 
                         try:
                             if client_version < Version("1.12.0"):
-                                r = self._conan_api.create(".", name=name, version=version,
+                                r = self._conan_api.create(self._conanfile, name=name, version=version,
                                                         user=user, channel=channel,
                                                         build_modes=self._build_policy,
                                                         profile_name=self._profile_abs_path,
                                                         test_folder=self._test_folder)
                             else:
-                                r = self._conan_api.create(".", name=name, version=version,
+                                r = self._conan_api.create(self._conanfile, name=name, version=version,
                                                         user=user, channel=channel,
                                                         build_modes=self._build_policy,
                                                         profile_names=[self._profile_abs_path],
@@ -104,11 +112,21 @@ class CreateRunner(object):
                             self.printer.print_rule()
                             return
                         for installed in r['installed']:
-                            if installed["recipe"]["id"] == str(self._reference):
+                            reference = installed["recipe"]["id"]
+                            if client_version >= Version("1.10.0"):
+                                reference = ConanFileReference.loads(reference)
+                                reference = str(reference.copy_clear_rev())
+                            if ((reference == str(self._reference)) or \
+                               (reference in self._upload_dependencies) or \
+                               ("all" in self._upload_dependencies)) and \
+                               installed['packages']:
                                 package_id = installed['packages'][0]['id']
                                 if installed['packages'][0]["built"]:
-                                    self._uploader.upload_packages(self._reference,
-                                                                   self._upload, package_id)
+                                    if self._upload_only_recipe:
+                                        self._uploader.upload_recipe(reference, self._upload)
+                                    else:
+                                        self._uploader.upload_packages(reference,
+                                                                    self._upload, package_id)
                                 else:
                                     self.printer.print_message("Skipping upload for %s, "
                                                                "it hasn't been built" % package_id)
@@ -121,17 +139,22 @@ class DockerCreateRunner(object):
                  docker_image_skip_update=False, build_policy=None,
                  docker_image_skip_pull=False,
                  always_update_conan_in_docker=False,
-                 upload=False, upload_retry=None,
+                 upload=False, upload_retry=None, upload_only_recipe=None,
                  runner=None,
                  docker_shell="", docker_conan_home="",
-                 docker_platform_param="", lcow_user_workaround="",
+                 docker_platform_param="", docker_run_options="",
+                 lcow_user_workaround="",
                  test_folder=None,
                  pip_install=None,
-                 config_url=None):
+                 config_url=None,
+                 printer=None,
+                 upload_dependencies=None,
+                 conanfile=None):
 
-        self.printer = Printer()
+        self.printer = printer or Printer()
         self._upload = upload
         self._upload_retry = upload_retry
+        self._upload_only_recipe = upload_only_recipe
         self._reference = reference
         self._conan_pip_package = conan_pip_package
         self._build_policy = build_policy
@@ -147,11 +170,14 @@ class DockerCreateRunner(object):
         self._docker_shell = docker_shell
         self._docker_conan_home = docker_conan_home
         self._docker_platform_param = docker_platform_param
+        self._docker_run_options = docker_run_options or ""
         self._lcow_user_workaround = lcow_user_workaround
         self._runner = PrintRunner(runner, self.printer)
         self._test_folder = test_folder
         self._pip_install = pip_install
         self._config_url = config_url
+        self._upload_dependencies = upload_dependencies
+        self._conanfile = conanfile
 
     def _pip_update_conan_command(self):
         commands = []
@@ -187,8 +213,9 @@ class DockerCreateRunner(object):
                 with self.printer.foldable_output("update conan"):
                     try:
                         command = '%s docker run %s --name conan_runner ' \
-                                  ' %s %s "%s"' % (self._sudo_docker_command,
+                                  ' %s %s %s "%s"' % (self._sudo_docker_command,
                                                    env_vars_text,
+                                                   self._docker_run_options,
                                                    self._docker_image,
                                                    self._docker_shell,
                                                    self._pip_update_conan_command())
@@ -214,12 +241,13 @@ class DockerCreateRunner(object):
         else:
             update_command = ""
 
-        command = ('%s docker run --rm -v "%s:%s/project" %s %s %s %s '
+        command = ('%s docker run --rm -v "%s:%s/project" %s %s %s %s %s '
                    '"%s cd project && '
                    '%s run_create_in_docker "' % (self._sudo_docker_command,
                                                   os.getcwd(),
                                                   self._docker_conan_home,
                                                   env_vars_text,
+                                                  self._docker_run_options,
                                                   self._docker_platform_param,
                                                   self._docker_image,
                                                   self._docker_shell,
@@ -256,9 +284,12 @@ class DockerCreateRunner(object):
         ret["CONAN_TEMP_TEST_FOLDER"] = "1"  # test package folder to a temp one
         ret["CPT_UPLOAD_ENABLED"] = self._upload
         ret["CPT_UPLOAD_RETRY"] = self._upload_retry
+        ret["CPT_UPLOAD_ONLY_RECIPE"] = self._upload_only_recipe
         ret["CPT_BUILD_POLICY"] = escape_env(self._build_policy)
         ret["CPT_TEST_FOLDER"] = escape_env(self._test_folder)
         ret["CPT_CONFIG_URL"] = escape_env(self._config_url)
+        ret["CPT_UPLOAD_DEPENDENCIES"] = escape_env(self._upload_dependencies)
+        ret["CPT_CONANFILE"] = escape_env(self._conanfile)
 
         ret.update({key: value for key, value in os.environ.items() if key.startswith("PIP_")})
 
