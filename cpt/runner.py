@@ -148,7 +148,7 @@ class DockerCreateRunner(object):
                  pip_install=None,
                  config_url=None,
                  printer=None,
-                 upload_dependencies=None,
+                 upload_dependencies=[],
                  conanfile=None):
 
         self.printer = printer or Printer()
