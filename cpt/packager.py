@@ -247,12 +247,12 @@ class ConanMultiPackager(object):
             # With LCOW, Docker doesn't respect USER directive in dockerfile yet
             self.lcow_user_workaround = "sudo su conan && "
 
-        self.exclude_vcvars_precommand = (exclude_vcvars_precommand or
-                                          os.getenv("CONAN_EXCLUDE_VCVARS_PRECOMMAND", False))
-        self._docker_image_skip_update = (docker_image_skip_update or
-                                          os.getenv("CONAN_DOCKER_IMAGE_SKIP_UPDATE", False))
-        self._docker_image_skip_pull = (docker_image_skip_pull or
-                                        os.getenv("CONAN_DOCKER_IMAGE_SKIP_PULL", False))
+        self.exclude_vcvars_precommand = exclude_vcvars_precommand or \
+                                          get_bool_from_env("CONAN_EXCLUDE_VCVARS_PRECOMMAND")
+        self._docker_image_skip_update = docker_image_skip_update or \
+                                          get_bool_from_env("CONAN_DOCKER_IMAGE_SKIP_UPDATE")
+        self._docker_image_skip_pull = docker_image_skip_pull or \
+                                        get_bool_from_env("CONAN_DOCKER_IMAGE_SKIP_PULL")
 
         self.runner = runner or os.system
         self.output_runner = ConanOutputRunner()
