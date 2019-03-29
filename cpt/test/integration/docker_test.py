@@ -1,6 +1,5 @@
 import subprocess
 import unittest
-import os
 import time
 
 from conans import __version__ as client_version
@@ -124,6 +123,7 @@ import os
 
 class Pkg(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
+    requires = "zlib/1.2.11@conan/stable"
 
     def build(self):
         pass
@@ -161,43 +161,3 @@ class Pkg(ConanFile):
             self.packager.add({})
             self.packager.run()
             self.assertIn("--cpus=1  conanio/gcc8", self.output)
-
-
-class DockerTestExternal(BaseTest):
-    @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
-    @unittest.skipUnless(is_travis_running(), "Requires Travis CI")
-    def test_docker_image_update(self):
-        """ CPT patches the docker image to download the latest CPT version,
-            we need download the CPT from an external resource. In this case, from
-            Github.
-        """
-
-        conanfile = """from conans import ConanFile
-import os
-
-class Pkg(ConanFile):
-    settings = "os", "compiler", "build_type", "arch"
-
-    def build(self):
-        pass
-"""
-        self.save_conanfile(conanfile)
-        # Validate by Environemnt Variable
-        travis_repo_slug = os.getenv("TRAVIS_REPO_SLUG")
-        branch = os.getenv("TRAVIS_BRANCH")
-        cpt_package = "https://github.com/{}/archive/{}.zip".format(travis_repo_slug, branch)
-        with tools.environment_append({"CONAN_DOCKER_ENTRY_SCRIPT": "pip install -U /tmp/cpt",
-                                       "CONAN_USERNAME": "bar",
-                                       "CONAN_DOCKER_IMAGE": "conanio/gcc8",
-                                       "CONAN_REFERENCE": "foo/0.0.1@bar/testing",
-                                       "CONAN_DOCKER_RUN_OPTIONS": "--network=host -v{}:/tmp/cpt".format(self.root_project_folder),
-                                       "CONAN_DOCKER_IMAGE_SKIP_UPDATE": "TRUE",
-                                       "CONAN_PIP_INSTALL": cpt_package
-                                       }):
-            self.packager = ConanMultiPackager(gcc_versions=["8"],
-                                               archs=["x86_64"],
-                                               build_types=["Release"],
-                                               out=self.output.write)
-            self.packager.add({})
-            self.packager.run()
-            self.assertIn('-e CONAN_PIP_INSTALL="https://github.com/{}/archive/{}.zip'.format(travis_repo_slug, branch), self.output)
