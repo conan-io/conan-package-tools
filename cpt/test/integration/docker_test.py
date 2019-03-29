@@ -141,7 +141,6 @@ class Pkg(ConanFile):
             self.packager.run()
             self.assertIn("--network=host --add-host=google.com:8.8.8.8 -v", self.output)
 
-
         # Validate by parameter
         with tools.environment_append({"CONAN_USERNAME": "bar",
                                        "CONAN_DOCKER_IMAGE": "conanio/gcc8",
@@ -154,7 +153,6 @@ class Pkg(ConanFile):
                                                docker_run_options="--network=host -v{}:/tmp/cpt --cpus=1".format(self.root_project_folder) ,
                                                docker_entry_script="pip install -U /tmp/cpt",
                                                docker_image_skip_update=True,
-
                                                out=self.output.write)
             self.packager.add({})
             self.packager.run()

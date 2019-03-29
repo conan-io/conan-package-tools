@@ -117,7 +117,6 @@ class Pkg(ConanFile):
                                 "CONAN_UPLOAD_ONLY_RECIPE": "TRUE", "CONAN_CHANNEL": "mychannel"}):
             mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True,
                                                       ci_manager=self._ci_manager)
-
             mulitpackager.add({}, {"shared": True})
             mulitpackager.add({}, {"shared": False})
             mulitpackager.run()
@@ -134,7 +133,6 @@ class Pkg(ConanFile):
                                 "CONAN_UPLOAD_ONLY_RECIPE": "FALSE", "CONAN_CHANNEL": "mychannel"}):
             mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True,
                                                       ci_manager=self._ci_manager)
-
             mulitpackager.add({}, {"shared": True})
             mulitpackager.add({}, {"shared": False})
             mulitpackager.run()
@@ -157,7 +155,6 @@ class Pkg(ConanFile):
             mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True,
                                                       upload_only_recipe=True,
                                                       ci_manager=self._ci_manager)
-
             mulitpackager.add({}, {"shared": True})
             mulitpackager.add({}, {"shared": False})
             mulitpackager.run()
@@ -175,7 +172,6 @@ class Pkg(ConanFile):
             mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True,
                                                       upload_only_recipe=False,
                                                       ci_manager=self._ci_manager)
-
             mulitpackager.add({}, {"shared": True})
             mulitpackager.add({}, {"shared": False})
             mulitpackager.run()
@@ -185,7 +181,6 @@ class Pkg(ConanFile):
             self.assertIn("Recipe is up to date, upload skipped", tc.out)
             self.assertIn("Uploading package 1/2", tc.out)
             self.assertIn("Uploading package 2/2", tc.out)
-
 
     def test_upload_package_revisions(self):
         ts = TestServer(users={"user": "password"})
@@ -204,7 +199,6 @@ class Pkg(ConanFile):
             self.assertIn("Uploading package 1/2", tc.out)
             self.assertIn("Uploading package 2/2", tc.out)
             self.assertIn("HALLO", tc.out)
-
 
 
 class UploadDependenciesTest(unittest.TestCase):
@@ -263,7 +257,6 @@ class Pkg(ConanFile):
                                                       build_policy="missing",
                                                       exclude_vcvars_precommand=True,
                                                       ci_manager=self._ci_manager)
-
             mulitpackager.add({}, {})
             mulitpackager.run()
 
@@ -300,7 +293,6 @@ class Pkg(ConanFile):
                                                       build_policy="missing",
                                                       exclude_vcvars_precommand=True,
                                                       ci_manager=self._ci_manager)
-
             mulitpackager.add({}, {})
             mulitpackager.run()
 
