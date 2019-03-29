@@ -18,7 +18,7 @@ class CreateRunner(object):
                  exclude_vcvars_precommand=False, build_policy=None, runner=None,
                  cwd=None, printer=None, upload=False, upload_only_recipe=None,
                  test_folder=None, config_url=None,
-                 upload_dependencies=None, conanfile=None):
+                 upload_dependencies=[], conanfile=None):
 
         self.printer = printer or Printer()
         self._cwd = cwd or os.getcwd()
@@ -37,7 +37,7 @@ class CreateRunner(object):
         self._conanfile = conanfile
         self._upload_dependencies = upload_dependencies.split(",") if \
                                     isinstance(upload_dependencies, str) else \
-                                    upload_dependencies or []
+                                    upload_dependencies
 
         patch_default_base_profile(conan_api, profile_abs_path)
 
