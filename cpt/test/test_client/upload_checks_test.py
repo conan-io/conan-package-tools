@@ -21,6 +21,7 @@ class Pkg(ConanFile):
     def build(self):
         self.output.warn("HALLO")
 """
+
     def setUp(self):
         self._ci_manager = MockCIManager()
 
@@ -318,6 +319,7 @@ class Pkg(ConanFile):
                                                       build_policy="missing",
                                                       exclude_vcvars_precommand=True,
                                                       ci_manager=self._ci_manager)
+
             mulitpackager.add({}, {})
             mulitpackager.run()
 
