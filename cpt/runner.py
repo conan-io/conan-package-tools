@@ -5,6 +5,7 @@ from collections import namedtuple
 
 from conans import tools, __version__ as client_version
 from conans.model.version import Version
+from conans.model.ref import ConanFileReference
 
 from cpt import __version__ as package_tools_version
 from cpt.config import ConfigManager
@@ -38,7 +39,6 @@ class CreateRunner(object):
         self._upload_dependencies = upload_dependencies.split(",") if \
                                     isinstance(upload_dependencies, str) else \
                                     upload_dependencies
-
 
         patch_default_base_profile(conan_api, profile_abs_path)
 
@@ -114,6 +114,9 @@ class CreateRunner(object):
                             return
                         for installed in r['installed']:
                             reference = installed["recipe"]["id"]
+                            if client_version >= Version("1.10.0"):
+                                reference = ConanFileReference.loads(reference)
+                                reference = str(reference.copy_clear_rev())
                             if ((reference == str(self._reference)) or \
                                (reference in self._upload_dependencies) or \
                                ("all" in self._upload_dependencies)) and \

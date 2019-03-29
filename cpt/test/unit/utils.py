@@ -3,6 +3,7 @@ from collections import namedtuple
 
 from conans import __version__ as conan_version
 from conans import tools
+from conans.model.ref import ConanFileReference
 from conans.test.utils.test_files import temp_folder
 from conans.util.files import save
 from conans.model.version import Version
@@ -39,18 +40,20 @@ class MockConanAPI(object):
         self._client_cache = self._cache = MockConanCache()
 
     def create(self, *args, **kwargs):
+        reference = ConanFileReference(kwargs["name"], kwargs["version"], kwargs["user"], kwargs["channel"])
         self.calls.append(Action("create", args, kwargs))
         return {
             "installed": [
                {
                   "packages": [
                      {
-                        "id": "227fb0ea22f4797212e72ba94ea89c7b3fbc2a0c"
+                        "id": "227fb0ea22f4797212e72ba94ea89c7b3fbc2a0c",
+                        "built": True
                      }
                   ],
                   "recipe": {
-                     "id": kwargs["name"]
-                  }
+                     "id": str(reference)
+                  },
                }]}
 
     def create_profile(self, *args, **kwargs):
