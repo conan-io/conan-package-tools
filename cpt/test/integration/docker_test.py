@@ -1,18 +1,14 @@
-import os
-import sys
-import time
 import subprocess
 import unittest
+
+import time
 
 from conans import __version__ as client_version
 from conans import tools
 from conans.model.ref import ConanFileReference
 from conans.model.version import Version
-
-from cpt import __version__ as version
 from cpt.packager import ConanMultiPackager
-from cpt.test.integration.base import BaseTest, PYPI_TESTING_REPO, CONAN_UPLOAD_URL, \
-    CONAN_UPLOAD_PASSWORD, CONAN_LOGIN_UPLOAD
+from cpt.test.integration.base import BaseTest, CONAN_UPLOAD_PASSWORD, CONAN_LOGIN_UPLOAD
 from cpt.test.unit.utils import MockCIManager
 
 
@@ -46,10 +42,9 @@ class Pkg(ConanFile):
 """
 
         self.save_conanfile(conanfile)
-        with tools.environment_append({"CONAN_DOCKER_RUN_OPTIONS": "--network=host -v{}:/tmp/cpt".format(self.old_folder),
+        with tools.environment_append({"CONAN_DOCKER_RUN_OPTIONS": "--network=host -v{}:/tmp/cpt".format(self.root_project_folder),
                                        "CONAN_DOCKER_ENTRY_SCRIPT": "pip install -U /tmp/cpt",
                                        "CONAN_USE_DOCKER": "1",
-                                       "CONAN_DOCKER_USE_SUDO": "1",
                                        "CONAN_DOCKER_IMAGE_SKIP_UPDATE": "TRUE",
                                        "CONAN_LOGIN_USERNAME": "demo",
                                        "CONAN_USERNAME": "demo",
@@ -91,10 +86,9 @@ class Pkg(ConanFile):
             self.assertEquals(self.api.search_recipes(search_pattern)["results"], [])
 
         # Try upload only when stable, shouldn't upload anything
-        with tools.environment_append({"CONAN_DOCKER_RUN_OPTIONS": "--network=host -v{}:/tmp/cpt".format(self.old_folder),
+        with tools.environment_append({"CONAN_DOCKER_RUN_OPTIONS": "--network=host -v{}:/tmp/cpt".format(self.root_project_folder),
                                        "CONAN_DOCKER_ENTRY_SCRIPT": "pip install -U /tmp/cpt",
                                        "CONAN_USE_DOCKER": "1",
-                                       "CONAN_DOCKER_USE_SUDO": "1",
                                        "CONAN_LOGIN_USERNAME": "demo",
                                        "CONAN_USERNAME": "demo",
                                        "CONAN_PASSWORD": "demo",
@@ -135,9 +129,8 @@ class Pkg(ConanFile):
         with tools.environment_append({"CONAN_DOCKER_ENTRY_SCRIPT": "pip install -U /tmp/cpt",
                                        "CONAN_USERNAME": "bar",
                                        "CONAN_DOCKER_IMAGE": "conanio/gcc8",
-                                       "CONAN_DOCKER_USE_SUDO": "0",
                                        "CONAN_REFERENCE": "foo/0.0.1@bar/testing",
-                                       "CONAN_DOCKER_RUN_OPTIONS": "--network=host, --add-host=google.com:8.8.8.8 -v{}:/tmp/cpt".format(self.old_folder),
+                                       "CONAN_DOCKER_RUN_OPTIONS": "--network=host, --add-host=google.com:8.8.8.8 -v{}:/tmp/cpt".format(self.root_project_folder),
                                        "CONAN_DOCKER_IMAGE_SKIP_UPDATE": "TRUE"
                                        }):
             self.packager = ConanMultiPackager(gcc_versions=["8"],
@@ -151,14 +144,13 @@ class Pkg(ConanFile):
         # Validate by parameter
         with tools.environment_append({"CONAN_USERNAME": "bar",
                                        "CONAN_DOCKER_IMAGE": "conanio/gcc8",
-                                       "CONAN_DOCKER_USE_SUDO": "0",
                                        "CONAN_REFERENCE": "foo/0.0.1@bar/testing"
                                        }):
 
             self.packager = ConanMultiPackager(gcc_versions=["8"],
                                                archs=["x86_64"],
                                                build_types=["Release"],
-                                               docker_run_options="--network=host -v{}:/tmp/cpt --cpus=1".format(self.old_folder) ,
+                                               docker_run_options="--network=host -v{}:/tmp/cpt --cpus=1".format(self.root_project_folder) ,
                                                docker_entry_script="pip install -U /tmp/cpt",
                                                docker_image_skip_update=True,
                                                out=self.output.write)

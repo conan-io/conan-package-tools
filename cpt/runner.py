@@ -39,7 +39,6 @@ class CreateRunner(object):
                                     isinstance(upload_dependencies, str) else \
                                     upload_dependencies
 
-
         patch_default_base_profile(conan_api, profile_abs_path)
 
         if Version(client_version) < Version("1.12.0"):
