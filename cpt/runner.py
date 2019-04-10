@@ -151,7 +151,8 @@ class DockerCreateRunner(object):
                  config_url=None,
                  printer=None,
                  upload_dependencies=None,
-                 conanfile=None):
+                 conanfile=None,
+                 force_selinux=None):
 
         self.printer = printer or Printer()
         self._upload = upload
@@ -180,6 +181,7 @@ class DockerCreateRunner(object):
         self._config_url = config_url
         self._upload_dependencies = upload_dependencies or []
         self._conanfile = conanfile
+        self._force_selinux = force_selinux
 
     def _pip_update_conan_command(self):
         commands = []
@@ -249,7 +251,7 @@ class DockerCreateRunner(object):
             update_command = self._pip_update_conan_command() + " && "
         else:
             update_command = ""
-        volume_options = ":z" if DockerCreateRunner.is_selinux_running() else ""
+        volume_options = ":z" if (DockerCreateRunner.is_selinux_running() or self._force_selinux) else ""
 
         command = ('%s docker run --rm -v "%s:%s/project%s" %s %s %s %s %s '
                    '"%s cd project && '
