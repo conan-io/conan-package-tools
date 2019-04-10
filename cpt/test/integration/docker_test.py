@@ -1,6 +1,5 @@
 import subprocess
 import unittest
-
 import time
 
 from conans import __version__ as client_version
@@ -121,6 +120,7 @@ import os
 
 class Pkg(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
+    requires = "zlib/1.2.11@conan/stable"
 
     def build(self):
         pass
