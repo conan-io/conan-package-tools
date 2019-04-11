@@ -29,7 +29,7 @@ if [[ "$(uname -s)" == 'Darwin' ]]; then
     python --version
 else
     sudo apt-get update
-    sudo apt-get install gcc-multilib g++-multilib
+    sudo apt-get install -y --no-install-recommends gcc-multilib g++-multilib selinux-basics
 fi
 
 pip install -r cpt/requirements.txt
