@@ -1,5 +1,6 @@
 import os
 import sys
+import subprocess
 from collections import namedtuple
 
 from conans import tools, __version__ as client_version
@@ -150,7 +151,8 @@ class DockerCreateRunner(object):
                  config_url=None,
                  printer=None,
                  upload_dependencies=None,
-                 conanfile=None):
+                 conanfile=None,
+                 force_selinux=None):
 
         self.printer = printer or Printer()
         self._upload = upload
@@ -179,6 +181,7 @@ class DockerCreateRunner(object):
         self._config_url = config_url
         self._upload_dependencies = upload_dependencies or []
         self._conanfile = conanfile
+        self._force_selinux = force_selinux
 
     def _pip_update_conan_command(self):
         commands = []
@@ -199,6 +202,13 @@ class DockerCreateRunner(object):
 
         command = " && ".join(commands)
         return command
+
+    @staticmethod
+    def is_selinux_running():
+        if tools.which("getenforce"):
+            output = subprocess.check_output("getenforce", shell=True)
+            return "Enforcing" in output.decode()
+        return False
 
     def run(self, pull_image=True, docker_entry_script=None):
         envs = self.get_env_vars()
@@ -241,12 +251,14 @@ class DockerCreateRunner(object):
             update_command = self._pip_update_conan_command() + " && "
         else:
             update_command = ""
+        volume_options = ":z" if (DockerCreateRunner.is_selinux_running() or self._force_selinux) else ""
 
-        command = ('%s docker run --rm -v "%s:%s/project" %s %s %s %s %s '
+        command = ('%s docker run --rm -v "%s:%s/project%s" %s %s %s %s %s '
                    '"%s cd project && '
                    '%s run_create_in_docker "' % (self._sudo_docker_command,
                                                   os.getcwd(),
                                                   self._docker_conan_home,
+                                                  volume_options,
                                                   env_vars_text,
                                                   self._docker_run_options,
                                                   self._docker_platform_param,

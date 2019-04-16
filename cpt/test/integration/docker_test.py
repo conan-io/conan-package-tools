@@ -8,6 +8,7 @@ from conans.model.ref import ConanFileReference
 from conans.model.version import Version
 from cpt.packager import ConanMultiPackager
 from cpt.test.integration.base import BaseTest, CONAN_UPLOAD_PASSWORD, CONAN_LOGIN_UPLOAD
+from cpt.runner import DockerCreateRunner
 from cpt.test.unit.utils import MockCIManager
 
 
@@ -131,7 +132,8 @@ class Pkg(ConanFile):
                                        "CONAN_DOCKER_IMAGE": "conanio/gcc8",
                                        "CONAN_REFERENCE": "foo/0.0.1@bar/testing",
                                        "CONAN_DOCKER_RUN_OPTIONS": "--network=host, --add-host=google.com:8.8.8.8 -v{}:/tmp/cpt".format(self.root_project_folder),
-                                       "CONAN_DOCKER_IMAGE_SKIP_UPDATE": "TRUE"
+                                       "CONAN_DOCKER_IMAGE_SKIP_UPDATE": "TRUE",
+                                       "CONAN_FORCE_SELINUX": "TRUE"
                                        }):
             self.packager = ConanMultiPackager(gcc_versions=["8"],
                                                archs=["x86_64"],
@@ -140,11 +142,13 @@ class Pkg(ConanFile):
             self.packager.add({})
             self.packager.run()
             self.assertIn("--network=host --add-host=google.com:8.8.8.8 -v", self.output)
+            self.assertIn("/home/conan/project:z", self.output)
 
         # Validate by parameter
         with tools.environment_append({"CONAN_USERNAME": "bar",
                                        "CONAN_DOCKER_IMAGE": "conanio/gcc8",
-                                       "CONAN_REFERENCE": "foo/0.0.1@bar/testing"
+                                       "CONAN_REFERENCE": "foo/0.0.1@bar/testing",
+
                                        }):
 
             self.packager = ConanMultiPackager(gcc_versions=["8"],
@@ -153,7 +157,9 @@ class Pkg(ConanFile):
                                                docker_run_options="--network=host -v{}:/tmp/cpt --cpus=1".format(self.root_project_folder) ,
                                                docker_entry_script="pip install -U /tmp/cpt",
                                                docker_image_skip_update=True,
-                                               out=self.output.write)
+                                               out=self.output.write,
+                                               force_selinux=True)
             self.packager.add({})
             self.packager.run()
             self.assertIn("--cpus=1  conanio/gcc8", self.output)
+            self.assertIn("/home/conan/project:z", self.output)
