@@ -8,7 +8,6 @@ from conans.model.ref import ConanFileReference
 from conans.model.version import Version
 from cpt.packager import ConanMultiPackager
 from cpt.test.integration.base import BaseTest, CONAN_UPLOAD_PASSWORD, CONAN_LOGIN_UPLOAD
-from cpt.runner import DockerCreateRunner
 from cpt.test.unit.utils import MockCIManager
 
 
@@ -163,3 +162,36 @@ class Pkg(ConanFile):
             self.packager.run()
             self.assertIn("--cpus=1  conanio/gcc8", self.output)
             self.assertIn("/home/conan/project:z", self.output)
+
+    @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
+    def test_docker_run_android(self):
+        self.create_project()
+        command = ('docker run --rm -v "{}:/home/conan/project" ',
+                   '-e CONAN_RECIPE_LINTER="False" ',
+                   '-e CONAN_PIP_PACKAGE="0" ',
+                   '-e CONAN_DOCKER_ENTRY_SCRIPT="pip install -U /tmp/cpt" ',
+                   '-e CONAN_USERNAME="bar" ',
+                   '-e CONAN_DOCKER_IMAGE="conanio/android-clang8" ',
+                   '-e CONAN_CHANNEL="testing" ',
+                   '-e CONAN_DOCKER_RUN_OPTIONS="-v{}:/tmp/cpt" ',
+                   '-e CONAN_DOCKER_IMAGE_SKIP_UPDATE="TRUE" ',
+                   '-e CONAN_DOCKER_USE_SUDO="FALSE" ',
+                   '-e CONAN_ARCHS="x86_64" ',
+                   '-e CONAN_CLANG_VERSIONS="8" ',
+                   '-e CONAN_BUILD_TYPES="Release" ',
+                   '-e CONAN_LOGIN_USERNAME="bar" ',
+                   '-e CONAN_REFERENCE="hello/0.1.0@bar/testing" ',
+                   '-e CPT_PROFILE="@@include(default)@@@@[settings]@@arch=x86_64@@build_type=Release@@compiler=clang@@compiler.version=8@@[options]@@@@[env]@@@@[build_requires]@@@@" ',
+                   '-e CONAN_TEMP_TEST_FOLDER="1" ',
+                   '-e CPT_UPLOAD_RETRY="3" ',
+                   '-e CPT_CONANFILE="conanfile.py" ',
+                   '-v{}:/tmp/cpt  ',
+                   'conanio/android-clang8 ',
+                   '/bin/sh -c " cd project &&  pip install -U /tmp/cpt && run_create_in_docker "')
+        command = "".join(command).format(self.tmp_folder, self.root_project_folder, self.root_project_folder)
+        output = subprocess.check_output(command, shell=True).decode()
+        self.assertIn("os=Android", output)
+        self.assertIn("compiler.version=8", output)
+        self.assertIn("compiler=clang", output)
+        self.assertIn("arch=x86_64", output)
+        self.assertIn("Cross-build from 'Linux:x86_64' to 'Android:x86_64'", output)

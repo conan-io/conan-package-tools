@@ -16,8 +16,6 @@ def run():
     # Get all from environ
     conan_api, client_cache, _ = Conan.factory()
     printer = Printer()
-    if os.path.exists(client_cache.default_profile_path):
-        os.remove(client_cache.default_profile_path)
 
     remotes_manager = RemotesManager(conan_api, printer)
     default_username = os.getenv("CONAN_USERNAME")
