@@ -36,6 +36,10 @@ class BaseTest(unittest.TestCase):
     def save_conanfile(self, conanfile):
         tools.save(os.path.join(self.tmp_folder, "conanfile.py"), conanfile)
 
+    def create_project(self):
+        with tools.chdir(self.tmp_folder):
+            self.api.new("hello/0.1.0", pure_c=True)
+
     @property
     def root_project_folder(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))

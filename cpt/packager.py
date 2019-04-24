@@ -106,7 +106,8 @@ class ConanMultiPackager(object):
                  test_folder=None,
                  cwd=None,
                  config_url=None,
-                 upload_dependencies=None):
+                 upload_dependencies=None,
+                 force_selinux=None):
 
         self.printer = Printer(out)
         self.printer.print_rule()
@@ -278,6 +279,7 @@ class ConanMultiPackager(object):
         else:
             self.docker_32_images = os.getenv("CONAN_DOCKER_32_IMAGES", False)
 
+        self.force_selinux = force_selinux or get_bool_from_env("CONAN_FORCE_SELINUX")
         self.curpage = curpage or os.getenv("CONAN_CURRENT_PAGE", 1)
         self.total_pages = total_pages or os.getenv("CONAN_TOTAL_PAGES", 1)
 
@@ -580,7 +582,8 @@ class ConanMultiPackager(object):
                                        config_url=self.config_url,
                                        printer=self.printer,
                                        upload_dependencies=self.upload_dependencies,
-                                       conanfile=self.conanfile)
+                                       conanfile=self.conanfile,
+                                       force_selinux=self.force_selinux)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
                       docker_entry_script=self.docker_entry_script)
