@@ -152,7 +152,8 @@ class Pkg(ConanFile):
         self.packager.add({}, {}, {}, {})
         self.packager.run()
 
-        pf = self.client_cache.export(ConanFileReference.loads("lib/1.0@lasote/testing"))
+        ref = ConanFileReference.loads("lib/1.0@lasote/testing")
+        pf = self.client_cache.package_layout(ref).export()
         found_in_export = False
         for exported in os.listdir(pf):
             if "other_file" == exported:
@@ -161,7 +162,7 @@ class Pkg(ConanFile):
 
         self.assertTrue(found_in_export)
 
-        pf = self.client_cache.export_sources(ConanFileReference.loads("lib/1.0@lasote/testing"))
+        pf = self.client_cache.package_layout(ref).export_sources()
         found_in_export_sources = False
         for exported in os.listdir(pf):
             if "source.cpp" == exported:
