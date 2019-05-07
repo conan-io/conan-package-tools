@@ -29,6 +29,8 @@ def load_cf_class(path, conan_api):
         from conans.client.loader_parse import load_conanfile_class
         return load_conanfile_class(path)
     else:
+        remotes = conan_api._cache.registry.load_remotes()
+        conan_api.python_requires.enable_remotes(remotes=remotes)
         return conan_api._loader.load_class(path)
 
 
