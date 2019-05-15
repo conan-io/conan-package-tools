@@ -4,6 +4,7 @@ from collections import namedtuple
 
 from conans.model.ref import ConanFileReference
 from conans.model.version import Version
+from cpt.lazy_objects import LazyConanFileReference
 from cpt.tools import split_colon_env, transform_list_options_to_dict
 
 default_gcc_versions = ["4.9", "5", "6", "7", "8"]
@@ -182,9 +183,9 @@ class BuildConf(namedtuple("BuildConf", "settings options env_vars build_require
             raise Exception("'env_vars' field has to be a dict")
         if not isinstance(build_requires, dict):
             raise Exception("'build_requires' field has to be a dict")
-        if reference is not None and not isinstance(reference, str) and \
-           not isinstance(reference, ConanFileReference):
-            raise Exception("'reference' field has to be a string or ConanFileReference")
+        if reference is not None and \
+           not isinstance(reference, (str, ConanFileReference, LazyConanFileReference)):
+            raise Exception("'reference' field has to be a string, ConanFileReference or LazyConanFileReference")
 
         if isinstance(reference, str):
             reference = ConanFileReference.loads(reference)
