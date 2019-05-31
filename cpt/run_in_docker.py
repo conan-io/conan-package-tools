@@ -19,9 +19,9 @@ def run():
 
     remotes_manager = RemotesManager(conan_api, printer)
     default_username = os.getenv("CONAN_USERNAME")
-    auth_manager = AuthManager(conan_api, printer, default_username=default_username)
-
     upload_retry = os.getenv("CPT_UPLOAD_RETRY")
+    auth_manager = AuthManager(conan_api, printer, default_username=default_username, retry=upload_retry)
+
     upload_only_recipe = os.getenv("CPT_UPLOAD_ONLY_RECIPE")
     uploader = Uploader(conan_api, remotes_manager, auth_manager, printer, upload_retry)
     build_policy = unscape_env(os.getenv("CPT_BUILD_POLICY"))

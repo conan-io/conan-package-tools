@@ -1,6 +1,8 @@
 import unittest
+from unittest.mock import patch
 
 from conans import tools
+from conans.errors import ConanException
 from conans.test.utils.tools import TestBufferConanOutput
 from cpt.auth import AuthManager
 from cpt.printer import Printer
@@ -144,3 +146,14 @@ class AuthTest(unittest.TestCase):
                     'CONAN_LOGIN_USERNAME': 'myuser'}
 
         self.assertEquals(manager.env_vars(), expected)
+
+    def test_authentication_retry(self):
+        users = {"remote1": "my_user"}
+        passwords = {"remote1": "my_pass"}
+        manager = AuthManager(self.conan_api, self.printer, login_input=users,
+                              passwords_input=passwords, retry=3)
+        with patch('cpt.test.unit.packager_test.MockConanAPI.authenticate') as mock_authenticate:
+            mock_authenticate.side_effect = ConanException
+            with self.assertRaises(ConanException):
+                manager.login("remote1")
+            self.assertEquals(3, mock_authenticate.get.call_count)

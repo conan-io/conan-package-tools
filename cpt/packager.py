@@ -132,7 +132,8 @@ class ConanMultiPackager(object):
 
         self.auth_manager = AuthManager(self.conan_api, self.printer, login_username, password,
                                         default_username=self.username,
-                                        skip_check_credentials=self.skip_check_credentials)
+                                        skip_check_credentials=self.skip_check_credentials,
+                                        retry=self.upload_retry)
 
         # Upload related variables
         self.upload_retry = upload_retry or os.getenv("CONAN_UPLOAD_RETRY", 3)

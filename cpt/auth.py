@@ -1,11 +1,13 @@
 import os
 from six import string_types
+from conans.errors import ConanException
 
 
 class AuthManager(object):
 
     def __init__(self, conan_api, printer, login_input=None,
-                 passwords_input=None, default_username=None, skip_check_credentials=False):
+                 passwords_input=None, default_username=None, skip_check_credentials=False,
+                 retry=None):
         """
         :param conan_api: ConanAPI
         :param login_input: Can be a string with the user or a dict with {"remote": "login"}
@@ -19,6 +21,9 @@ class AuthManager(object):
         self._data = {}  # {"remote_name": (user, password)}
         self.printer = printer
         self.skip_check_credentials = skip_check_credentials
+        self._retry = retry
+        if self._retry is None:
+            self._retry = 0
 
         unique_login = self._get_single_login_username(login_input) or default_username
         unique_password = self._get_single_password(passwords_input)
@@ -102,9 +107,22 @@ class AuthManager(object):
                                            "activated, trying to use pre-stored user/password in "
                                            "local cache")
                 return
+        self.authenticate(user, password, remote_name)
 
-        self._conan_api.authenticate(user, password, remote_name)
-        self.printer.print_message("OK! '%s' user logged in '%s' " % (user, remote_name))
+    def authenticate(self, user, password, remote_name):
+        """ Conan Upload has retry mechanism, which avoid timeouts or connection errors.
+            However, authentication process doesn't contain any retry step. 
+        """
+        count = 1
+        while True:
+            try:
+                self._conan_api.authenticate(user, password, remote_name)
+                self.printer.print_message("OK! '%s' user logged in '%s' " % (user, remote_name))
+                break
+            except ConanException as error:
+                if count >= self._retry:
+                    raise ConanException(error)
+                count = count + 1
 
     def env_vars(self):
         ret = {}
