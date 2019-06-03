@@ -2,10 +2,10 @@ import subprocess
 import unittest
 import time
 
-from conans import __version__ as client_version
 from conans import tools
 from conans.model.ref import ConanFileReference
 from conans.model.version import Version
+from cpt import get_client_version
 from cpt.packager import ConanMultiPackager
 from cpt.test.integration.base import BaseTest, CONAN_UPLOAD_PASSWORD, CONAN_LOGIN_UPLOAD
 from cpt.test.unit.utils import MockCIManager
@@ -30,6 +30,7 @@ class DockerTest(BaseTest):
 
     @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
     def test_docker(self):
+        client_version = get_client_version()
         ci_manager = MockCIManager()
         unique_ref = "zlib/%s" % str(time.time())
         conanfile = """from conans import ConanFile
