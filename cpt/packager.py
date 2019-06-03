@@ -5,13 +5,13 @@ import sys
 from collections import defaultdict
 
 import six
-from conans import __version__ as client_version, tools
+from conans import tools
 from conans.client.conan_api import Conan
 from conans.client.runner import ConanRunner
 from conans.model.ref import ConanFileReference
 from conans.model.version import Version
 
-from cpt import NEWEST_CONAN_SUPPORTED
+from cpt import NEWEST_CONAN_SUPPORTED, get_client_version
 from cpt.auth import AuthManager
 from cpt.builds_generator import BuildConf, BuildGenerator
 from cpt.ci_manager import CIManager
@@ -25,10 +25,11 @@ from cpt.uploader import Uploader
 
 
 def load_cf_class(path, conan_api):
+    client_version = get_client_version()
     if Version(client_version) < Version("1.7.0"):
         from conans.client.loader_parse import load_conanfile_class
         return load_conanfile_class(path)
-    elif Version(client_version) <= Version("1.15.0"):
+    elif Version(client_version) < Version("1.16.0"):
         remotes = conan_api._cache.registry.load_remotes()
         conan_api.python_requires.enable_remotes(remotes=remotes)
         return conan_api._loader.load_class(path)
@@ -114,6 +115,8 @@ class ConanMultiPackager(object):
                  config_url=None,
                  upload_dependencies=None,
                  force_selinux=None):
+
+        conan_version = get_client_version()
 
         self.printer = Printer(out)
         self.printer.print_rule()
@@ -289,7 +292,7 @@ class ConanMultiPackager(object):
         self.curpage = curpage or os.getenv("CONAN_CURRENT_PAGE", 1)
         self.total_pages = total_pages or os.getenv("CONAN_TOTAL_PAGES", 1)
 
-        self.conan_pip_package = os.getenv("CONAN_PIP_PACKAGE", "conan==%s" % client_version)
+        self.conan_pip_package = os.getenv("CONAN_PIP_PACKAGE", "conan==%s" % conan_version)
         if self.conan_pip_package in ("0", "False"):
             self.conan_pip_package = ""
         self.vs10_x86_64_enabled = vs10_x86_64_enabled
@@ -310,7 +313,7 @@ class ConanMultiPackager(object):
                                      if valid_pair(var, value)})
 
         self._newest_supported_conan_version = Version(NEWEST_CONAN_SUPPORTED).minor(fill=False)
-        self._client_conan_version = client_version
+        self._client_conan_version = conan_version
 
     def _check_conan_version(self):
         tmp = self._newest_supported_conan_version

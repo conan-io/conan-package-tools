@@ -1,20 +1,19 @@
 import six
-from conans import __version__ as client_version
-from conans import __version__ as conan_version
 from conans.client.conan_api import Conan
 from conans.model.version import Version
+from cpt import get_client_version
 
 from cpt.packager import ConanMultiPackager
 
 
 def get_patched_multipackager(tc, *args, **kwargs):
     tc.init_dynamic_vars()
-
+    client_version = get_client_version()
     extra_init_kwargs = {}
     if Version(client_version) >= Version("1.11"):
         extra_init_kwargs.update({'requester': tc.requester})
 
-    if Version(conan_version) < Version("1.12.0"):
+    if Version(client_version) < Version("1.12.0"):
         cache = tc.client_cache
     else:
         cache = tc.cache
