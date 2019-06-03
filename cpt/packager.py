@@ -28,7 +28,7 @@ def load_cf_class(path, conan_api):
     if Version(client_version) < Version("1.7.0"):
         from conans.client.loader_parse import load_conanfile_class
         return load_conanfile_class(path)
-    elif Version(client_version) < Version("1.16.0"):
+    elif Version(client_version) <= Version("1.15.0"):
         remotes = conan_api._cache.registry.load_remotes()
         conan_api.python_requires.enable_remotes(remotes=remotes)
         return conan_api._loader.load_class(path)
