@@ -3,11 +3,11 @@ import sys
 import subprocess
 from collections import namedtuple
 
-from conans import tools, __version__ as client_version
+from conans import tools
 from conans.model.version import Version
 from conans.model.ref import ConanFileReference
 
-from cpt import __version__ as package_tools_version
+from cpt import __version__ as package_tools_version, get_client_version
 from cpt.config import ConfigManager
 from cpt.printer import Printer
 from cpt.profiles import load_profile, patch_default_base_profile
@@ -42,8 +42,9 @@ class CreateRunner(object):
         self._upload_dependencies = self._upload_dependencies or []
 
         patch_default_base_profile(conan_api, profile_abs_path)
+        client_version = get_client_version()
 
-        if Version(client_version) < Version("1.12.0"):
+        if client_version < Version("1.12.0"):
             cache = self._conan_api._client_cache
         else:
             cache = self._conan_api._cache
@@ -55,6 +56,7 @@ class CreateRunner(object):
         return self._profile.settings
 
     def run(self):
+        client_version = get_client_version()
 
         if self._config_url:
             ConfigManager(self._conan_api, self.printer).install(url=self._config_url)
