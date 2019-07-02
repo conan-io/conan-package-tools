@@ -31,7 +31,6 @@ class CreateRunner(object):
         self._exclude_vcvars_precommand = exclude_vcvars_precommand
         self._build_policy = build_policy
         self._runner = PrintRunner(runner or os.system, self.printer)
-        self._uploader.remote_manager.add_remotes_to_conan()
         self._test_folder = test_folder
         self._config_url = config_url
         self._upload_only_recipe = upload_only_recipe
