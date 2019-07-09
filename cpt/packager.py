@@ -165,6 +165,7 @@ class ConanMultiPackager(object):
 
         self.upload_only_recipe = upload_only_recipe or get_bool_from_env("CONAN_UPLOAD_ONLY_RECIPE")
 
+        self.remotes_manager.add_remotes_to_conan()
         self.uploader = Uploader(self.conan_api, self.remotes_manager, self.auth_manager,
                                  self.printer, self.upload_retry)
 
@@ -475,7 +476,6 @@ class ConanMultiPackager(object):
                 self.printer.print_message("Skipped builds due [skip ci] commit message")
                 return 99
             if not self.skip_check_credentials and self._upload_enabled():
-                self.remotes_manager.add_remotes_to_conan()
                 self.auth_manager.login(self.remotes_manager.upload_remote_name)
             if self.conan_pip_package and not self.use_docker:
                 with self.printer.foldable_output("pip_update"):

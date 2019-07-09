@@ -18,6 +18,7 @@ def run():
     printer = Printer()
 
     remotes_manager = RemotesManager(conan_api, printer)
+    remotes_manager.add_remotes_to_conan()
     default_username = os.getenv("CONAN_USERNAME")
     auth_manager = AuthManager(conan_api, printer, default_username=default_username)
 
