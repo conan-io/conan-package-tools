@@ -544,7 +544,7 @@ class ConanMultiPackager(object):
                 self.builds_in_current_page.append(build)
 
         self.printer.print_current_page(curpage, total_pages)
-        self.printer.print_jobs(self.builds_in_current_page)
+        self.printer.print_jobs(self.builds_in_current_page, not self._disable_numbered_jobs)
 
         pulled_docker_images = defaultdict(lambda: False)
 

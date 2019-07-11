@@ -90,7 +90,9 @@ class Printer(object):
         self.printer(tabulate(table, headers="firstrow", tablefmt='psql'))
         self.printer("\n")
 
-    def print_jobs(self, all_jobs):
+    def print_jobs(self, all_jobs, use_numbered_jobs):
+        initial_headers = ['#'] if use_numbered_jobs else []
+
         compiler_headers_ext = set()
         option_headers = set()
         for build in all_jobs:
@@ -101,11 +103,13 @@ class Printer(object):
 
         table = []
         for i, build in enumerate(all_jobs):
-            table.append([build.settings.get(it, "") for it in compiler_headers] +
-                         [build.options.get(it, '') for it in option_headers])
+            job_row = [str(i+1)] if use_numbered_jobs else []
+            job_row.extend([build.settings.get(it, "") for it in compiler_headers])
+            job_row.extend([build.options.get(it, '') for it in option_headers])
+            table.append(job_row)
 
         if len(table):
-            self.printer(tabulate(table, headers=list(compiler_headers) + list(option_headers),
+            self.printer(tabulate(table, headers=list(initial_headers) + list(compiler_headers) + list(option_headers),
                                   # showindex=True,
                                   tablefmt='psql'))
             self.printer("\n")
