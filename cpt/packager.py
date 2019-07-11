@@ -324,7 +324,7 @@ class ConanMultiPackager(object):
         self._newest_supported_conan_version = Version(NEWEST_CONAN_SUPPORTED).minor(fill=False)
         self._client_conan_version = conan_version
 
-        self._disable_numbered_jobs = disable_numbered_jobs or os.getenv("CONAN_DISABLE_NUMBERED_JOBS", False)
+        self._disable_numbered_jobs = disable_numbered_jobs or get_bool_from_env("CONAN_DISABLE_NUMBERED_JOBS")
 
     def _check_conan_version(self):
         tmp = self._newest_supported_conan_version
