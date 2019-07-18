@@ -1215,7 +1215,6 @@ This is especially useful for CI integration.
 - **CONAN_CONANFILE**: Custom conanfile consumed by Conan create. e.j. conanfile.py
 - **CPT_TEST_FOLDER**: Custom test_package path, e.j .conan/test_package
 - **CONAN_FORCE_SELINUX**: Force docker to relabel file objects on the shared volumes
-- **CONAN_DISABLE_NUMBERED_JOBS**: If set, it disables numbering jobs within a page
 
 
 # Full example
