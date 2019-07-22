@@ -1075,7 +1075,6 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **conanfile**: Custom conanfile consumed by Conan create. e.j. conanfile.py
 - **config_url**: Conan config URL be installed before to build e.j https://github.com/bincrafters/conan-config.git
 - **force_selinux**: Force docker to relabel file objects on the shared volumes
-- **disable_numbered_jobs**: If True, it disables numbering jobs within a page. By default is False.
 
 Upload related parameters:
 
