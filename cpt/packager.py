@@ -323,8 +323,6 @@ class ConanMultiPackager(object):
         self._newest_supported_conan_version = Version(NEWEST_CONAN_SUPPORTED).minor(fill=False)
         self._client_conan_version = conan_version
 
-        self._disable_numbered_jobs = False
-
     def _check_conan_version(self):
         tmp = self._newest_supported_conan_version
         if Version(self._client_conan_version).minor(fill=False) > tmp:
@@ -543,14 +541,13 @@ class ConanMultiPackager(object):
                 self.builds_in_current_page.append(build)
 
         self.printer.print_current_page(curpage, total_pages)
-        self.printer.print_jobs(self.builds_in_current_page, not self._disable_numbered_jobs)
+        self.printer.print_jobs(self.builds_in_current_page)
 
         pulled_docker_images = defaultdict(lambda: False)
 
         # FIXME: Remove in Conan 1.3, https://github.com/conan-io/conan/issues/2787
         for index, build in enumerate(self.builds_in_current_page):
-            if not self._disable_numbered_jobs:
-                self.printer.print_message("Build: %s/%s" % (index+1, len(self.builds_in_current_page)))
+            self.printer.print_message("Build: %s/%s" % (index+1, len(self.builds_in_current_page)))
             base_profile_name = base_profile_name or os.getenv("CONAN_BASE_PROFILE")
             if base_profile_name:
                 self.printer.print_message("**************************************************")
