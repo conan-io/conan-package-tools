@@ -9,7 +9,7 @@ from cpt.packager import ConanMultiPackager
 def get_patched_multipackager(tc, *args, **kwargs):
     client_version = get_client_version()
     extra_init_kwargs = {}
-    if Version("1.11") < Version(client_version) > Version("1.18"):
+    if Version("1.11") < Version(client_version) < Version("1.18"):
         extra_init_kwargs.update({'requester': tc.requester})
     elif Version(client_version) >= Version("1.18"):
         extra_init_kwargs.update({'http_requester': tc.requester})
