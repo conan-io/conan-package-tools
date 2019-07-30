@@ -40,10 +40,16 @@ def load_cf_class(path, conan_api):
         remotes = conan_api._cache.registry.load_remotes()
         conan_api.python_requires.enable_remotes(remotes=remotes)
         return conan_api._loader.load_class(path)
-    else:
+    elif Version(client_version) < Version("1.18.0"):
         remotes = conan_api._cache.registry.load_remotes()
         conan_api._python_requires.enable_remotes(remotes=remotes)
         return conan_api._loader.load_class(path)
+    else:
+        if not conan_api.app:
+            conan_api.create_app()
+        remotes = conan_api.app.cache.registry.load_remotes()
+        conan_api.app.python_requires.enable_remotes(remotes=remotes)
+        return conan_api.app.loader.load_class(path)
 
 
 class PlatformInfo(object):
@@ -132,7 +138,9 @@ class ConanMultiPackager(object):
         self.cwd = cwd or os.getcwd()
 
         if not conan_api:
-            self.conan_api, self.client_cache, _ = Conan.factory()
+            self.conan_api, _, _ = Conan.factory()
+            self.conan_api.create_app()
+            self.client_cache = self.conan_api.app.cache
         else:
             self.conan_api = conan_api
             self.client_cache = client_cache

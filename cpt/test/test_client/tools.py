@@ -7,19 +7,19 @@ from cpt.packager import ConanMultiPackager
 
 
 def get_patched_multipackager(tc, *args, **kwargs):
-    tc.init_dynamic_vars()
     client_version = get_client_version()
     extra_init_kwargs = {}
-    if Version(client_version) >= Version("1.11"):
+    if Version("1.11") < Version(client_version) < Version("1.18"):
         extra_init_kwargs.update({'requester': tc.requester})
+    elif Version(client_version) >= Version("1.18"):
+        extra_init_kwargs.update({'http_requester': tc.requester})
 
     if Version(client_version) < Version("1.12.0"):
         cache = tc.client_cache
     else:
         cache = tc.cache
 
-    conan_api = Conan(cache, tc.user_io, tc.runner, tc.remote_manager, tc.hook_manager,
-                      interactive=False, **extra_init_kwargs)
+    conan_api = Conan(cache_folder=cache.cache_folder, output=tc.out, **extra_init_kwargs)
 
     class Printer(object):
 
@@ -29,7 +29,7 @@ def get_patched_multipackager(tc, *args, **kwargs):
         def __call__(self, contents):
             if six.PY2:
                 contents = unicode(contents)
-            self.tc.user_io.out._buffer.write(contents)
+            self.tc.out.write(contents)
 
     kwargs["out"] = Printer(tc)
     kwargs["conan_api"] = conan_api

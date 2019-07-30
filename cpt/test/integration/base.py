@@ -25,7 +25,9 @@ class BaseTest(unittest.TestCase):
         self.old_env = dict(os.environ)
         os.environ.update({"CONAN_USER_HOME": self.conan_home, "CONAN_PIP_PACKAGE": "0"})
         self.output = TestBufferConanOutput()
-        self.api, self.client_cache, _ = ConanAPIV1.factory()
+        self.api, _, _ = ConanAPIV1.factory()
+        self.api.create_app()
+        self.client_cache = self.api.app.cache
 
     def tearDown(self):
         os.chdir(self.old_folder)
