@@ -45,8 +45,12 @@ class CreateRunner(object):
 
         if client_version < Version("1.12.0"):
             cache = self._conan_api._client_cache
-        else:
+        elif client_version < Version("1.18.0"):
             cache = self._conan_api._cache
+        else:
+            if not conan_api.app:
+                conan_api.create_app()
+            cache = conan_api.app.cache
 
         self._profile = load_profile(profile_abs_path, cache)
 

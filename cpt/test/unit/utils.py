@@ -1,6 +1,8 @@
 import os
 from collections import namedtuple
 
+import mock
+
 from conans import tools
 from conans.model.ref import ConanFileReference
 from conans.test.utils.test_files import temp_folder
@@ -32,12 +34,13 @@ class MockConanCache(object):
 
 Action = namedtuple("Action", "name args kwargs")
 
-
 class MockConanAPI(object):
 
     def __init__(self):
         self.calls = []
         self._client_cache = self._cache = MockConanCache()
+        self.app = mock.Mock()
+        self.app.cache = self._client_cache
 
     def create(self, *args, **kwargs):
         reference = ConanFileReference(kwargs["name"], kwargs["version"], kwargs["user"], kwargs["channel"])

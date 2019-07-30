@@ -57,8 +57,12 @@ def patch_default_base_profile(conan_api, profile_abs_path):
         conan_version = get_client_version()
         if conan_version < Version("1.12.0"):
             cache = conan_api._client_cache
-        else:
+        elif conan_version < Version("1.18.0"):
             cache = conan_api._cache
+        else:
+            if not conan_api.app:
+                conan_api.create_app()
+            cache = conan_api.app.cache
 
         default_profile_name = os.path.basename(cache.default_profile_path)
         if not os.path.exists(cache.default_profile_path):
