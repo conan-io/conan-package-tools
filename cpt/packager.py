@@ -45,6 +45,8 @@ def load_cf_class(path, conan_api):
         conan_api._python_requires.enable_remotes(remotes=remotes)
         return conan_api._loader.load_class(path)
     else:
+        if not conan_api.app:
+            conan_api.create_app()
         remotes = conan_api.app.cache.registry.load_remotes()
         conan_api.app.python_requires.enable_remotes(remotes=remotes)
         return conan_api.app.loader.load_class(path)
