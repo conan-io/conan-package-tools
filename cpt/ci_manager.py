@@ -216,10 +216,12 @@ class CircleCiManager(GenericManager):
         return os.getenv("CIRCLE_SHA1", None)
 
     def get_branch(self):
+        if self.is_pull_request():
+            return None
         return os.getenv("CIRCLE_BRANCH", None)
 
     def is_pull_request(self):
-        return os.getenv("CIRCLE_PULL_REQUEST", None)
+        return "CIRCLE_PULL_REQUEST" in os.environ
 
     def is_tag(self):
         return os.getenv("CIRCLE_TAG", None)
