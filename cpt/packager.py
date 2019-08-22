@@ -127,7 +127,8 @@ class ConanMultiPackager(object):
                  cwd=None,
                  config_url=None,
                  upload_dependencies=None,
-                 force_selinux=None):
+                 force_selinux=None,
+                 update_dependencies=None):
 
         conan_version = get_client_version()
 
@@ -296,6 +297,8 @@ class ConanMultiPackager(object):
             self.upload_dependencies = ",".join(self.upload_dependencies)
         if "all" in self.upload_dependencies and self.upload_dependencies != "all":
             raise Exception("Upload dependencies only accepts or 'all' or package references. Do not mix both!")
+
+        self.update_dependencies = update_dependencies or get_bool_from_env("CONAN_UPDATE_DEPENDENCIES")
 
         os.environ["CONAN_CHANNEL"] = self.channel
 
@@ -578,7 +581,8 @@ class ConanMultiPackager(object):
                                  test_folder=self.test_folder,
                                  config_url=self.config_url,
                                  upload_dependencies=self.upload_dependencies,
-                                 conanfile=self.conanfile)
+                                 conanfile=self.conanfile,
+                                 update_dependencies=self.update_dependencies)
                 r.run()
             else:
                 docker_image = self._get_docker_image(build)
@@ -607,7 +611,8 @@ class ConanMultiPackager(object):
                                        printer=self.printer,
                                        upload_dependencies=self.upload_dependencies,
                                        conanfile=self.conanfile,
-                                       force_selinux=self.force_selinux)
+                                       force_selinux=self.force_selinux,
+                                       update_dependencies=self.update_dependencies)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
                       docker_entry_script=self.docker_entry_script)

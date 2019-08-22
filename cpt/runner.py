@@ -19,7 +19,7 @@ class CreateRunner(object):
                  exclude_vcvars_precommand=False, build_policy=None, runner=None,
                  cwd=None, printer=None, upload=False, upload_only_recipe=None,
                  test_folder=None, config_url=None,
-                 upload_dependencies=None, conanfile=None):
+                 upload_dependencies=None, conanfile=None, update_dependencies=False):
 
         self.printer = printer or Printer()
         self._cwd = cwd or os.getcwd()
@@ -39,6 +39,7 @@ class CreateRunner(object):
                                     isinstance(upload_dependencies, str) else \
                                     upload_dependencies
         self._upload_dependencies = self._upload_dependencies or []
+        self._update_dependencies = update_dependencies
 
         patch_default_base_profile(conan_api, profile_abs_path)
         client_version = get_client_version()
@@ -105,13 +106,15 @@ class CreateRunner(object):
                                                         user=user, channel=channel,
                                                         build_modes=self._build_policy,
                                                         profile_name=self._profile_abs_path,
-                                                        test_folder=self._test_folder)
+                                                        test_folder=self._test_folder,
+                                                        update=self._update_dependencies)
                             else:
                                 r = self._conan_api.create(self._conanfile, name=name, version=version,
                                                         user=user, channel=channel,
                                                         build_modes=self._build_policy,
                                                         profile_names=[self._profile_abs_path],
-                                                        test_folder=self._test_folder)
+                                                        test_folder=self._test_folder,
+                                                        update=self._update_dependencies)
                         except exc_class as e:
                             self.printer.print_rule()
                             self.printer.print_message("Skipped configuration by the recipe: "
@@ -157,7 +160,8 @@ class DockerCreateRunner(object):
                  printer=None,
                  upload_dependencies=None,
                  conanfile=None,
-                 force_selinux=None):
+                 force_selinux=None,
+                 update_dependencies=False):
 
         self.printer = printer or Printer()
         self._upload = upload
@@ -187,6 +191,7 @@ class DockerCreateRunner(object):
         self._upload_dependencies = upload_dependencies or []
         self._conanfile = conanfile
         self._force_selinux = force_selinux
+        self._update_dependencies = update_dependencies
 
     def _pip_update_conan_command(self):
         commands = []
@@ -308,6 +313,7 @@ class DockerCreateRunner(object):
         ret["CPT_CONFIG_URL"] = escape_env(self._config_url)
         ret["CPT_UPLOAD_DEPENDENCIES"] = escape_env(self._upload_dependencies)
         ret["CPT_CONANFILE"] = escape_env(self._conanfile)
+        ret["CPT_UPDATE_DEPENDENCIES"] = self._update_dependencies
 
         ret.update({key: value for key, value in os.environ.items() if key.startswith("PIP_")})
 
