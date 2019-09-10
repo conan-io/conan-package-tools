@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 
 def get_bool_from_env(var_name):
@@ -24,3 +25,10 @@ def transform_list_options_to_dict(list_options):
         option_obj = option.split('=')
         dict_options[option_obj[0]] = option_obj[1]
     return dict_options
+
+
+def get_os_docker_image(docker_image):
+    if docker_image:
+        subprocess.check_output("docker pull {}".format(docker_image))
+        output = subprocess.check_output("docker inspect -f '{{.Os}}' {image}".format(image=docker_image))
+        return output.decode()

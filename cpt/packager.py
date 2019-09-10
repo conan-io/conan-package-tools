@@ -21,6 +21,7 @@ from cpt.remotes import RemotesManager
 from cpt.runner import CreateRunner, DockerCreateRunner
 from cpt.tools import get_bool_from_env
 from cpt.tools import split_colon_env
+from cpt.tools import get_os_docker_image
 from cpt.uploader import Uploader
 
 
@@ -214,7 +215,7 @@ class ConanMultiPackager(object):
 
         self._docker_image = docker_image or os.getenv("CONAN_DOCKER_IMAGE", None)
 
-        # If CONAN_DOCKER_IMAGE is speified, then use docker is True
+        # If CONAN_DOCKER_IMAGE is specified, then use docker is True
         self.use_docker = (use_docker or os.getenv("CONAN_USE_DOCKER", False) or
                            self._docker_image is not None)
 
@@ -259,7 +260,7 @@ class ConanMultiPackager(object):
         if self.is_wcow:
             if self.docker_conan_home is None:
                 self.docker_conan_home = "C:/Users/ContainerAdministrator"
-            self.docker_shell = "cmd /C"
+            self.docker_shell = "/bin/sh -c" if get_os_docker_image(self._docker_image) == "linux" else "cmd /C"
         else:
             if self.docker_conan_home is None:
                 self.docker_conan_home = "/home/conan"
