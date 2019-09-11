@@ -10,6 +10,7 @@ from conans.model.ref import ConanFileReference
 from cpt import __version__ as package_tools_version, get_client_version
 from cpt.config import ConfigManager
 from cpt.printer import Printer
+from cpt.tools import get_os_docker_image
 from cpt.profiles import load_profile, patch_default_base_profile
 
 
@@ -208,6 +209,11 @@ class DockerCreateRunner(object):
         command = " && ".join(commands)
         return command
 
+    def _get_docker_shell_based_on_image(self, docker_image):
+        if get_os_docker_image(docker_image) == "linux":
+            return "/bin/sh -c"
+        return "cmd /C"
+
     @staticmethod
     def is_selinux_running():
         if tools.which("getenforce"):
@@ -228,12 +234,13 @@ class DockerCreateRunner(object):
                 # Update the downloaded image
                 with self.printer.foldable_output("update conan"):
                     try:
+                        docker_shell = self._get_docker_shell_based_on_image(self._docker_shell)
                         command = '%s docker run %s --name conan_runner ' \
                                   ' %s %s %s "%s"' % (self._sudo_docker_command,
                                                    env_vars_text,
                                                    self._docker_run_options,
                                                    self._docker_image,
-                                                   self._docker_shell,
+                                                   docker_shell,
                                                    self._pip_update_conan_command())
 
                         ret = self._runner(command)
@@ -257,6 +264,7 @@ class DockerCreateRunner(object):
         else:
             update_command = ""
         volume_options = ":z" if (DockerCreateRunner.is_selinux_running() or self._force_selinux) else ""
+        docker_shell = self._get_docker_shell_based_on_image(self._docker_shell)
 
         command = ('%s docker run --rm -v "%s:%s/project%s" %s %s %s %s %s '
                    '"%s cd project && '
@@ -268,7 +276,7 @@ class DockerCreateRunner(object):
                                                   self._docker_run_options,
                                                   self._docker_platform_param,
                                                   self._docker_image,
-                                                  self._docker_shell,
+                                                  docker_shell,
                                                   self._lcow_user_workaround,
                                                   update_command))
 

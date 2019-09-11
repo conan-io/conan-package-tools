@@ -27,8 +27,7 @@ def transform_list_options_to_dict(list_options):
     return dict_options
 
 
-def get_os_docker_image(docker_image, use_docker=True):
-    if docker_image and use_docker:
-        subprocess.check_call("docker pull %s" % docker_image, shell=True)
+def get_os_docker_image(docker_image):
+    if docker_image:
         output = subprocess.check_output("docker inspect -f '{{.Os}}' %s" % docker_image, shell=True)
         return output.decode().strip().replace("'", "")

@@ -1053,6 +1053,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **docker_entry_script**: Command to be executed before to build when running Docker.
 - **pip_install**: Package list to be installed by pip before to build. e.j ["foo", "bar"]
 - **docker_32_images**: If defined, and the current build is arch="x86" the docker image name will be appended with "-i386". e.j: "conanio/gcc63-i386"
+- **docker_shell**: Shell command to be executed by Docker. e.j: "/bin/bash -c"
 - **curpage**: Current page of packages to create
 - **total_pages**: Total number of pages
 - **vs10_x86_64_enabled**: Flag indicating whether or not to build for VS10 64bits. Default [False]
@@ -1189,6 +1190,7 @@ This is especially useful for CI integration.
 - **CONAN_ALWAYS_UPDATE_CONAN_DOCKER**: If defined, "conan package tools" and "conan" will be installed and upgraded in the docker image in every build execution
   and the container won't be commited with the modifications.
 - **CONAN_DOCKER_32_IMAGES**: If defined, and the current build is arch="x86" the docker image name will be appended with "-i386". e.j: "conanio/gcc63-i386"
+- **CONAN_DOCKER_SHELL**: Shell command to be executed by Docker. e.j: "/bin/bash -c"
 - **CONAN_STABLE_BRANCH_PATTERN**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *CONAN_STABLE_CHANNEL* channel. Default "master". E.j: "release/*"
 - **CONAN_STABLE_CHANNEL**: Stable channel name, default "stable"
 - **CONAN_CHANNEL**: Channel where your packages will be uploaded if the previous parameter doesn't match

@@ -21,7 +21,6 @@ from cpt.remotes import RemotesManager
 from cpt.runner import CreateRunner, DockerCreateRunner
 from cpt.tools import get_bool_from_env
 from cpt.tools import split_colon_env
-from cpt.tools import get_os_docker_image
 from cpt.uploader import Uploader
 
 
@@ -116,6 +115,7 @@ class ConanMultiPackager(object):
                  docker_entry_script=None,
                  docker_32_images=None,
                  docker_conan_home=None,
+                 docker_shell=None,
                  pip_install=None,
                  build_policy=None,
                  always_update_conan_in_docker=False,
@@ -255,16 +255,14 @@ class ConanMultiPackager(object):
         if not pip_found or not "pip" in self.pip_command:
             raise Exception("CONAN_PIP_COMMAND: '{}' is not a valid pip command.".format(self.pip_command))
 
-        self.docker_shell = ""
+        self.docker_shell = docker_shell or os.getenv("CONAN_DOCKER_SHELL")
 
         if self.is_wcow:
             if self.docker_conan_home is None:
                 self.docker_conan_home = "C:/Users/ContainerAdministrator"
-            self.docker_shell = "/bin/sh -c" if get_os_docker_image(self._docker_image, self.use_docker) == "linux" else "cmd /C"
         else:
             if self.docker_conan_home is None:
                 self.docker_conan_home = "/home/conan"
-            self.docker_shell = "/bin/sh -c"
 
         self.docker_platform_param = ""
         self.lcow_user_workaround = ""
