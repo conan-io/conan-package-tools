@@ -7,6 +7,7 @@ from conans.model.ref import ConanFileReference
 from conans.model.version import Version
 from cpt import get_client_version
 from cpt.packager import ConanMultiPackager
+from cpt.tools import get_os_docker_image
 from cpt.test.integration.base import BaseTest, CONAN_UPLOAD_PASSWORD, CONAN_LOGIN_UPLOAD
 from cpt.test.unit.utils import MockCIManager
 
@@ -196,3 +197,10 @@ class Pkg(ConanFile):
         self.assertIn("compiler=clang", output)
         self.assertIn("arch=x86_64", output)
         self.assertIn("Cross-build from 'Linux:x86_64' to 'Android:x86_64'", output)
+
+    @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
+    def test_get_os_docker_image(self):
+        self.assertEqual("linux", get_os_docker_image("conanio/gcc8"))
+        self.assertEqual(None, get_os_docker_image(None))
+        with self.assertRaises(subprocess.CalledProcessError):
+            get_os_docker_image("conanio/foobar")
