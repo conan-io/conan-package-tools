@@ -260,7 +260,7 @@ class ConanMultiPackager(object):
         if self.is_wcow:
             if self.docker_conan_home is None:
                 self.docker_conan_home = "C:/Users/ContainerAdministrator"
-            self.docker_shell = "/bin/sh -c" if get_os_docker_image(self._docker_imagem, self.use_docker) == "linux" else "cmd /C"
+            self.docker_shell = "/bin/sh -c" if get_os_docker_image(self._docker_image, self.use_docker) == "linux" else "cmd /C"
         else:
             if self.docker_conan_home is None:
                 self.docker_conan_home = "/home/conan"
