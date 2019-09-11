@@ -1075,6 +1075,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **conanfile**: Custom conanfile consumed by Conan create. e.j. conanfile.py
 - **config_url**: Conan config URL be installed before to build e.j https://github.com/bincrafters/conan-config.git
 - **force_selinux**: Force docker to relabel file objects on the shared volumes
+- **update_dependencies**: Update all dependencies before building e.g conan create -u
 
 Upload related parameters:
 
@@ -1214,6 +1215,7 @@ This is especially useful for CI integration.
 - **CONAN_CONANFILE**: Custom conanfile consumed by Conan create. e.j. conanfile.py
 - **CPT_TEST_FOLDER**: Custom test_package path, e.j .conan/test_package
 - **CONAN_FORCE_SELINUX**: Force docker to relabel file objects on the shared volumes
+- **CPT_UPDATE_DEPENDENCIES**: Update all dependencies before building e.g conan create -u
 
 
 # Full example
