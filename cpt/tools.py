@@ -25,9 +25,3 @@ def transform_list_options_to_dict(list_options):
         option_obj = option.split('=')
         dict_options[option_obj[0]] = option_obj[1]
     return dict_options
-
-
-def get_os_docker_image(docker_image):
-    if docker_image:
-        output = subprocess.check_output("docker inspect -f '{{.Os}}' %s" % docker_image, shell=True)
-        return output.decode().strip().replace("'", "")

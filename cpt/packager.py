@@ -260,9 +260,11 @@ class ConanMultiPackager(object):
         if self.is_wcow:
             if self.docker_conan_home is None:
                 self.docker_conan_home = "C:/Users/ContainerAdministrator"
+                self.docker_shell = docker_shell or "cmd /C"
         else:
             if self.docker_conan_home is None:
                 self.docker_conan_home = "/home/conan"
+                self.docker_shell = docker_shell or "/bin/sh -c"
 
         self.docker_platform_param = ""
         self.lcow_user_workaround = ""
