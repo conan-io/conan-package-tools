@@ -106,6 +106,7 @@ class ConanMultiPackager(object):
                  upload_only_when_tag=None,
                  upload_only_recipe=None,
                  build_types=None,
+                 cppstds=None,
                  skip_check_credentials=False,
                  allow_gcc_minors=False,
                  exclude_vcvars_precommand=False,
@@ -226,7 +227,7 @@ class ConanMultiPackager(object):
                                               visual_versions, visual_runtimes, visual_toolsets,
                                               vs10_x86_64_enabled,
                                               mingw_configurations, archs, allow_gcc_minors,
-                                              build_types, options)
+                                              build_types, options, cppstds)
 
         build_policy = (build_policy or
                         self.ci_manager.get_commit_build_policy() or
