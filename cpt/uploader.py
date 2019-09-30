@@ -47,7 +47,7 @@ class Uploader(object):
                                       remote_name=remote_name,
                                       force=True,
                                       retry=int(self._upload_retry))
-            elif client_version <= Version("1.19.0"):
+            elif client_version <= Version("1.20.0"):
                 all_packages = package_id != None
                 self.conan_api.upload(str(reference),
                                       all_packages=all_packages,
