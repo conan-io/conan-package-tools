@@ -18,7 +18,7 @@ class CreateRunner(object):
     def __init__(self, profile_abs_path, reference, conan_api, uploader,
                  exclude_vcvars_precommand=False, build_policy=None, runner=None,
                  cwd=None, printer=None, upload=False, upload_only_recipe=None,
-                 test_folder=None, config_url=None,
+                 test_folder=None, config_url=None, config_args=None,
                  upload_dependencies=None, conanfile=None, update_dependencies=False):
 
         self.printer = printer or Printer()
@@ -33,6 +33,7 @@ class CreateRunner(object):
         self._runner = PrintRunner(runner or os.system, self.printer)
         self._test_folder = test_folder
         self._config_url = config_url
+        self._config_args = config_args
         self._upload_only_recipe = upload_only_recipe
         self._conanfile = conanfile
         self._upload_dependencies = upload_dependencies.split(",") if \
@@ -63,7 +64,7 @@ class CreateRunner(object):
         client_version = get_client_version()
 
         if self._config_url:
-            ConfigManager(self._conan_api, self.printer).install(url=self._config_url)
+            ConfigManager(self._conan_api, self.printer).install(url=self._config_url, args=self._config_args)
 
         context = tools.no_op()
         compiler = self.settings.get("compiler", None)
@@ -157,6 +158,7 @@ class DockerCreateRunner(object):
                  test_folder=None,
                  pip_install=None,
                  config_url=None,
+                 config_args=None,
                  printer=None,
                  upload_dependencies=None,
                  conanfile=None,
@@ -188,6 +190,7 @@ class DockerCreateRunner(object):
         self._test_folder = test_folder
         self._pip_install = pip_install
         self._config_url = config_url
+        self._config_args = config_args
         self._upload_dependencies = upload_dependencies or []
         self._conanfile = conanfile
         self._force_selinux = force_selinux
@@ -311,6 +314,7 @@ class DockerCreateRunner(object):
         ret["CPT_BUILD_POLICY"] = escape_env(self._build_policy)
         ret["CPT_TEST_FOLDER"] = escape_env(self._test_folder)
         ret["CPT_CONFIG_URL"] = escape_env(self._config_url)
+        ret["CPT_CONFIG_ARGS"] = escape_env(self._config_args)
         ret["CPT_UPLOAD_DEPENDENCIES"] = escape_env(self._upload_dependencies)
         ret["CPT_CONANFILE"] = escape_env(self._conanfile)
         ret["CPT_UPDATE_DEPENDENCIES"] = self._update_dependencies
