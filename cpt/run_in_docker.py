@@ -35,6 +35,7 @@ def run():
     config_url = unscape_env(os.getenv("CPT_CONFIG_URL"))
     upload_dependencies = unscape_env(os.getenv("CPT_UPLOAD_DEPENDENCIES"))
     conanfile = unscape_env(os.getenv("CPT_CONANFILE"))
+    skip_recipe_export = unscape_env(os.getenv("CPT_SKIP_RECIPE_EXPORT"))
     if base_profile_text:
         base_profile_name = unscape_env(os.getenv("CPT_BASE_PROFILE_NAME"))
         tools.save(os.path.join(client_cache.profiles_path, base_profile_name),
@@ -45,7 +46,8 @@ def run():
                           build_policy=build_policy, printer=printer, upload=upload,
                           upload_only_recipe=upload_only_recipe,
                           test_folder=test_folder, config_url=config_url,
-                          upload_dependencies=upload_dependencies, conanfile=conanfile)
+                          upload_dependencies=upload_dependencies, conanfile=conanfile,
+                          skip_recipe_export=skip_recipe_export)
     runner.run()
 
 

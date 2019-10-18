@@ -979,6 +979,20 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 
     CONAN_CLANG_VERSIONS = "3.8,3.9,4.0"
 
+## Package Recipe Export
+
+By default, each build performed by Conan package tools will (re)export the recipe (conanfile.py & associated files) of the package to the local cache. 
+
+You can elect for this only to occur for the **first** build performed by defining the following environment variable:
+
+
+    CONAN_SKIP_RECIPE_EXPORT="True"
+
+Or, set it in ``ConanMultiPackager`` arguments:
+
+    ConanMultiPackager(skip_recipe_export=True)
+
+This is the equivalent of passing the `--not-export` argument to the [`conan create`](https://docs.conan.io/en/latest/reference/commands/creator/create.html) command.
 
 # FULL REFERENCE
 
@@ -1075,6 +1089,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **conanfile**: Custom conanfile consumed by Conan create. e.j. conanfile.py
 - **config_url**: Conan config URL be installed before to build e.j https://github.com/bincrafters/conan-config.git
 - **force_selinux**: Force docker to relabel file objects on the shared volumes
+- **skip_recipe_export**: If True, the package recipe will only be exported on the first build. Default [False]
 
 Upload related parameters:
 
@@ -1214,6 +1229,7 @@ This is especially useful for CI integration.
 - **CONAN_CONANFILE**: Custom conanfile consumed by Conan create. e.j. conanfile.py
 - **CPT_TEST_FOLDER**: Custom test_package path, e.j .conan/test_package
 - **CONAN_FORCE_SELINUX**: Force docker to relabel file objects on the shared volumes
+- **CONAN_SKIP_RECIPE_EXPORT**: If defined, the package recipe will only be exported on the first build.
 
 
 # Full example
