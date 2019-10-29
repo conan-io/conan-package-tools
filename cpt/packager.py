@@ -107,6 +107,7 @@ class ConanMultiPackager(object):
                  upload_only_when_tag=None,
                  upload_only_recipe=None,
                  build_types=None,
+                 cppstds=None,
                  skip_check_credentials=False,
                  allow_gcc_minors=False,
                  exclude_vcvars_precommand=False,
@@ -116,6 +117,7 @@ class ConanMultiPackager(object):
                  docker_entry_script=None,
                  docker_32_images=None,
                  docker_conan_home=None,
+                 docker_shell=None,
                  pip_install=None,
                  build_policy=None,
                  remove_outdated_packages=False,
@@ -222,7 +224,7 @@ class ConanMultiPackager(object):
 
         self._docker_image = docker_image or os.getenv("CONAN_DOCKER_IMAGE", None)
 
-        # If CONAN_DOCKER_IMAGE is speified, then use docker is True
+        # If CONAN_DOCKER_IMAGE is specified, then use docker is True
         self.use_docker = (use_docker or os.getenv("CONAN_USE_DOCKER", False) or
                            self._docker_image is not None)
 
@@ -234,7 +236,7 @@ class ConanMultiPackager(object):
                                               visual_versions, visual_runtimes, visual_toolsets,
                                               vs10_x86_64_enabled,
                                               mingw_configurations, archs, allow_gcc_minors,
-                                              build_types, options)
+                                              build_types, options, cppstds)
 
         build_policy = (build_policy or
                         self.ci_manager.get_commit_build_policy() or
@@ -262,16 +264,16 @@ class ConanMultiPackager(object):
         if not pip_found or not "pip" in self.pip_command:
             raise Exception("CONAN_PIP_COMMAND: '{}' is not a valid pip command.".format(self.pip_command))
 
-        self.docker_shell = ""
+        self.docker_shell = docker_shell or os.getenv("CONAN_DOCKER_SHELL")
 
         if self.is_wcow:
             if self.docker_conan_home is None:
                 self.docker_conan_home = "C:/Users/ContainerAdministrator"
-            self.docker_shell = "cmd /C"
+                self.docker_shell = docker_shell or "cmd /C"
         else:
             if self.docker_conan_home is None:
                 self.docker_conan_home = "/home/conan"
-            self.docker_shell = "/bin/sh -c"
+                self.docker_shell = docker_shell or "/bin/sh -c"
 
         self.docker_platform_param = ""
         self.lcow_user_workaround = ""

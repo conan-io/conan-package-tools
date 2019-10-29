@@ -133,7 +133,8 @@ class Pkg(ConanFile):
                                        "CONAN_REFERENCE": "foo/0.0.1@bar/testing",
                                        "CONAN_DOCKER_RUN_OPTIONS": "--network=host, --add-host=google.com:8.8.8.8 -v{}:/tmp/cpt".format(self.root_project_folder),
                                        "CONAN_DOCKER_IMAGE_SKIP_UPDATE": "TRUE",
-                                       "CONAN_FORCE_SELINUX": "TRUE"
+                                       "CONAN_FORCE_SELINUX": "TRUE",
+                                       "CONAN_DOCKER_SHELL": "/bin/bash -c"
                                        }):
             self.packager = ConanMultiPackager(gcc_versions=["8"],
                                                archs=["x86_64"],
@@ -142,6 +143,7 @@ class Pkg(ConanFile):
             self.packager.add({})
             self.packager.run()
             self.assertIn("--network=host --add-host=google.com:8.8.8.8 -v", self.output)
+            self.assertIn("/bin/bash -c", self.output)
             self.assertIn("/home/conan/project:z", self.output)
 
         # Validate by parameter
@@ -157,11 +159,13 @@ class Pkg(ConanFile):
                                                docker_run_options="--network=host -v{}:/tmp/cpt --cpus=1".format(self.root_project_folder) ,
                                                docker_entry_script="pip install -U /tmp/cpt",
                                                docker_image_skip_update=True,
+                                               docker_shell="/bin/bash -c",
                                                out=self.output.write,
                                                force_selinux=True)
             self.packager.add({})
             self.packager.run()
             self.assertIn("--cpus=1  conanio/gcc8", self.output)
+            self.assertIn("/bin/bash -c", self.output)
             self.assertIn("/home/conan/project:z", self.output)
 
     @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
