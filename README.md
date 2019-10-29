@@ -1062,6 +1062,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **upload_only_recipe**: If defined, will try to upload **only** the recipes. The built packages will **not** be uploaded. Default [False]
 - **upload_dependencies**: Will try to upload dependencies to your remote. Default [False]
 - **build_types**: List containing specific build types. Default ["Release", "Debug"]
+- **cppstds**: List containing specific cpp standards. Default None
 - **skip_check_credentials**: Conan will skip checking the user credentials before building the packages. And if no user/remote is specified, will try to upload with the
   already stored credentiales in the local cache. Default [False]
 - **allow_gcc_minors** Declare this variable if you want to allow gcc >=5 versions with the minor (5.1, 6.3 etc).
@@ -1176,6 +1177,7 @@ This is especially useful for CI integration.
 - **CONAN_ARCHS**: Architectures to build for, comma separated, e.g. "x86,x86_64"
 - **CONAN_OPTIONS**: Conan build options, comma separated, e.g. "foobar:with_bar=True,foobar:with_qux=False"
 - **CONAN_BUILD_TYPES**: Build types to build for, comma separated, e.g. "Release,Debug"
+- **CONAN_CPPSTDS**: List containing values for `compiler.cppstd`. Default None
 - **CONAN_VISUAL_VERSIONS**: Visual versions, comma separated, e.g. "12,14"
 - **CONAN_VISUAL_RUNTIMES**: Visual runtimes, comma separated, e.g. "MT,MD"
 - **CONAN_VISUAL_TOOLSETS**: Map Visual versions to toolsets, e.g. `14=v140;v140_xp,12=v120_xp`
