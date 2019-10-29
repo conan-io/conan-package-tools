@@ -106,6 +106,7 @@ class ConanMultiPackager(object):
                  upload_only_when_tag=None,
                  upload_only_recipe=None,
                  build_types=None,
+                 cppstds=None,
                  skip_check_credentials=False,
                  allow_gcc_minors=False,
                  exclude_vcvars_precommand=False,
@@ -115,6 +116,7 @@ class ConanMultiPackager(object):
                  docker_entry_script=None,
                  docker_32_images=None,
                  docker_conan_home=None,
+                 docker_shell=None,
                  pip_install=None,
                  build_policy=None,
                  always_update_conan_in_docker=False,
@@ -128,7 +130,8 @@ class ConanMultiPackager(object):
                  config_url=None,
                  upload_dependencies=None,
                  force_selinux=None,
-                 skip_recipe_export=False):
+                 skip_recipe_export=False,
+                 update_dependencies=None):
 
         conan_version = get_client_version()
 
@@ -215,7 +218,7 @@ class ConanMultiPackager(object):
 
         self._docker_image = docker_image or os.getenv("CONAN_DOCKER_IMAGE", None)
 
-        # If CONAN_DOCKER_IMAGE is speified, then use docker is True
+        # If CONAN_DOCKER_IMAGE is specified, then use docker is True
         self.use_docker = (use_docker or os.getenv("CONAN_USE_DOCKER", False) or
                            self._docker_image is not None)
 
@@ -227,7 +230,7 @@ class ConanMultiPackager(object):
                                               visual_versions, visual_runtimes, visual_toolsets,
                                               vs10_x86_64_enabled,
                                               mingw_configurations, archs, allow_gcc_minors,
-                                              build_types, options)
+                                              build_types, options, cppstds)
 
         build_policy = (build_policy or
                         self.ci_manager.get_commit_build_policy() or
@@ -255,16 +258,16 @@ class ConanMultiPackager(object):
         if not pip_found or not "pip" in self.pip_command:
             raise Exception("CONAN_PIP_COMMAND: '{}' is not a valid pip command.".format(self.pip_command))
 
-        self.docker_shell = ""
+        self.docker_shell = docker_shell or os.getenv("CONAN_DOCKER_SHELL")
 
         if self.is_wcow:
             if self.docker_conan_home is None:
                 self.docker_conan_home = "C:/Users/ContainerAdministrator"
-            self.docker_shell = "cmd /C"
+                self.docker_shell = docker_shell or "cmd /C"
         else:
             if self.docker_conan_home is None:
                 self.docker_conan_home = "/home/conan"
-            self.docker_shell = "/bin/sh -c"
+                self.docker_shell = docker_shell or "/bin/sh -c"
 
         self.docker_platform_param = ""
         self.lcow_user_workaround = ""
@@ -297,6 +300,8 @@ class ConanMultiPackager(object):
             self.upload_dependencies = ",".join(self.upload_dependencies)
         if "all" in self.upload_dependencies and self.upload_dependencies != "all":
             raise Exception("Upload dependencies only accepts or 'all' or package references. Do not mix both!")
+
+        self.update_dependencies = update_dependencies or get_bool_from_env("CONAN_UPDATE_DEPENDENCIES")
 
         os.environ["CONAN_CHANNEL"] = self.channel
 
@@ -559,7 +564,8 @@ class ConanMultiPackager(object):
         skip_recipe_export = False
         
         # FIXME: Remove in Conan 1.3, https://github.com/conan-io/conan/issues/2787
-        for build in self.builds_in_current_page:
+        for index, build in enumerate(self.builds_in_current_page):
+            self.printer.print_message("Build: %s/%s" % (index+1, len(self.builds_in_current_page)))
             base_profile_name = base_profile_name or os.getenv("CONAN_BASE_PROFILE")
             if base_profile_name:
                 self.printer.print_message("**************************************************")
@@ -581,10 +587,11 @@ class ConanMultiPackager(object):
                                  upload=self._upload_enabled(),
                                  upload_only_recipe=self.upload_only_recipe,
                                  test_folder=self.test_folder,
-                                 config_url=self.config_url,
-                                 upload_dependencies=self.upload_dependencies,                                 
+                                 config_url=self.config_url,                                 
+                                 upload_dependencies=self.upload_dependencies,
                                  conanfile=self.conanfile,
-                                 skip_recipe_export=skip_recipe_export)
+                                 skip_recipe_export=skip_recipe_export,
+                                 update_dependencies=self.update_dependencies)
                 r.run()
             else:
                 docker_image = self._get_docker_image(build)
@@ -614,7 +621,8 @@ class ConanMultiPackager(object):
                                        upload_dependencies=self.upload_dependencies,
                                        conanfile=self.conanfile,
                                        force_selinux=self.force_selinux,
-                                       skip_recipe_export=skip_recipe_export)
+                                       skip_recipe_export=skip_recipe_export,
+                                       update_dependencies=self.update_dependencies)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
                       docker_entry_script=self.docker_entry_script)
