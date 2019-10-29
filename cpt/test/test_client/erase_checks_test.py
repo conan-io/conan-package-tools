@@ -40,7 +40,7 @@ class Pkg(ConanFile):
             self.assertIn("Uploading package 1/2", tc.out)
             self.assertIn("Uploading package 2/2", tc.out)
             self.assertIn("OLD", tc.out)
-            getattr(self, assert_func)("Removing outdated packages for 'lib/1.0@user/testing'",
+            getattr(self, assert_func)("Removing outdated packages for 'lib/1.0@user/mychannel'",
                                        tc.out)
 
     @parameterized.expand([
@@ -62,5 +62,5 @@ class Pkg(ConanFile):
             self.assertIn("Uploading package 1/2", tc.out)
             self.assertIn("Uploading package 2/2", tc.out)
             self.assertIn("OLD", tc.out)
-            getattr(self, assert_func)("Removing outdated packages for 'lib/1.0@user/testing'",
+            getattr(self, assert_func)("Removing outdated packages for 'lib/1.0@user/mychannel'",
                                        tc.out)
