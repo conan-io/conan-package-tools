@@ -554,7 +554,8 @@ class ConanMultiPackager(object):
         pulled_docker_images = defaultdict(lambda: False)
 
         # FIXME: Remove in Conan 1.3, https://github.com/conan-io/conan/issues/2787
-        for build in self.builds_in_current_page:
+        for index, build in enumerate(self.builds_in_current_page):
+            self.printer.print_message("Build: %s/%s" % (index+1, len(self.builds_in_current_page)))
             base_profile_name = base_profile_name or os.getenv("CONAN_BASE_PROFILE")
             if base_profile_name:
                 self.printer.print_message("**************************************************")
