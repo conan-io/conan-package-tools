@@ -17,14 +17,14 @@ def run():
     # Get all from environ
     conan_api, client_cache, _ = Conan.factory()
     printer = Printer()
-    if os.path.exists(client_cache.default_profile_path):
-        os.remove(client_cache.default_profile_path)
 
     remotes_manager = RemotesManager(conan_api, printer)
+    remotes_manager.add_remotes_to_conan()
     default_username = os.getenv("CONAN_USERNAME")
     auth_manager = AuthManager(conan_api, printer, default_username=default_username)
 
     upload_retry = os.getenv("CPT_UPLOAD_RETRY")
+    upload_only_recipe = os.getenv("CPT_UPLOAD_ONLY_RECIPE")
     uploader = Uploader(conan_api, remotes_manager, auth_manager, printer, upload_retry)
     build_policy = unscape_env(os.getenv("CPT_BUILD_POLICY"))
     test_folder = unscape_env(os.getenv("CPT_TEST_FOLDER"))
@@ -38,6 +38,8 @@ def run():
     base_profile_text = unscape_env(os.getenv("CPT_BASE_PROFILE"))
     config_url = unscape_env(os.getenv("CPT_CONFIG_URL"))
     upload_dependencies = unscape_env(os.getenv("CPT_UPLOAD_DEPENDENCIES"))
+    update_dependencies = unscape_env(os.getenv("CPT_UPDATE_DEPENDENCIES"))
+    conanfile = unscape_env(os.getenv("CPT_CONANFILE"))
     if base_profile_text:
         base_profile_name = unscape_env(os.getenv("CPT_BASE_PROFILE_NAME"))
         tools.save(os.path.join(client_cache.profiles_path, base_profile_name),
@@ -46,8 +48,10 @@ def run():
     upload = os.getenv("CPT_UPLOAD_ENABLED")
     runner = CreateRunner(abs_profile_path, reference, conan_api, uploader, eraser=eraser,
                           build_policy=build_policy, printer=printer, upload=upload,
+                          upload_only_recipe=upload_only_recipe,
                           test_folder=test_folder, config_url=config_url,
-                          upload_dependencies=upload_dependencies)
+                          upload_dependencies=upload_dependencies, conanfile=conanfile,
+                          update_dependencies=update_dependencies)
     runner.run()
 
 

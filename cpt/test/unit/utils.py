@@ -1,11 +1,14 @@
 import os
 from collections import namedtuple
 
-from conans import __version__ as conan_version
+import mock
+
 from conans import tools
+from conans.model.ref import ConanFileReference
 from conans.test.utils.test_files import temp_folder
 from conans.util.files import save
 from conans.model.version import Version
+from cpt import get_client_version
 
 
 class MockRunner(object):
@@ -31,26 +34,29 @@ class MockConanCache(object):
 
 Action = namedtuple("Action", "name args kwargs")
 
-
 class MockConanAPI(object):
 
     def __init__(self):
         self.calls = []
         self._client_cache = self._cache = MockConanCache()
+        self.app = mock.Mock()
+        self.app.cache = self._client_cache
 
     def create(self, *args, **kwargs):
+        reference = ConanFileReference(kwargs["name"], kwargs["version"], kwargs["user"], kwargs["channel"])
         self.calls.append(Action("create", args, kwargs))
         return {
             "installed": [
                {
                   "packages": [
                      {
-                        "id": "227fb0ea22f4797212e72ba94ea89c7b3fbc2a0c"
+                        "id": "227fb0ea22f4797212e72ba94ea89c7b3fbc2a0c",
+                        "built": True
                      }
                   ],
                   "recipe": {
-                     "id": kwargs["name"]
-                  }
+                     "id": str(reference)
+                  },
                }]}
 
     def create_profile(self, *args, **kwargs):
@@ -82,6 +88,7 @@ class MockConanAPI(object):
         if call.name != "create":
             raise Exception("Invalid test, not contains a create: %s" % self.calls)
         from conans.client.profile_loader import read_profile
+        conan_version = get_client_version()
         if Version(conan_version) < Version("1.12.0"):
             profile_name = call.kwargs["profile_name"]
         else:

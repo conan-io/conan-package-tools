@@ -1,3 +1,8 @@
+from conans.model.version import Version
+
+from cpt import get_client_version
+
+
 class Uploader(object):
 
     def __init__(self, conan_api, remote_manager, auth_manager, printer, upload_retry):
@@ -9,7 +14,14 @@ class Uploader(object):
         if not self._upload_retry:
             self._upload_retry = 0
 
+    def upload_recipe(self, reference, upload):
+        self._upload_artifacts(reference, upload)
+
     def upload_packages(self, reference, upload, package_id):
+        self._upload_artifacts(reference, upload, package_id)
+
+    def _upload_artifacts(self, reference, upload, package_id=None):
+        client_version = get_client_version()
         remote_name = self.remote_manager.upload_remote_name
         if not remote_name:
             self.printer.print_message("Upload skipped, not upload remote available")
@@ -19,26 +31,26 @@ class Uploader(object):
             return
 
         if upload:
-            from conans.model.version import Version
-            from conans import __version__ as client_version
+
             self.printer.print_message("Uploading packages for '%s'" % str(reference))
             self.auth_manager.login(remote_name)
 
-            if Version(client_version) < Version("1.7.0"):
+            if client_version < Version("1.7.0"):
                 self.conan_api.upload(str(reference),
                                       package=package_id,
                                       remote=remote_name,
                                       force=True,
                                       retry=int(self._upload_retry))
-            elif Version(client_version) < Version("1.8.0"):
+            elif client_version < Version("1.8.0"):
                 self.conan_api.upload(str(reference),
                                       package=package_id,
                                       remote_name=remote_name,
                                       force=True,
                                       retry=int(self._upload_retry))
-            elif Version(client_version) < Version("1.14.0"):
+            elif client_version <= Version("1.20.0"):
+                all_packages = package_id != None
                 self.conan_api.upload(str(reference),
-                                      all_packages=True,
+                                      all_packages=all_packages,
                                       remote_name=remote_name,
                                       retry=int(self._upload_retry))
             else:

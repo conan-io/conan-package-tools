@@ -94,6 +94,7 @@ class Pkg(ConanFile):
                                     ci_manager=self.ci_manager,
                                     upload="https://api.bintray.com/conan/conan-community/conan")
             mp.run()  # No builds to upload so no raises
+            self.assertNotIn("Wrong user or password", self.output)
 
     def test_existing_upload_repo(self):
         self.api.remote_add("my_upload_repo", "https://api.bintray.com/conan/conan-community/conan")

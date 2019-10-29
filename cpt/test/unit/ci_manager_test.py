@@ -95,6 +95,18 @@ class CIManagerTest(unittest.TestCase):
             self.assertEquals(manager.get_branch(), "mybranch")
             self.assertIsNotNone(manager.get_commit_msg())
             self.assertEquals(manager.get_commit_id(), "506c89117650bb12252db26d35b8c2385411f175")
+            self.assertEquals(manager.is_pull_request(), False)
+
+        with tools.environment_append({"CIRCLECI": "1",
+                                       "CIRCLE_BRANCH": "pull/35",
+                                       "CIRCLE_SHA1": "506c89117650bb12252db26d35b8c2385411f175",
+                                       "CIRCLE_PULL_REQUEST": "https://github.com/org/repo/pull/35"
+                                       }):
+            manager = CIManager(self.printer)
+            self.assertIsNone(manager.get_branch())
+            self.assertIsNotNone(manager.get_commit_msg())
+            self.assertEquals(manager.get_commit_id(), "506c89117650bb12252db26d35b8c2385411f175")
+            self.assertEquals(manager.is_pull_request(), True)
 
     def test_gitlab_instance(self):
         with tools.environment_append({"GITLAB_CI": "1",
@@ -121,11 +133,35 @@ class CIManagerTest(unittest.TestCase):
         with tools.environment_append({"SYSTEM_TEAMFOUNDATIONCOLLECTIONURI": "https://dev.azure.com/",
                                        "BUILD_SOURCEVERSIONMESSAGE": "msg",
                                        "BUILD_SOURCEVERSION": "506c89117650bb12252db26d35b8c2385411f175",
-                                       "BUILD_SOURCEBRANCHNAME": "mybranch",
+                                       "BUILD_SOURCEBRANCH": "mybranch",
                                        "BUILD_REASON": "manual",
                                        }):
             manager = CIManager(self.printer)
             self.assertEquals(manager.get_branch(), "mybranch")
+            self.assertEquals(manager.get_commit_msg(), "msg")
+            self.assertEquals(manager.get_commit_id(), "506c89117650bb12252db26d35b8c2385411f175")
+            self.assertEquals(manager.is_pull_request(), False)
+
+        with tools.environment_append({"SYSTEM_TEAMFOUNDATIONCOLLECTIONURI": "https://dev.azure.com/",
+                                       "BUILD_SOURCEVERSIONMESSAGE": "msg",
+                                       "BUILD_SOURCEVERSION": "506c89117650bb12252db26d35b8c2385411f175",
+                                       "BUILD_SOURCEBRANCH": "refs/heads/testing/version",
+                                       "BUILD_REASON": "PullRequest",
+                                       }):
+            manager = CIManager(self.printer)
+            self.assertEquals(manager.get_branch(), "testing/version")
+            self.assertEquals(manager.get_commit_msg(), "msg")
+            self.assertEquals(manager.get_commit_id(), "506c89117650bb12252db26d35b8c2385411f175")
+            self.assertEquals(manager.is_pull_request(), True)
+
+        with tools.environment_append({"SYSTEM_TEAMFOUNDATIONCOLLECTIONURI": "https://dev.azure.com/",
+                                       "BUILD_SOURCEVERSIONMESSAGE": "msg",
+                                       "BUILD_SOURCEVERSION": "506c89117650bb12252db26d35b8c2385411f175",
+                                       "BUILD_SOURCEBRANCH": "refs/heads/stable/version",
+                                       "BUILD_REASON": "IndividualCI",
+                                       }):
+            manager = CIManager(self.printer)
+            self.assertEquals(manager.get_branch(), "stable/version")
             self.assertEquals(manager.get_commit_msg(), "msg")
             self.assertEquals(manager.get_commit_id(), "506c89117650bb12252db26d35b8c2385411f175")
             self.assertEquals(manager.is_pull_request(), False)
