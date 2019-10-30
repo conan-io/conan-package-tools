@@ -979,21 +979,6 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 
     CONAN_CLANG_VERSIONS = "3.8,3.9,4.0"
 
-## Package Recipe Export
-
-By default, each build performed by Conan package tools will (re)export the recipe (conanfile.py & associated files) of the package to the local cache. 
-
-You can elect for this only to occur for the **first** build performed by defining the following environment variable:
-
-
-    CONAN_SKIP_RECIPE_EXPORT="True"
-
-Or, set it in ``ConanMultiPackager`` arguments:
-
-    ConanMultiPackager(skip_recipe_export=True)
-
-This is the equivalent of passing the `--not-export` argument to the [`conan create`](https://docs.conan.io/en/latest/reference/commands/creator/create.html) command.
-
 # FULL REFERENCE
 
 
