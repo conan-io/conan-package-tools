@@ -7,7 +7,7 @@ class ConfigManager(object):
 
     def install(self, url, args=None):
         message = "Installing config from address %s" % url
-        if not args is None:
+        if args:
             message += " with args \"%s\"" % args
         self.printer.print_message(message)
         self._conan_api.config_install(url, verify_ssl=True, args=args)
