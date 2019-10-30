@@ -945,7 +945,7 @@ class AppTest(unittest.TestCase):
 
         def _check_run_calls(skip_recipe_export):
             env_var = '-e CPT_SKIP_RECIPE_EXPORT="True"'
-            run_calls = [call for call in self.runner.calls if call.startswith(" docker run --rm")]
+            run_calls = [call for call in self.runner.calls if "docker run --rm" in call]
             if skip_recipe_export:
                 # Only first call should export recipe
                 self.assertNotIn(env_var, run_calls[0])
@@ -969,7 +969,7 @@ class AppTest(unittest.TestCase):
                                       out=output.write)
         packager.add_common_builds()
         packager.run()
-        _check_run_calls(False)        
+        _check_run_calls(False)
 
         with tools.environment_append({"CONAN_SKIP_RECIPE_EXPORT": "True"}):
             self.runner.reset()
@@ -987,7 +987,7 @@ class AppTest(unittest.TestCase):
 
             packager.add_common_builds()
             packager.run()
-            _check_run_calls(True)           
+            _check_run_calls(True)
 
         self.runner.reset()
         packager = ConanMultiPackager(username="lasote",
@@ -1004,4 +1004,4 @@ class AppTest(unittest.TestCase):
                                       out=output.write)
         packager.add_common_builds()
         packager.run()
-        _check_run_calls(True)        
+        _check_run_calls(True)
