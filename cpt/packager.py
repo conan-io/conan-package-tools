@@ -128,6 +128,7 @@ class ConanMultiPackager(object):
                  test_folder=None,
                  cwd=None,
                  config_url=None,
+                 config_args=None,
                  upload_dependencies=None,
                  force_selinux=None,
                  update_dependencies=None):
@@ -323,6 +324,8 @@ class ConanMultiPackager(object):
         self.test_folder = test_folder or os.getenv("CPT_TEST_FOLDER")
 
         self.config_url = config_url or os.getenv("CONAN_CONFIG_URL")
+
+        self.config_args = config_args or os.getenv("CONAN_CONFIG_ARGS")
 
         def valid_pair(var, value):
             return (isinstance(value, six.string_types) or
@@ -583,6 +586,7 @@ class ConanMultiPackager(object):
                                  upload_only_recipe=self.upload_only_recipe,
                                  test_folder=self.test_folder,
                                  config_url=self.config_url,
+                                 config_args=self.config_args,
                                  upload_dependencies=self.upload_dependencies,
                                  conanfile=self.conanfile,
                                  update_dependencies=self.update_dependencies)
@@ -611,6 +615,7 @@ class ConanMultiPackager(object):
                                        test_folder=self.test_folder,
                                        pip_install=self.pip_install,
                                        config_url=self.config_url,
+                                       config_args=self.config_args,
                                        printer=self.printer,
                                        upload_dependencies=self.upload_dependencies,
                                        conanfile=self.conanfile,
