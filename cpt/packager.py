@@ -128,6 +128,7 @@ class ConanMultiPackager(object):
                  test_folder=None,
                  cwd=None,
                  config_url=None,
+                 config_args=None,
                  upload_dependencies=None,
                  force_selinux=None,
                  skip_recipe_export=False,
@@ -327,6 +328,7 @@ class ConanMultiPackager(object):
 
         self.skip_recipe_export = skip_recipe_export or \
                                      get_bool_from_env("CONAN_SKIP_RECIPE_EXPORT")
+        self.config_args = config_args or os.getenv("CONAN_CONFIG_ARGS")
 
         def valid_pair(var, value):
             return (isinstance(value, six.string_types) or
@@ -587,7 +589,8 @@ class ConanMultiPackager(object):
                                  upload=self._upload_enabled(),
                                  upload_only_recipe=self.upload_only_recipe,
                                  test_folder=self.test_folder,
-                                 config_url=self.config_url,                                 
+                                 config_url=self.config_url,
+                                 config_args=self.config_args,
                                  upload_dependencies=self.upload_dependencies,
                                  conanfile=self.conanfile,
                                  skip_recipe_export=skip_recipe_export,
@@ -617,6 +620,7 @@ class ConanMultiPackager(object):
                                        test_folder=self.test_folder,
                                        pip_install=self.pip_install,
                                        config_url=self.config_url,
+                                       config_args=self.config_args,
                                        printer=self.printer,
                                        upload_dependencies=self.upload_dependencies,
                                        conanfile=self.conanfile,
