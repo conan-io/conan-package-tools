@@ -133,6 +133,7 @@ class ConanMultiPackager(object):
                  config_args=None,
                  upload_dependencies=None,
                  force_selinux=None,
+                 skip_recipe_export=False,
                  update_dependencies=None):
 
         conan_version = get_client_version()
@@ -327,6 +328,8 @@ class ConanMultiPackager(object):
 
         self.config_url = config_url or os.getenv("CONAN_CONFIG_URL")
 
+        self.skip_recipe_export = skip_recipe_export or \
+                                     get_bool_from_env("CONAN_SKIP_RECIPE_EXPORT")
         self.config_args = config_args or os.getenv("CONAN_CONFIG_ARGS")
 
         def valid_pair(var, value):
@@ -562,7 +565,8 @@ class ConanMultiPackager(object):
         self.printer.print_jobs(self.builds_in_current_page)
 
         pulled_docker_images = defaultdict(lambda: False)
-
+        skip_recipe_export = False
+        
         # FIXME: Remove in Conan 1.3, https://github.com/conan-io/conan/issues/2787
         for index, build in enumerate(self.builds_in_current_page):
             self.printer.print_message("Build: %s/%s" % (index+1, len(self.builds_in_current_page)))
@@ -591,6 +595,7 @@ class ConanMultiPackager(object):
                                  config_args=self.config_args,
                                  upload_dependencies=self.upload_dependencies,
                                  conanfile=self.conanfile,
+                                 skip_recipe_export=skip_recipe_export,
                                  update_dependencies=self.update_dependencies)
                 r.run()
             else:
@@ -622,11 +627,14 @@ class ConanMultiPackager(object):
                                        upload_dependencies=self.upload_dependencies,
                                        conanfile=self.conanfile,
                                        force_selinux=self.force_selinux,
+                                       skip_recipe_export=skip_recipe_export,
                                        update_dependencies=self.update_dependencies)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
                       docker_entry_script=self.docker_entry_script)
                 pulled_docker_images[docker_image] = True
+            
+            skip_recipe_export = self.skip_recipe_export
 
     def _get_docker_image(self, build):
         if self._docker_image:

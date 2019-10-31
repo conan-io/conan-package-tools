@@ -979,7 +979,6 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 
     CONAN_CLANG_VERSIONS = "3.8,3.9,4.0"
 
-
 # FULL REFERENCE
 
 
@@ -1078,6 +1077,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **config_url**: Conan config URL be installed before to build e.j https://github.com/bincrafters/conan-config.git
 - **config_args**: Conan config arguments used when installing conan config
 - **force_selinux**: Force docker to relabel file objects on the shared volumes
+- **skip_recipe_export**: If True, the package recipe will only be exported on the first build. Default [False]
 - **update_dependencies**: Update all dependencies before building e.g conan create -u
 
 Upload related parameters:
@@ -1221,6 +1221,7 @@ This is especially useful for CI integration.
 - **CONAN_CONANFILE**: Custom conanfile consumed by Conan create. e.j. conanfile.py
 - **CPT_TEST_FOLDER**: Custom test_package path, e.j .conan/test_package
 - **CONAN_FORCE_SELINUX**: Force docker to relabel file objects on the shared volumes
+- **CONAN_SKIP_RECIPE_EXPORT**: If defined, the package recipe will only be exported on the first build.
 - **CPT_UPDATE_DEPENDENCIES**: Update all dependencies before building e.g conan create -u
 
 

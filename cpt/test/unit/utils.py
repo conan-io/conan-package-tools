@@ -99,11 +99,11 @@ class MockConanAPI(object):
     def reset(self):
         self.calls = []
 
-    def _get_creates(self):
+    def get_creates(self):
         return [call for call in self.calls if call.name == "create"]
 
     def assert_tests_for(self, indexes):
-        creates = self._get_creates()
+        creates = self.get_creates()
         for create_index, index in enumerate(indexes):
             profile = self.get_profile_from_call(creates[create_index])
             assert("os%s" % index == profile.settings["os"])
