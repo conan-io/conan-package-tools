@@ -430,18 +430,25 @@ class ConanMultiPackager(object):
 
     def add_common_builds(self, shared_option_name=None, pure_c=True,
                           dll_with_static_runtime=False, reference=None):
+        if reference:
+            if "@" in reference:
+                reference = ConanFileReference.loads(reference)
+            else:
+                name, version = reference.split("/")
+                reference = ConanFileReference(name, version, self.username, self.channel)
+        else:
+            reference = self.reference
 
-        if not reference and not self.reference:
+        if not reference:
             raise Exception("Specify a CONAN_REFERENCE or name and version fields in the recipe")
 
         if shared_option_name is None:
             if os.path.exists(os.path.join(self.cwd, self.conanfile)):
                 conanfile = load_cf_class(os.path.join(self.cwd, self.conanfile), self.conan_api)
                 if hasattr(conanfile, "options") and conanfile.options and "shared" in conanfile.options:
-                    shared_option_name = "%s:shared" % self.reference.name
+                    shared_option_name = "%s:shared" % reference.name
 
-        tmp = self.build_generator.get_builds(pure_c, shared_option_name, dll_with_static_runtime,
-                                              reference or self.reference)
+        tmp = self.build_generator.get_builds(pure_c, shared_option_name, dll_with_static_runtime, reference)
         self._builds.extend(tmp)
 
     def add(self, settings=None, options=None, env_vars=None, build_requires=None, reference=None):
