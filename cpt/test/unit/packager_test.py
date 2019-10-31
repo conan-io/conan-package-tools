@@ -531,6 +531,15 @@ class AppTest(unittest.TestCase):
             for settings, _, _, _, _ in builder.items:
                 self.assertEquals(settings["compiler"], "gcc")
                 self.assertEquals(settings["compiler.version"], "4.9")
+                
+    def test_multiple_references(self):
+        builder = ConanMultiPackager(username="Pepe", ci_manager=self.ci_manager)
+        builder.add_common_builds(reference="lib/1.0@lasote/mychannel")
+        for _, _, _, _, reference in builder.items:
+            self.assertEquals(reference, "lib/1.0@lasote/mychannel")
+        builder.add_common_builds(reference="lib/2.0@lasote/mychannel")
+        for _, _, _, _, reference in builder.items:
+            self.assertTrue(reference in ("lib/1.0@lasote/mychannel", "lib/2.0@lasote/mychannel"))
 
     def select_defaults_test(self):
         with tools.environment_append({"CONAN_REFERENCE": "zlib/1.2.8"}):
