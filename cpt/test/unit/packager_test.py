@@ -878,3 +878,130 @@ class AppTest(unittest.TestCase):
 
                 self.assertTrue("CONAN_PIP_COMMAND: '/bin/bash' is not a valid pip command" in context.exception)
             self.assertNotIn("[pip_update]", output)
+
+    def test_skip_recipe_export(self):
+
+        def _check_create_calls(skip_recipe_export):
+            not_export = "not_export"
+            creates = self.conan_api.get_creates()
+            if skip_recipe_export:
+                # Only first call should export recipe
+                self.assertFalse(self.assertFalse(creates[0].kwargs[not_export]))
+                for call in creates[1:]:
+                    self.assertTrue(call.kwargs[not_export])
+            else:
+                for call in creates:
+                    self.assertFalse(call.kwargs[not_export])
+
+        output = TestBufferConanOutput()
+        packager = ConanMultiPackager(username="lasote",
+                                      channel="mychannel",
+                                      visual_versions=["12"],
+                                      archs=["x86", "x86_64"],
+                                      build_types=["Release"],
+                                      reference="zlib/1.2.11",
+                                      runner=self.runner,
+                                      conan_api=self.conan_api,
+                                      ci_manager=self.ci_manager,
+                                      out=output.write)
+        packager.add_common_builds()
+        packager.run()
+        _check_create_calls(False)
+
+        with tools.environment_append({"CONAN_SKIP_RECIPE_EXPORT": "True"}):
+            self.conan_api.reset()
+            packager = ConanMultiPackager(username="lasote",
+                                      channel="mychannel",
+                                      visual_versions=["12"],
+                                      archs=["x86", "x86_64"],
+                                      build_types=["Release"],
+                                      reference="zlib/1.2.11",
+                                      runner=self.runner,
+                                      conan_api=self.conan_api,
+                                      ci_manager=self.ci_manager,
+                                      out=output.write)
+
+            packager.add_common_builds()
+            packager.run()
+            _check_create_calls(True)
+
+        self.conan_api.reset()
+        packager = ConanMultiPackager(username="lasote",
+                                      channel="mychannel",
+                                      visual_versions=["12"],
+                                      archs=["x86", "x86_64"],
+                                      build_types=["Release"],
+                                      reference="zlib/1.2.11",
+                                      runner=self.runner,
+                                      conan_api=self.conan_api,
+                                      ci_manager=self.ci_manager,
+                                      skip_recipe_export=True,
+                                      out=output.write)
+        packager.add_common_builds()
+        packager.run()
+        _check_create_calls(True)
+
+    def test_skip_recipe_export_docker(self):
+
+        def _check_run_calls(skip_recipe_export):
+            env_var = '-e CPT_SKIP_RECIPE_EXPORT="True"'
+            run_calls = [call for call in self.runner.calls if "docker run --rm" in call]
+            if skip_recipe_export:
+                # Only first call should export recipe
+                self.assertNotIn(env_var, run_calls[0])
+                for call in run_calls[1:]:
+                    self.assertIn(env_var, call)
+            else:
+                for call in run_calls:
+                    self.assertNotIn(env_var, call)
+
+        output = TestBufferConanOutput()
+        packager = ConanMultiPackager(username="lasote",
+                                      channel="mychannel",
+                                      gcc_versions=["9"],
+                                      archs=["x86", "x86_64"],
+                                      build_types=["Release"],
+                                      reference="zlib/1.2.11",
+                                      use_docker=True,
+                                      runner=self.runner,
+                                      conan_api=self.conan_api,
+                                      ci_manager=self.ci_manager,
+                                      out=output.write)
+        packager.add_common_builds()
+        packager.run()
+        _check_run_calls(False)
+
+        with tools.environment_append({"CONAN_SKIP_RECIPE_EXPORT": "True"}):
+            self.runner.reset()
+            packager = ConanMultiPackager(username="lasote",
+                                      channel="mychannel",
+                                      gcc_versions=["9"],
+                                      archs=["x86", "x86_64"],
+                                      build_types=["Release"],
+                                      reference="zlib/1.2.11",
+                                      use_docker=True,
+                                      runner=self.runner,
+                                      conan_api=self.conan_api,
+                                      ci_manager=self.ci_manager,
+                                      out=output.write)
+
+            packager.add_common_builds()
+            packager.run()
+            _check_run_calls(True)
+
+        self.runner.reset()
+        packager = ConanMultiPackager(username="lasote",
+                                      channel="mychannel",
+                                      gcc_versions=["9"],
+                                      archs=["x86", "x86_64"],
+                                      build_types=["Release"],
+                                      reference="zlib/1.2.11",
+                                      use_docker=True,
+                                      runner=self.runner,
+                                      conan_api=self.conan_api,
+                                      ci_manager=self.ci_manager,
+                                      skip_recipe_export=True,
+                                      out=output.write)
+        packager.add_common_builds()
+        packager.run()
+        _check_run_calls(True)
