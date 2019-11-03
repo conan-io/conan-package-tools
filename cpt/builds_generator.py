@@ -207,7 +207,7 @@ def get_mingw_builds(mingw_configurations, mingw_installer_reference,
         version, arch, exception, thread = config
         if arch not in archs:
             continue
-        settings = {"arch": arch, "compiler": "gcc",
+        settings = {"arch": arch, "compiler": "gcc", "os": "Windows",
                     "compiler.version": version[0:3],
                     "compiler.threads": thread,
                     "compiler.exception": exception}
@@ -268,7 +268,8 @@ def get_visual_builds_for_version(visual_runtimes, visual_version, arch, shared_
                                   reference=None, toolset=None):
     base_set = {"compiler": "Visual Studio",
                 "compiler.version": visual_version,
-                "arch": arch}
+                "arch": arch,
+                "os": "Windows"}
 
     if toolset:
         base_set["compiler.toolset"] = toolset
@@ -322,11 +323,12 @@ def get_visual_builds_for_version(visual_runtimes, visual_version, arch, shared_
 
 
 def get_build(compiler, the_arch, the_build_type, the_compiler_version,
-              the_compiler_cppstd, the_libcxx, options, reference):
+              the_compiler_cppstd, the_libcxx, the_os, options, reference):
     setts = {"arch": the_arch,
              "build_type": the_build_type,
              "compiler": compiler,
-             "compiler.version": the_compiler_version}
+             "compiler.version": the_compiler_version,
+             "os": the_os}
     if the_compiler_cppstd:
         setts["compiler.cppstd"] = the_compiler_cppstd
     if the_libcxx:
@@ -350,21 +352,21 @@ def get_osx_apple_clang_builds(apple_clang_versions, archs, shared_option_name,
                             if not pure_c:
                                 ret.append(get_build("apple-clang", arch, build_type_it,
                                                         compiler_version, cppstd,
-                                                        "libc++", opt, reference))
+                                                        "libc++", "Macos", opt, reference))
                             else:
                                 ret.append(get_build("apple-clang", arch, build_type_it,
                                                         compiler_version, None,
-                                                        None, opt, reference))
+                                                        None, "Macos", opt, reference))
                 else:
                     for build_type_it in build_types:
                         if not pure_c:
                             ret.append(get_build("apple-clang", arch, build_type_it,
                                                     compiler_version, cppstd,
-                                                    "libc++", options, reference))
+                                                    "libc++", "Macos", options, reference))
                         else:
                             ret.append(get_build("apple-clang", arch, build_type_it,
                                                     compiler_version, None,
-                                                    None, options, reference))
+                                                    None, "Macos", options, reference))
 
     return ret
 
@@ -383,24 +385,24 @@ def get_linux_gcc_builds(gcc_versions, archs, shared_option_name, pure_c, build_
                         for build_type_it in build_types:
                             if not pure_c:
                                 ret.append(get_build("gcc", arch, build_type_it, gcc_version,
-                                                     cppstd, "libstdc++", opt, reference))
+                                                     cppstd, "libstdc++", "Linux", opt, reference))
                                 if float(gcc_version) >= 5:
                                     ret.append(get_build("gcc", arch, build_type_it, gcc_version,
-                                                        cppstd, "libstdc++11", opt, reference))
+                                                        cppstd, "libstdc++11", "Linux", opt, reference))
                             else:
                                 ret.append(get_build("gcc", arch, build_type_it, gcc_version,
-                                                     None, None, opt, reference))
+                                                     None, None, "Linux", opt, reference))
                 else:
                     for build_type_it in build_types:
                         if not pure_c:
                             ret.append(get_build("gcc", arch, build_type_it, gcc_version,
-                                                 cppstd, "libstdc++", options, reference))
+                                                 cppstd, "libstdc++", "Linux", options, reference))
                             if float(gcc_version) >= 5:
                                 ret.append(get_build("gcc", arch, build_type_it, gcc_version,
-                                                    cppstd, "libstdc++11", options, reference))
+                                                    cppstd, "libstdc++11", "Linux", options, reference))
                         else:
                             ret.append(get_build("gcc", arch, build_type_it, gcc_version, None,
-                                                 None, options, reference))
+                                                 None, "Linux", options, reference))
         return ret
 
 
@@ -418,20 +420,20 @@ def get_linux_clang_builds(clang_versions, archs, shared_option_name, pure_c, bu
                         for build_type_it in build_types:
                             if not pure_c:
                                 ret.append(get_build("clang", arch, build_type_it, clang_version,
-                                                     cppstd, "libstdc++", opt, reference))
+                                                     cppstd, "libstdc++", "Linux", opt, reference))
                                 ret.append(get_build("clang", arch, build_type_it, clang_version,
-                                                     cppstd, "libc++", opt, reference))
+                                                     cppstd, "libc++", "Linux", opt, reference))
                             else:
                                 ret.append(get_build("clang", arch, build_type_it, clang_version,
-                                                     None, None, opt, reference))
+                                                     None, None, "Linux", opt, reference))
                 else:
                     for build_type_it in build_types:
                         if not pure_c:
                             ret.append(get_build("clang", arch, build_type_it, clang_version,
-                                                 cppstd, "libstdc++", options, reference))
+                                                 cppstd, "libstdc++", "Linux", options, reference))
                             ret.append(get_build("clang", arch, build_type_it, clang_version,
-                                                 cppstd, "libc++", options, reference))
+                                                 cppstd, "libc++", "Linux", options, reference))
                         else:
                             ret.append(get_build("clang", arch, build_type_it, clang_version,
-                                                 None, None, options, reference))
+                                                 None, None, "Linux", options, reference))
     return ret
