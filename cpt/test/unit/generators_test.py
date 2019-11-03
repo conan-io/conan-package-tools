@@ -19,26 +19,26 @@ class GeneratorsTest(unittest.TestCase):
         expected = [
             ({'build_type': 'Release', 'compiler.version': '4.9', 'compiler.libcxx': "libstdc++",
               'compiler': 'gcc', 'arch': 'x86', 'compiler.exception': 'dwarf2',
-              'compiler.threads': 'posix'},
+              'compiler.threads': 'posix', 'os': 'Windows'},
              {'pack:shared': True},
              {},
              {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
             ({'compiler.version': '4.9', 'compiler': 'gcc', 'compiler.libcxx': "libstdc++",
               'build_type': 'Debug', 'compiler.exception': 'dwarf2', 'compiler.threads': 'posix',
-              'arch': 'x86'},
+              'arch': 'x86', 'os': 'Windows'},
              {'pack:shared': True},
              {},
              {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
 
             ({'build_type': 'Release', 'compiler.version': '4.9', 'compiler.libcxx': "libstdc++",
               'compiler': 'gcc', 'arch': 'x86', 'compiler.exception': 'dwarf2',
-              'compiler.threads': 'posix'},
+              'compiler.threads': 'posix', 'os': 'Windows'},
              {'pack:shared': False},
                 {},
                 {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
             ({'compiler.version': '4.9', 'compiler': 'gcc', 'compiler.libcxx': "libstdc++",
               'build_type': 'Debug', 'compiler.exception': 'dwarf2', 'compiler.threads': 'posix',
-              'arch': 'x86'},
+              'arch': 'x86', 'os': 'Windows'},
              {'pack:shared': False},
              {},
              {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref)]
@@ -50,13 +50,13 @@ class GeneratorsTest(unittest.TestCase):
         expected = [
             ({'build_type': 'Release', 'compiler.version': '4.9', 'compiler.libcxx': "libstdc++",
               'compiler': 'gcc', 'arch': 'x86', 'compiler.exception': 'dwarf2',
-              'compiler.threads': 'posix', 'compiler.cppstd': '20'},
+              'compiler.threads': 'posix', 'compiler.cppstd': '20', 'os': 'Windows'},
              {'pack:shared': True},
              {},
              {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, None),
             ({'build_type': 'Release', 'compiler.version': '4.9', 'compiler.libcxx': "libstdc++",
               'compiler': 'gcc', 'arch': 'x86', 'compiler.exception': 'dwarf2',
-              'compiler.threads': 'posix', 'compiler.cppstd': '20'},
+              'compiler.threads': 'posix', 'compiler.cppstd': '20', 'os': 'Windows'},
              {'pack:shared': False},
              {},
              {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, None)]
@@ -68,13 +68,13 @@ class GeneratorsTest(unittest.TestCase):
         expected = [
             ({'compiler.version': '4.9', 'compiler': 'gcc', 'compiler.libcxx': "libstdc++",
               'build_type': 'Debug', 'compiler.exception': 'dwarf2', 'compiler.threads': 'posix',
-              'arch': 'x86', 'compiler.cppstd': '14'},
+              'arch': 'x86', 'compiler.cppstd': '14', 'os': 'Windows'},
              {'pack:shared': True},
              {},
              {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, None),
             ({'compiler.version': '4.9', 'compiler': 'gcc', 'compiler.libcxx': "libstdc++",
               'build_type': 'Debug', 'compiler.exception': 'dwarf2', 'compiler.threads': 'posix',
-              'arch': 'x86', 'compiler.cppstd': '14'},
+              'arch': 'x86', 'compiler.cppstd': '14', 'os': 'Windows'},
              {'pack:shared': False},
              {},
              {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, None)]
@@ -89,26 +89,26 @@ class GeneratorsTest(unittest.TestCase):
         expected = [
             ({'build_type': 'Release', 'compiler.version': '4.9', 'compiler.libcxx': "libstdc++",
               'compiler': 'gcc', 'arch': 'x86', 'compiler.exception': 'dwarf2',
-              'compiler.threads': 'posix'},
+              'compiler.threads': 'posix', 'os': 'Windows'},
              {'pack:shared': True, "pack:foobar": True, "foobar:qux": "data"},
              {},
              {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
             ({'compiler.version': '4.9', 'compiler': 'gcc', 'compiler.libcxx': "libstdc++",
               'build_type': 'Debug', 'compiler.exception': 'dwarf2', 'compiler.threads': 'posix',
-              'arch': 'x86'},
+              'arch': 'x86', 'os': 'Windows'},
              {'pack:shared': True, "pack:foobar": True, "foobar:qux": "data"},
              {},
              {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
 
             ({'build_type': 'Release', 'compiler.version': '4.9', 'compiler.libcxx': "libstdc++",
               'compiler': 'gcc', 'arch': 'x86', 'compiler.exception': 'dwarf2',
-              'compiler.threads': 'posix'},
+              'compiler.threads': 'posix', 'os': 'Windows'},
              {'pack:shared': False, "pack:foobar": True, "foobar:qux": "data"},
              {},
              {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
             ({'compiler.version': '4.9', 'compiler': 'gcc', 'compiler.libcxx': "libstdc++",
               'build_type': 'Debug', 'compiler.exception': 'dwarf2', 'compiler.threads': 'posix',
-              'arch': 'x86'},
+              'arch': 'x86', 'os': 'Windows'},
              {'pack:shared': False, "pack:foobar": True, "foobar:qux": "data"},
              {},
              {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref)]
@@ -123,13 +123,13 @@ class GeneratorsTest(unittest.TestCase):
         expected = [
             ({'build_type': 'Release', 'compiler.version': '4.9', 'compiler.libcxx': "libstdc++",
               'compiler': 'gcc', 'arch': 'x86', 'compiler.exception': 'dwarf2',
-              'compiler.threads': 'posix'},
+              'compiler.threads': 'posix', 'os': 'Windows'},
              {"pack:foobar": True, "foobar:qux": "data"},
              {},
              {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
             ({'compiler.version': '4.9', 'compiler': 'gcc', 'compiler.libcxx': "libstdc++",
               'build_type': 'Debug', 'compiler.exception': 'dwarf2', 'compiler.threads': 'posix',
-              'arch': 'x86'},
+              'arch': 'x86', 'os': 'Windows'},
              {"pack:foobar": True, "foobar:qux": "data"},
              {},
              {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref)]
@@ -142,13 +142,17 @@ class GeneratorsTest(unittest.TestCase):
                                             cppstds=[None],
                                             options={},
                                             reference=ref)
-        expected = [({'arch': 'x86_64', 'compiler.libcxx': 'libc++', 'compiler': 'apple-clang', 'compiler.version': '8.0', 'build_type': 'Debug'},
+        expected = [({'arch': 'x86_64', 'compiler.libcxx': 'libc++', 'compiler': 'apple-clang', 'compiler.version': '8.0',
+                      'build_type': 'Debug', 'os': 'Macos'},
                      {'pack:shared': True}, {}, {}, ref),
-                    ({'arch': 'x86_64', 'compiler.libcxx': 'libc++', 'compiler': 'apple-clang', 'compiler.version': '8.0', 'build_type': 'Release'},
+                    ({'arch': 'x86_64', 'compiler.libcxx': 'libc++', 'compiler': 'apple-clang', 'compiler.version': '8.0',
+                      'build_type': 'Release', 'os': 'Macos'},
                      {'pack:shared': True}, {}, {}, ref),
-                    ({'arch': 'x86_64', 'compiler.libcxx': 'libc++', 'compiler': 'apple-clang', 'compiler.version': '8.0', 'build_type': 'Debug'},
+                    ({'arch': 'x86_64', 'compiler.libcxx': 'libc++', 'compiler': 'apple-clang', 'compiler.version': '8.0',
+                      'build_type': 'Debug', 'os': 'Macos'},
                      {'pack:shared': False}, {}, {}, ref),
-                    ({'arch': 'x86_64', 'compiler.libcxx': 'libc++', 'compiler': 'apple-clang', 'compiler.version': '8.0', 'build_type': 'Release'},
+                    ({'arch': 'x86_64', 'compiler.libcxx': 'libc++', 'compiler': 'apple-clang', 'compiler.version': '8.0',
+                      'build_type': 'Release', 'os': 'Macos'},
                      {'pack:shared': False}, {}, {}, ref)]
         self.assertEquals([tuple(a) for a in builds], expected)
 
@@ -157,50 +161,50 @@ class GeneratorsTest(unittest.TestCase):
                                             cppstds=[None],
                                             options={})
         expected = [({'arch': 'x86_64', 'compiler': 'apple-clang',
-                      'compiler.version': '8.0', 'build_type': 'Debug'},
+                      'compiler.version': '8.0', 'build_type': 'Debug', 'os': 'Macos'},
                      {'pack:shared': True}, {}, {}, None),
                     ({'arch': 'x86_64', 'compiler': 'apple-clang',
-                      'compiler.version': '8.0', 'build_type': 'Release'},
+                      'compiler.version': '8.0', 'build_type': 'Release', 'os': 'Macos'},
                      {'pack:shared': True}, {}, {}, None),
                     ({'arch': 'x86_64', 'compiler': 'apple-clang',
-                      'compiler.version': '8.0', 'build_type': 'Debug'},
+                      'compiler.version': '8.0', 'build_type': 'Debug', 'os': 'Macos'},
                      {'pack:shared': False}, {}, {}, None),
                     ({'arch': 'x86_64', 'compiler': 'apple-clang',
-                      'compiler.version': '8.0', 'build_type': 'Release'},
+                      'compiler.version': '8.0', 'build_type': 'Release', 'os': 'Macos'},
                      {'pack:shared': False}, {}, {}, None)]
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_osx_apple_clang_builds(["8.0"], ["x86_64"], "pack:shared", pure_c=False, build_types=["Debug"], cppstds=["14"], options={})
         expected = [({'arch': 'x86_64', 'compiler.libcxx': 'libc++', 'compiler': 'apple-clang',
-                      'compiler.version': '8.0', 'build_type': 'Debug', 'compiler.cppstd': '14'},
+                      'compiler.version': '8.0', 'build_type': 'Debug', 'compiler.cppstd': '14', 'os': 'Macos'},
                      {'pack:shared': True}, {}, {}, None),
                     ({'arch': 'x86_64', 'compiler.libcxx': 'libc++', 'compiler': 'apple-clang',
-                      'compiler.version': '8.0', 'build_type': 'Debug', 'compiler.cppstd': '14'},
+                      'compiler.version': '8.0', 'build_type': 'Debug', 'compiler.cppstd': '14', 'os': 'Macos'},
                      {'pack:shared': False}, {}, {}, None)]
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_osx_apple_clang_builds(["8.0"], ["x86_64"], "pack:shared", pure_c=True, build_types=["Release"], cppstds=["17"], options={})
         expected = [({'arch': 'x86_64', 'compiler': 'apple-clang',
-                      'compiler.version': '8.0', 'build_type': 'Release'},
+                      'compiler.version': '8.0', 'build_type': 'Release', 'os': 'Macos'},
                      {'pack:shared': True}, {}, {}, None),
                     ({'arch': 'x86_64', 'compiler': 'apple-clang',
-                      'compiler.version': '8.0', 'build_type': 'Release'},
+                      'compiler.version': '8.0', 'build_type': 'Release', 'os': 'Macos'},
                      {'pack:shared': False}, {}, {}, None)]
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_osx_apple_clang_builds(["8.0"], ["x86_64"], "pack:shared", pure_c=False,
                                             build_types=["Debug", "Release"], cppstds=[None], options={"qux:foobar": False, "foo:pkg": "bar"}, reference=ref)
         expected = [({'arch': 'x86_64', 'compiler.libcxx': 'libc++', 'compiler': 'apple-clang',
-                      'compiler.version': '8.0', 'build_type': 'Debug'},
+                      'compiler.version': '8.0', 'build_type': 'Debug', 'os': 'Macos'},
                      {'pack:shared': True, "qux:foobar": False, "foo:pkg": "bar"}, {}, {}, ref),
                     ({'arch': 'x86_64', 'compiler.libcxx': 'libc++', 'compiler': 'apple-clang',
-                      'compiler.version': '8.0', 'build_type': 'Release'},
+                      'compiler.version': '8.0', 'build_type': 'Release', 'os': 'Macos'},
                      {'pack:shared': True, "qux:foobar": False, "foo:pkg": "bar"}, {}, {}, ref),
                     ({'arch': 'x86_64', 'compiler.libcxx': 'libc++', 'compiler': 'apple-clang',
-                      'compiler.version': '8.0', 'build_type': 'Debug'},
+                      'compiler.version': '8.0', 'build_type': 'Debug', 'os': 'Macos'},
                      {'pack:shared': False, "qux:foobar": False, "foo:pkg": "bar"}, {}, {}, ref),
                     ({'arch': 'x86_64', 'compiler.libcxx': 'libc++', 'compiler': 'apple-clang',
-                      'compiler.version': '8.0', 'build_type': 'Release'},
+                      'compiler.version': '8.0', 'build_type': 'Release', 'os': 'Macos'},
                      {'pack:shared': False, "qux:foobar": False, "foo:pkg": "bar"}, {}, {}, ref)]
         self.assertEquals([tuple(a) for a in builds], expected)
 
@@ -209,121 +213,129 @@ class GeneratorsTest(unittest.TestCase):
                                             cppstds=[None],
                                             options={"qux:foobar": False, "foo:pkg": "bar"}, reference=ref)
         expected = [({'arch': 'x86_64', 'compiler.libcxx': 'libc++', 'compiler': 'apple-clang',
-                      'compiler.version': '8.0', 'build_type': 'Debug'},
+                      'compiler.version': '8.0', 'build_type': 'Debug', 'os': 'Macos'},
                      {"qux:foobar": False, "foo:pkg": "bar"}, {}, {}, ref),
                     ({'arch': 'x86_64', 'compiler.libcxx': 'libc++', 'compiler': 'apple-clang',
-                      'compiler.version': '8.0', 'build_type': 'Release'},
+                      'compiler.version': '8.0', 'build_type': 'Release', 'os': 'Macos'},
                      {"qux:foobar": False, "foo:pkg": "bar"}, {}, {}, ref)]
         self.assertEquals([tuple(a) for a in builds], expected)
 
     def test_get_linux_gcc_builds(self):
         builds = get_linux_gcc_builds(["6"], ["x86_64"], "pack:shared", pure_c=False, build_types=["Debug", "Release"], cppstds=[None], options={})
-        expected = [({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++', 'compiler.version': '6', 'arch': 'x86_64'},
+        expected = [({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++', 'compiler.version': '6',
+                      'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': True}, {}, {}, None),
-                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++11', 'compiler.version': '6', 'arch': 'x86_64'},
+                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++11', 'compiler.version': '6',
+                      'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': True}, {}, {}, None),
-                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++', 'compiler.version': '6', 'arch': 'x86_64'},
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++', 'compiler.version': '6',
+                      'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': True}, {}, {}, None),
-                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++11', 'compiler.version': '6', 'arch': 'x86_64'},
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++11', 'compiler.version': '6',
+                      'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': True}, {}, {}, None),
-                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++', 'compiler.version': '6', 'arch': 'x86_64'},
+                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++', 'compiler.version': '6',
+                      'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': False}, {}, {}, None),
-                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++11', 'compiler.version': '6', 'arch': 'x86_64'},
+                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++11', 'compiler.version': '6',
+                      'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': False}, {}, {}, None),
-                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++', 'compiler.version': '6', 'arch': 'x86_64'},
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++', 'compiler.version': '6',
+                      'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': False}, {}, {}, None),
-                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++11', 'compiler.version': '6', 'arch': 'x86_64'},
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++11', 'compiler.version': '6',
+                      'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': False}, {}, {}, None)]
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_linux_gcc_builds(["6"], ["x86_64"], "pack:shared", pure_c=True, build_types=["Debug", "Release"], cppstds=[None], options={})
-        expected = [({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Debug', 'compiler': 'gcc'},
+        expected = [({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Debug', 'compiler': 'gcc', 'os': 'Linux'},
                      {'pack:shared': True}, {}, {}, None),
-                    ({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Release', 'compiler': 'gcc'},
+                    ({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Release', 'compiler': 'gcc', 'os': 'Linux'},
                      {'pack:shared': True}, {}, {}, None),
-                    ({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Debug', 'compiler': 'gcc'},
+                    ({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Debug', 'compiler': 'gcc', 'os': 'Linux'},
                      {'pack:shared': False}, {}, {}, None),
-                    ({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Release', 'compiler': 'gcc'},
+                    ({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Release', 'compiler': 'gcc', 'os': 'Linux'},
                      {'pack:shared': False}, {}, {}, None)]
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_linux_gcc_builds(["6"], ["x86_64"], "pack:shared", pure_c=False, build_types=["Debug"], cppstds=["14"], options={})
         expected = [({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
-                      'compiler.version': '6', 'arch': 'x86_64', 'compiler.cppstd': '14'},
+                      'compiler.version': '6', 'arch': 'x86_64', 'compiler.cppstd': '14', 'os': 'Linux'},
                      {'pack:shared': True}, {}, {}, None),
                     ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++11',
-                      'compiler.version': '6', 'arch': 'x86_64', 'compiler.cppstd': '14'},
+                      'compiler.version': '6', 'arch': 'x86_64', 'compiler.cppstd': '14', 'os': 'Linux'},
                      {'pack:shared': True}, {}, {}, None),
                     ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
-                      'compiler.version': '6', 'arch': 'x86_64', 'compiler.cppstd': '14'},
+                      'compiler.version': '6', 'arch': 'x86_64', 'compiler.cppstd': '14', 'os': 'Linux'},
                      {'pack:shared': False}, {}, {}, None),
                     ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++11',
-                      'compiler.version': '6', 'arch': 'x86_64', 'compiler.cppstd': '14'},
+                      'compiler.version': '6', 'arch': 'x86_64', 'compiler.cppstd': '14', 'os': 'Linux'},
                      {'pack:shared': False}, {}, {}, None)]
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_linux_gcc_builds(["6"], ["x86_64"], "pack:shared", pure_c=True, build_types=["Debug"], cppstds=["14"], options={})
-        expected = [({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Debug', 'compiler': 'gcc'},
+        expected = [({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Debug', 'compiler': 'gcc', 'os': 'Linux'},
                      {'pack:shared': True}, {}, {}, None),
-                    ({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Debug', 'compiler': 'gcc'},
+                    ({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Debug', 'compiler': 'gcc', 'os': 'Linux'},
                      {'pack:shared': False}, {}, {}, None)]
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_linux_gcc_builds(["6"], ["x86_64"], "pack:shared", pure_c=False, build_types=["Release"], cppstds=["17"], options={})
         expected = [({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
-                      'compiler.version': '6', 'arch': 'x86_64', 'compiler.cppstd': '17'},
+                      'compiler.version': '6', 'arch': 'x86_64', 'compiler.cppstd': '17', 'os': 'Linux'},
                      {'pack:shared': True}, {}, {}, None),
                     ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++11',
-                      'compiler.version': '6', 'arch': 'x86_64', 'compiler.cppstd': '17'},
+                      'compiler.version': '6', 'arch': 'x86_64', 'compiler.cppstd': '17', 'os': 'Linux'},
                      {'pack:shared': True}, {}, {}, None),
                     ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
-                      'compiler.version': '6', 'arch': 'x86_64', 'compiler.cppstd': '17'},
+                      'compiler.version': '6', 'arch': 'x86_64', 'compiler.cppstd': '17', 'os': 'Linux'},
                      {'pack:shared': False}, {}, {}, None),
                     ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++11',
-                      'compiler.version': '6', 'arch': 'x86_64', 'compiler.cppstd': '17'},
+                      'compiler.version': '6', 'arch': 'x86_64', 'compiler.cppstd': '17', 'os': 'Linux'},
                      {'pack:shared': False}, {}, {}, None)]
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_linux_gcc_builds(["6"], ["x86_64"], "pack:shared", pure_c=True, build_types=["Release"], cppstds=["17"], options={})
-        expected = [({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Release', 'compiler': 'gcc'},
+        expected = [({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Release', 'compiler': 'gcc', 'os': 'Linux'},
                      {'pack:shared': True}, {}, {}, None),
-                    ({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Release', 'compiler': 'gcc'},
+                    ({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Release', 'compiler': 'gcc', 'os': 'Linux'},
                      {'pack:shared': False}, {}, {}, None)]
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_linux_gcc_builds(["6"], ["x86_64"], "pack:shared", pure_c=False, build_types=["Debug", "Release"],
                                       cppstds=[None], options={"foo:bar": "qux", "pkg:qux": False})
-        expected = [({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++', 'compiler.version': '6',
-                      'arch': 'x86_64'},
+        expected = [({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '6', 'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': True, "foo:bar": "qux", "pkg:qux": False}, {}, {}, None),
                     ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++11',
-                      'compiler.version': '6', 'arch': 'x86_64'},
+                      'compiler.version': '6', 'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': True, "foo:bar": "qux", "pkg:qux": False}, {}, {}, None),
                     ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
-                      'compiler.version': '6', 'arch': 'x86_64'},
+                      'compiler.version': '6', 'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': True, "foo:bar": "qux", "pkg:qux": False}, {}, {}, None),
                     ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++11',
-                      'compiler.version': '6', 'arch': 'x86_64'},
+                      'compiler.version': '6', 'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': True, "foo:bar": "qux", "pkg:qux": False}, {}, {}, None),
                     ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++', 'compiler.version': '6',
-                      'arch': 'x86_64'},
+                      'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': False, "foo:bar": "qux", "pkg:qux": False}, {}, {}, None),
                     ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++11',
-                      'compiler.version': '6', 'arch': 'x86_64'},
+                      'compiler.version': '6', 'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': False, "foo:bar": "qux", "pkg:qux": False}, {}, {}, None),
                     ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
-                      'compiler.version': '6', 'arch': 'x86_64'},
+                      'compiler.version': '6', 'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': False, "foo:bar": "qux", "pkg:qux": False}, {}, {}, None),
                     ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++11',
-                      'compiler.version': '6', 'arch': 'x86_64'},
+                      'compiler.version': '6', 'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': False, "foo:bar": "qux", "pkg:qux": False}, {}, {}, None)]
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_linux_gcc_builds(["6"], ["x86_64"], None, pure_c=True, build_types=["Debug", "Release"],
                                       cppstds=[None], options={"qux:bar": "foo", "*:pkg": False})
-        expected = [({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Debug', 'compiler': 'gcc'},
+        expected = [({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Debug', 'compiler': 'gcc', 'os': 'Linux'},
                      {"qux:bar": "foo", "*:pkg": False}, {}, {}, None),
-                    ({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Release', 'compiler': 'gcc'},
+                    ({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Release', 'compiler': 'gcc', 'os': 'Linux'},
                      {"qux:bar": "foo", "*:pkg": False}, {}, {}, None)]
         self.assertEquals([tuple(a) for a in builds], expected)
 
@@ -333,84 +345,92 @@ class GeneratorsTest(unittest.TestCase):
         builds = get_linux_clang_builds(["4.0"], ["x86_64"], "pack:shared", pure_c=False,
                                         build_types=["Debug", "Release"], cppstds=[None], options={},
                                         reference=ref)
-        expected = [({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++', 'compiler.version': '4.0', 'arch': 'x86_64'},
+        expected = [({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++', 'compiler.version': '4.0',
+                      'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': True}, {}, {}, ref),
-                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libc++', 'compiler.version': '4.0', 'arch': 'x86_64'},
+                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libc++', 'compiler.version': '4.0',
+                      'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': True}, {}, {}, ref),
-                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++', 'compiler.version': '4.0', 'arch': 'x86_64'},
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++', 'compiler.version': '4.0',
+                      'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': True}, {}, {}, ref),
-                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libc++', 'compiler.version': '4.0', 'arch': 'x86_64'},
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libc++', 'compiler.version': '4.0',
+                      'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': True}, {}, {}, ref),
-                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++', 'compiler.version': '4.0', 'arch': 'x86_64'},
+                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++', 'compiler.version': '4.0',
+                      'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': False}, {}, {}, ref),
-                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libc++', 'compiler.version': '4.0', 'arch': 'x86_64'},
+                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libc++', 'compiler.version': '4.0',
+                      'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': False}, {}, {}, ref),
-                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++', 'compiler.version': '4.0', 'arch': 'x86_64'},
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++', 'compiler.version': '4.0',
+                      'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': False}, {}, {}, ref),
-                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libc++', 'compiler.version': '4.0', 'arch': 'x86_64'},
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libc++', 'compiler.version': '4.0',
+                      'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': False}, {}, {}, ref)]
         b = [tuple(a) for a in builds]
         self.assertEquals(b, expected)
 
         builds = get_linux_clang_builds(["4.0"], ["x86_64"], "pack:shared", pure_c=True,
                                         build_types=["Debug", "Release"], cppstds=[None], options={}, reference=ref)
-        expected = [({'arch': 'x86_64', 'compiler.version': '4.0', 'build_type': 'Debug', 'compiler': 'clang'},
+        expected = [({'arch': 'x86_64', 'compiler.version': '4.0', 'build_type': 'Debug', 'compiler': 'clang', 'os': 'Linux'},
                      {'pack:shared': True}, {}, {}, ref),
-                    ({'arch': 'x86_64', 'compiler.version': '4.0', 'build_type': 'Release', 'compiler': 'clang'},
+                    ({'arch': 'x86_64', 'compiler.version': '4.0', 'build_type': 'Release', 'compiler': 'clang', 'os': 'Linux'},
                      {'pack:shared': True}, {}, {}, ref),
-                    ({'arch': 'x86_64', 'compiler.version': '4.0', 'build_type': 'Debug', 'compiler': 'clang'},
+                    ({'arch': 'x86_64', 'compiler.version': '4.0', 'build_type': 'Debug', 'compiler': 'clang', 'os': 'Linux'},
                      {'pack:shared': False}, {}, {}, ref),
-                    ({'arch': 'x86_64', 'compiler.version': '4.0', 'build_type': 'Release', 'compiler': 'clang'},
+                    ({'arch': 'x86_64', 'compiler.version': '4.0', 'build_type': 'Release', 'compiler': 'clang', 'os': 'Linux'},
                      {'pack:shared': False}, {}, {}, ref)]
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_linux_clang_builds(["4.0"], ["x86_64"], "pack:shared", pure_c=False,
                                         build_types=["Debug"], cppstds=[None], options={}, reference=ref)
         expected = [({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
-                      'compiler.version': '4.0', 'arch': 'x86_64'},
+                      'compiler.version': '4.0', 'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': True}, {}, {}, ref),
                     ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libc++', 'compiler.version': '4.0',
-                     'arch': 'x86_64'},
+                     'arch': 'x86_64', 'os': 'Linux'},
                     {'pack:shared': True}, {}, {}, ref),
                     ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
-                      'compiler.version': '4.0', 'arch': 'x86_64'},
+                      'compiler.version': '4.0', 'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': False}, {}, {}, ref),
                     ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libc++', 'compiler.version': '4.0',
-                     'arch': 'x86_64'},
+                     'arch': 'x86_64', 'os': 'Linux'},
                     {'pack:shared': False}, {}, {}, ref)]
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_linux_clang_builds(["4.0"], ["x86_64"], "pack:shared", pure_c=True,
                                         build_types=["Debug"], cppstds=[None], options={}, reference=ref)
-        expected = [({'arch': 'x86_64', 'compiler.version': '4.0', 'build_type': 'Debug', 'compiler': 'clang'},
+        expected = [({'arch': 'x86_64', 'compiler.version': '4.0', 'build_type': 'Debug', 'compiler': 'clang', 'os': 'Linux'},
                      {'pack:shared': True}, {}, {}, ref),
-                    ({'arch': 'x86_64', 'compiler.version': '4.0', 'build_type': 'Debug', 'compiler': 'clang'},
+                    ({'arch': 'x86_64', 'compiler.version': '4.0', 'build_type': 'Debug', 'compiler': 'clang', 'os': 'Linux'},
                      {'pack:shared': False}, {}, {}, ref)]
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_linux_clang_builds(["4.0"], ["x86_64"], "pack:shared", pure_c=False,
                                         build_types=["Release"], cppstds=[None], options={}, reference=ref)
         expected = [({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
-                      'compiler.version': '4.0', 'arch': 'x86_64'},
+                      'compiler.version': '4.0', 'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': True}, {}, {}, ref),
                     (
                     {'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libc++', 'compiler.version': '4.0',
-                     'arch': 'x86_64'},
+                     'arch': 'x86_64', 'os': 'Linux'},
                     {'pack:shared': True}, {}, {}, ref),
                     ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
-                      'compiler.version': '4.0', 'arch': 'x86_64'},
+                      'compiler.version': '4.0', 'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': False}, {}, {}, ref),
                     (
                     {'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libc++', 'compiler.version': '4.0',
-                     'arch': 'x86_64'},
+                     'arch': 'x86_64', 'os': 'Linux'},
                     {'pack:shared': False}, {}, {}, ref)]
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_linux_clang_builds(["4.0"], ["x86_64"], "pack:shared", pure_c=True, build_types=["Release"],
                                         cppstds=[None], options={}, reference=None)
-        expected = [({'arch': 'x86_64', 'compiler.version': '4.0', 'build_type': 'Release', 'compiler': 'clang'},
+        expected = [({'arch': 'x86_64', 'compiler.version': '4.0', 'build_type': 'Release', 'compiler': 'clang', 'os': 'Linux'},
                      {'pack:shared': True}, {}, {}, None),
-                    ({'arch': 'x86_64', 'compiler.version': '4.0', 'build_type': 'Release', 'compiler': 'clang'},
+                    ({'arch': 'x86_64', 'compiler.version': '4.0', 'build_type': 'Release', 'compiler': 'clang', 'os': 'Linux'},
                      {'pack:shared': False}, {}, {}, None)]
         self.assertEquals([tuple(a) for a in builds], expected)
 
@@ -418,18 +438,18 @@ class GeneratorsTest(unittest.TestCase):
                                         build_types=["Debug"], cppstds=[None],
                                         options={"foo:bar": "qux", "pkg:shared": True}, reference=ref)
         expected = [({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
-                      'compiler.version': '4.0', 'arch': 'x86_64'},
+                      'compiler.version': '4.0', 'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': True, "foo:bar": "qux", "pkg:shared": True}, {}, {}, ref),
                     (
                     {'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libc++', 'compiler.version': '4.0',
-                     'arch': 'x86_64'},
+                     'arch': 'x86_64', 'os': 'Linux'},
                     {'pack:shared': True, "foo:bar": "qux", "pkg:shared": True}, {}, {}, ref),
                     ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
-                      'compiler.version': '4.0', 'arch': 'x86_64'},
+                      'compiler.version': '4.0', 'arch': 'x86_64', 'os': 'Linux'},
                      {'pack:shared': False, "foo:bar": "qux", "pkg:shared": True}, {}, {}, ref),
                     (
                     {'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libc++', 'compiler.version': '4.0',
-                     'arch': 'x86_64'},
+                     'arch': 'x86_64', 'os': 'Linux'},
                     {'pack:shared': False, "foo:bar": "qux", "pkg:shared": True}, {}, {}, ref)]
         self.assertEquals([tuple(a) for a in builds], expected)
 
@@ -438,12 +458,12 @@ class GeneratorsTest(unittest.TestCase):
                                         options={"foo:bar": "qux", "pkg:shared": True},
                                         reference=ref)
         expected = [({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
-                      'compiler.version': '4.0', 'arch': 'x86_64'},
+                      'compiler.version': '4.0', 'arch': 'x86_64', 'os': 'Linux'},
                      {"foo:bar": "qux", "pkg:shared": True}, {}, {}, ref),
                     (
                         {'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libc++',
                          'compiler.version': '4.0',
-                         'arch': 'x86_64'},
+                         'arch': 'x86_64', 'os': 'Linux'},
                         {"foo:bar": "qux", "pkg:shared": True}, {}, {}, ref)]
         self.assertEquals([tuple(a) for a in builds], expected)
 
@@ -461,10 +481,14 @@ class GeneratorsTest(unittest.TestCase):
                                    reference=ref)
 
         expected = [
-        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.runtime': 'MDd'}, {}, {}, {}, ref),
-        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.runtime': 'MTd'}, {}, {}, {}, ref),
-        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.runtime': 'MDd'}, {}, {}, {}, ref),
-        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.runtime': 'MTd'}, {}, {}, {}, ref)]
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10',
+          'compiler.runtime': 'MDd', 'os': 'Windows'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10',
+          'compiler.runtime': 'MTd', 'os': 'Windows'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14',
+          'compiler.runtime': 'MDd', 'os': 'Windows'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14',
+          'compiler.runtime': 'MTd', 'os': 'Windows'}, {}, {}, {}, ref)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
@@ -478,13 +502,17 @@ class GeneratorsTest(unittest.TestCase):
                                    options={})
 
         expected = [
-            ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10'},
+            ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
+              'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': False}, {}, {}, None),
-            ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10'},
+            ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
+              'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': True}, {}, {}, None),
-            ({'compiler.runtime': 'MDd', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10'},
+            ({'compiler.runtime': 'MDd', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'Visual Studio',
+              'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': False}, {}, {}, None),
-            ({'compiler.runtime': 'MDd', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10'},
+            ({'compiler.runtime': 'MDd', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'Visual Studio',
+              'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': True}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
@@ -499,9 +527,11 @@ class GeneratorsTest(unittest.TestCase):
                                    cppstds=['17'],
                                    options={})
         expected = [
-        ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.cppstd': '17'},
+        ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
+          'compiler.version': '10', 'compiler.cppstd': '17', 'os': 'Windows'},
           {'libpng:shared': False}, {}, {}, None),
-        ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.cppstd': '17'},
+        ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
+          'compiler.version': '10', 'compiler.cppstd': '17', 'os': 'Windows'},
           {'libpng:shared': True}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
@@ -516,7 +546,8 @@ class GeneratorsTest(unittest.TestCase):
                                    cppstds=['14'],
                                    options={})
         expected = [
-            ({'compiler': 'Visual Studio', 'compiler.runtime': 'MTd', 'compiler.version': '10', 'arch': 'x86', 'compiler.cppstd': '14', 'build_type': 'Debug'},
+            ({'compiler': 'Visual Studio', 'compiler.runtime': 'MTd', 'compiler.version': '10', 'arch': 'x86',
+              'compiler.cppstd': '14', 'build_type': 'Debug', 'os': 'Windows'},
              {'libpng:shared': False}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
@@ -533,13 +564,13 @@ class GeneratorsTest(unittest.TestCase):
 
         expected = [
             ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10',
-              'compiler.cppstd': '14', 'compiler.runtime': 'MDd'}, {}, {}, {}, None),
+              'compiler.cppstd': '14', 'compiler.runtime': 'MDd', 'os': 'Windows'}, {}, {}, {}, None),
             ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10',
-              'compiler.cppstd': '14', 'compiler.runtime': 'MTd'}, {}, {}, {}, None),
+              'compiler.cppstd': '14', 'compiler.runtime': 'MTd', 'os': 'Windows'}, {}, {}, {}, None),
             ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14',
-              'compiler.cppstd': '14', 'compiler.runtime': 'MDd'}, {}, {}, {}, None),
+              'compiler.cppstd': '14', 'compiler.runtime': 'MDd', 'os': 'Windows'}, {}, {}, {}, None),
             ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14',
-              'compiler.cppstd': '14', 'compiler.runtime': 'MTd'}, {}, {}, {}, None)]
+              'compiler.cppstd': '14', 'compiler.runtime': 'MTd', 'os': 'Windows'}, {}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
@@ -555,16 +586,16 @@ class GeneratorsTest(unittest.TestCase):
 
         expected = [
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': False}, {}, {}, None),
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': True}, {}, {}, None),
             ({'compiler.runtime': 'MDd', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': False}, {}, {}, None),
             ({'compiler.runtime': 'MDd', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': True}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
@@ -580,10 +611,10 @@ class GeneratorsTest(unittest.TestCase):
                                    options={})
         expected = [
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.cppstd': '20', 'compiler.version': '10'},
+              'compiler.cppstd': '20', 'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': False}, {}, {}, None),
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.cppstd': '20', 'compiler.version': '10'},
+              'compiler.cppstd': '20', 'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': True}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
@@ -599,7 +630,7 @@ class GeneratorsTest(unittest.TestCase):
                                    options={})
         expected = [
             ({'compiler': 'Visual Studio', 'compiler.runtime': 'MTd', 'compiler.version': '10', 'arch': 'x86',
-              'compiler.cppstd': '20', 'build_type': 'Debug'},
+              'compiler.cppstd': '20', 'build_type': 'Debug', 'os': 'Windows'},
              {'libpng:shared': False}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
@@ -618,13 +649,13 @@ class GeneratorsTest(unittest.TestCase):
 
         expected = [
             ({'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'Visual Studio', 'compiler.version': '10',
-              'compiler.cppstd': '14', 'compiler.runtime': 'MD'}, {}, {}, {}, None),
+              'compiler.cppstd': '14', 'compiler.runtime': 'MD', 'os': 'Windows'}, {}, {}, {}, None),
             ({'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'Visual Studio', 'compiler.version': '10',
-              'compiler.cppstd': '14', 'compiler.runtime': 'MT'}, {}, {}, {}, None),
+              'compiler.cppstd': '14', 'compiler.runtime': 'MT', 'os': 'Windows'}, {}, {}, {}, None),
             ({'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'Visual Studio', 'compiler.version': '14',
-              'compiler.cppstd': '14', 'compiler.runtime': 'MD'}, {}, {}, {}, None),
+              'compiler.cppstd': '14', 'compiler.runtime': 'MD', 'os': 'Windows'}, {}, {}, {}, None),
             ({'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'Visual Studio', 'compiler.version': '14',
-              'compiler.cppstd': '14', 'compiler.runtime': 'MT'}, {}, {}, {}, None)]
+              'compiler.cppstd': '14', 'compiler.runtime': 'MT', 'os': 'Windows'}, {}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
@@ -640,16 +671,16 @@ class GeneratorsTest(unittest.TestCase):
 
         expected = [
             ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'Release', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': False}, {}, {}, None),
             ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'Release', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': True}, {}, {}, None),
             ({'compiler.runtime': 'MD', 'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': False}, {}, {}, None),
             ({'compiler.runtime': 'MD', 'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': True}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
@@ -665,10 +696,10 @@ class GeneratorsTest(unittest.TestCase):
                                    options={})
         expected = [
             ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'Release', 'compiler': 'Visual Studio',
-              'compiler.cppstd': '17', 'compiler.version': '10'},
+              'compiler.cppstd': '17', 'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': False}, {}, {}, None),
             ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'Release', 'compiler': 'Visual Studio',
-              'compiler.cppstd': '17', 'compiler.version': '10'},
+              'compiler.cppstd': '17', 'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': True}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
@@ -685,7 +716,7 @@ class GeneratorsTest(unittest.TestCase):
         expected = [
             ({'compiler': 'Visual Studio', 'compiler.runtime': 'MT',
               'compiler.cppstd': '17', 'compiler.version': '10', 'arch': 'x86',
-              'build_type': 'Release'},
+              'build_type': 'Release', 'os': 'Windows'},
              {'libpng:shared': False}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
@@ -704,13 +735,13 @@ class GeneratorsTest(unittest.TestCase):
 
         expected = [
             ({'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio', 'compiler.version': '10',
-              'compiler.runtime': 'MD'}, {}, {}, {}, None),
+              'compiler.runtime': 'MD', 'os': 'Windows'}, {}, {}, {}, None),
             ({'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio', 'compiler.version': '10',
-              'compiler.runtime': 'MT'}, {}, {}, {}, None),
+              'compiler.runtime': 'MT', 'os': 'Windows'}, {}, {}, {}, None),
             ({'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio', 'compiler.version': '14',
-              'compiler.runtime': 'MD'}, {}, {}, {}, None),
+              'compiler.runtime': 'MD', 'os': 'Windows'}, {}, {}, {}, None),
             ({'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio', 'compiler.version': '14',
-              'compiler.runtime': 'MT'}, {}, {}, {}, None)]
+              'compiler.runtime': 'MT', 'os': 'Windows'}, {}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
@@ -726,16 +757,16 @@ class GeneratorsTest(unittest.TestCase):
 
         expected = [
             ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio',
-              'compiler.cppstd': '14', 'compiler.version': '10'},
+              'compiler.cppstd': '14', 'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': False}, {}, {}, None),
             ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio',
-              'compiler.cppstd': '14', 'compiler.version': '10'},
+              'compiler.cppstd': '14', 'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': True}, {}, {}, None),
             ({'compiler.runtime': 'MD', 'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio',
-              'compiler.cppstd': '14', 'compiler.version': '10'},
+              'compiler.cppstd': '14', 'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': False}, {}, {}, None),
             ({'compiler.runtime': 'MD', 'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio',
-              'compiler.cppstd': '14', 'compiler.version': '10'},
+              'compiler.cppstd': '14', 'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': True}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
@@ -751,10 +782,10 @@ class GeneratorsTest(unittest.TestCase):
                                    options={})
         expected = [
             ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio',
-              'compiler.cppstd': '14', 'compiler.version': '10'},
+              'compiler.cppstd': '14', 'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': False}, {}, {}, None),
             ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio',
-              'compiler.cppstd': '14', 'compiler.version': '10'},
+              'compiler.cppstd': '14', 'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': True}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
@@ -769,7 +800,7 @@ class GeneratorsTest(unittest.TestCase):
                                    options={})
         expected = [
             ({'compiler': 'Visual Studio', 'compiler.runtime': 'MT', 'compiler.version': '10', 'arch': 'x86',
-              'build_type': 'RelWithDebInfo'},
+              'build_type': 'RelWithDebInfo', 'os': 'Windows'},
              {'libpng:shared': False}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
@@ -787,13 +818,13 @@ class GeneratorsTest(unittest.TestCase):
 
         expected = [
             ({'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio', 'compiler.version': '10',
-              'compiler.cppstd': '20', 'compiler.runtime': 'MD'}, {}, {}, {}, None),
+              'compiler.cppstd': '20', 'compiler.runtime': 'MD', 'os': 'Windows'}, {}, {}, {}, None),
             ({'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio', 'compiler.version': '10',
-              'compiler.cppstd': '20', 'compiler.runtime': 'MT'}, {}, {}, {}, None),
+              'compiler.cppstd': '20', 'compiler.runtime': 'MT', 'os': 'Windows'}, {}, {}, {}, None),
             ({'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio', 'compiler.version': '14',
-              'compiler.cppstd': '20', 'compiler.runtime': 'MD'}, {}, {}, {}, None),
+              'compiler.cppstd': '20', 'compiler.runtime': 'MD', 'os': 'Windows'}, {}, {}, {}, None),
             ({'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio', 'compiler.version': '14',
-              'compiler.cppstd': '20', 'compiler.runtime': 'MT'}, {}, {}, {}, None)]
+              'compiler.cppstd': '20', 'compiler.runtime': 'MT', 'os': 'Windows'}, {}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
@@ -808,16 +839,16 @@ class GeneratorsTest(unittest.TestCase):
 
         expected = [
             ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': False}, {}, {}, None),
             ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': True}, {}, {}, None),
             ({'compiler.runtime': 'MD', 'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': False}, {}, {}, None),
             ({'compiler.runtime': 'MD', 'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio',
-              'compiler.version': '10'},
+              'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': True}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
@@ -832,10 +863,10 @@ class GeneratorsTest(unittest.TestCase):
                                    options={})
         expected = [
             ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio',
-              'compiler.cppstd': '14', 'compiler.version': '10'},
+              'compiler.cppstd': '14', 'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': False}, {}, {}, None),
             ({'compiler.runtime': 'MD', 'arch': 'x86', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio',
-              'compiler.cppstd': '14', 'compiler.version': '10'},
+              'compiler.cppstd': '14', 'compiler.version': '10', 'os': 'Windows'},
              {'libpng:shared': True}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
@@ -850,7 +881,7 @@ class GeneratorsTest(unittest.TestCase):
                                    options={})
         expected = [
             ({'compiler': 'Visual Studio', 'compiler.runtime': 'MT', 'compiler.version': '10', 'arch': 'x86',
-              'build_type': 'MinSizeRel'},
+              'build_type': 'MinSizeRel', 'os': 'Windows'},
              {'libpng:shared': False}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
@@ -868,14 +899,22 @@ class GeneratorsTest(unittest.TestCase):
                                    reference=ref)
 
         expected = [
-        ({'arch': 'x86', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.cppstd': '14', 'compiler.runtime': 'MD'}, {}, {}, {}, ref),
-        ({'arch': 'x86', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.cppstd': '14', 'compiler.runtime': 'MD'}, {}, {}, {}, ref),
-        ({'arch': 'x86', 'build_type': 'Release', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.cppstd': '14', 'compiler.runtime': 'MD'}, {}, {}, {}, ref),
-        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10', 'compiler.cppstd': '14', 'compiler.runtime': 'MDd'}, {}, {}, {}, ref),
-        ({'arch': 'x86', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.cppstd': '14', 'compiler.runtime': 'MD'}, {}, {}, {}, ref),
-        ({'arch': 'x86', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.cppstd': '14', 'compiler.runtime': 'MD'}, {}, {}, {}, ref),
-        ({'arch': 'x86', 'build_type': 'Release', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.cppstd': '14', 'compiler.runtime': 'MD'}, {}, {}, {}, ref),
-        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14', 'compiler.cppstd': '14', 'compiler.runtime': 'MDd'}, {}, {}, {}, ref)]
+        ({'arch': 'x86', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio', 'compiler.version': '10',
+          'compiler.cppstd': '14', 'compiler.runtime': 'MD', 'os': 'Windows'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio', 'compiler.version': '10',
+          'compiler.cppstd': '14', 'compiler.runtime': 'MD', 'os': 'Windows'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Release', 'compiler': 'Visual Studio', 'compiler.version': '10',
+          'compiler.cppstd': '14', 'compiler.runtime': 'MD', 'os': 'Windows'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10',
+          'compiler.cppstd': '14', 'compiler.runtime': 'MDd', 'os': 'Windows'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'MinSizeRel', 'compiler': 'Visual Studio', 'compiler.version': '14',
+          'compiler.cppstd': '14', 'compiler.runtime': 'MD', 'os': 'Windows'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'RelWithDebInfo', 'compiler': 'Visual Studio', 'compiler.version': '14',
+          'compiler.cppstd': '14', 'compiler.runtime': 'MD', 'os': 'Windows'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Release', 'compiler': 'Visual Studio', 'compiler.version': '14',
+          'compiler.cppstd': '14', 'compiler.runtime': 'MD', 'os': 'Windows'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14',
+          'compiler.cppstd': '14', 'compiler.runtime': 'MDd', 'os': 'Windows'}, {}, {}, {}, ref)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
@@ -893,13 +932,13 @@ class GeneratorsTest(unittest.TestCase):
 
         expected = [
             ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10',
-              'compiler.runtime': 'MDd'}, {"msvc:sdk": 10, "pkg:shared": True}, {}, {}, ref),
+              'compiler.runtime': 'MDd', 'os': 'Windows'}, {"msvc:sdk": 10, "pkg:shared": True}, {}, {}, ref),
             ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '10',
-              'compiler.runtime': 'MTd'}, {"msvc:sdk": 10, "pkg:shared": True}, {}, {}, ref),
+              'compiler.runtime': 'MTd', 'os': 'Windows'}, {"msvc:sdk": 10, "pkg:shared": True}, {}, {}, ref),
             ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14',
-              'compiler.runtime': 'MDd'}, {"msvc:sdk": 10, "pkg:shared": True}, {}, {}, ref),
+              'compiler.runtime': 'MDd', 'os': 'Windows'}, {"msvc:sdk": 10, "pkg:shared": True}, {}, {}, ref),
             ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio', 'compiler.version': '14',
-              'compiler.runtime': 'MTd'}, {"msvc:sdk": 10, "pkg:shared": True}, {}, {}, ref)]
+              'compiler.runtime': 'MTd', 'os': 'Windows'}, {"msvc:sdk": 10, "pkg:shared": True}, {}, {}, ref)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
@@ -914,16 +953,16 @@ class GeneratorsTest(unittest.TestCase):
 
         expected = [
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.version': '10', 'compiler.cppstd': '17'},
+              'compiler.version': '10', 'compiler.cppstd': '17', 'os': 'Windows'},
              {'libpng:shared': False, "pkg:shared": False, "pkg:foo": "bar"}, {}, {}, None),
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.version': '10', 'compiler.cppstd': '17'},
+              'compiler.version': '10', 'compiler.cppstd': '17', 'os': 'Windows'},
              {'libpng:shared': True, "pkg:shared": False, "pkg:foo": "bar"}, {}, {}, None),
             ({'compiler.runtime': 'MDd', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.version': '10', 'compiler.cppstd': '17'},
+              'compiler.version': '10', 'compiler.cppstd': '17', 'os': 'Windows'},
              {'libpng:shared': False, "pkg:shared": False, "pkg:foo": "bar"}, {}, {}, None),
             ({'compiler.runtime': 'MDd', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.version': '10', 'compiler.cppstd': '17'},
+              'compiler.version': '10', 'compiler.cppstd': '17', 'os': 'Windows'},
              {'libpng:shared': True, "pkg:shared": False, "pkg:foo": "bar"}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
@@ -938,10 +977,10 @@ class GeneratorsTest(unittest.TestCase):
                                    options={"pkg:shared": False, "pkg:fPIC": False})
         expected = [
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.version': '10', 'compiler.cppstd': '14'},
+              'compiler.version': '10', 'compiler.cppstd': '14', 'os': 'Windows'},
              {'libpng:shared': False, "pkg:shared": False, "pkg:fPIC": False}, {}, {}, None),
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.version': '10', 'compiler.cppstd': '14'},
+              'compiler.version': '10', 'compiler.cppstd': '14', 'os': 'Windows'},
              {'libpng:shared': True, "pkg:shared": False, "pkg:fPIC": False}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
@@ -959,10 +998,10 @@ class GeneratorsTest(unittest.TestCase):
                                    options={})
         expected = [
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.version': '15', 'compiler.cppstd': '17', 'compiler.toolset': 'v140'},
+              'compiler.version': '15', 'compiler.cppstd': '17', 'compiler.toolset': 'v140', 'os': 'Windows'},
              {}, {}, {}, None),
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.version': '15', 'compiler.cppstd': '17', 'compiler.toolset': 'v140_xp'},
+              'compiler.version': '15', 'compiler.cppstd': '17', 'compiler.toolset': 'v140_xp', 'os': 'Windows'},
              {}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
@@ -991,10 +1030,10 @@ class GeneratorsTest(unittest.TestCase):
                                    options={})
         expected = [
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.cppstd': '14', 'compiler.version': '15'},
+              'compiler.cppstd': '14', 'compiler.version': '15', 'os': 'Windows'},
              {}, {}, {}, None),
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.cppstd': '17', 'compiler.version': '15'},
+              'compiler.cppstd': '17', 'compiler.version': '15', 'os': 'Windows'},
              {}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
