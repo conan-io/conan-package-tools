@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 
 def get_bool_from_env(var_name):

@@ -979,7 +979,6 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 
     CONAN_CLANG_VERSIONS = "3.8,3.9,4.0"
 
-
 # FULL REFERENCE
 
 
@@ -1053,6 +1052,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **docker_entry_script**: Command to be executed before to build when running Docker.
 - **pip_install**: Package list to be installed by pip before to build. e.j ["foo", "bar"]
 - **docker_32_images**: If defined, and the current build is arch="x86" the docker image name will be appended with "-i386". e.j: "conanio/gcc63-i386"
+- **docker_shell**: Shell command to be executed by Docker. e.j: "/bin/bash -c" (Linux), "cmd /C" (Windows)
 - **curpage**: Current page of packages to create
 - **total_pages**: Total number of pages
 - **vs10_x86_64_enabled**: Flag indicating whether or not to build for VS10 64bits. Default [False]
@@ -1062,6 +1062,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **upload_only_recipe**: If defined, will try to upload **only** the recipes. The built packages will **not** be uploaded. Default [False]
 - **upload_dependencies**: Will try to upload dependencies to your remote. Default [False]
 - **build_types**: List containing specific build types. Default ["Release", "Debug"]
+- **cppstds**: List containing specific cpp standards. Default None
 - **skip_check_credentials**: Conan will skip checking the user credentials before building the packages. And if no user/remote is specified, will try to upload with the
   already stored credentiales in the local cache. Default [False]
 - **allow_gcc_minors** Declare this variable if you want to allow gcc >=5 versions with the minor (5.1, 6.3 etc).
@@ -1074,7 +1075,10 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **test_folder**: Custom test folder consumed by Conan create, e.j .conan/test_package
 - **conanfile**: Custom conanfile consumed by Conan create. e.j. conanfile.py
 - **config_url**: Conan config URL be installed before to build e.j https://github.com/bincrafters/conan-config.git
+- **config_args**: Conan config arguments used when installing conan config
 - **force_selinux**: Force docker to relabel file objects on the shared volumes
+- **skip_recipe_export**: If True, the package recipe will only be exported on the first build. Default [False]
+- **update_dependencies**: Update all dependencies before building e.g conan create -u
 
 Upload related parameters:
 
@@ -1175,6 +1179,7 @@ This is especially useful for CI integration.
 - **CONAN_ARCHS**: Architectures to build for, comma separated, e.g. "x86,x86_64"
 - **CONAN_OPTIONS**: Conan build options, comma separated, e.g. "foobar:with_bar=True,foobar:with_qux=False"
 - **CONAN_BUILD_TYPES**: Build types to build for, comma separated, e.g. "Release,Debug"
+- **CONAN_CPPSTDS**: List containing values for `compiler.cppstd`. Default None
 - **CONAN_VISUAL_VERSIONS**: Visual versions, comma separated, e.g. "12,14"
 - **CONAN_VISUAL_RUNTIMES**: Visual runtimes, comma separated, e.g. "MT,MD"
 - **CONAN_VISUAL_TOOLSETS**: Map Visual versions to toolsets, e.g. `14=v140;v140_xp,12=v120_xp`
@@ -1189,6 +1194,7 @@ This is especially useful for CI integration.
 - **CONAN_ALWAYS_UPDATE_CONAN_DOCKER**: If defined, "conan package tools" and "conan" will be installed and upgraded in the docker image in every build execution
   and the container won't be commited with the modifications.
 - **CONAN_DOCKER_32_IMAGES**: If defined, and the current build is arch="x86" the docker image name will be appended with "-i386". e.j: "conanio/gcc63-i386"
+- **CONAN_DOCKER_SHELL**: Shell command to be executed by Docker. e.j: "/bin/bash -c" (Linux), "cmd /C" (Windows)
 - **CONAN_STABLE_BRANCH_PATTERN**: Regular expression, if current git branch matches this pattern, the packages will be uploaded to *CONAN_STABLE_CHANNEL* channel. Default "master". E.j: "release/*"
 - **CONAN_STABLE_CHANNEL**: Stable channel name, default "stable"
 - **CONAN_CHANNEL**: Channel where your packages will be uploaded if the previous parameter doesn't match
@@ -1209,11 +1215,14 @@ This is especially useful for CI integration.
     - "outdated": Build only missing or if the available package is not built with the current recipe. Useful to upload new configurations, e.j packages for a new compiler without
       rebuild all packages.
 - **CONAN_CONFIG_URL**: Conan config URL be installed before to build e.j https://github.com/bincrafters/conan-config.git
+- **CONAN_CONFIG_ARGS**: Conan config arguments used when installing conan config
 - **CONAN_BASE_PROFILE**: Apply options, settings, etc. to this profile instead of `default`.
 - **CONAN_IGNORE_SKIP_CI**: Ignore `[skip ci]` in commit message.
 - **CONAN_CONANFILE**: Custom conanfile consumed by Conan create. e.j. conanfile.py
 - **CPT_TEST_FOLDER**: Custom test_package path, e.j .conan/test_package
 - **CONAN_FORCE_SELINUX**: Force docker to relabel file objects on the shared volumes
+- **CONAN_SKIP_RECIPE_EXPORT**: If defined, the package recipe will only be exported on the first build.
+- **CPT_UPDATE_DEPENDENCIES**: Update all dependencies before building e.g conan create -u
 
 
 # Full example

@@ -49,8 +49,10 @@ def load_cf_class(path, conan_api):
             conan_api.create_app()
         remotes = conan_api.app.cache.registry.load_remotes()
         conan_api.app.python_requires.enable_remotes(remotes=remotes)
-        return conan_api.app.loader.load_class(path)
-
+        if Version(client_version) < Version("1.20.0"):
+            return conan_api.app.loader.load_class(path)
+        else:
+            return conan_api.app.loader.load_basic(path)
 
 class PlatformInfo(object):
     """Easy mockable for testing"""
@@ -106,6 +108,7 @@ class ConanMultiPackager(object):
                  upload_only_when_tag=None,
                  upload_only_recipe=None,
                  build_types=None,
+                 cppstds=None,
                  skip_check_credentials=False,
                  allow_gcc_minors=False,
                  exclude_vcvars_precommand=False,
@@ -115,6 +118,7 @@ class ConanMultiPackager(object):
                  docker_entry_script=None,
                  docker_32_images=None,
                  docker_conan_home=None,
+                 docker_shell=None,
                  pip_install=None,
                  build_policy=None,
                  always_update_conan_in_docker=False,
@@ -126,8 +130,11 @@ class ConanMultiPackager(object):
                  test_folder=None,
                  cwd=None,
                  config_url=None,
+                 config_args=None,
                  upload_dependencies=None,
-                 force_selinux=None):
+                 force_selinux=None,
+                 skip_recipe_export=False,
+                 update_dependencies=None):
 
         conan_version = get_client_version()
 
@@ -214,7 +221,7 @@ class ConanMultiPackager(object):
 
         self._docker_image = docker_image or os.getenv("CONAN_DOCKER_IMAGE", None)
 
-        # If CONAN_DOCKER_IMAGE is speified, then use docker is True
+        # If CONAN_DOCKER_IMAGE is specified, then use docker is True
         self.use_docker = (use_docker or os.getenv("CONAN_USE_DOCKER", False) or
                            self._docker_image is not None)
 
@@ -226,7 +233,7 @@ class ConanMultiPackager(object):
                                               visual_versions, visual_runtimes, visual_toolsets,
                                               vs10_x86_64_enabled,
                                               mingw_configurations, archs, allow_gcc_minors,
-                                              build_types, options)
+                                              build_types, options, cppstds)
 
         build_policy = (build_policy or
                         self.ci_manager.get_commit_build_policy() or
@@ -254,16 +261,16 @@ class ConanMultiPackager(object):
         if not pip_found or not "pip" in self.pip_command:
             raise Exception("CONAN_PIP_COMMAND: '{}' is not a valid pip command.".format(self.pip_command))
 
-        self.docker_shell = ""
+        self.docker_shell = docker_shell or os.getenv("CONAN_DOCKER_SHELL")
 
         if self.is_wcow:
             if self.docker_conan_home is None:
                 self.docker_conan_home = "C:/Users/ContainerAdministrator"
-            self.docker_shell = "cmd /C"
+                self.docker_shell = docker_shell or "cmd /C"
         else:
             if self.docker_conan_home is None:
                 self.docker_conan_home = "/home/conan"
-            self.docker_shell = "/bin/sh -c"
+                self.docker_shell = docker_shell or "/bin/sh -c"
 
         self.docker_platform_param = ""
         self.lcow_user_workaround = ""
@@ -297,6 +304,8 @@ class ConanMultiPackager(object):
         if "all" in self.upload_dependencies and self.upload_dependencies != "all":
             raise Exception("Upload dependencies only accepts or 'all' or package references. Do not mix both!")
 
+        self.update_dependencies = update_dependencies or get_bool_from_env("CONAN_UPDATE_DEPENDENCIES")
+
         os.environ["CONAN_CHANNEL"] = self.channel
 
         if docker_32_images is not None:
@@ -318,6 +327,10 @@ class ConanMultiPackager(object):
         self.test_folder = test_folder or os.getenv("CPT_TEST_FOLDER")
 
         self.config_url = config_url or os.getenv("CONAN_CONFIG_URL")
+
+        self.skip_recipe_export = skip_recipe_export or \
+                                     get_bool_from_env("CONAN_SKIP_RECIPE_EXPORT")
+        self.config_args = config_args or os.getenv("CONAN_CONFIG_ARGS")
 
         def valid_pair(var, value):
             return (isinstance(value, six.string_types) or
@@ -422,18 +435,25 @@ class ConanMultiPackager(object):
 
     def add_common_builds(self, shared_option_name=None, pure_c=True,
                           dll_with_static_runtime=False, reference=None):
+        if reference:
+            if "@" in reference:
+                reference = ConanFileReference.loads(reference)
+            else:
+                name, version = reference.split("/")
+                reference = ConanFileReference(name, version, self.username, self.channel)
+        else:
+            reference = self.reference
 
-        if not reference and not self.reference:
+        if not reference:
             raise Exception("Specify a CONAN_REFERENCE or name and version fields in the recipe")
 
         if shared_option_name is None:
             if os.path.exists(os.path.join(self.cwd, self.conanfile)):
                 conanfile = load_cf_class(os.path.join(self.cwd, self.conanfile), self.conan_api)
                 if hasattr(conanfile, "options") and conanfile.options and "shared" in conanfile.options:
-                    shared_option_name = "%s:shared" % self.reference.name
+                    shared_option_name = "%s:shared" % reference.name
 
-        tmp = self.build_generator.get_builds(pure_c, shared_option_name, dll_with_static_runtime,
-                                              reference or self.reference)
+        tmp = self.build_generator.get_builds(pure_c, shared_option_name, dll_with_static_runtime, reference)
         self._builds.extend(tmp)
 
     def add(self, settings=None, options=None, env_vars=None, build_requires=None, reference=None):
@@ -552,9 +572,11 @@ class ConanMultiPackager(object):
         self.printer.print_jobs(self.builds_in_current_page)
 
         pulled_docker_images = defaultdict(lambda: False)
-
+        skip_recipe_export = False
+        
         # FIXME: Remove in Conan 1.3, https://github.com/conan-io/conan/issues/2787
-        for build in self.builds_in_current_page:
+        for index, build in enumerate(self.builds_in_current_page):
+            self.printer.print_message("Build: %s/%s" % (index+1, len(self.builds_in_current_page)))
             base_profile_name = base_profile_name or os.getenv("CONAN_BASE_PROFILE")
             if base_profile_name:
                 self.printer.print_message("**************************************************")
@@ -577,8 +599,11 @@ class ConanMultiPackager(object):
                                  upload_only_recipe=self.upload_only_recipe,
                                  test_folder=self.test_folder,
                                  config_url=self.config_url,
+                                 config_args=self.config_args,
                                  upload_dependencies=self.upload_dependencies,
-                                 conanfile=self.conanfile)
+                                 conanfile=self.conanfile,
+                                 skip_recipe_export=skip_recipe_export,
+                                 update_dependencies=self.update_dependencies)
                 r.run()
             else:
                 docker_image = self._get_docker_image(build)
@@ -604,14 +629,19 @@ class ConanMultiPackager(object):
                                        test_folder=self.test_folder,
                                        pip_install=self.pip_install,
                                        config_url=self.config_url,
+                                       config_args=self.config_args,
                                        printer=self.printer,
                                        upload_dependencies=self.upload_dependencies,
                                        conanfile=self.conanfile,
-                                       force_selinux=self.force_selinux)
+                                       force_selinux=self.force_selinux,
+                                       skip_recipe_export=skip_recipe_export,
+                                       update_dependencies=self.update_dependencies)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
                       docker_entry_script=self.docker_entry_script)
                 pulled_docker_images[docker_image] = True
+            
+            skip_recipe_export = self.skip_recipe_export
 
     def _get_docker_image(self, build):
         if self._docker_image:
