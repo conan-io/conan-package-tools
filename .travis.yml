@@ -13,8 +13,7 @@ jobs:
       env: TOXENV=py37-conan-latest
       dist: xenial
 
-    # Macos is slow, only if everything has passed
-    - stage: Macos - all Conan versions
+    - stage: Conan Latest - Macos
       language: generic
       os: osx
       osx_image: xcode8.3
@@ -29,7 +28,7 @@ jobs:
       python: 2.7
       env: TOXENV=py27-conan-dev
     - python: 3.7
-      if: branch != master
+      if: branch != master AND branch !~ /release*/
       env: TOXENV=py37-conan-dev
       dist: xenial
 
