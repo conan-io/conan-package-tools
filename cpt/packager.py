@@ -54,6 +54,7 @@ def load_cf_class(path, conan_api):
         else:
             return conan_api.app.loader.load_basic(path)
 
+
 class PlatformInfo(object):
     """Easy mockable for testing"""
     @staticmethod

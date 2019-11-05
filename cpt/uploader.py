@@ -47,11 +47,9 @@ class Uploader(object):
                                       remote_name=remote_name,
                                       force=True,
                                       retry=int(self._upload_retry))
-            elif client_version <= Version("1.20.0"):
+            else:
                 all_packages = package_id != None
                 self.conan_api.upload(str(reference),
                                       all_packages=all_packages,
                                       remote_name=remote_name,
                                       retry=int(self._upload_retry))
-            else:
-                raise Exception("Incompatible installed Conan version found: %s" % client_version)
