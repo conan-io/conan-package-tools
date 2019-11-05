@@ -25,7 +25,7 @@ jobs:
       env: PYVER=py37 TOXENV=py37-conan-latest
 
     - stage: Conan Development - Linux
-      if: branch != master
+      if: branch != master AND branch !~ /release*/
       python: 2.7
       env: TOXENV=py27-conan-dev
     - python: 3.7
