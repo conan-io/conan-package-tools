@@ -403,7 +403,7 @@ def get_linux_gcc_builds(gcc_versions, archs, shared_option_name, pure_c, build_
                         else:
                             ret.append(get_build("gcc", arch, build_type_it, gcc_version, None,
                                                  None, "Linux", options, reference))
-        return ret
+    return ret
 
 
 def get_linux_clang_builds(clang_versions, archs, shared_option_name, pure_c, build_types, cppstds,
