@@ -317,7 +317,7 @@ Or you can directly iterate the builds to do any change. EX: Remove the GCC 4.6 
         filtered_builds = []
         for settings, options, env_vars, build_requires, reference in builder.items:
             if settings["compiler.version"] != "4.6" and settings["build_type"] != "Debug":
-                 filtered_builds.append([settings, options, env_vars, build_requires])
+                 filtered_builds.append([settings, options, env_vars, build_requires, reference])
         builder.builds = filtered_builds
         builder.run()
 
