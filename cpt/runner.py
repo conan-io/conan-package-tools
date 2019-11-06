@@ -109,7 +109,7 @@ class CreateRunner(object):
                                                         user=user, channel=channel,
                                                         build_modes=self._build_policy,
                                                         profile_name=self._profile_abs_path,
-                                                        test_folder=self._test_folder, 
+                                                        test_folder=self._test_folder,
                                                         not_export=self.skip_recipe_export,
                                                         update=self._update_dependencies)
                             else:
@@ -117,7 +117,7 @@ class CreateRunner(object):
                                                         user=user, channel=channel,
                                                         build_modes=self._build_policy,
                                                         profile_names=[self._profile_abs_path],
-                                                        test_folder=self._test_folder, 
+                                                        test_folder=self._test_folder,
                                                         not_export=self.skip_recipe_export,
                                                         update=self._update_dependencies)
                         except exc_class as e:
@@ -137,6 +137,8 @@ class CreateRunner(object):
                                installed['packages']:
                                 package_id = installed['packages'][0]['id']
                                 if installed['packages'][0]["built"]:
+                                    if "@" not in reference:
+                                        reference += "@"
                                     if self._upload_only_recipe:
                                         self._uploader.upload_recipe(reference, self._upload)
                                     else:
@@ -166,7 +168,7 @@ class DockerCreateRunner(object):
                  printer=None,
                  upload_dependencies=None,
                  conanfile=None,
-                 force_selinux=None, 
+                 force_selinux=None,
                  skip_recipe_export=False,
                  update_dependencies=False):
 
