@@ -23,6 +23,11 @@ class Pkg(ConanFile):
 """
 
     def setUp(self):
+        for var in ["CONAN_USERNAME", "CONAN_CHANNEL", "CONAN_REFERENCE"]:
+            try:
+                del os.environ[var]
+            except:
+                pass
         self._ci_manager = MockCIManager()
 
     def test_dont_upload_non_built_packages(self):
