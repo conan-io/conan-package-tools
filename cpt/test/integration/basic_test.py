@@ -22,21 +22,6 @@ class Pkg(ConanFile):
         with self.assertRaisesRegexp(Exception, "Specify a CONAN_REFERENCE or name and version"):
             mp.add_common_builds()
 
-    def test_missing_username(self):
-        conanfile = """from conans import ConanFile
-class Pkg(ConanFile):
-    name = "lib"
-    version = "1.0"
-    options = {"shared": [True, False]}
-    default_options = "shared=False"
-
-"""
-        self.save_conanfile(conanfile)
-
-        with self.assertRaisesRegexp(Exception, "Instance ConanMultiPackage with 'username' "
-                                                "parameter or use CONAN_USERNAME env variable"):
-            ConanMultiPackager()
-
     @unittest.skipUnless(sys.platform.startswith("win"), "Requires Windows")
     def test_msvc(self):
         conanfile = """from conans import ConanFile
