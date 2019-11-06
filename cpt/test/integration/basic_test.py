@@ -217,3 +217,24 @@ class Pkg(ConanFile):
         self.packager.add({}, {}, {}, {})
         self.packager.run()
         self.assertIn("conanfile                 | custom_recipe.py", self.output)
+
+    def test_partial_reference(self):
+        conanfile = """from conans import ConanFile
+class Pkg(ConanFile):
+    name = "foobar"
+    version = "0.1.0"
+
+    def configure(self):
+        self.output.info("hello all")
+"""
+        tools.save(os.path.join(self.tmp_folder, "conanfile.py"), conanfile)
+        with tools.environment_append({"CONAN_REFERENCE": "foobar/0.1.0@"}):
+            self.packager = ConanMultiPackager(out=self.output.write)
+            self.packager.add({}, {}, {}, {})
+            self.packager.run()
+        self.assertIn("partial_reference         | foobar/0.1.0@", self.output)
+
+        self.packager = ConanMultiPackager(out=self.output.write)
+        self.packager.add({}, {}, {}, {})
+        self.packager.run()
+        self.assertIn("partial_reference         | foobar/0.1.0@", self.output)

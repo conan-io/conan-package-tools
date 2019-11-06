@@ -200,6 +200,24 @@ class Pkg(ConanFile):
             self.assertIn("Uploading package 2/2", tc.out)
             self.assertIn("HALLO", tc.out)
 
+    def test_upload_partial_reference(self):
+        ts = TestServer(users={"user": "password"},
+                        write_permissions=[("lib/1.0", "user")])
+        tc = TestClient(servers={"default": ts}, users={"default": [("user", "password")]})
+        tc.save({"conanfile.py": self.conanfile})
+
+        with environment_append({"CONAN_UPLOAD": ts.fake_url, "CONAN_LOGIN_USERNAME": "user",
+                                 "CONAN_PASSWORD": "password", "CONAN_REFERENCE": "lib/1.0@",
+                                 }):
+
+            mp = get_patched_multipackager(tc, exclude_vcvars_precommand=True)
+            mp.add_common_builds(shared_option_name=False)
+            mp.run()
+
+            self.assertIn("Uploading packages for 'lib/1.0@'", tc.out)
+            self.assertIn("lib/1.0: WARN: HALLO", tc.out)
+
+
 
 class UploadDependenciesTest(unittest.TestCase):
 
