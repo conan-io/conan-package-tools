@@ -10,6 +10,7 @@ from cpt.profiles import save_profile_to_tmp
 from cpt.remotes import RemotesManager
 from cpt.runner import CreateRunner, unscape_env
 from cpt.uploader import Uploader
+from cpt.eraser import Eraser
 
 
 def run():
@@ -29,6 +30,9 @@ def run():
     test_folder = unscape_env(os.getenv("CPT_TEST_FOLDER"))
     reference = ConanFileReference.loads(os.getenv("CONAN_REFERENCE"))
 
+    remove_outdated_packages = unscape_env(os.getenv("CPT_REMOVE_OUTDATED_PACKAGES"))
+    eraser = Eraser(conan_api, remotes_manager, auth_manager, printer, remove_outdated_packages)
+
     profile_text = unscape_env(os.getenv("CPT_PROFILE"))
     abs_profile_path = save_profile_to_tmp(profile_text)
     base_profile_text = unscape_env(os.getenv("CPT_BASE_PROFILE"))
@@ -43,7 +47,7 @@ def run():
                    base_profile_text)
 
     upload = os.getenv("CPT_UPLOAD_ENABLED")
-    runner = CreateRunner(abs_profile_path, reference, conan_api, uploader,
+    runner = CreateRunner(abs_profile_path, reference, conan_api, uploader, eraser=eraser,
                           build_policy=build_policy, printer=printer, upload=upload,
                           upload_only_recipe=upload_only_recipe,
                           test_folder=test_folder, config_url=config_url,
