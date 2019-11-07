@@ -157,9 +157,6 @@ class ConanMultiPackager(object):
         self.remotes_manager = RemotesManager(self.conan_api, self.printer, remotes, upload)
         self.username = username or os.getenv("CONAN_USERNAME", None)
 
-        if not self.username:
-            raise Exception("Instance ConanMultiPackage with 'username' parameter or use "
-                            "CONAN_USERNAME env variable")
         self.skip_check_credentials = skip_check_credentials or get_bool_from_env("CONAN_SKIP_CHECK_CREDENTIALS")
 
         self.auth_manager = AuthManager(self.conan_api, self.printer, login_username, password,
@@ -194,12 +191,11 @@ class ConanMultiPackager(object):
 
         self.stable_branch_pattern = stable_branch_pattern or \
                                      os.getenv("CONAN_STABLE_BRANCH_PATTERN", None)
-        self.specified_channel = channel or os.getenv("CONAN_CHANNEL", "testing")
-        self.specified_channel = self.specified_channel.rstrip()
+
         self.stable_channel = stable_channel or os.getenv("CONAN_STABLE_CHANNEL", "stable")
         self.stable_channel = self.stable_channel.rstrip()
-        self.channel = self._get_channel(self.specified_channel, self.stable_channel, self.upload_only_when_tag)
         self.partial_reference = reference or os.getenv("CONAN_REFERENCE", None)
+        self.channel = self._get_specified_channel(channel, reference)
         self.conanfile = conanfile or os.getenv("CONAN_CONANFILE", "conanfile.py")
 
         if self.partial_reference:
@@ -307,7 +303,8 @@ class ConanMultiPackager(object):
 
         self.update_dependencies = update_dependencies or get_bool_from_env("CONAN_UPDATE_DEPENDENCIES")
 
-        os.environ["CONAN_CHANNEL"] = self.channel
+        if self.channel:
+            os.environ["CONAN_CHANNEL"] = self.channel
 
         if docker_32_images is not None:
             self.docker_32_images = docker_32_images
@@ -544,9 +541,9 @@ class ConanMultiPackager(object):
         def raise_error(field):
             raise Exception("Upload not possible, '%s' is missing!" % field)
 
-        if not self.channel:
+        if not self.channel and "@" not in self.partial_reference:
             raise_error("channel")
-        if not self.username:
+        if not self.username and "@" not in self.partial_reference:
             raise_error("username")
 
         return True
@@ -574,7 +571,7 @@ class ConanMultiPackager(object):
 
         pulled_docker_images = defaultdict(lambda: False)
         skip_recipe_export = False
-        
+
         # FIXME: Remove in Conan 1.3, https://github.com/conan-io/conan/issues/2787
         for index, build in enumerate(self.builds_in_current_page):
             self.printer.print_message("Build: %s/%s" % (index+1, len(self.builds_in_current_page)))
@@ -641,7 +638,7 @@ class ConanMultiPackager(object):
                 r.run(pull_image=not pulled_docker_images[docker_image],
                       docker_entry_script=self.docker_entry_script)
                 pulled_docker_images[docker_image] = True
-            
+
             skip_recipe_export = self.skip_recipe_export
 
     def _get_docker_image(self, build):
@@ -677,6 +674,9 @@ class ConanMultiPackager(object):
         return "conanio/%s%s" % (compiler_name, compiler_version.replace(".", ""))
 
     def _get_channel(self, specified_channel, stable_channel, upload_when_tag):
+        if not specified_channel:
+            return
+
         if self.stable_branch_pattern:
             stable_patterns = [self.stable_branch_pattern]
         else:
@@ -702,3 +702,21 @@ class ConanMultiPackager(object):
             return stable_channel
 
         return specified_channel
+
+    def _get_specified_channel(self, channel, reference):
+        partial_reference = reference or os.getenv("CONAN_REFERENCE", None)
+        specified_channel = None
+        # without name/channel e.g. zlib/1.2.11@
+        if partial_reference:
+            if "@" in partial_reference:
+                specified_channel = channel or os.getenv("CONAN_CHANNEL", None)
+            else:
+                specified_channel = channel or os.getenv("CONAN_CHANNEL", "testing")
+                specified_channel = specified_channel.rstrip()
+        else:
+            if self.username:
+                specified_channel = channel or os.getenv("CONAN_CHANNEL", "testing")
+                specified_channel = specified_channel.rstrip()
+            else:
+                specified_channel = channel or os.getenv("CONAN_CHANNEL", None)
+        return self._get_channel(specified_channel, self.stable_channel, self.upload_only_when_tag)

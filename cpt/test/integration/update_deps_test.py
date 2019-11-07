@@ -40,11 +40,22 @@ class Pkg(ConanFile):
         self.output.info("new foo")
     """
 
+    conanfile_foo_3 = """from conans import ConanFile
+class Pkg(ConanFile):
+    name = "qux"
+    version = "1.0.0"
+    options = {"shared": [True, False]}
+    default_options = "shared=False"
+
+    def build(self):
+        self.output.info("qux")
+    """
+
     conanfile = """from conans import ConanFile
 class Pkg(ConanFile):
     name = "foobar"
     version = "2.0"
-    requires = "bar/0.1.0@foo/stable", "foo/1.0.0@bar/testing"
+    requires = "bar/0.1.0@foo/stable", "foo/1.0.0@bar/testing", "qux/1.0.0"
 
     def build(self):
         self.output.warn("BUILDING")
@@ -54,13 +65,16 @@ class Pkg(ConanFile):
         self._ci_manager = MockCIManager()
         self._server = TestServer(users={"user": "password"},
                                   write_permissions=[("bar/0.1.0@foo/stable", "user"),
-                                                     ("foo/1.0.0@bar/testing", "user")])
+                                                     ("foo/1.0.0@bar/testing", "user"),
+                                                     ("qux/1.0.0", "user")])
         self._client = TestClient(servers={"default": self._server},
                                   users={"default": [("user", "password")]})
         self._client.save({"conanfile_bar.py": self.conanfile_bar})
         self._client.run("export conanfile_bar.py foo/stable")
         self._client.save({"conanfile_foo.py": self.conanfile_foo})
         self._client.run("export conanfile_foo.py bar/testing")
+        self._client.save({"conanfile_foo3.py": self.conanfile_foo_3})
+        self._client.run("export conanfile_foo3.py")
         self._client.save({"conanfile.py": self.conanfile})
 
     def test_update_all_dependencies(self):
@@ -81,6 +95,7 @@ class Pkg(ConanFile):
             self.assertIn("Uploading packages for 'foobar/2.0@user/testing'", self._client.out)
             self.assertIn("Uploading packages for 'bar/0.1.0@foo/stable'", self._client.out)
             self.assertIn("Uploading packages for 'foo/1.0.0@bar/testing'", self._client.out)
+            self.assertIn("Uploading packages for 'qux/1.0.0@'", self._client.out)
 
             # Upload new version of foo/1.0.0@bar/testing and re-add old revision in local cache
             self._client.save({"conanfile_foo.py": self.conanfile_foo_2})
