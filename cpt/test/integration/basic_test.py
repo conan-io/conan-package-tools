@@ -22,21 +22,6 @@ class Pkg(ConanFile):
         with self.assertRaisesRegexp(Exception, "Specify a CONAN_REFERENCE or name and version"):
             mp.add_common_builds()
 
-    def test_missing_username(self):
-        conanfile = """from conans import ConanFile
-class Pkg(ConanFile):
-    name = "lib"
-    version = "1.0"
-    options = {"shared": [True, False]}
-    default_options = "shared=False"
-
-"""
-        self.save_conanfile(conanfile)
-
-        with self.assertRaisesRegexp(Exception, "Instance ConanMultiPackage with 'username' "
-                                                "parameter or use CONAN_USERNAME env variable"):
-            ConanMultiPackager()
-
     @unittest.skipUnless(sys.platform.startswith("win"), "Requires Windows")
     def test_msvc(self):
         conanfile = """from conans import ConanFile
@@ -217,3 +202,24 @@ class Pkg(ConanFile):
         self.packager.add({}, {}, {}, {})
         self.packager.run()
         self.assertIn("conanfile                 | custom_recipe.py", self.output)
+
+    def test_partial_reference(self):
+        conanfile = """from conans import ConanFile
+class Pkg(ConanFile):
+    name = "foobar"
+    version = "0.1.0"
+
+    def configure(self):
+        self.output.info("hello all")
+"""
+        tools.save(os.path.join(self.tmp_folder, "conanfile.py"), conanfile)
+        with tools.environment_append({"CONAN_REFERENCE": "foobar/0.1.0@"}):
+            self.packager = ConanMultiPackager(out=self.output.write)
+            self.packager.add({}, {}, {}, {})
+            self.packager.run()
+        self.assertIn("partial_reference         | foobar/0.1.0@", self.output)
+
+        self.packager = ConanMultiPackager(out=self.output.write)
+        self.packager.add({}, {}, {}, {})
+        self.packager.run()
+        self.assertIn("partial_reference         | foobar/0.1.0@", self.output)
