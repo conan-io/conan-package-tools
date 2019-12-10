@@ -48,7 +48,7 @@ class Pkg(ConanFile):
                                             True, "my_upload_remote"),
                                     skip_check_credentials=True)
             mp.add({}, {}, {})
-            with self.assertRaisesRegexp(ConanException, "Conan interactive mode disabled"):
+            with self.assertRaisesRegexp(ConanException, "Errors uploading some packages"):
                 mp.run()
             self.assertIn("Uploading packages for", self.output)
             self.assertIn("Credentials not specified but 'skip_check_credentials' activated",
