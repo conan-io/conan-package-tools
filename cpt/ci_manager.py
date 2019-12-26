@@ -68,7 +68,7 @@ class CIManager(object):
         matches = prog.match(msg)
         if matches:
             build_policy = matches.groups()[0]
-            if build_policy not in ("never", "outdated", "missing"):
+            if build_policy not in ("never", "outdated", "missing", "all"):
                 raise Exception("Invalid build policy, valid values: never, outdated, missing")
             return build_policy
         return None

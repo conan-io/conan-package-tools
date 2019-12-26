@@ -1072,6 +1072,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
     - "missing": Build only missing packages.
     - "outdated": Build only missing or if the available package is not built with the current recipe. Useful to upload new configurations, e.j packages for a new compiler without
       rebuild all packages.
+    - "all": Build all requirements.
 - **test_folder**: Custom test folder consumed by Conan create, e.j .conan/test_package
 - **conanfile**: Custom conanfile consumed by Conan create. e.j. conanfile.py
 - **config_url**: Conan config URL be installed before to build e.j https://github.com/bincrafters/conan-config.git

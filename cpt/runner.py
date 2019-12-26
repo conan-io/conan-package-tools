@@ -88,7 +88,7 @@ class CreateRunner(object):
                     name, version, user, channel, _ = self._reference
 
                 if self._build_policy:
-                    self._build_policy = [self._build_policy]
+                    self._build_policy = [] if self._build_policy == "all" else [self._build_policy]
                 # https://github.com/conan-io/conan-package-tools/issues/184
                 with tools.environment_append({"_CONAN_CREATE_COMMAND_": "1"}):
                     params = {"name": name, "version": version, "user": user,

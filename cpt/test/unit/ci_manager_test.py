@@ -206,6 +206,13 @@ class CIManagerTest(unittest.TestCase):
             self.assertEquals(manager.get_commit_msg(), "This is a great commit "
                                                         "[build=outdated] End.")
 
+        with tools.environment_append({"TRAVIS": "1",
+                                       "TRAVIS_COMMIT_MESSAGE":
+                                           "This is a great commit [build=all] End."}):
+            manager = CIManager(self.printer)
+            self.assertEquals(manager.get_commit_build_policy(), "all")
+            self.assertEquals(manager.get_commit_msg(), "This is a great commit "
+                                                        "[build=all] End.")
         # Appveyor
         with tools.environment_append({"APPVEYOR": "1",
                                        "APPVEYOR_PULL_REQUEST_NUMBER": "1",
