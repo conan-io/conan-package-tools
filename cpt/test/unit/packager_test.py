@@ -663,7 +663,7 @@ class AppTest(unittest.TestCase):
                                              conan_api=self.conan_api,
                                              remotes="otherurl",
                                              platform_info=platform_mock_for("Darwin"),
-                                             build_policy="missing",
+                                             build_policy=build_policy,
                                              ci_manager=self.ci_manager)
                 builder.add_common_builds()
                 builder.run()
