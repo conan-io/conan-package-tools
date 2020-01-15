@@ -341,6 +341,31 @@ Sometimes you want to use Conan as [in-source](https://docs.conan.io/en/latest/c
 
 As SHA-1 is 40 digits long, you could format the result to short size
 
+## Save created packages summary
+In case you want to integrate CPT with other tools, for example you want to have build logic after creating packages, you can save a json report about all configurations and packages.
+
+**Examples**:
+
+    from cpt.packager import ConanMultiPackager
+
+    if __name__ == "__main__":
+        builder = ConanMultiPackager()
+        builder.add_common_builds()
+        builder.run(summary_file='cpt_summary_file.json')
+
+
+    from cpt.packager import ConanMultiPackager
+
+    if __name__ == "__main__":
+        builder = ConanMultiPackager()
+        builder.add_common_builds()
+        builder.run(summary_file='cpt_summary_file.json')
+        builder.save_packages_summary('cpt_summary_file.json')
+
+
+Alternatively you can use the `CPT_SUMMARY_FILE` environment variable to set the summary file path
+
+
 
 ## Using Docker
 
