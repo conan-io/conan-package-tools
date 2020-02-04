@@ -26,21 +26,22 @@ from cpt.uploader import Uploader
 
 def load_cf_class(path, conan_api):
     client_version = get_client_version()
-    if Version(client_version) < Version("1.7.0"):
+    client_version = Version(client_version)
+    if client_version < Version("1.7.0"):
         from conans.client.loader_parse import load_conanfile_class
         return load_conanfile_class(path)
-    elif Version(client_version) < Version("1.14.0"):
+    elif client_version < Version("1.14.0"):
         return conan_api._loader.load_class(path)
-    elif Version(client_version) < Version("1.15.0"):
+    elif client_version < Version("1.15.0"):
         remotes = conan_api._cache.registry.remotes.list
         for remote in remotes:
             conan_api.python_requires.enable_remotes(remote_name=remote)
         return conan_api._loader.load_class(path)
-    elif Version(client_version) < Version("1.16.0"):
+    elif client_version < Version("1.16.0"):
         remotes = conan_api._cache.registry.load_remotes()
         conan_api.python_requires.enable_remotes(remotes=remotes)
         return conan_api._loader.load_class(path)
-    elif Version(client_version) < Version("1.18.0"):
+    elif client_version < Version("1.18.0"):
         remotes = conan_api._cache.registry.load_remotes()
         conan_api._python_requires.enable_remotes(remotes=remotes)
         return conan_api._loader.load_class(path)
@@ -49,10 +50,12 @@ def load_cf_class(path, conan_api):
             conan_api.create_app()
         remotes = conan_api.app.cache.registry.load_remotes()
         conan_api.app.python_requires.enable_remotes(remotes=remotes)
-        if Version(client_version) < Version("1.20.0"):
+        if client_version < Version("1.20.0"):
             return conan_api.app.loader.load_class(path)
-        else:
+        elif client_version < Version("1.21.0"):
             return conan_api.app.loader.load_basic(path)
+        else:
+            return conan_api.app.loader.load_named(path, None, None, None, None)
 
 
 class PlatformInfo(object):
