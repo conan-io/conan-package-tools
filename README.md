@@ -359,7 +359,7 @@ In case you want to integrate CPT with other tools, for example you want to have
     if __name__ == "__main__":
         builder = ConanMultiPackager()
         builder.add_common_builds()
-        builder.run(summary_file='cpt_summary_file.json')
+        builder.run()
         builder.save_packages_summary('cpt_summary_file.json')
 
 
