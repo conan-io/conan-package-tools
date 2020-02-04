@@ -42,4 +42,4 @@ class Pkg(ConanFile):
         mulitpackager.run()
         self.assertIn("Python requires\n    pyreq/0.1@user/channel", client.out)
         self.assertIn("Packages\n    foo/1.0.0@user/testing", client.out)
-
+        self.assertIn("foo/1.0.0@user/testing: 123,234", client.out)
