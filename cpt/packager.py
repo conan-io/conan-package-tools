@@ -50,6 +50,7 @@ def load_cf_class(path, conan_api):
             conan_api.create_app()
         remotes = conan_api.app.cache.registry.load_remotes()
         conan_api.app.python_requires.enable_remotes(remotes=remotes)
+        conan_api.app.pyreq_loader.enable_remotes(remotes=remotes)
         if client_version < Version("1.20.0"):
             return conan_api.app.loader.load_class(path)
         elif client_version < Version("1.21.0"):

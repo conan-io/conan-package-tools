@@ -20,19 +20,19 @@ class Pkg(ConanFile):
         conanfile = """from conans import ConanFile
 
 class Pkg(ConanFile):
-    name = "foo"
+    name = "pyreq"
     version = "1.0.0"
-    python_requires = "pyreq/0.1@user/channel"
+    python_requires = "pyreq_base/0.1@user/channel"
 
     def build(self):
-        v = self.python_requires["pyreq"].module.myvar
-        f = self.python_requires["pyreq"].module.myfunct()
+        v = self.python_requires["pyreq_base"].module.myvar
+        f = self.python_requires["pyreq_base"].module.myfunct()
         self.output.info("%s,%s" % (v, f))
 """
 
         client = TestClient()
         client.save({"conanfile_base.py": base_conanfile})
-        client.run("export conanfile_base.py pyreq/0.1@user/channel")
+        client.run("export conanfile_base.py pyreq_base/0.1@user/channel")
 
         client.save({"conanfile.py": conanfile})
         mulitpackager = get_patched_multipackager(client, username="user",
@@ -40,6 +40,6 @@ class Pkg(ConanFile):
                                                           exclude_vcvars_precommand=True)
         mulitpackager.add({}, {})
         mulitpackager.run()
-        self.assertIn("Python requires\n    pyreq/0.1@user/channel", client.out)
-        self.assertIn("Packages\n    foo/1.0.0@user/testing", client.out)
-        self.assertIn("foo/1.0.0@user/testing: 123,234", client.out)
+        self.assertIn("Python requires\n    pyreq_base/0.1@user/channel", client.out)
+        self.assertIn("Packages\n    pyreq/1.0.0@user/testing", client.out)
+        self.assertIn("pyreq/1.0.0@user/testing: 123,234", client.out)
