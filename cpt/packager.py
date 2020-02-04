@@ -447,7 +447,7 @@ class ConanMultiPackager(object):
 
         if shared_option_name is None:
             env_shared_option_name = os.getenv("CONAN_SHARED_OPTION_NAME", None)
-            shared_option_name = env_shared_option_name if env_shared_option_name != "False" else False
+            shared_option_name = env_shared_option_name if str(env_shared_option_name).lower() != "false" else False
 
         if shared_option_name is None:
             if os.path.exists(os.path.join(self.cwd, self.conanfile)):
