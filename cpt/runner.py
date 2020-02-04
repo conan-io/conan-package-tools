@@ -43,6 +43,7 @@ class CreateRunner(object):
         self._upload_dependencies = self._upload_dependencies or []
         self.skip_recipe_export = skip_recipe_export
         self._update_dependencies = update_dependencies
+        self._results = None
 
         patch_default_base_profile(conan_api, profile_abs_path)
         client_version = get_client_version()
@@ -61,6 +62,10 @@ class CreateRunner(object):
     @property
     def settings(self):
         return self._profile.settings
+
+    @property
+    def results(self):
+        return self._results
 
     def run(self):
         client_version = get_client_version()
@@ -105,7 +110,7 @@ class CreateRunner(object):
 
                         try:
                             if client_version < Version("1.12.0"):
-                                r = self._conan_api.create(self._conanfile, name=name, version=version,
+                                self._results = self._conan_api.create(self._conanfile, name=name, version=version,
                                                         user=user, channel=channel,
                                                         build_modes=self._build_policy,
                                                         profile_name=self._profile_abs_path,
@@ -113,7 +118,7 @@ class CreateRunner(object):
                                                         not_export=self.skip_recipe_export,
                                                         update=self._update_dependencies)
                             else:
-                                r = self._conan_api.create(self._conanfile, name=name, version=version,
+                                self._results = self._conan_api.create(self._conanfile, name=name, version=version,
                                                         user=user, channel=channel,
                                                         build_modes=self._build_policy,
                                                         profile_names=[self._profile_abs_path],
@@ -126,7 +131,7 @@ class CreateRunner(object):
                                                        "%s" % str(e))
                             self.printer.print_rule()
                             return
-                        for installed in r['installed']:
+                        for installed in self._results['installed']:
                             reference = installed["recipe"]["id"]
                             if client_version >= Version("1.10.0"):
                                 reference = ConanFileReference.loads(reference)

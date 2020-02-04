@@ -184,6 +184,7 @@ class ConanMultiPackager(object):
 
         self._builds = []
         self._named_builds = {}
+        self._packages_summary = []
 
         self._update_conan_in_docker = always_update_conan_in_docker or get_bool_from_env("CONAN_ALWAYS_UPDATE_CONAN_DOCKER")
 
@@ -372,6 +373,21 @@ class ConanMultiPackager(object):
             return ""
 
     @property
+    def packages_summary(self):
+        return self._packages_summary
+
+    def save_packages_summary(self, file):
+        self.printer.print_message("Saving packages summary to " + file)
+        import json
+        import datetime
+        def default(o):
+            if isinstance(o, (datetime.date, datetime.datetime)):
+                return o.isoformat()
+
+        with open(file, 'w') as outfile:
+            json.dump(self.packages_summary, outfile, default = default)
+
+    @property
     def items(self):
         return self._builds
 
@@ -491,7 +507,7 @@ class ConanMultiPackager(object):
             updated_builds.append(build)
         self._builds = updated_builds
 
-    def run(self, base_profile_name=None):
+    def run(self, base_profile_name=None, summary_file=None):
         self._check_conan_version()
 
         env_vars = self.auth_manager.env_vars()
@@ -515,6 +531,10 @@ class ConanMultiPackager(object):
                                                           self.pip_command, packages))
 
             self.run_builds(base_profile_name=base_profile_name)
+
+        summary_file = summary_file or os.getenv("CPT_SUMMARY_FILE", None)
+        if summary_file:
+            self.save_packages_summary(summary_file)
 
     def _upload_enabled(self):
         if not self.remotes_manager.upload_remote_name:
@@ -603,6 +623,7 @@ class ConanMultiPackager(object):
                                  skip_recipe_export=skip_recipe_export,
                                  update_dependencies=self.update_dependencies)
                 r.run()
+                self._packages_summary.append({"configuration":  build, "package" : r.results})
             else:
                 docker_image = self._get_docker_image(build)
                 r = DockerCreateRunner(profile_text, base_profile_text, base_profile_name,
