@@ -263,3 +263,23 @@ class Pkg(ConanFile):
             with open(json_file) as json_content:
                 json_data = json.load(json_content)
                 self.assertFalse(json_data[0]["package"]["error"])
+
+    def test_custom_name_version(self):
+        conanfile = """from conans import ConanFile
+from datetime import date
+class Pkg(ConanFile):
+
+    def configure(self):
+        self.output.info("hello all")
+
+    def set_name(self):
+        self.name = "foobar"
+
+    def set_version(self):
+        today = date.today()
+        self.version = today.strftime("%Y%B%d")
+"""
+        tools.save(os.path.join(self.tmp_folder, "conanfile.py"), conanfile)
+        self.packager = ConanMultiPackager(out=self.output.write)
+        self.packager.add_common_builds(pure_c=False)
+        self.packager.run()
