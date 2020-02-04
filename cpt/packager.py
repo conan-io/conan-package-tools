@@ -445,7 +445,9 @@ class ConanMultiPackager(object):
         if not reference:
             raise Exception("Specify a CONAN_REFERENCE or name and version fields in the recipe")
 
-        shared_option_name = os.getenv("CONAN_SHARED_OPTION_NAME")
+        if shared_option_name is None:
+            env_shared_option_name = os.getenv("CONAN_SHARED_OPTION_NAME", None)
+            shared_option_name = env_shared_option_name if env_shared_option_name != "False" else False
 
         if shared_option_name is None:
             if os.path.exists(os.path.join(self.cwd, self.conanfile)):
