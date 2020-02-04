@@ -237,7 +237,7 @@ class ConanMultiPackager(object):
                         os.getenv("CONAN_BUILD_POLICY", None))
 
         if build_policy:
-            if build_policy.lower() not in ("never", "outdated", "missing"):
+            if build_policy.lower() not in ("never", "outdated", "missing", "all"):
                 raise Exception("Invalid build policy, valid values: never, outdated, missing")
 
         self.build_policy = build_policy

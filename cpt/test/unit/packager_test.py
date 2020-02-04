@@ -652,21 +652,22 @@ class AppTest(unittest.TestCase):
         builder.run()
         self.assertEquals(["outdated"], self.conan_api.calls[-1].kwargs["build_modes"])
 
-        with tools.environment_append({"CONAN_BUILD_POLICY": "missing"}):
-            self.conan_api = MockConanAPI()
-            builder = ConanMultiPackager(username="pepe", channel="testing",
-                                         reference="Hello/0.1", password="password",
-                                         visual_versions=[], gcc_versions=[],
-                                         apple_clang_versions=[],
-                                         runner=self.runner,
-                                         conan_api=self.conan_api,
-                                         remotes="otherurl",
-                                         platform_info=platform_mock_for("Darwin"),
-                                         build_policy="missing",
-                                         ci_manager=self.ci_manager)
-            builder.add_common_builds()
-            builder.run()
-            self.assertEquals(["missing"], self.conan_api.calls[-1].kwargs["build_modes"])
+        for build_policy, expected in [("missing", ["missing"]), ("all",[])]:
+            with tools.environment_append({"CONAN_BUILD_POLICY": build_policy}):
+                self.conan_api = MockConanAPI()
+                builder = ConanMultiPackager(username="pepe", channel="testing",
+                                             reference="Hello/0.1", password="password",
+                                             visual_versions=[], gcc_versions=[],
+                                             apple_clang_versions=[],
+                                             runner=self.runner,
+                                             conan_api=self.conan_api,
+                                             remotes="otherurl",
+                                             platform_info=platform_mock_for("Darwin"),
+                                             build_policy=build_policy,
+                                             ci_manager=self.ci_manager)
+                builder.add_common_builds()
+                builder.run()
+                self.assertEquals(expected, self.conan_api.calls[-1].kwargs["build_modes"])
 
     def test_test_folder(self):
         builder = ConanMultiPackager(username="pepe", channel="testing",
