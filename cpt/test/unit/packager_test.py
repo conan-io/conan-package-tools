@@ -412,7 +412,8 @@ class AppTest(unittest.TestCase):
         builder = ConanMultiPackager(mingw_configurations=mingw_configurations, visual_versions=[],
                                      username="Pepe", platform_info=platform_mock_for("Windows"),
                                      reference="lib/1.0", ci_manager=self.ci_manager)
-        builder.add_common_builds(shared_option_name="zlib:shared", pure_c=True)
+        with tools.environment_append({"CONAN_SHARED_OPTION_NAME": "zlib:shared"}):
+            builder.add_common_builds(pure_c=True)
         expected = [({'compiler.exception': 'seh', 'compiler.libcxx': "libstdc++",
                       'compiler.threads': 'posix', 'compiler.version': '4.9', 'arch': 'x86_64',
                       'build_type': 'Release', 'compiler': 'gcc'},
@@ -445,10 +446,11 @@ class AppTest(unittest.TestCase):
         builder = ConanMultiPackager(username="Pepe", reference="zlib/1.2.11",
                                      ci_manager=self.ci_manager)
         named_builds = defaultdict(list)
-        builder.add_common_builds(shared_option_name="zlib:shared", pure_c=True)
-        for settings, options, env_vars, build_requires, _ in builder.items:
-            named_builds[settings['arch']].append([settings, options, env_vars, build_requires])
-        builder.named_builds = named_builds
+        with tools.environment_append({"CONAN_SHARED_OPTION_NAME": "zlib:shared"}):
+            builder.add_common_builds(pure_c=True)
+            for settings, options, env_vars, build_requires, _ in builder.items:
+                named_builds[settings['arch']].append([settings, options, env_vars, build_requires])
+            builder.named_builds = named_builds
 
         self.assertEquals(builder.builds, [])
         if platform.system() == "Darwin":  # Not default x86 in Macos
