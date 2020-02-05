@@ -40,4 +40,5 @@ class Pkg(ConanFile):
                                                           exclude_vcvars_precommand=True)
         mulitpackager.add({}, {})
         mulitpackager.run()
-        self.assertIn("pyreq/1.0.0@user/testing: 123,234", client.out)
+        self.assertIn("pyreq/1.0.0@user/", client.out)
+        self.assertIn(": 123,234", client.out)
