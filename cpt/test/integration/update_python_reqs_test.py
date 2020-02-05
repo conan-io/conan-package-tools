@@ -40,6 +40,4 @@ class Pkg(ConanFile):
                                                           exclude_vcvars_precommand=True)
         mulitpackager.add({}, {})
         mulitpackager.run()
-        self.assertIn("Python requires\n    pyreq_base/0.1@user/channel", client.out)
-        self.assertIn("Packages\n    pyreq/1.0.0@user/testing", client.out)
         self.assertIn("pyreq/1.0.0@user/testing: 123,234", client.out)
