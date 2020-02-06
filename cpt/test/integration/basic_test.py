@@ -1,6 +1,7 @@
 import os
 import unittest
 import sys
+import json
 
 from conans import tools
 from conans.model.ref import ConanFileReference
@@ -223,3 +224,62 @@ class Pkg(ConanFile):
         self.packager.add({}, {}, {}, {})
         self.packager.run()
         self.assertIn("partial_reference         | foobar/0.1.0@", self.output)
+
+    def test_save_packages_summary(self):
+        conanfile = """from conans import ConanFile
+class Pkg(ConanFile):
+    name = "foobar"
+    version = "0.1.0"
+
+    def configure(self):
+        self.output.info("hello all")
+"""
+        json_file = 'cpt_summary_file.json'
+        tools.save(os.path.join(self.tmp_folder, "conanfile.py"), conanfile)
+        self.packager = ConanMultiPackager(out=self.output.write)
+        self.packager.add({}, {}, {}, {})
+        self.packager.run(summary_file=json_file)
+        self.assertTrue(os.path.isfile(json_file))
+        with open(json_file) as json_content:
+            json_data = json.load(json_content)
+            self.assertFalse(json_data[0]["package"]["error"])
+
+        json_file = "_" + json_file
+        self.packager = ConanMultiPackager(out=self.output.write)
+        self.packager.add({}, {}, {}, {})
+        self.packager.run()
+        self.packager.save_packages_summary(json_file)
+        self.assertTrue(os.path.isfile(json_file))
+        with open(json_file) as json_content:
+            json_data = json.load(json_content)
+            self.assertFalse(json_data[0]["package"]["error"])
+
+        json_file = "__" + json_file
+        with tools.environment_append({"CPT_SUMMARY_FILE": json_file}):
+            self.packager = ConanMultiPackager(out=self.output.write)
+            self.packager.add({}, {}, {}, {})
+            self.packager.run()
+            self.assertTrue(os.path.isfile(json_file))
+            with open(json_file) as json_content:
+                json_data = json.load(json_content)
+                self.assertFalse(json_data[0]["package"]["error"])
+
+    def test_custom_name_version(self):
+        conanfile = """from conans import ConanFile
+from datetime import date
+class Pkg(ConanFile):
+
+    def configure(self):
+        self.output.info("hello all")
+
+    def set_name(self):
+        self.name = "foobar"
+
+    def set_version(self):
+        today = date.today()
+        self.version = today.strftime("%Y%B%d")
+"""
+        tools.save(os.path.join(self.tmp_folder, "conanfile.py"), conanfile)
+        self.packager = ConanMultiPackager(out=self.output.write)
+        self.packager.add_common_builds(pure_c=False)
+        self.packager.run()

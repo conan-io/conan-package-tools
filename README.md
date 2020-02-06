@@ -341,6 +341,31 @@ Sometimes you want to use Conan as [in-source](https://docs.conan.io/en/latest/c
 
 As SHA-1 is 40 digits long, you could format the result to short size
 
+## Save created packages summary
+In case you want to integrate CPT with other tools, for example you want to have build logic after creating packages, you can save a json report about all configurations and packages.
+
+**Examples**:
+
+    from cpt.packager import ConanMultiPackager
+
+    if __name__ == "__main__":
+        builder = ConanMultiPackager()
+        builder.add_common_builds()
+        builder.run(summary_file='cpt_summary_file.json')
+
+
+    from cpt.packager import ConanMultiPackager
+
+    if __name__ == "__main__":
+        builder = ConanMultiPackager()
+        builder.add_common_builds()
+        builder.run()
+        builder.save_packages_summary('cpt_summary_file.json')
+
+
+Alternatively you can use the `CPT_SUMMARY_FILE` environment variable to set the summary file path
+
+
 
 ## Using Docker
 
@@ -1072,6 +1097,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
     - "missing": Build only missing packages.
     - "outdated": Build only missing or if the available package is not built with the current recipe. Useful to upload new configurations, e.j packages for a new compiler without
       rebuild all packages.
+    - "all": Build all requirements.
 - **test_folder**: Custom test folder consumed by Conan create, e.j .conan/test_package
 - **conanfile**: Custom conanfile consumed by Conan create. e.j. conanfile.py
 - **config_url**: Conan config URL be installed before to build e.j https://github.com/bincrafters/conan-config.git
@@ -1178,6 +1204,7 @@ This is especially useful for CI integration.
 - **CONAN_APPLE_CLANG_VERSIONS**: Apple clang versions, comma separated, e.g. "6.1,8.0"
 - **CONAN_ARCHS**: Architectures to build for, comma separated, e.g. "x86,x86_64"
 - **CONAN_OPTIONS**: Conan build options, comma separated, e.g. "foobar:with_bar=True,foobar:with_qux=False"
+- **CONAN_SHARED_OPTION_NAME**: Set `shared_option_name` by environment variable, e.g. "mypackagename:shared"
 - **CONAN_BUILD_TYPES**: Build types to build for, comma separated, e.g. "Release,Debug"
 - **CONAN_CPPSTDS**: List containing values for `compiler.cppstd`. Default None
 - **CONAN_VISUAL_VERSIONS**: Visual versions, comma separated, e.g. "12,14"

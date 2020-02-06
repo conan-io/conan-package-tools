@@ -26,21 +26,22 @@ from cpt.uploader import Uploader
 
 def load_cf_class(path, conan_api):
     client_version = get_client_version()
-    if Version(client_version) < Version("1.7.0"):
+    client_version = Version(client_version)
+    if client_version < Version("1.7.0"):
         from conans.client.loader_parse import load_conanfile_class
         return load_conanfile_class(path)
-    elif Version(client_version) < Version("1.14.0"):
+    elif client_version < Version("1.14.0"):
         return conan_api._loader.load_class(path)
-    elif Version(client_version) < Version("1.15.0"):
+    elif client_version < Version("1.15.0"):
         remotes = conan_api._cache.registry.remotes.list
         for remote in remotes:
             conan_api.python_requires.enable_remotes(remote_name=remote)
         return conan_api._loader.load_class(path)
-    elif Version(client_version) < Version("1.16.0"):
+    elif client_version < Version("1.16.0"):
         remotes = conan_api._cache.registry.load_remotes()
         conan_api.python_requires.enable_remotes(remotes=remotes)
         return conan_api._loader.load_class(path)
-    elif Version(client_version) < Version("1.18.0"):
+    elif client_version < Version("1.18.0"):
         remotes = conan_api._cache.registry.load_remotes()
         conan_api._python_requires.enable_remotes(remotes=remotes)
         return conan_api._loader.load_class(path)
@@ -49,10 +50,13 @@ def load_cf_class(path, conan_api):
             conan_api.create_app()
         remotes = conan_api.app.cache.registry.load_remotes()
         conan_api.app.python_requires.enable_remotes(remotes=remotes)
-        if Version(client_version) < Version("1.20.0"):
+        conan_api.app.pyreq_loader.enable_remotes(remotes=remotes)
+        if client_version < Version("1.20.0"):
             return conan_api.app.loader.load_class(path)
-        else:
+        elif client_version < Version("1.21.0"):
             return conan_api.app.loader.load_basic(path)
+        else:
+            return conan_api.app.loader.load_named(path, None, None, None, None)
 
 
 class PlatformInfo(object):
@@ -184,6 +188,7 @@ class ConanMultiPackager(object):
 
         self._builds = []
         self._named_builds = {}
+        self._packages_summary = []
 
         self._update_conan_in_docker = always_update_conan_in_docker or get_bool_from_env("CONAN_ALWAYS_UPDATE_CONAN_DOCKER")
 
@@ -237,7 +242,7 @@ class ConanMultiPackager(object):
                         os.getenv("CONAN_BUILD_POLICY", None))
 
         if build_policy:
-            if build_policy.lower() not in ("never", "outdated", "missing"):
+            if build_policy.lower() not in ("never", "outdated", "missing", "all"):
                 raise Exception("Invalid build policy, valid values: never, outdated, missing")
 
         self.build_policy = build_policy
@@ -372,6 +377,21 @@ class ConanMultiPackager(object):
             return ""
 
     @property
+    def packages_summary(self):
+        return self._packages_summary
+
+    def save_packages_summary(self, file):
+        self.printer.print_message("Saving packages summary to " + file)
+        import json
+        import datetime
+        def default(o):
+            if isinstance(o, (datetime.date, datetime.datetime)):
+                return o.isoformat()
+
+        with open(file, 'w') as outfile:
+            json.dump(self.packages_summary, outfile, default = default)
+
+    @property
     def items(self):
         return self._builds
 
@@ -446,6 +466,10 @@ class ConanMultiPackager(object):
             raise Exception("Specify a CONAN_REFERENCE or name and version fields in the recipe")
 
         if shared_option_name is None:
+            env_shared_option_name = os.getenv("CONAN_SHARED_OPTION_NAME", None)
+            shared_option_name = env_shared_option_name if str(env_shared_option_name).lower() != "false" else False
+
+        if shared_option_name is None:
             if os.path.exists(os.path.join(self.cwd, self.conanfile)):
                 conanfile = load_cf_class(os.path.join(self.cwd, self.conanfile), self.conan_api)
                 if hasattr(conanfile, "options") and conanfile.options and "shared" in conanfile.options:
@@ -491,7 +515,7 @@ class ConanMultiPackager(object):
             updated_builds.append(build)
         self._builds = updated_builds
 
-    def run(self, base_profile_name=None):
+    def run(self, base_profile_name=None, summary_file=None):
         self._check_conan_version()
 
         env_vars = self.auth_manager.env_vars()
@@ -515,6 +539,10 @@ class ConanMultiPackager(object):
                                                           self.pip_command, packages))
 
             self.run_builds(base_profile_name=base_profile_name)
+
+        summary_file = summary_file or os.getenv("CPT_SUMMARY_FILE", None)
+        if summary_file:
+            self.save_packages_summary(summary_file)
 
     def _upload_enabled(self):
         if not self.remotes_manager.upload_remote_name:
@@ -603,6 +631,7 @@ class ConanMultiPackager(object):
                                  skip_recipe_export=skip_recipe_export,
                                  update_dependencies=self.update_dependencies)
                 r.run()
+                self._packages_summary.append({"configuration":  build, "package" : r.results})
             else:
                 docker_image = self._get_docker_image(build)
                 r = DockerCreateRunner(profile_text, base_profile_text, base_profile_name,
