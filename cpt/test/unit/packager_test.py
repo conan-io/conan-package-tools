@@ -80,6 +80,19 @@ class AppTest(unittest.TestCase):
 
         self.assertEqual([tuple(a) for a in self.packager.items], packager_expected.items)
 
+    def test_add_common_builds_update_build_if(self):
+        self.packager.add_common_builds()
+        self.packager.update_build_if(lambda build: build.settings["build_type"] == "Debug",
+                                      new_options={"foo:bar": True})
+        self.packager.update_build_if(lambda build: build.settings["build_type"] == "Release",
+                                      new_options={"foo:qux": False})
+
+        for settings, options, _, _, _ in self.packager.items:
+            if settings["build_type"] == "Release":
+                self.assertEqual(options, {"foo:qux": False})
+            else:
+                self.assertEqual(options, {"foo:bar": True})
+
     def test_full_profile(self):
         self.packager.add({"os": "Windows", "compiler": "gcc"},
                           {"option1": "One"},
