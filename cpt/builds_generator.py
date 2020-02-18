@@ -54,7 +54,7 @@ class BuildGenerator(object):
 
     def __init__(self, reference, os_name, gcc_versions, apple_clang_versions, clang_versions,
                  visual_versions, visual_runtimes, visual_toolsets, vs10_x86_64_enabled,
-                 mingw_configurations, archs, allow_gcc_minors,  build_types, options, cppstds):
+                 mingw_configurations, archs, allow_gcc_minors, build_types, options, cppstds):
 
         self._visual_toolsets = visual_toolsets
         self._os_name = os_name
@@ -219,7 +219,7 @@ def get_mingw_builds(mingw_configurations, mingw_installer_reference,
                 opt[shared_option_name] = shared
                 builds += _make_mingw_builds(settings, opt, build_requires, build_types, cppstds, reference)
         else:
-            builds += _make_mingw_builds(settings, options, build_requires, build_types, cppstds, reference)
+            builds += _make_mingw_builds(settings, copy.copy(options), build_requires, build_types, cppstds, reference)
 
     return builds
 
@@ -316,7 +316,7 @@ def get_visual_builds_for_version(visual_runtimes, visual_version, arch, shared_
     for setting, options, env_vars, build_requires in sets:
         tmp = copy.copy(base_set)
         tmp.update(setting)
-        ret.append(BuildConf(tmp, options, env_vars, build_requires, reference))
+        ret.append(BuildConf(tmp, copy.copy(options), env_vars, build_requires, reference))
 
     return ret
 
@@ -332,7 +332,7 @@ def get_build(compiler, the_arch, the_build_type, the_compiler_version,
     if the_libcxx:
         setts["compiler.libcxx"] = the_libcxx
 
-    return BuildConf(setts, options, {}, {}, reference)
+    return BuildConf(setts, copy.copy(options), {}, {}, reference)
 
 
 def get_osx_apple_clang_builds(apple_clang_versions, archs, shared_option_name,
@@ -386,7 +386,7 @@ def get_linux_gcc_builds(gcc_versions, archs, shared_option_name, pure_c, build_
                                                      cppstd, "libstdc++", opt, reference))
                                 if float(gcc_version) >= 5:
                                     ret.append(get_build("gcc", arch, build_type_it, gcc_version,
-                                                        cppstd, "libstdc++11", opt, reference))
+                                                         cppstd, "libstdc++11", opt, reference))
                             else:
                                 ret.append(get_build("gcc", arch, build_type_it, gcc_version,
                                                      None, None, opt, reference))
@@ -397,7 +397,7 @@ def get_linux_gcc_builds(gcc_versions, archs, shared_option_name, pure_c, build_
                                                  cppstd, "libstdc++", options, reference))
                             if float(gcc_version) >= 5:
                                 ret.append(get_build("gcc", arch, build_type_it, gcc_version,
-                                                    cppstd, "libstdc++11", options, reference))
+                                                     cppstd, "libstdc++11", options, reference))
                         else:
                             ret.append(get_build("gcc", arch, build_type_it, gcc_version, None,
                                                  None, options, reference))
