@@ -185,7 +185,8 @@ class DockerCreateRunner(object):
                  conanfile=None,
                  force_selinux=None,
                  skip_recipe_export=False,
-                 update_dependencies=False):
+                 update_dependencies=False,
+                 lockfile=None):
 
         self.printer = printer or Printer()
         self._upload = upload
@@ -218,6 +219,7 @@ class DockerCreateRunner(object):
         self._force_selinux = force_selinux
         self._skip_recipe_export = skip_recipe_export
         self._update_dependencies = update_dependencies
+        self._lockfile = lockfile
 
     def _pip_update_conan_command(self):
         commands = []
@@ -342,6 +344,7 @@ class DockerCreateRunner(object):
         ret["CPT_CONANFILE"] = escape_env(self._conanfile)
         ret["CPT_SKIP_RECIPE_EXPORT"] = self._skip_recipe_export
         ret["CPT_UPDATE_DEPENDENCIES"] = self._update_dependencies
+        ret["CPT_LOCKFILE"] = escape_env(self._lockfile)
 
         ret.update({key: value for key, value in os.environ.items() if key.startswith("PIP_")})
 

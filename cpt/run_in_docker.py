@@ -43,13 +43,15 @@ def run():
                    base_profile_text)
 
     upload = os.getenv("CPT_UPLOAD_ENABLED")
+    lockfile = unscape_env(os.getenv("CPT_LOCKFILE"))
     runner = CreateRunner(abs_profile_path, reference, conan_api, uploader,
                           build_policy=build_policy, printer=printer, upload=upload,
                           upload_only_recipe=upload_only_recipe,
                           test_folder=test_folder, config_url=config_url,
                           upload_dependencies=upload_dependencies, conanfile=conanfile,
                           skip_recipe_export=skip_recipe_export,
-                          update_dependencies=update_dependencies)
+                          update_dependencies=update_dependencies,
+                          lockfile=lockfile)
     runner.run()
 
 
