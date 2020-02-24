@@ -139,7 +139,8 @@ class ConanMultiPackager(object):
                  upload_dependencies=None,
                  force_selinux=None,
                  skip_recipe_export=False,
-                 update_dependencies=None):
+                 update_dependencies=None,
+                 lockfile=None):
 
         conan_version = get_client_version()
 
@@ -346,6 +347,7 @@ class ConanMultiPackager(object):
 
         self._newest_supported_conan_version = Version(NEWEST_CONAN_SUPPORTED).minor(fill=False)
         self._client_conan_version = conan_version
+        self._lockfile = lockfile
 
     def _check_conan_version(self):
         tmp = self._newest_supported_conan_version
@@ -629,7 +631,8 @@ class ConanMultiPackager(object):
                                  upload_dependencies=self.upload_dependencies,
                                  conanfile=self.conanfile,
                                  skip_recipe_export=skip_recipe_export,
-                                 update_dependencies=self.update_dependencies)
+                                 update_dependencies=self.update_dependencies,
+                                 lockfile=self._lockfile)
                 r.run()
                 self._packages_summary.append({"configuration":  build, "package" : r.results})
             else:

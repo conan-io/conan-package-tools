@@ -20,7 +20,7 @@ class CreateRunner(object):
                  cwd=None, printer=None, upload=False, upload_only_recipe=None,
                  test_folder=None, config_url=None, config_args=None,
                  upload_dependencies=None, conanfile=None, skip_recipe_export=False,
-                 update_dependencies=False):
+                 update_dependencies=False, lockfile=None):
 
         self.printer = printer or Printer()
         self._cwd = cwd or os.getcwd()
@@ -58,6 +58,7 @@ class CreateRunner(object):
             cache = conan_api.app.cache
 
         self._profile = load_profile(profile_abs_path, cache)
+        self._lockfile = lockfile
 
     @property
     def settings(self):
@@ -117,6 +118,14 @@ class CreateRunner(object):
                                                         test_folder=self._test_folder,
                                                         not_export=self.skip_recipe_export,
                                                         update=self._update_dependencies)
+                            elif client_version < Version("1.17.0"):
+                                self._results = self._conan_api.create(self._conanfile, name=name, version=version,
+                                                                       user=user, channel=channel,
+                                                                       build_modes=self._build_policy,
+                                                                       profile_names=[self._profile_abs_path],
+                                                                       test_folder=self._test_folder,
+                                                                       not_export=self.skip_recipe_export,
+                                                                       update=self._update_dependencies)
                             else:
                                 self._results = self._conan_api.create(self._conanfile, name=name, version=version,
                                                         user=user, channel=channel,
@@ -124,7 +133,8 @@ class CreateRunner(object):
                                                         profile_names=[self._profile_abs_path],
                                                         test_folder=self._test_folder,
                                                         not_export=self.skip_recipe_export,
-                                                        update=self._update_dependencies)
+                                                        update=self._update_dependencies,
+                                                        lockfile=self._lockfile)
                         except exc_class as e:
                             self.printer.print_rule()
                             self.printer.print_message("Skipped configuration by the recipe: "
