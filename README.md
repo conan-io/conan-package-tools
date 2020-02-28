@@ -272,6 +272,7 @@ There are also two additional parameters of the ``add_common_builds``:
 - **shared_option_name**: If your conanfile.py have an option **shared**, the generated builds will contain automatically the "True/False" combination for that option.
   Pass "False" to deactivate it or "lib_name:shared_option_name" to specify a custom option name, e.j: boost:my_shared``
 - **dll_with_static_runtime**: Will add also the combination of runtime MT with shared libraries.
+- **header_only**: If your conanfile.py have an option **header_only**, the generated builds will contain automatically the "True/False" combination for that option [#454](https://github.com/conan-io/conan-package-tools/issues/454).
 
 ```
 from cpt.packager import ConanMultiPackager
@@ -1139,12 +1140,14 @@ The current commit message can contain special messages:
 
 ## Complete ConanMultiPackager methods reference:
 
-- **add_common_builds(shared_option_name=None, pure_c=True, dll_with_static_runtime=False)**: Generate a set of package configurations and add them to the
+- **add_common_builds(shared_option_name=None, pure_c=True, dll_with_static_runtime=False, reference=None, header_only=True)**: Generate a set of package configurations and add them to the
   list of packages that will be created.
 
     - **shared_option_name**: If given, ConanMultiPackager will add different configurations for -o shared=True and -o shared=False.
     - **pure_c**: ConanMultiPackager won't generate different builds for the **libstdc++** c++ standard library, because it is a pure C library.
     - **dll_with_static_runtime**: generate also build for "MT" runtime when the library is shared.
+    - **reference**: Custom package reference
+    - **header_only**: Generate new builds following header-only options [#454](https://github.com/conan-io/conan-package-tools/issues/454)
 
 - **login(remote_name)**: Performs a `conan user` command in the specified remote.
 
