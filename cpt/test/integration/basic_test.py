@@ -285,13 +285,23 @@ class Pkg(ConanFile):
         self.packager.run()
 
     def test_header_only_option_true(self):
+        header_only = self._test_header_only(False)
+        self.assertEqual(header_only, 1)
+        self.packager.run()
+
+    def test_header_only_option_false(self):
+        header_only = self._test_header_only(True)
+        self.assertEqual(header_only, int(len(self.packager.builds) / 2))
+        self.packager.run()
+
+    def _test_header_only(self, default_value):
         conanfile = """from conans import ConanFile
 class Pkg(ConanFile):
     name = "qux"
     version = "0.1.0"
     settings = "os"
     options = {"header_only": [True, False], "shared": [True, False], "fPIC": [True, False]}
-    default_options = {"header_only": False, "shared": False, "fPIC": True}
+    default_options = {"header_only": %s, "shared": False, "fPIC": True}
 
     def configure(self):
         if self.options.header_only:
@@ -301,47 +311,14 @@ class Pkg(ConanFile):
     def package_id(self):
         if self.options.header_only:
             self.info.header_only()
-"""
+""" % default_value
         tools.save(os.path.join(self.tmp_folder, "conanfile.py"), conanfile)
         self.packager = ConanMultiPackager(out=self.output.write)
         self.packager.add_common_builds(pure_c=False)
 
         header_only = 0
         for build in self.packager.builds:
-            if {"qux:shared": True, "qux:header_only": True} in build:
+            _, options, _, _ = build
+            if options.get("qux:header_only") == (not default_value):
                 header_only += 1
-        self.assertEqual(header_only, 1)
-        self.packager.run()
-
-    def test_header_only_option_false(self):
-        conanfile = """from conans import ConanFile
-class Pkg(ConanFile):
-    name = "qux"
-    version = "0.1.0"
-    settings = "os"
-    options = {"header_only": [True, False], "shared": [True, False], "fPIC": [True, False]}
-    default_options = {"header_only": True, "shared": False, "fPIC": True}
-
-    def configure(self):
-        if self.options.header_only:
-            del self.options.shared
-            del self.options.fPIC
-
-    def package_id(self):
-        if self.options.header_only:
-            self.info.header_only()
-"""
-        tools.save(os.path.join(self.tmp_folder, "conanfile.py"), conanfile)
-        self.packager = ConanMultiPackager(out=self.output.write)
-        self.packager.add_common_builds(pure_c=False)
-
-        header_only_shared = 0
-        header_only_static = 0
-        for build in self.packager.builds:
-            if {"qux:shared": True, "qux:header_only": False} in build:
-                header_only_shared += 1
-            elif {"qux:shared": False, "qux:header_only": False} in build:
-                header_only_static += 1
-        self.assertEqual(header_only_shared, int(len(self.packager.builds) / 4))
-        self.assertEqual(header_only_static, int(len(self.packager.builds) / 4))
-        self.packager.run()
+        return header_only
