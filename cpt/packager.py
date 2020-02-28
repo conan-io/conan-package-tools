@@ -4,6 +4,7 @@ import re
 import sys
 import copy
 from collections import defaultdict
+from itertools import product
 
 import six
 from conans import tools
@@ -494,6 +495,26 @@ class ConanMultiPackager(object):
 
         builds = self.build_generator.get_builds(pure_c, shared_option_name, dll_with_static_runtime, reference)
 
+        raw_options_for_building = [opt[opt.find(":")+1:] for opt in build_all_options_values]
+        for raw_option in reversed(raw_options_for_building):
+            if not isinstance(conanfile.options.get(raw_option), list):
+                raw_options_for_building.remove(raw_option)
+
+        if raw_options_for_building:
+            for settings, options, env_vars, build_requires, reference in reversed(builds):
+                cloned_options = copy.copy(conanfile.options)
+                for key, value in conanfile.options.items():
+                    if key == "shared" or key == "header_only" or key in raw_options_for_building:
+                        continue
+                    else:
+                        del cloned_options[key]
+                for key in cloned_options.keys():
+                    if not key.startswith("{}:".format(reference.name)):
+                        cloned_options["{}:{}".format(reference.name, key)] = cloned_options.pop(key)
+                combinations = [dict(zip(cloned_options, v)) for v in product(*cloned_options.values())]
+                for new_options in combinations:
+                    builds.append(BuildConf(settings, new_options, env_vars, build_requires, reference))
+
         if header_only_option and header_only:
             if conanfile.default_options.get("header_only"):
                 cloned_builds = copy.deepcopy(builds)
@@ -506,15 +527,6 @@ class ConanMultiPackager(object):
                 cloned_options.update({header_only_option: True})
                 builds.append(BuildConf(copy.copy(settings), cloned_options, copy.copy(env_vars),
                                         copy.copy(build_requires), reference))
-
-        for option in build_all_options_values:
-            cloned_builds = copy.deepcopy(builds)
-            for settings, options, env_vars, build_requires, reference in cloned_builds:
-                for key, value in conanfile.options.items():
-                    if key == option[option.find(":")+1:] and isinstance(value, list):
-                        for opt_value in value:
-                            options.update({option, opt_value})
-            builds.extend(cloned_builds)
 
         self._builds.extend(builds)
 
