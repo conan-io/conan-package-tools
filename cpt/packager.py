@@ -473,12 +473,18 @@ class ConanMultiPackager(object):
             env_shared_option_name = os.getenv("CONAN_SHARED_OPTION_NAME", None)
             shared_option_name = env_shared_option_name if str(env_shared_option_name).lower() != "false" else False
 
-        header_only_option = None
         if shared_option_name is None:
             if os.path.exists(os.path.join(self.cwd, self.conanfile)):
                 conanfile = load_cf_class(os.path.join(self.cwd, self.conanfile), self.conan_api)
                 if hasattr(conanfile, "options") and conanfile.options and "shared" in conanfile.options:
                     shared_option_name = "%s:shared" % reference.name
+                if hasattr(conanfile, "options") and conanfile.options and "header_only" in conanfile.options:
+                    header_only_option = "%s:header_only" % reference.name
+
+        header_only_option = None
+        if header_only is None:
+            if os.path.exists(os.path.join(self.cwd, self.conanfile)):
+                conanfile = load_cf_class(os.path.join(self.cwd, self.conanfile), self.conan_api)
                 if hasattr(conanfile, "options") and conanfile.options and "header_only" in conanfile.options:
                     header_only_option = "%s:header_only" % reference.name
 
