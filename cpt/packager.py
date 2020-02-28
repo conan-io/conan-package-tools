@@ -456,7 +456,8 @@ class ConanMultiPackager(object):
         self.auth_manager.login(remote_name)
 
     def add_common_builds(self, shared_option_name=None, pure_c=True,
-                          dll_with_static_runtime=False, reference=None, header_only=True):
+                          dll_with_static_runtime=False, reference=None, header_only=True,
+                          build_all_options_values=None):
         if reference:
             if "@" in reference:
                 reference = ConanFileReference.loads(reference)
@@ -473,14 +474,23 @@ class ConanMultiPackager(object):
             env_shared_option_name = os.getenv("CONAN_SHARED_OPTION_NAME", None)
             shared_option_name = env_shared_option_name if str(env_shared_option_name).lower() != "false" else False
 
+        build_all_options_values = build_all_options_values or split_colon_env("CONAN_SHARED_OPTION_NAME") or []
+        if not isinstance(build_all_options_values, list):
+            raise Exception("'build_all_options_values' must be a list. e.g. ['foo:opt', 'foo:bar']")
+
+        conanfile = None
+        if os.path.exists(os.path.join(self.cwd, self.conanfile)):
+            conanfile = load_cf_class(os.path.join(self.cwd, self.conanfile), self.conan_api)
+
         header_only_option = None
+        if conanfile:
+            if hasattr(conanfile, "options") and conanfile.options and "header_only" in conanfile.options:
+                header_only_option = "%s:header_only" % reference.name
+
         if shared_option_name is None:
-            if os.path.exists(os.path.join(self.cwd, self.conanfile)):
-                conanfile = load_cf_class(os.path.join(self.cwd, self.conanfile), self.conan_api)
+            if conanfile:
                 if hasattr(conanfile, "options") and conanfile.options and "shared" in conanfile.options:
                     shared_option_name = "%s:shared" % reference.name
-                if hasattr(conanfile, "options") and conanfile.options and "header_only" in conanfile.options:
-                    header_only_option = "%s:header_only" % reference.name
 
         builds = self.build_generator.get_builds(pure_c, shared_option_name, dll_with_static_runtime, reference)
 
@@ -496,6 +506,15 @@ class ConanMultiPackager(object):
                 cloned_options.update({header_only_option: True})
                 builds.append(BuildConf(copy.copy(settings), cloned_options, copy.copy(env_vars),
                                         copy.copy(build_requires), reference))
+
+        for option in build_all_options_values:
+            cloned_builds = copy.deepcopy(builds)
+            for settings, options, env_vars, build_requires, reference in cloned_builds:
+                for key, value in conanfile.options.items():
+                    if key == option[option.find(":")+1:] and isinstance(value, list):
+                        for opt_value in value:
+                            options.update({option, opt_value})
+            builds.extend(cloned_builds)
 
         self._builds.extend(builds)
 
