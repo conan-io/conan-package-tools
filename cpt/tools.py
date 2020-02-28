@@ -1,9 +1,7 @@
 import os
-import subprocess
 
 
 def get_bool_from_env(var_name):
-    import os
     val = os.getenv(var_name, None)
     return str(val).lower() not in ("0", "none", "false")
 
