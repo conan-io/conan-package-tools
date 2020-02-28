@@ -1031,3 +1031,34 @@ class AppTest(unittest.TestCase):
         packager.add_common_builds()
         packager.run()
         _check_run_calls(True)
+
+    def test_lockfile(self):
+        builder = ConanMultiPackager(username="pepe", channel="testing",
+                                     reference="Hello/0.1", password="password",
+                                     visual_versions=[], gcc_versions=[],
+                                     apple_clang_versions=[],
+                                     runner=self.runner,
+                                     conan_api=self.conan_api,
+                                     remotes="otherurl",
+                                     platform_info=platform_mock_for("Darwin"),
+                                     lockfile="foobar.lock",
+                                     ci_manager=self.ci_manager)
+        builder.add_common_builds()
+        builder.run()
+        self.assertEquals("foobar.lock", self.conan_api.calls[-1].kwargs["lockfile"])
+
+        with tools.environment_append({"CONAN_LOCKFILE": "couse.lock"}):
+            self.conan_api = MockConanAPI()
+            builder = ConanMultiPackager(username="pepe", channel="testing",
+                                         reference="Hello/0.1", password="password",
+                                         visual_versions=[], gcc_versions=[],
+                                         apple_clang_versions=[],
+                                         runner=self.runner,
+                                         conan_api=self.conan_api,
+                                         remotes="otherurl",
+                                         platform_info=platform_mock_for("Darwin"),
+                                         build_policy=None,
+                                         ci_manager=self.ci_manager)
+            builder.add_common_builds()
+            builder.run()
+            self.assertEquals("couse.lock", self.conan_api.calls[-1].kwargs["lockfile"])
