@@ -2,6 +2,7 @@ import os
 import platform
 import re
 import sys
+import copy
 from collections import defaultdict
 
 import six
@@ -452,7 +453,7 @@ class ConanMultiPackager(object):
         self.auth_manager.login(remote_name)
 
     def add_common_builds(self, shared_option_name=None, pure_c=True,
-                          dll_with_static_runtime=False, reference=None):
+                          dll_with_static_runtime=False, reference=None, header_only=True):
         if reference:
             if "@" in reference:
                 reference = ConanFileReference.loads(reference)
@@ -469,14 +470,31 @@ class ConanMultiPackager(object):
             env_shared_option_name = os.getenv("CONAN_SHARED_OPTION_NAME", None)
             shared_option_name = env_shared_option_name if str(env_shared_option_name).lower() != "false" else False
 
+        header_only_option = None
         if shared_option_name is None:
             if os.path.exists(os.path.join(self.cwd, self.conanfile)):
                 conanfile = load_cf_class(os.path.join(self.cwd, self.conanfile), self.conan_api)
                 if hasattr(conanfile, "options") and conanfile.options and "shared" in conanfile.options:
                     shared_option_name = "%s:shared" % reference.name
+                if hasattr(conanfile, "options") and conanfile.options and "header_only" in conanfile.options:
+                    header_only_option = "%s:header_only" % reference.name
 
-        tmp = self.build_generator.get_builds(pure_c, shared_option_name, dll_with_static_runtime, reference)
-        self._builds.extend(tmp)
+        builds = self.build_generator.get_builds(pure_c, shared_option_name, dll_with_static_runtime, reference)
+
+        if header_only_option and header_only:
+            if conanfile.default_options.get("header_only"):
+                cloned_builds = copy.deepcopy(builds)
+                for settings, options, env_vars, build_requires, reference in cloned_builds:
+                    options.update({header_only_option: False})
+                builds.extend(cloned_builds)
+            else:
+                settings, options, env_vars, build_requires, reference = builds[0]
+                cloned_options = copy.copy(options)
+                cloned_options.update({header_only_option: True})
+                builds.append(BuildConf(copy.copy(settings), cloned_options, copy.copy(env_vars),
+                                        copy.copy(build_requires), reference))
+
+        self._builds.extend(builds)
 
     def add(self, settings=None, options=None, env_vars=None, build_requires=None, reference=None):
         settings = settings or {}
