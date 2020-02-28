@@ -305,7 +305,7 @@ class GitHubActionsManager(GenericManager):
 
     def get_branch(self):
         branch = os.getenv("GITHUB_REF", None)
-        if os.getenv("GITHUB_EVENT_NAME", "") == "pull_request":
+        if self.is_pull_request():
             branch = os.getenv("GITHUB_BASE_REF", "")
         return branch
 
