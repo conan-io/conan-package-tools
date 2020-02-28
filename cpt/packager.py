@@ -140,7 +140,8 @@ class ConanMultiPackager(object):
                  upload_dependencies=None,
                  force_selinux=None,
                  skip_recipe_export=False,
-                 update_dependencies=None):
+                 update_dependencies=None,
+                 lockfile=None):
 
         conan_version = get_client_version()
 
@@ -335,6 +336,8 @@ class ConanMultiPackager(object):
         self.skip_recipe_export = skip_recipe_export or \
                                      get_bool_from_env("CONAN_SKIP_RECIPE_EXPORT")
         self.config_args = config_args or os.getenv("CONAN_CONFIG_ARGS")
+
+        self.lockfile = lockfile or os.getenv("CONAN_LOCKFILE")
 
         def valid_pair(var, value):
             return (isinstance(value, six.string_types) or
@@ -646,6 +649,7 @@ class ConanMultiPackager(object):
                                  config_args=self.config_args,
                                  upload_dependencies=self.upload_dependencies,
                                  conanfile=self.conanfile,
+                                 lockfile=self.lockfile,
                                  skip_recipe_export=skip_recipe_export,
                                  update_dependencies=self.update_dependencies)
                 r.run()
@@ -678,6 +682,7 @@ class ConanMultiPackager(object):
                                        printer=self.printer,
                                        upload_dependencies=self.upload_dependencies,
                                        conanfile=self.conanfile,
+                                       lockfile=self.lockfile,
                                        force_selinux=self.force_selinux,
                                        skip_recipe_export=skip_recipe_export,
                                        update_dependencies=self.update_dependencies)

@@ -20,7 +20,7 @@ class CreateRunner(object):
                  cwd=None, printer=None, upload=False, upload_only_recipe=None,
                  test_folder=None, config_url=None, config_args=None,
                  upload_dependencies=None, conanfile=None, skip_recipe_export=False,
-                 update_dependencies=False):
+                 update_dependencies=False, lockfile=None):
 
         self.printer = printer or Printer()
         self._cwd = cwd or os.getcwd()
@@ -37,6 +37,7 @@ class CreateRunner(object):
         self._config_args = config_args
         self._upload_only_recipe = upload_only_recipe
         self._conanfile = conanfile
+        self._lockfile = lockfile
         self._upload_dependencies = upload_dependencies.split(",") if \
                                     isinstance(upload_dependencies, str) else \
                                     upload_dependencies
@@ -124,7 +125,8 @@ class CreateRunner(object):
                                                         profile_names=[self._profile_abs_path],
                                                         test_folder=self._test_folder,
                                                         not_export=self.skip_recipe_export,
-                                                        update=self._update_dependencies)
+                                                        update=self._update_dependencies,
+                                                        lockfile=self._lockfile)
                         except exc_class as e:
                             self.printer.print_rule()
                             self.printer.print_message("Skipped configuration by the recipe: "
@@ -175,7 +177,8 @@ class DockerCreateRunner(object):
                  conanfile=None,
                  force_selinux=None,
                  skip_recipe_export=False,
-                 update_dependencies=False):
+                 update_dependencies=False,
+                 lockfile=None):
 
         self.printer = printer or Printer()
         self._upload = upload
@@ -205,6 +208,7 @@ class DockerCreateRunner(object):
         self._config_args = config_args
         self._upload_dependencies = upload_dependencies or []
         self._conanfile = conanfile
+        self._lockfile = lockfile
         self._force_selinux = force_selinux
         self._skip_recipe_export = skip_recipe_export
         self._update_dependencies = update_dependencies
@@ -330,6 +334,7 @@ class DockerCreateRunner(object):
         ret["CPT_CONFIG_ARGS"] = escape_env(self._config_args)
         ret["CPT_UPLOAD_DEPENDENCIES"] = escape_env(self._upload_dependencies)
         ret["CPT_CONANFILE"] = escape_env(self._conanfile)
+        ret["CPT_LOCKFILE"] = escape_env(self._lockfile)
         ret["CPT_SKIP_RECIPE_EXPORT"] = self._skip_recipe_export
         ret["CPT_UPDATE_DEPENDENCIES"] = self._update_dependencies
 

@@ -1100,6 +1100,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
       rebuild all packages.
     - "all": Build all requirements.
 - **test_folder**: Custom test folder consumed by Conan create, e.j .conan/test_package
+- **lockfile**: Custom conan lockfile to be used, e.j. conan.lock. Default [None]
 - **conanfile**: Custom conanfile consumed by Conan create. e.j. conanfile.py
 - **config_url**: Conan config URL be installed before to build e.j https://github.com/bincrafters/conan-config.git
 - **config_args**: Conan config arguments used when installing conan config
@@ -1249,6 +1250,7 @@ This is especially useful for CI integration.
 - **CONAN_BASE_PROFILE**: Apply options, settings, etc. to this profile instead of `default`.
 - **CONAN_IGNORE_SKIP_CI**: Ignore `[skip ci]` in commit message.
 - **CONAN_CONANFILE**: Custom conanfile consumed by Conan create. e.j. conanfile.py
+- **CONAN_LOCKFILE**: Custom conan lockfile to be used, e.j. conan.lock.
 - **CPT_TEST_FOLDER**: Custom test_package path, e.j .conan/test_package
 - **CONAN_FORCE_SELINUX**: Force docker to relabel file objects on the shared volumes
 - **CONAN_SKIP_RECIPE_EXPORT**: If defined, the package recipe will only be exported on the first build.
