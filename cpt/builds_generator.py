@@ -142,7 +142,8 @@ won't be able to use them.
             options = []
         self._options = transform_list_options_to_dict(options)
 
-    def get_builds(self, pure_c, shared_option_name, dll_with_static_runtime, reference=None):
+    def get_builds(self, pure_c, shared_option_name, dll_with_static_runtime, reference=None,
+                   build_all_options_values=None):
 
         ref = reference or self._reference
 
@@ -150,29 +151,35 @@ won't be able to use them.
             if self._mingw_configurations:
                 builds = get_mingw_builds(self._mingw_configurations,
                                           get_mingw_package_reference(), self._archs,
-                                          shared_option_name, self._build_types, self._cppstds, self._options, ref)
+                                          shared_option_name, self._build_types, self._cppstds,
+                                          self._options, ref, build_all_options_values)
             else:
                 builds = []
             builds.extend(get_visual_builds(self._visual_versions, self._archs,
                                             self._visual_runtimes, self._visual_toolsets,
                                             shared_option_name, dll_with_static_runtime,
                                             self._vs10_x86_64_enabled,
-                                            self._build_types, self._cppstds, self._options, ref))
+                                            self._build_types, self._cppstds, self._options, ref,
+                                            build_all_options_values))
             return builds
         elif self._os_name == "Linux":
             builds = get_linux_gcc_builds(self._gcc_versions, self._archs, shared_option_name,
-                                          pure_c, self._build_types, self._cppstds, self._options, ref)
+                                          pure_c, self._build_types, self._cppstds, self._options, ref,
+                                          build_all_options_values)
             builds.extend(get_linux_clang_builds(self._clang_versions, self._archs,
                                                  shared_option_name, pure_c, self._build_types,
-                                                 self._cppstds, self._options, ref))
+                                                 self._cppstds, self._options, ref,
+                                                 build_all_options_values))
             return builds
         elif self._os_name == "Darwin":
             return get_osx_apple_clang_builds(self._apple_clang_versions, self._archs,
                                               shared_option_name, pure_c, self._build_types,
-                                              self._cppstds,  self._options, ref)
+                                              self._cppstds,  self._options, ref,
+                                              build_all_options_values)
         elif self._os_name == "FreeBSD":
             return get_linux_clang_builds(self._clang_versions, self._archs, shared_option_name,
-                                          pure_c, self._build_types, self._cppstds, self._options, ref)
+                                          pure_c, self._build_types, self._cppstds, self._options,
+                                          ref, build_all_options_values)
         else:
             raise Exception("Unknown operating system: %s" % self._os_name)
 
@@ -195,13 +202,13 @@ class BuildConf(namedtuple("BuildConf", "settings options env_vars build_require
         if isinstance(reference, str):
             reference = ConanFileReference.loads(reference)
 
-        return super(BuildConf, cls).__new__(cls, settings, options, env_vars,
-                                             build_requires, reference)
+        return super(BuildConf, cls).__new__(cls, settings, options, env_vars, build_requires,
+                                             reference)
 
 
 def get_mingw_builds(mingw_configurations, mingw_installer_reference,
                      archs, shared_option_name, build_types, cppstds,
-                     options, reference=None):
+                     options, reference=None, build_all_options_values=None):
     builds = []
     for config in mingw_configurations:
         version, arch, exception, thread = config
@@ -213,10 +220,15 @@ def get_mingw_builds(mingw_configurations, mingw_installer_reference,
                     "compiler.exception": exception}
         build_requires = {"*": [mingw_installer_reference]}
 
-        if shared_option_name:
+        if shared_option_name and not build_all_options_values:
             for shared in [True, False]:
                 opt = copy.copy(options)
                 opt[shared_option_name] = shared
+                builds += _make_mingw_builds(settings, opt, build_requires, build_types, cppstds, reference)
+        elif build_all_options_values:
+            for option_values in build_all_options_values:
+                opt = copy.copy(options)
+                opt.update(option_values)
                 builds += _make_mingw_builds(settings, opt, build_requires, build_types, cppstds, reference)
         else:
             builds += _make_mingw_builds(settings, copy.copy(options), build_requires, build_types, cppstds, reference)
@@ -241,7 +253,7 @@ def _make_mingw_builds(settings, options, build_requires, build_types, cppstds, 
 
 def get_visual_builds(visual_versions, archs, visual_runtimes, visual_toolsets, shared_option_name,
                       dll_with_static_runtime, vs10_x86_64_enabled, build_types, cppstds,
-                      options, reference=None):
+                      options, reference=None, build_all_options_values=None):
 
     visual_toolsets = visual_toolsets or get_env_visual_toolsets()
     ret = []
@@ -258,14 +270,16 @@ def get_visual_builds(visual_versions, archs, visual_runtimes, visual_toolsets, 
                 visual_builds = get_visual_builds_for_version(visual_runtimes, visual_version, arch,
                                                               shared_option_name,
                                                               dll_with_static_runtime, build_types,
-                                                              cppstds, options, reference, toolset=toolset)
+                                                              cppstds, options, reference,
+                                                              toolset=toolset,
+                                                              build_all_options_values=build_all_options_values)
                 ret.extend(visual_builds)
     return ret
 
 
 def get_visual_builds_for_version(visual_runtimes, visual_version, arch, shared_option_name,
                                   dll_with_static_runtime, build_types, cppstds, options,
-                                  reference=None, toolset=None):
+                                  reference=None, toolset=None, build_all_options_values=None):
     base_set = {"compiler": "Visual Studio",
                 "compiler.version": visual_version,
                 "arch": arch}
@@ -294,7 +308,7 @@ def get_visual_builds_for_version(visual_runtimes, visual_version, arch, shared_
                 partial_settings = {"build_type": bld, "compiler.runtime": rt}
                 if cppstd:
                     partial_settings["compiler.cppstd"] = cppstd
-                if shared_option_name:
+                if shared_option_name and not build_all_options_values:
                     opt = copy.copy(options)
                     opt[shared_option_name] = False
                     sets.append((partial_settings, opt, {}, {}))
@@ -309,6 +323,15 @@ def get_visual_builds_for_version(visual_runtimes, visual_version, arch, shared_
                         opt[shared_option_name] = True
                         sets.append((partial_settings,
                                     opt, {}, {}))
+                elif build_all_options_values:
+                    for option_values in build_all_options_values:
+                        opt = copy.copy(options)
+                        opt.update(option_values)
+                        sets.append((partial_settings, opt, {}, {}))
+                        if shared_option_name and rt in ['MT', 'MTd'] and dll_with_static_runtime:
+                            new_opt = copy.copy(opt)
+                            new_opt[shared_option_name] = True
+                            sets.append((partial_settings, opt, {}, {}))
                 else:
                     sets.append((partial_settings, options, {}, {}))
 
@@ -336,13 +359,14 @@ def get_build(compiler, the_arch, the_build_type, the_compiler_version,
 
 
 def get_osx_apple_clang_builds(apple_clang_versions, archs, shared_option_name,
-                               pure_c, build_types, cppstds, options, reference=None):
+                               pure_c, build_types, cppstds, options, reference=None,
+                               build_all_options_values=None):
     ret = []
     # Not specified compiler or compiler version, will use the auto detected
     for compiler_version in apple_clang_versions:
         for arch in archs:
             for cppstd in cppstds:
-                if shared_option_name:
+                if shared_option_name and not build_all_options_values:
                     for shared in [True, False]:
                         opt = copy.copy(options)
                         opt[shared_option_name] = shared
@@ -355,6 +379,19 @@ def get_osx_apple_clang_builds(apple_clang_versions, archs, shared_option_name,
                                 ret.append(get_build("apple-clang", arch, build_type_it,
                                                         compiler_version, None,
                                                         None, opt, reference))
+                elif build_all_options_values:
+                    for option_values in build_all_options_values:
+                        opt = copy.copy(options)
+                        opt.update(option_values)
+                        for build_type_it in build_types:
+                            if not pure_c:
+                                ret.append(get_build("apple-clang", arch, build_type_it,
+                                                     compiler_version, cppstd,
+                                                     "libc++", opt, reference))
+                            else:
+                                ret.append(get_build("apple-clang", arch, build_type_it,
+                                                     compiler_version, None,
+                                                     None, opt, reference))
                 else:
                     for build_type_it in build_types:
                         if not pure_c:
@@ -370,13 +407,13 @@ def get_osx_apple_clang_builds(apple_clang_versions, archs, shared_option_name,
 
 
 def get_linux_gcc_builds(gcc_versions, archs, shared_option_name, pure_c, build_types, cppstds,
-                         options, reference=None):
+                         options, reference=None, build_all_options_values=None):
     ret = []
     # Not specified compiler or compiler version, will use the auto detected
     for gcc_version in gcc_versions:
         for arch in archs:
             for cppstd in cppstds:
-                if shared_option_name:
+                if shared_option_name and not build_all_options_values:
                     for shared in [True, False]:
                         opt = copy.copy(options)
                         opt[shared_option_name] = shared
@@ -390,6 +427,21 @@ def get_linux_gcc_builds(gcc_versions, archs, shared_option_name, pure_c, build_
                             else:
                                 ret.append(get_build("gcc", arch, build_type_it, gcc_version,
                                                      None, None, opt, reference))
+                elif build_all_options_values:
+                    for option_values in build_all_options_values:
+                        opt = copy.copy(options)
+                        opt.update(option_values)
+                        for build_type_it in build_types:
+                            if not pure_c:
+                                ret.append(get_build("gcc", arch, build_type_it, gcc_version,
+                                                     cppstd, "libstdc++", opt, reference))
+                                if float(gcc_version) >= 5:
+                                    ret.append(get_build("gcc", arch, build_type_it, gcc_version,
+                                                         cppstd, "libstdc++11", opt, reference))
+                            else:
+                                ret.append(get_build("gcc", arch, build_type_it, gcc_version,
+                                                     None, None, opt, reference))
+
                 else:
                     for build_type_it in build_types:
                         if not pure_c:
@@ -405,16 +457,29 @@ def get_linux_gcc_builds(gcc_versions, archs, shared_option_name, pure_c, build_
 
 
 def get_linux_clang_builds(clang_versions, archs, shared_option_name, pure_c, build_types, cppstds,
-                           options, reference=None):
+                           options, reference=None, build_all_options_values=None):
     ret = []
     # Not specified compiler or compiler version, will use the auto detected
     for clang_version in clang_versions:
         for arch in archs:
             for cppstd in cppstds:
-                if shared_option_name:
+                if shared_option_name and not build_all_options_values:
                     for shared in [True, False]:
                         opt = copy.copy(options)
                         opt[shared_option_name] = shared
+                        for build_type_it in build_types:
+                            if not pure_c:
+                                ret.append(get_build("clang", arch, build_type_it, clang_version,
+                                                     cppstd, "libstdc++", opt, reference))
+                                ret.append(get_build("clang", arch, build_type_it, clang_version,
+                                                     cppstd, "libc++", opt, reference))
+                            else:
+                                ret.append(get_build("clang", arch, build_type_it, clang_version,
+                                                     None, None, opt, reference))
+                elif build_all_options_values:
+                    for option_values in build_all_options_values:
+                        opt = copy.copy(options)
+                        opt.update(option_values)
                         for build_type_it in build_types:
                             if not pure_c:
                                 ret.append(get_build("clang", arch, build_type_it, clang_version,

@@ -493,27 +493,29 @@ class ConanMultiPackager(object):
                 if hasattr(conanfile, "options") and conanfile.options and "shared" in conanfile.options:
                     shared_option_name = "%s:shared" % reference.name
 
-        builds = self.build_generator.get_builds(pure_c, shared_option_name, dll_with_static_runtime, reference)
-
-        raw_options_for_building = [opt[opt.find(":")+1:] for opt in build_all_options_values]
+        # filter only valid options
+        raw_options_for_building = [opt[opt.find(":") + 1:] for opt in build_all_options_values]
         for raw_option in reversed(raw_options_for_building):
             if not isinstance(conanfile.options.get(raw_option), list):
                 raw_options_for_building.remove(raw_option)
-
         if raw_options_for_building:
-            for settings, options, env_vars, build_requires, reference in reversed(builds):
-                cloned_options = copy.copy(conanfile.options)
-                for key, value in conanfile.options.items():
-                    if key == "shared" or key == "header_only" or key in raw_options_for_building:
-                        continue
-                    else:
-                        del cloned_options[key]
-                for key in cloned_options.keys():
-                    if not key.startswith("{}:".format(reference.name)):
-                        cloned_options["{}:{}".format(reference.name, key)] = cloned_options.pop(key)
-                combinations = [dict(zip(cloned_options, v)) for v in product(*cloned_options.values())]
-                for new_options in combinations:
-                    builds.append(BuildConf(settings, new_options, env_vars, build_requires, reference))
+            # get option and its values
+            cloned_options = copy.copy(conanfile.options)
+            for key, value in conanfile.options.items():
+                if key == "shared" and shared_option_name:
+                    continue
+                elif key not in raw_options_for_building:
+                    del cloned_options[key]
+            for key in cloned_options.keys():
+                # add package reference to the option name
+                if not key.startswith("{}:".format(reference.name)):
+                    cloned_options["{}:{}".format(reference.name, key)] = cloned_options.pop(key)
+            # combine all options x values (cartesian product)
+            build_all_options_values = [dict(zip(cloned_options, v)) for v in product(*cloned_options.values())]
+
+        builds = self.build_generator.get_builds(pure_c, shared_option_name,
+                                                 dll_with_static_runtime, reference,
+                                                 build_all_options_values)
 
         if header_only_option and header_only:
             if conanfile.default_options.get("header_only"):
