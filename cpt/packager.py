@@ -264,6 +264,7 @@ class ConanMultiPackager(object):
         pip_found = True if tools.os_info.is_windows else tools.which(self.pip_command)
         if not pip_found or not "pip" in self.pip_command:
             raise Exception("CONAN_PIP_COMMAND: '{}' is not a valid pip command.".format(self.pip_command))
+        self.docker_pip_command = os.getenv("CONAN_DOCKER_PIP_COMMAND", "pip")
 
         self.docker_shell = docker_shell or os.getenv("CONAN_DOCKER_SHELL")
 
@@ -677,6 +678,7 @@ class ConanMultiPackager(object):
                                        lcow_user_workaround=self.lcow_user_workaround,
                                        test_folder=self.test_folder,
                                        pip_install=self.pip_install,
+                                       docker_pip_command=self.docker_pip_command,
                                        config_url=self.config_url,
                                        config_args=self.config_args,
                                        printer=self.printer,

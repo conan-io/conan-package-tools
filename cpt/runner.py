@@ -170,6 +170,7 @@ class DockerCreateRunner(object):
                  lcow_user_workaround="",
                  test_folder=None,
                  pip_install=None,
+                 docker_pip_command=None,
                  config_url=None,
                  config_args=None,
                  printer=None,
@@ -204,6 +205,7 @@ class DockerCreateRunner(object):
         self._runner = PrintRunner(runner, self.printer)
         self._test_folder = test_folder
         self._pip_install = pip_install
+        self._docker_pip_command = docker_pip_command
         self._config_url = config_url
         self._config_args = config_args
         self._upload_dependencies = upload_dependencies or []
@@ -217,18 +219,23 @@ class DockerCreateRunner(object):
         commands = []
         # Hack for testing when retrieving cpt from artifactory repo
         if "conan-package-tools" not in self._conan_pip_package:
-            commands.append("%s pip install conan_package_tools==%s "
+            commands.append("%s %s install conan_package_tools==%s "
                             "--upgrade --no-cache" % (self._sudo_pip_command,
+                                                      self._docker_pip_command,
                                                       package_tools_version))
 
         if self._conan_pip_package:
-            commands.append("%s pip install %s --no-cache" % (self._sudo_pip_command,
+            commands.append("%s %s install %s --no-cache" % (self._sudo_pip_command,
+                                                             self._docker_pip_command,
                                                               self._conan_pip_package))
         else:
-            commands.append("%s pip install conan --upgrade --no-cache" % self._sudo_pip_command)
+            commands.append("%s %s install conan --upgrade --no-cache" % (self._sudo_pip_command,
+                                                                          self._docker_pip_command))
 
         if self._pip_install:
-            commands.append("%s pip install %s --upgrade --no-cache" % (self._sudo_pip_command, " ".join(self._pip_install)))
+            commands.append("%s %s install %s --upgrade --no-cache" % (self._sudo_pip_command,
+                                                                       self._docker_pip_command,
+                                                                       " ".join(self._pip_install)))
 
         command = " && ".join(commands)
         return command

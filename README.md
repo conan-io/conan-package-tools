@@ -1235,6 +1235,7 @@ This is especially useful for CI integration.
   Set it with the bash executable path if it’s not in the PATH or you want to use a different one.
 - **CONAN_PIP_USE_SUDO** Use "sudo" when invoking pip, by default it will use sudo when not using Windows and not running docker image "conanio/". "False" to deactivate.
 - **CONAN_PIP_COMMAND** Run custom `pip` command when updating Conan. e.g. "/usr/bin/pip2"
+- **CONAN_DOCKER_PIP_COMMAND** Run custom `pip` command when updating Conan and CPT in Docker container. e.g. "/usr/bin/pip2"
 - **CONAN_DOCKER_USE_SUDO** Use "sudo" when invoking docker, by default it will use sudo when not using Windows. "False" to deactivate.
 - **CONAN_ALLOW_GCC_MINORS** Declare this variable if you want to allow gcc >=5 versions with the minor (5.1, 6.3 etc).
 - **CONAN_EXCLUDE_VCVARS_PRECOMMAND** For Visual Studio builds, it exclude the vcvars call to set the environment.

@@ -200,3 +200,37 @@ class Pkg(ConanFile):
         self.assertIn("compiler=clang", output)
         self.assertIn("arch=x86_64", output)
         self.assertIn("Cross-build from 'Linux:x86_64' to 'Android:x86_64'", output)
+
+    @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
+    def test_docker_custom_pip_command(self):
+        conanfile = """from conans import ConanFile
+        import os
+
+        class Pkg(ConanFile):
+            settings = "os", "compiler", "build_type", "arch"
+            requires = "zlib/1.2.11@conan/stable"
+
+            def build(self):
+                pass
+        """
+        self.save_conanfile(conanfile)
+        with tools.environment_append({"CONAN_DOCKER_ENTRY_SCRIPT": "pip install -U /tmp/cpt",
+                                       "CONAN_USERNAME": "bar",
+                                       "CONAN_DOCKER_IMAGE": "conanio/gcc8",
+                                       "CONAN_REFERENCE": "foo/0.0.1@bar/testing",
+                                       "CONAN_DOCKER_RUN_OPTIONS": "--network=host, --add-host=google.com:8.8.8.8 -v{}:/tmp/cpt".format(
+                                           self.root_project_folder),
+                                       "CONAN_DOCKER_IMAGE_SKIP_UPDATE": "TRUE",
+                                       "CONAN_FORCE_SELINUX": "TRUE",
+                                       "CONAN_DOCKER_SHELL": "/bin/bash -c",
+                                       "CONAN_DOCKER_PIP_COMMAND": "foobar"
+                                       }):
+            self.packager = ConanMultiPackager(gcc_versions=["8"],
+                                               archs=["x86_64"],
+                                               build_types=["Release"],
+                                               out=self.output.write)
+            self.packager.add({})
+            with self.assertRaises(Exception) as raised:
+                self.packager.run()
+                self.assertIn("Error updating the image", str(raised.exception))
+                self.assertIn("foobar install conan_package_tools", str(raised.exception))
