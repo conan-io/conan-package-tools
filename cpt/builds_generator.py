@@ -8,7 +8,7 @@ from cpt.tools import split_colon_env, transform_list_options_to_dict
 
 default_gcc_versions = ["4.9", "5", "6", "7", "8", "9"]
 default_clang_versions = ["3.8", "3.9", "4.0", "5.0", "6.0", "7.0", "8", "9"]
-default_visual_versions = ["14", "15", "16"]
+default_visual_versions = ["14", "15"]
 default_visual_runtimes = ["MT", "MD", "MTd", "MDd"]
 default_apple_clang_versions = ["9.0", "9.1", "10.0", "11.0"]
 default_archs = ["x86", "x86_64"]
