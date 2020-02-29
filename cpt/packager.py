@@ -499,7 +499,7 @@ class ConanMultiPackager(object):
             if hasattr(conanfile, "options") and conanfile.options and \
                not isinstance(conanfile.options.get(raw_option), list):
                 raw_options_for_building.remove(raw_option)
-        if raw_options_for_building:
+        if raw_options_for_building and conanfile:
             # get option and its values
             cloned_options = copy.copy(conanfile.options)
             for key, value in conanfile.options.items():
