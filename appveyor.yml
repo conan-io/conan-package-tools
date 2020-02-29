@@ -1,12 +1,12 @@
 environment:
   matrix:
     - PYTHON: "C:\\Python27"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       USE_UNSUPPORTED_CONAN_WITH_PYTHON_2: "1"
       TOXENV: "py27-conan-latest"
 
     - PYTHON: "C:\\Python37"
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       USE_UNSUPPORTED_CONAN_WITH_PYTHON_2: "1"
       TOXENV: "py37-conan-latest"
 
