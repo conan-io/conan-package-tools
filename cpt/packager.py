@@ -496,7 +496,8 @@ class ConanMultiPackager(object):
         # filter only valid options
         raw_options_for_building = [opt[opt.find(":") + 1:] for opt in build_all_options_values]
         for raw_option in reversed(raw_options_for_building):
-            if not isinstance(conanfile.options.get(raw_option), list):
+            if hasattr(conanfile, "options") and conanfile.options and \
+               not isinstance(conanfile.options.get(raw_option), list):
                 raw_options_for_building.remove(raw_option)
         if raw_options_for_building:
             # get option and its values
