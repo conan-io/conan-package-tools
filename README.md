@@ -1223,6 +1223,7 @@ This is especially useful for CI integration.
 - **CONAN_ARCHS**: Architectures to build for, comma separated, e.g. "x86,x86_64"
 - **CONAN_OPTIONS**: Conan build options, comma separated, e.g. "foobar:with_bar=True,foobar:with_qux=False"
 - **CONAN_SHARED_OPTION_NAME**: Set `shared_option_name` by environment variable, e.g. "mypackagename:shared"
+- **CONAN_BUILD_ALL_OPTIONS_VALUES**: Set `build_all_options_values` by environment variable, e.g. "mypackagename:foo,mypackagename:bar"
 - **CONAN_BUILD_TYPES**: Build types to build for, comma separated, e.g. "Release,Debug"
 - **CONAN_CPPSTDS**: List containing values for `compiler.cppstd`. Default None
 - **CONAN_VISUAL_VERSIONS**: Visual versions, comma separated, e.g. "12,14"

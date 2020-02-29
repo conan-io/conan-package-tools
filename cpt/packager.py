@@ -475,7 +475,7 @@ class ConanMultiPackager(object):
             env_shared_option_name = os.getenv("CONAN_SHARED_OPTION_NAME", None)
             shared_option_name = env_shared_option_name if str(env_shared_option_name).lower() != "false" else False
 
-        build_all_options_values = build_all_options_values or split_colon_env("CONAN_SHARED_OPTION_NAME") or []
+        build_all_options_values = build_all_options_values or split_colon_env("CONAN_BUILD_ALL_OPTIONS_VALUES") or []
         if not isinstance(build_all_options_values, list):
             raise Exception("'build_all_options_values' must be a list. e.g. ['foo:opt', 'foo:bar']")
 

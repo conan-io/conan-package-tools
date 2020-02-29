@@ -557,7 +557,7 @@ class AppTest(unittest.TestCase):
             for _, _, _, _, reference in builder.items:
                 self.assertTrue(str(reference) in ("lib/1.0@lasote/mychannel", "lib/2.0@lasote/mychannel"))
 
-    def select_defaults_test(self):
+    def test_select_defaults_test(self):
         with tools.environment_append({"CONAN_REFERENCE": "zlib/1.2.8"}):
             builder = ConanMultiPackager(platform_info=platform_mock_for("Linux"),
                                          gcc_versions=["4.8", "5"],
