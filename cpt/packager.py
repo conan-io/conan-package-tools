@@ -4,6 +4,7 @@ import re
 import sys
 import copy
 from collections import defaultdict
+from itertools import product
 
 import six
 from conans import tools
@@ -457,7 +458,8 @@ class ConanMultiPackager(object):
         self.auth_manager.login(remote_name)
 
     def add_common_builds(self, shared_option_name=None, pure_c=True,
-                          dll_with_static_runtime=False, reference=None, header_only=True):
+                          dll_with_static_runtime=False, reference=None, header_only=True,
+                          build_all_options_values=None):
         if reference:
             if "@" in reference:
                 reference = ConanFileReference.loads(reference)
@@ -474,16 +476,48 @@ class ConanMultiPackager(object):
             env_shared_option_name = os.getenv("CONAN_SHARED_OPTION_NAME", None)
             shared_option_name = env_shared_option_name if str(env_shared_option_name).lower() != "false" else False
 
+        build_all_options_values = build_all_options_values or split_colon_env("CONAN_BUILD_ALL_OPTIONS_VALUES") or []
+        if not isinstance(build_all_options_values, list):
+            raise Exception("'build_all_options_values' must be a list. e.g. ['foo:opt', 'foo:bar']")
+
+        conanfile = None
+        if os.path.exists(os.path.join(self.cwd, self.conanfile)):
+            conanfile = load_cf_class(os.path.join(self.cwd, self.conanfile), self.conan_api)
+
         header_only_option = None
+        if conanfile:
+            if hasattr(conanfile, "options") and conanfile.options and "header_only" in conanfile.options:
+                header_only_option = "%s:header_only" % reference.name
+
         if shared_option_name is None:
-            if os.path.exists(os.path.join(self.cwd, self.conanfile)):
-                conanfile = load_cf_class(os.path.join(self.cwd, self.conanfile), self.conan_api)
+            if conanfile:
                 if hasattr(conanfile, "options") and conanfile.options and "shared" in conanfile.options:
                     shared_option_name = "%s:shared" % reference.name
-                if hasattr(conanfile, "options") and conanfile.options and "header_only" in conanfile.options:
-                    header_only_option = "%s:header_only" % reference.name
 
-        builds = self.build_generator.get_builds(pure_c, shared_option_name, dll_with_static_runtime, reference)
+        # filter only valid options
+        raw_options_for_building = [opt[opt.find(":") + 1:] for opt in build_all_options_values]
+        for raw_option in reversed(raw_options_for_building):
+            if hasattr(conanfile, "options") and conanfile.options and \
+               not isinstance(conanfile.options.get(raw_option), list):
+                raw_options_for_building.remove(raw_option)
+        if raw_options_for_building and conanfile:
+            # get option and its values
+            cloned_options = copy.copy(conanfile.options)
+            for key, value in conanfile.options.items():
+                if key == "shared" and shared_option_name:
+                    continue
+                elif key not in raw_options_for_building:
+                    del cloned_options[key]
+            for key in cloned_options.keys():
+                # add package reference to the option name
+                if not key.startswith("{}:".format(reference.name)):
+                    cloned_options["{}:{}".format(reference.name, key)] = cloned_options.pop(key)
+            # combine all options x values (cartesian product)
+            build_all_options_values = [dict(zip(cloned_options, v)) for v in product(*cloned_options.values())]
+
+        builds = self.build_generator.get_builds(pure_c, shared_option_name,
+                                                 dll_with_static_runtime, reference,
+                                                 build_all_options_values)
 
         if header_only_option and header_only:
             if conanfile.default_options.get("header_only"):

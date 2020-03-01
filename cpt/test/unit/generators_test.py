@@ -25,8 +25,7 @@ class GeneratorsTest(unittest.TestCase):
              {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
             ({'compiler.version': '4.9', 'compiler': 'gcc', 'compiler.libcxx': "libstdc++",
               'build_type': 'Debug', 'compiler.exception': 'dwarf2', 'compiler.threads': 'posix',
-              'arch': 'x86'},
-             {'pack:shared': True},
+              'arch': 'x86'},             {'pack:shared': True},
              {},
              {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
 
@@ -136,6 +135,119 @@ class GeneratorsTest(unittest.TestCase):
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
+        mingw_configurations = [("4.9", "x86", "dwarf2", "posix")]
+        ref = ConanFileReference.loads("lib/1.0@conan/stable")
+        builds = get_mingw_builds(mingw_configurations,
+                                  ConanFileReference.loads("mingw_installer/1.0@conan/stable"),
+                                  ["x86"], "pack:shared", ["Release", "Debug"], [None], options={},
+                                  reference=ref,
+                                  build_all_options_values=[
+                                  {'pack:shared': True, 'pack:foo': True, 'pack:bar': True},
+                                  {'pack:shared': True, 'pack:foo': False, 'pack:bar': True},
+                                  {'pack:shared': True, 'pack:foo': True, 'pack:bar': False},
+                                  {'pack:shared': True, 'pack:foo': False, 'pack:bar': False},
+                                  {'pack:shared': False, 'pack:foo': True, 'pack:bar': True},
+                                  {'pack:shared': False, 'pack:foo': False, 'pack:bar': True},
+                                  {'pack:shared': False, 'pack:foo': True, 'pack:bar': False},
+                                  {'pack:shared': False, 'pack:foo': False, 'pack:bar': False}])
+        expected = [({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
+                      'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
+                      'build_type': 'Release', 'compiler.libcxx': 'libstdc++'},
+                     {'pack:shared': True, 'pack:foo': True, 'pack:bar': True}, {},
+                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+
+                    ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
+                      'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
+                      'build_type': 'Debug', 'compiler.libcxx': 'libstdc++'},
+                     {'pack:shared': True, 'pack:foo': True, 'pack:bar': True}, {},
+                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+
+                    ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
+                      'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
+                      'build_type': 'Release', 'compiler.libcxx': 'libstdc++'},
+                     {'pack:shared': True, 'pack:foo': False, 'pack:bar': True}, {},
+                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+
+                    ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
+                      'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
+                      'build_type': 'Debug', 'compiler.libcxx': 'libstdc++'},
+                     {'pack:shared': True, 'pack:foo': False, 'pack:bar': True}, {},
+                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+
+                    ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
+                      'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
+                      'build_type': 'Release', 'compiler.libcxx': 'libstdc++'},
+                     {'pack:shared': True, 'pack:foo': True, 'pack:bar': False}, {},
+                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+
+                    ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
+                      'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
+                      'build_type': 'Debug', 'compiler.libcxx': 'libstdc++'},
+                     {'pack:shared': True, 'pack:foo': True, 'pack:bar': False}, {},
+                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+
+                    ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
+                      'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
+                      'build_type': 'Release', 'compiler.libcxx': 'libstdc++'},
+                     {'pack:shared': True, 'pack:foo': False, 'pack:bar': False}, {},
+                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+
+                    ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
+                      'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
+                      'build_type': 'Debug', 'compiler.libcxx': 'libstdc++'},
+                     {'pack:shared': True, 'pack:foo': False, 'pack:bar': False}, {},
+                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+
+                    ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
+                      'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
+                      'build_type': 'Release', 'compiler.libcxx': 'libstdc++'},
+                     {'pack:shared': False, 'pack:foo': True, 'pack:bar': True}, {},
+                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+
+                    ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
+                      'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
+                      'build_type': 'Debug', 'compiler.libcxx': 'libstdc++'},
+                     {'pack:shared': False, 'pack:foo': True, 'pack:bar': True}, {},
+                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+
+                    ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
+                      'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
+                      'build_type': 'Release', 'compiler.libcxx': 'libstdc++'},
+                     {'pack:shared': False, 'pack:foo': False, 'pack:bar': True}, {},
+                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+
+                    ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
+                      'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
+                      'build_type': 'Debug', 'compiler.libcxx': 'libstdc++'},
+                     {'pack:shared': False, 'pack:foo': False, 'pack:bar': True}, {},
+                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+
+                    ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
+                      'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
+                      'build_type': 'Release', 'compiler.libcxx': 'libstdc++'},
+                     {'pack:shared': False, 'pack:foo': True, 'pack:bar': False}, {},
+                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+
+                    ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
+                      'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
+                      'build_type': 'Debug', 'compiler.libcxx': 'libstdc++'},
+                     {'pack:shared': False, 'pack:foo': True, 'pack:bar': False}, {},
+                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+
+                    ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
+                      'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
+                      'build_type': 'Release', 'compiler.libcxx': 'libstdc++'},
+                     {'pack:shared': False, 'pack:foo': False, 'pack:bar': False}, {},
+                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+
+                    ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
+                      'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
+                      'build_type': 'Debug', 'compiler.libcxx': 'libstdc++'},
+                     {'pack:shared': False, 'pack:foo': False, 'pack:bar': False}, {},
+                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
     def test_get_osx_apple_clang_builds(self):
         ref = ConanFileReference.loads("lib/1.0@conan/stable")
         builds = get_osx_apple_clang_builds(["8.0"], ["x86_64"], "pack:shared", pure_c=False, build_types=["Debug", "Release"],
@@ -214,6 +326,72 @@ class GeneratorsTest(unittest.TestCase):
                     ({'arch': 'x86_64', 'compiler.libcxx': 'libc++', 'compiler': 'apple-clang',
                       'compiler.version': '8.0', 'build_type': 'Release'},
                      {"qux:foobar": False, "foo:pkg": "bar"}, {}, {}, ref)]
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        ref = ConanFileReference.loads("lib/1.0@conan/stable")
+        builds = get_osx_apple_clang_builds(["8.0"], ["x86_64"], "pack:shared", pure_c=False,
+                                            build_types=["Debug", "Release"],
+                                            cppstds=[None],
+                                            options={},
+                                            reference=ref,
+                                            build_all_options_values=[
+                                                {'pack:shared': True, 'pack:foo': True, 'pack:bar': True},
+                                                {'pack:shared': True, 'pack:foo': False, 'pack:bar': True},
+                                                {'pack:shared': True, 'pack:foo': True, 'pack:bar': False},
+                                                {'pack:shared': True, 'pack:foo': False, 'pack:bar': False},
+                                                {'pack:shared': False, 'pack:foo': True, 'pack:bar': True},
+                                                {'pack:shared': False, 'pack:foo': False, 'pack:bar': True},
+                                                {'pack:shared': False, 'pack:foo': True, 'pack:bar': False},
+                                                {'pack:shared': False, 'pack:foo': False, 'pack:bar': False}])
+        expected = [({'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'apple-clang',
+                      'compiler.version': '8.0', 'compiler.libcxx': 'libc++'},
+                     {'pack:shared': True, 'pack:foo': True, 'pack:bar': True}, {}, {}, ref), (
+                    {'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'apple-clang',
+                     'compiler.version': '8.0', 'compiler.libcxx': 'libc++'},
+                    {'pack:shared': True, 'pack:foo': True, 'pack:bar': True}, {}, {}, ref), (
+                    {'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'apple-clang',
+                     'compiler.version': '8.0', 'compiler.libcxx': 'libc++'},
+                    {'pack:shared': True, 'pack:foo': False, 'pack:bar': True}, {}, {}, ref), (
+                    {'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'apple-clang',
+                     'compiler.version': '8.0', 'compiler.libcxx': 'libc++'},
+                    {'pack:shared': True, 'pack:foo': False, 'pack:bar': True}, {}, {}, ref), (
+                    {'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'apple-clang',
+                     'compiler.version': '8.0', 'compiler.libcxx': 'libc++'},
+                    {'pack:shared': True, 'pack:foo': True, 'pack:bar': False}, {}, {}, ref), (
+                    {'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'apple-clang',
+                     'compiler.version': '8.0', 'compiler.libcxx': 'libc++'},
+                    {'pack:shared': True, 'pack:foo': True, 'pack:bar': False}, {}, {}, ref), (
+                    {'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'apple-clang',
+                     'compiler.version': '8.0', 'compiler.libcxx': 'libc++'},
+                    {'pack:shared': True, 'pack:foo': False, 'pack:bar': False}, {}, {}, ref), (
+                    {'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'apple-clang',
+                     'compiler.version': '8.0', 'compiler.libcxx': 'libc++'},
+                    {'pack:shared': True, 'pack:foo': False, 'pack:bar': False}, {}, {}, ref), (
+                    {'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'apple-clang',
+                     'compiler.version': '8.0', 'compiler.libcxx': 'libc++'},
+                    {'pack:shared': False, 'pack:foo': True, 'pack:bar': True}, {}, {}, ref), (
+                    {'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'apple-clang',
+                     'compiler.version': '8.0', 'compiler.libcxx': 'libc++'},
+                    {'pack:shared': False, 'pack:foo': True, 'pack:bar': True}, {}, {}, ref), (
+                    {'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'apple-clang',
+                     'compiler.version': '8.0', 'compiler.libcxx': 'libc++'},
+                    {'pack:shared': False, 'pack:foo': False, 'pack:bar': True}, {}, {}, ref), (
+                    {'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'apple-clang',
+                     'compiler.version': '8.0', 'compiler.libcxx': 'libc++'},
+                    {'pack:shared': False, 'pack:foo': False, 'pack:bar': True}, {}, {}, ref), (
+                    {'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'apple-clang',
+                     'compiler.version': '8.0', 'compiler.libcxx': 'libc++'},
+                    {'pack:shared': False, 'pack:foo': True, 'pack:bar': False}, {}, {}, ref), (
+                    {'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'apple-clang',
+                     'compiler.version': '8.0', 'compiler.libcxx': 'libc++'},
+                    {'pack:shared': False, 'pack:foo': True, 'pack:bar': False}, {}, {}, ref), (
+                    {'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'apple-clang',
+                     'compiler.version': '8.0', 'compiler.libcxx': 'libc++'},
+                    {'pack:shared': False, 'pack:foo': False, 'pack:bar': False}, {}, {}, ref), (
+                    {'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'apple-clang',
+                     'compiler.version': '8.0', 'compiler.libcxx': 'libc++'},
+                    {'pack:shared': False, 'pack:foo': False, 'pack:bar': False}, {}, {}, ref)]
+
         self.assertEquals([tuple(a) for a in builds], expected)
 
     def test_get_linux_gcc_builds(self):
@@ -325,6 +503,121 @@ class GeneratorsTest(unittest.TestCase):
                      {"qux:bar": "foo", "*:pkg": False}, {}, {}, None),
                     ({'arch': 'x86_64', 'compiler.version': '6', 'build_type': 'Release', 'compiler': 'gcc'},
                      {"qux:bar": "foo", "*:pkg": False}, {}, {}, None)]
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_linux_gcc_builds(["9"], ["x86_64"], "pack:shared", pure_c=False,
+                                      build_types=["Debug", "Release"], cppstds=[None], options={},
+                                      build_all_options_values=[{"pack:shared": True, "pack:foo": True, "pack:bar": True},
+                                                                {"pack:shared": True, "pack:foo": False, "pack:bar": True},
+                                                                {"pack:shared": True, "pack:foo": True, "pack:bar": False},
+                                                                {"pack:shared": True, "pack:foo": False, "pack:bar": False},
+                                                                {"pack:shared": False, "pack:foo": True, "pack:bar": True},
+                                                                {"pack:shared": False, "pack:foo": False, "pack:bar": True},
+                                                                {"pack:shared": False, "pack:foo": True, "pack:bar": False},
+                                                                {"pack:shared": False, "pack:foo": False, "pack:bar": False}])
+        expected = [({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': True, 'pack:bar': True}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++11',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': True, 'pack:bar': True}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': True, 'pack:bar': True}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++11',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': True, 'pack:bar': True}, {}, {}, None),
+
+                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': False, 'pack:bar': True}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++11',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': False, 'pack:bar': True}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': False, 'pack:bar': True}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++11',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': False, 'pack:bar': True}, {}, {}, None),
+
+                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': True, 'pack:bar': False}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++11',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': True, 'pack:bar': False}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': True, 'pack:bar': False}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++11',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': True, 'pack:bar': False}, {}, {}, None),
+
+                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': False, 'pack:bar': False}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++11',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': False, 'pack:bar': False}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': False, 'pack:bar': False}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++11',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': False, 'pack:bar': False}, {}, {}, None),
+
+                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': True, 'pack:bar': True}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++11',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': True, 'pack:bar': True}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': True, 'pack:bar': True}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++11',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': True, 'pack:bar': True}, {}, {}, None),
+
+                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': False, 'pack:bar': True}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++11',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': False, 'pack:bar': True}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': False, 'pack:bar': True}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++11',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': False, 'pack:bar': True}, {}, {}, None),
+
+                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': True, 'pack:bar': False}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++11',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': True, 'pack:bar': False}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': True, 'pack:bar': False}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++11',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': True, 'pack:bar': False}, {}, {}, None),
+
+                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': False, 'pack:bar': False}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++11',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': False, 'pack:bar': False}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': False, 'pack:bar': False}, {}, {}, None),
+                    ({'compiler': 'gcc', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++11',
+                      'compiler.version': '9', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': False, 'pack:bar': False}, {}, {}, None)]
         self.assertEquals([tuple(a) for a in builds], expected)
 
     def test_get_linux_clang_builds(self):
@@ -446,6 +739,126 @@ class GeneratorsTest(unittest.TestCase):
                          'arch': 'x86_64'},
                         {"foo:bar": "qux", "pkg:shared": True}, {}, {}, ref)]
         self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_linux_clang_builds(["6.0"], ["x86_64"], "pack:shared", pure_c=False,
+                                        build_types=["Debug", "Release"], cppstds=[None],
+                                        options={}, reference=ref,
+                                        build_all_options_values=[
+                                          {"pack:shared": True, "pack:foo": True, "pack:bar": True},
+                                          {"pack:shared": True, "pack:foo": False, "pack:bar": True},
+                                          {"pack:shared": True, "pack:foo": True, "pack:bar": False},
+                                          {"pack:shared": True, "pack:foo": False, "pack:bar": False},
+                                          {"pack:shared": False, "pack:foo": True, "pack:bar": True},
+                                          {"pack:shared": False, "pack:foo": False, "pack:bar": True},
+                                          {"pack:shared": False, "pack:foo": True, "pack:bar": False},
+                                          {"pack:shared": False, "pack:foo": False, "pack:bar": False}
+                                        ])
+        expected = [({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': True, 'pack:bar': True}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': True, 'pack:bar': True}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': True, 'pack:bar': True}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': True, 'pack:bar': True}, {}, {}, ref),
+
+                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': False, 'pack:bar': True}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': False, 'pack:bar': True}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': False, 'pack:bar': True}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': False, 'pack:bar': True}, {}, {}, ref),
+
+                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': True, 'pack:bar': False}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': True, 'pack:bar': False}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': True, 'pack:bar': False}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': True, 'pack:bar': False}, {}, {}, ref),
+
+                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': False, 'pack:bar': False}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': False, 'pack:bar': False}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': False, 'pack:bar': False}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': True, 'pack:foo': False, 'pack:bar': False}, {}, {}, ref),
+
+                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': True, 'pack:bar': True}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': True, 'pack:bar': True}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': True, 'pack:bar': True}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': True, 'pack:bar': True}, {}, {}, ref),
+
+                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': False, 'pack:bar': True}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': False, 'pack:bar': True}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': False, 'pack:bar': True}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': False, 'pack:bar': True}, {}, {}, ref),
+
+                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': True, 'pack:bar': False}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': True, 'pack:bar': False}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': True, 'pack:bar': False}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': True, 'pack:bar': False}, {}, {}, ref),
+
+                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': False, 'pack:bar': False}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Debug', 'compiler.libcxx': 'libc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': False, 'pack:bar': False}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libstdc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': False, 'pack:bar': False}, {}, {}, ref),
+                    ({'compiler': 'clang', 'build_type': 'Release', 'compiler.libcxx': 'libc++',
+                      'compiler.version': '6.0', 'arch': 'x86_64'},
+                     {'pack:shared': False, 'pack:foo': False, 'pack:bar': False}, {}, {}, ref)]
+
+        b = [tuple(a) for a in builds]
+        self.assertEquals(b, expected)
 
     def test_visual_build_generator(self):
         ref = ConanFileReference.loads("lib/1.0@conan/stable")
@@ -996,5 +1409,126 @@ class GeneratorsTest(unittest.TestCase):
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
               'compiler.cppstd': '17', 'compiler.version': '15'},
              {}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        ref = ConanFileReference.loads("lib/1.0@conan/stable")
+        builds = get_visual_builds(visual_versions=["10", "14"],
+                                   archs=["x86"], visual_runtimes=["MDd", "MTd"],
+                                   visual_toolsets=None,
+                                   shared_option_name=None,
+                                   dll_with_static_runtime=False,
+                                   vs10_x86_64_enabled=True,
+                                   build_types=["Debug", "Release", "RelWithDebInfo", "MinSizeRel"],
+                                   cppstds=[None],
+                                   options={},
+                                   reference=ref,
+                                   build_all_options_values=[
+                                       {'pack:shared': True, 'pack:foo': True, 'pack:bar': True},
+                                       {'pack:shared': True, 'pack:foo': False, 'pack:bar': True},
+                                       {'pack:shared': True, 'pack:foo': True, 'pack:bar': False},
+                                       {'pack:shared': True, 'pack:foo': False, 'pack:bar': False},
+                                       {'pack:shared': False, 'pack:foo': True, 'pack:bar': True},
+                                       {'pack:shared': False, 'pack:foo': False, 'pack:bar': True},
+                                       {'pack:shared': False, 'pack:foo': True, 'pack:bar': False},
+                                       {'pack:shared': False, 'pack:foo': False, 'pack:bar': False}]
+                                   )
+
+        expected = [({'compiler': 'Visual Studio', 'compiler.version': '10', 'arch': 'x86',
+                      'build_type': 'Debug', 'compiler.runtime': 'MDd'},
+                     {'pack:shared': True, 'pack:foo': True, 'pack:bar': True}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '10', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MDd'},
+                    {'pack:shared': True, 'pack:foo': False, 'pack:bar': True}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '10', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MDd'},
+                    {'pack:shared': True, 'pack:foo': True, 'pack:bar': False}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '10', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MDd'},
+                    {'pack:shared': True, 'pack:foo': False, 'pack:bar': False}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '10', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MDd'},
+                    {'pack:shared': False, 'pack:foo': True, 'pack:bar': True}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '10', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MDd'},
+                    {'pack:shared': False, 'pack:foo': False, 'pack:bar': True}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '10', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MDd'},
+                    {'pack:shared': False, 'pack:foo': True, 'pack:bar': False}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '10', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MDd'},
+                    {'pack:shared': False, 'pack:foo': False, 'pack:bar': False}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '10', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MTd'},
+                    {'pack:shared': True, 'pack:foo': True, 'pack:bar': True}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '10', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MTd'},
+                    {'pack:shared': True, 'pack:foo': False, 'pack:bar': True}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '10', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MTd'},
+                    {'pack:shared': True, 'pack:foo': True, 'pack:bar': False}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '10', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MTd'},
+                    {'pack:shared': True, 'pack:foo': False, 'pack:bar': False}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '10', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MTd'},
+                    {'pack:shared': False, 'pack:foo': True, 'pack:bar': True}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '10', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MTd'},
+                    {'pack:shared': False, 'pack:foo': False, 'pack:bar': True}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '10', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MTd'},
+                    {'pack:shared': False, 'pack:foo': True, 'pack:bar': False}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '10', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MTd'},
+                    {'pack:shared': False, 'pack:foo': False, 'pack:bar': False}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '14', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MDd'},
+                    {'pack:shared': True, 'pack:foo': True, 'pack:bar': True}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '14', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MDd'},
+                    {'pack:shared': True, 'pack:foo': False, 'pack:bar': True}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '14', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MDd'},
+                    {'pack:shared': True, 'pack:foo': True, 'pack:bar': False}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '14', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MDd'},
+                    {'pack:shared': True, 'pack:foo': False, 'pack:bar': False}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '14', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MDd'},
+                    {'pack:shared': False, 'pack:foo': True, 'pack:bar': True}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '14', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MDd'},
+                    {'pack:shared': False, 'pack:foo': False, 'pack:bar': True}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '14', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MDd'},
+                    {'pack:shared': False, 'pack:foo': True, 'pack:bar': False}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '14', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MDd'},
+                    {'pack:shared': False, 'pack:foo': False, 'pack:bar': False}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '14', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MTd'},
+                    {'pack:shared': True, 'pack:foo': True, 'pack:bar': True}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '14', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MTd'},
+                    {'pack:shared': True, 'pack:foo': False, 'pack:bar': True}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '14', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MTd'},
+                    {'pack:shared': True, 'pack:foo': True, 'pack:bar': False}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '14', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MTd'},
+                    {'pack:shared': True, 'pack:foo': False, 'pack:bar': False}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '14', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MTd'},
+                    {'pack:shared': False, 'pack:foo': True, 'pack:bar': True}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '14', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MTd'},
+                    {'pack:shared': False, 'pack:foo': False, 'pack:bar': True}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '14', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MTd'},
+                    {'pack:shared': False, 'pack:foo': True, 'pack:bar': False}, {}, {}, ref), (
+                    {'compiler': 'Visual Studio', 'compiler.version': '14', 'arch': 'x86',
+                     'build_type': 'Debug', 'compiler.runtime': 'MTd'},
+                    {'pack:shared': False, 'pack:foo': False, 'pack:bar': False}, {}, {}, ref)]
 
         self.assertEquals([tuple(a) for a in builds], expected)

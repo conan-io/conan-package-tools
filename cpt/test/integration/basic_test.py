@@ -322,3 +322,22 @@ class Pkg(ConanFile):
             if options.get("qux:header_only") == (not default_value):
                 header_only += 1
         return header_only
+
+    def test_build_all_option_values(self):
+        conanfile = """from conans import ConanFile
+class Pkg(ConanFile):
+    name = "qux"
+    version = "0.1.0"
+    options = {"shared": [True, False], "fPIC": [True, False],
+               "header_only": [True, False], "foo": [True, False],
+               "bar": ["baz", "qux", "foobar"], "blah": "ANY"}
+    default_options = {"shared": False, "fPIC": True, "header_only": False,
+                       "foo": False, "bar": "baz", "blah": 42}
+
+    def configure(self):
+        self.output.info("hello all")
+"""
+        tools.save(os.path.join(self.tmp_folder, "conanfile.py"), conanfile)
+        self.packager = ConanMultiPackager(out=self.output.write)
+        self.packager.add_common_builds(pure_c=False, build_all_options_values=["qux:foo", "qux:bar", "qux:blah"])
+        self.packager.run()
