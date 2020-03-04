@@ -1,6 +1,6 @@
 
-__version__ = '0.31.1'
-NEWEST_CONAN_SUPPORTED = "1.22.100"
+__version__ = '0.31.2'
+NEWEST_CONAN_SUPPORTED = "1.22.300"
 
 
 def get_client_version():
