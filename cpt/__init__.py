@@ -1,7 +1,6 @@
 
-__version__ = '0.31.1'
-NEWEST_CONAN_SUPPORTED = "1.22.200"
-
+__version__ = '0.31.2'
+NEWEST_CONAN_SUPPORTED = "1.22.300"
 
 def get_client_version():
     from conans.model.version import Version
