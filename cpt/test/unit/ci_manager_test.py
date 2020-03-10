@@ -198,12 +198,12 @@ class CIManagerTest(unittest.TestCase):
     def test_github_actions_instance(self):
         gha_env = {"GITHUB_ACTIONS": "true",
                    "GITHUB_SHA": "98e984eacf4e3dfea431c8850c8c181a08e8cf3d",
-                   "GITHUB_REF": "testing/5.6.5",
-                   "GITHUB_BASE_REF": "testing/5.6.5",
+                   "GITHUB_REF": "refs/heads/testing/5.6.5",
+                   "GITHUB_BASE_REF": "refs/heads/testing/5.6.5",
                    "GITHUB_EVENT_NAME": "push"}
         with tools.environment_append(gha_env):
             manager = CIManager(self.printer)
-            self.assertEquals(manager.get_branch(), gha_env["GITHUB_REF"])
+            self.assertEquals(manager.get_branch(), "testing/5.6.5")
             self.assertEquals(manager.get_commit_id(), gha_env["GITHUB_SHA"])
             self.assertEquals(manager.is_pull_request(), False)
 
@@ -289,5 +289,3 @@ class CIManagerTest(unittest.TestCase):
 
             self.assertEquals(os.getenv('CONAN_LOGIN_USERNAME'), "bamboo")
             self.assertEquals(os.getenv('CONAN_USER_VAR'), "foobar")
-
-
