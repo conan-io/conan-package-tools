@@ -307,6 +307,8 @@ class GitHubActionsManager(GenericManager):
         branch = os.getenv("GITHUB_REF", None)
         if self.is_pull_request():
             branch = os.getenv("GITHUB_BASE_REF", "")
+        if branch.startswith("refs/heads/"):
+            branch = branch[11:]
         return branch
 
     def is_pull_request(self):
