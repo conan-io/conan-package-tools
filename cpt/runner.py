@@ -20,7 +20,7 @@ class CreateRunner(object):
                  cwd=None, printer=None, upload=False, upload_only_recipe=None,
                  test_folder=None, config_url=None, config_args=None,
                  upload_dependencies=None, conanfile=None, skip_recipe_export=False,
-                 update_dependencies=False):
+                 update_dependencies=False, lockfile=None):
 
         self.printer = printer or Printer()
         self._cwd = cwd or os.getcwd()
@@ -37,6 +37,7 @@ class CreateRunner(object):
         self._config_args = config_args
         self._upload_only_recipe = upload_only_recipe
         self._conanfile = conanfile
+        self._lockfile = lockfile
         self._upload_dependencies = upload_dependencies.split(",") if \
                                     isinstance(upload_dependencies, str) else \
                                     upload_dependencies
@@ -124,7 +125,8 @@ class CreateRunner(object):
                                                         profile_names=[self._profile_abs_path],
                                                         test_folder=self._test_folder,
                                                         not_export=self.skip_recipe_export,
-                                                        update=self._update_dependencies)
+                                                        update=self._update_dependencies,
+                                                        lockfile=self._lockfile)
                         except exc_class as e:
                             self.printer.print_rule()
                             self.printer.print_message("Skipped configuration by the recipe: "
@@ -168,6 +170,7 @@ class DockerCreateRunner(object):
                  lcow_user_workaround="",
                  test_folder=None,
                  pip_install=None,
+                 docker_pip_command=None,
                  config_url=None,
                  config_args=None,
                  printer=None,
@@ -175,7 +178,8 @@ class DockerCreateRunner(object):
                  conanfile=None,
                  force_selinux=None,
                  skip_recipe_export=False,
-                 update_dependencies=False):
+                 update_dependencies=False,
+                 lockfile=None):
 
         self.printer = printer or Printer()
         self._upload = upload
@@ -201,10 +205,12 @@ class DockerCreateRunner(object):
         self._runner = PrintRunner(runner, self.printer)
         self._test_folder = test_folder
         self._pip_install = pip_install
+        self._docker_pip_command = docker_pip_command
         self._config_url = config_url
         self._config_args = config_args
         self._upload_dependencies = upload_dependencies or []
         self._conanfile = conanfile
+        self._lockfile = lockfile
         self._force_selinux = force_selinux
         self._skip_recipe_export = skip_recipe_export
         self._update_dependencies = update_dependencies
@@ -213,18 +219,23 @@ class DockerCreateRunner(object):
         commands = []
         # Hack for testing when retrieving cpt from artifactory repo
         if "conan-package-tools" not in self._conan_pip_package:
-            commands.append("%s pip install conan_package_tools==%s "
+            commands.append("%s %s install conan_package_tools==%s "
                             "--upgrade --no-cache" % (self._sudo_pip_command,
+                                                      self._docker_pip_command,
                                                       package_tools_version))
 
         if self._conan_pip_package:
-            commands.append("%s pip install %s --no-cache" % (self._sudo_pip_command,
+            commands.append("%s %s install %s --no-cache" % (self._sudo_pip_command,
+                                                             self._docker_pip_command,
                                                               self._conan_pip_package))
         else:
-            commands.append("%s pip install conan --upgrade --no-cache" % self._sudo_pip_command)
+            commands.append("%s %s install conan --upgrade --no-cache" % (self._sudo_pip_command,
+                                                                          self._docker_pip_command))
 
         if self._pip_install:
-            commands.append("%s pip install %s --upgrade --no-cache" % (self._sudo_pip_command, " ".join(self._pip_install)))
+            commands.append("%s %s install %s --upgrade --no-cache" % (self._sudo_pip_command,
+                                                                       self._docker_pip_command,
+                                                                       " ".join(self._pip_install)))
 
         command = " && ".join(commands)
         return command
@@ -330,6 +341,7 @@ class DockerCreateRunner(object):
         ret["CPT_CONFIG_ARGS"] = escape_env(self._config_args)
         ret["CPT_UPLOAD_DEPENDENCIES"] = escape_env(self._upload_dependencies)
         ret["CPT_CONANFILE"] = escape_env(self._conanfile)
+        ret["CPT_LOCKFILE"] = escape_env(self._lockfile)
         ret["CPT_SKIP_RECIPE_EXPORT"] = self._skip_recipe_export
         ret["CPT_UPDATE_DEPENDENCIES"] = self._update_dependencies
 

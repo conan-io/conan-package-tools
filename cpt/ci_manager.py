@@ -35,6 +35,10 @@ def is_shippable():
     return os.getenv("SHIPPABLE", False)
 
 
+def is_github_actions():
+    return os.getenv("GITHUB_ACTIONS", False)
+
+
 class CIManager(object):
     def __init__(self, printer):
 
@@ -56,6 +60,8 @@ class CIManager(object):
             self.manager = AzurePipelinesManager(printer)
         elif is_shippable():
             self.manager = ShippableManager(printer)
+        elif is_github_actions():
+            self.manager = GitHubActionsManager(printer)
         else:
             self.manager = GenericManager(printer)
 
@@ -279,6 +285,32 @@ class AzurePipelinesManager(GenericManager):
 
     def is_pull_request(self):
         return os.getenv("BUILD_REASON", "false") == "PullRequest"
+
+
+class GitHubActionsManager(GenericManager):
+    def __init__(self, printer):
+        super(GitHubActionsManager, self).__init__(printer)
+        self.printer.print_message("CI detected: GitHub Actions")
+
+    def get_commit_msg(self):
+        try:
+            msg = subprocess.check_output("git log -1 --format=%s%n%b {}".format(self.get_commit_id()),
+                                          shell=True).decode().strip()
+            return msg
+        except Exception:
+            return None
+
+    def get_commit_id(self):
+        return os.getenv("GITHUB_SHA", None)
+
+    def get_branch(self):
+        branch = os.getenv("GITHUB_REF", None)
+        if self.is_pull_request():
+            branch = os.getenv("GITHUB_BASE_REF", "")
+        return branch
+
+    def is_pull_request(self):
+        return os.getenv("GITHUB_EVENT_NAME", "") == "pull_request"
 
 
 class ShippableManager(GenericManager):

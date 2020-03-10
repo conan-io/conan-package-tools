@@ -2,7 +2,9 @@ import os
 import platform
 import re
 import sys
+import copy
 from collections import defaultdict
+from itertools import product
 
 import six
 from conans import tools
@@ -139,7 +141,8 @@ class ConanMultiPackager(object):
                  upload_dependencies=None,
                  force_selinux=None,
                  skip_recipe_export=False,
-                 update_dependencies=None):
+                 update_dependencies=None,
+                 lockfile=None):
 
         conan_version = get_client_version()
 
@@ -262,6 +265,7 @@ class ConanMultiPackager(object):
         pip_found = True if tools.os_info.is_windows else tools.which(self.pip_command)
         if not pip_found or not "pip" in self.pip_command:
             raise Exception("CONAN_PIP_COMMAND: '{}' is not a valid pip command.".format(self.pip_command))
+        self.docker_pip_command = os.getenv("CONAN_DOCKER_PIP_COMMAND", "pip")
 
         self.docker_shell = docker_shell or os.getenv("CONAN_DOCKER_SHELL")
 
@@ -334,6 +338,8 @@ class ConanMultiPackager(object):
         self.skip_recipe_export = skip_recipe_export or \
                                      get_bool_from_env("CONAN_SKIP_RECIPE_EXPORT")
         self.config_args = config_args or os.getenv("CONAN_CONFIG_ARGS")
+
+        self.lockfile = lockfile or os.getenv("CONAN_LOCKFILE")
 
         def valid_pair(var, value):
             return (isinstance(value, six.string_types) or
@@ -452,7 +458,8 @@ class ConanMultiPackager(object):
         self.auth_manager.login(remote_name)
 
     def add_common_builds(self, shared_option_name=None, pure_c=True,
-                          dll_with_static_runtime=False, reference=None):
+                          dll_with_static_runtime=False, reference=None, header_only=True,
+                          build_all_options_values=None):
         if reference:
             if "@" in reference:
                 reference = ConanFileReference.loads(reference)
@@ -469,14 +476,63 @@ class ConanMultiPackager(object):
             env_shared_option_name = os.getenv("CONAN_SHARED_OPTION_NAME", None)
             shared_option_name = env_shared_option_name if str(env_shared_option_name).lower() != "false" else False
 
+        build_all_options_values = build_all_options_values or split_colon_env("CONAN_BUILD_ALL_OPTIONS_VALUES") or []
+        if not isinstance(build_all_options_values, list):
+            raise Exception("'build_all_options_values' must be a list. e.g. ['foo:opt', 'foo:bar']")
+
+        conanfile = None
+        if os.path.exists(os.path.join(self.cwd, self.conanfile)):
+            conanfile = load_cf_class(os.path.join(self.cwd, self.conanfile), self.conan_api)
+
+        header_only_option = None
+        if conanfile:
+            if hasattr(conanfile, "options") and conanfile.options and "header_only" in conanfile.options:
+                header_only_option = "%s:header_only" % reference.name
+
         if shared_option_name is None:
-            if os.path.exists(os.path.join(self.cwd, self.conanfile)):
-                conanfile = load_cf_class(os.path.join(self.cwd, self.conanfile), self.conan_api)
+            if conanfile:
                 if hasattr(conanfile, "options") and conanfile.options and "shared" in conanfile.options:
                     shared_option_name = "%s:shared" % reference.name
 
-        tmp = self.build_generator.get_builds(pure_c, shared_option_name, dll_with_static_runtime, reference)
-        self._builds.extend(tmp)
+        # filter only valid options
+        raw_options_for_building = [opt[opt.find(":") + 1:] for opt in build_all_options_values]
+        for raw_option in reversed(raw_options_for_building):
+            if hasattr(conanfile, "options") and conanfile.options and \
+               not isinstance(conanfile.options.get(raw_option), list):
+                raw_options_for_building.remove(raw_option)
+        if raw_options_for_building and conanfile:
+            # get option and its values
+            cloned_options = copy.copy(conanfile.options)
+            for key, value in conanfile.options.items():
+                if key == "shared" and shared_option_name:
+                    continue
+                elif key not in raw_options_for_building:
+                    del cloned_options[key]
+            for key in cloned_options.keys():
+                # add package reference to the option name
+                if not key.startswith("{}:".format(reference.name)):
+                    cloned_options["{}:{}".format(reference.name, key)] = cloned_options.pop(key)
+            # combine all options x values (cartesian product)
+            build_all_options_values = [dict(zip(cloned_options, v)) for v in product(*cloned_options.values())]
+
+        builds = self.build_generator.get_builds(pure_c, shared_option_name,
+                                                 dll_with_static_runtime, reference,
+                                                 build_all_options_values)
+
+        if header_only_option and header_only:
+            if conanfile.default_options.get("header_only"):
+                cloned_builds = copy.deepcopy(builds)
+                for settings, options, env_vars, build_requires, reference in cloned_builds:
+                    options.update({header_only_option: False})
+                builds.extend(cloned_builds)
+            else:
+                settings, options, env_vars, build_requires, reference = builds[0]
+                cloned_options = copy.copy(options)
+                cloned_options.update({header_only_option: True})
+                builds.append(BuildConf(copy.copy(settings), cloned_options, copy.copy(env_vars),
+                                        copy.copy(build_requires), reference))
+
+        self._builds.extend(builds)
 
     def add(self, settings=None, options=None, env_vars=None, build_requires=None, reference=None):
         settings = settings or {}
@@ -628,6 +684,7 @@ class ConanMultiPackager(object):
                                  config_args=self.config_args,
                                  upload_dependencies=self.upload_dependencies,
                                  conanfile=self.conanfile,
+                                 lockfile=self.lockfile,
                                  skip_recipe_export=skip_recipe_export,
                                  update_dependencies=self.update_dependencies)
                 r.run()
@@ -655,11 +712,13 @@ class ConanMultiPackager(object):
                                        lcow_user_workaround=self.lcow_user_workaround,
                                        test_folder=self.test_folder,
                                        pip_install=self.pip_install,
+                                       docker_pip_command=self.docker_pip_command,
                                        config_url=self.config_url,
                                        config_args=self.config_args,
                                        printer=self.printer,
                                        upload_dependencies=self.upload_dependencies,
                                        conanfile=self.conanfile,
+                                       lockfile=self.lockfile,
                                        force_selinux=self.force_selinux,
                                        skip_recipe_export=skip_recipe_export,
                                        update_dependencies=self.update_dependencies)
