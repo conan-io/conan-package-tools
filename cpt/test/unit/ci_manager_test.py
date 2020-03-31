@@ -218,6 +218,13 @@ class CIManagerTest(unittest.TestCase):
             self.assertEquals(manager.get_commit_id(), gha_env["GITHUB_SHA"])
             self.assertEquals(manager.is_pull_request(), True)
 
+        gha_env = {"GITHUB_ACTIONS": "true",
+                   "GITHUB_REF": "refs/heads/testing",
+                   "GITHUB_EVENT_NAME": "push"}
+        with tools.environment_append(gha_env):
+            manager = CIManager(self.printer)
+            self.assertEquals(manager.get_branch(), "testing")
+
     def test_build_policy(self):
         # Travis
         with tools.environment_append({"TRAVIS": "1",
@@ -289,5 +296,3 @@ class CIManagerTest(unittest.TestCase):
 
             self.assertEquals(os.getenv('CONAN_LOGIN_USERNAME'), "bamboo")
             self.assertEquals(os.getenv('CONAN_USER_VAR'), "foobar")
-
-
