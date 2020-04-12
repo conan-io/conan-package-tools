@@ -457,7 +457,7 @@ class ConanMultiPackager(object):
     def login(self, remote_name):
         self.auth_manager.login(remote_name)
 
-    def add_common_builds(self, shared_option_name=None, pure_c=True,
+    def add_common_builds(self, shared_option_name=None, pure_c=None,
                           dll_with_static_runtime=False, reference=None, header_only=True,
                           build_all_options_values=None):
         if reference:
@@ -475,6 +475,10 @@ class ConanMultiPackager(object):
         if shared_option_name is None:
             env_shared_option_name = os.getenv("CONAN_SHARED_OPTION_NAME", None)
             shared_option_name = env_shared_option_name if str(env_shared_option_name).lower() != "false" else False
+
+        if pure_c is None:
+            env_pure_c = os.getenv("CONAN_PURE_C", True)
+            pure_c = True if str(env_pure_c).lower() != "false" else False
 
         build_all_options_values = build_all_options_values or split_colon_env("CONAN_BUILD_ALL_OPTIONS_VALUES") or []
         if not isinstance(build_all_options_values, list):
