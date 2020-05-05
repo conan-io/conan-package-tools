@@ -6,13 +6,6 @@ jobs:
   fast_finish: true
   include:
 
-    - stage: Conan 1.25 (Pre Release) - Linux
-      python: 2.7
-      env: TOXENV=py27-conan-prerelease
-    - python: 3.7
-      env: TOXENV=py37-conan-prerelease
-      dist: xenial
-
     - stage: Conan Develop - Linux
       python: 2.7
       env: TOXENV=py27-conan-dev
