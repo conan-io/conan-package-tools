@@ -55,7 +55,7 @@ class Pkg(ConanFile):
 class Pkg(ConanFile):
     name = "foobar"
     version = "2.0"
-    requires = "bar/0.1.0@foo/stable", "foo/1.0.0@bar/testing", "qux/1.0.0"
+    requires = "bar/0.1.0@foo/stable", "foo/1.0.0@bar/testing", "qux/1.0.0@qux/stable"
 
     def build(self):
         self.output.warn("BUILDING")
@@ -66,7 +66,7 @@ class Pkg(ConanFile):
         self._server = TestServer(users={"user": "password"},
                                   write_permissions=[("bar/0.1.0@foo/stable", "user"),
                                                      ("foo/1.0.0@bar/testing", "user"),
-                                                     ("qux/1.0.0", "user")])
+                                                     ("qux/1.0.0@qux/stable", "user")])
         self._client = TestClient(servers={"default": self._server},
                                   users={"default": [("user", "password")]})
         self._client.save({"conanfile_bar.py": self.conanfile_bar})
@@ -74,7 +74,7 @@ class Pkg(ConanFile):
         self._client.save({"conanfile_foo.py": self.conanfile_foo})
         self._client.run("export conanfile_foo.py bar/testing")
         self._client.save({"conanfile_foo3.py": self.conanfile_foo_3})
-        self._client.run("export conanfile_foo3.py")
+        self._client.run("export conanfile_foo3.py qux/stable")
         self._client.save({"conanfile.py": self.conanfile})
 
     def test_update_some_dependencies(self):
@@ -95,7 +95,7 @@ class Pkg(ConanFile):
             self.assertIn("Uploading packages for 'foobar/2.0@user/testing'", self._client.out)
             self.assertIn("Uploading packages for 'bar/0.1.0@foo/stable'", self._client.out)
             self.assertIn("Uploading packages for 'foo/1.0.0@bar/testing'", self._client.out)
-            self.assertIn("Uploading packages for 'qux/1.0.0@'", self._client.out)
+            self.assertIn("Uploading packages for 'qux/1.0.0@qux/stable'", self._client.out)
 
             # only build and upload foobar
             mulitpackager = get_patched_multipackager(self._client, username="user",
@@ -108,14 +108,14 @@ class Pkg(ConanFile):
             mulitpackager.run()
             self.assertRegex(str(self._client.out), r'bar/0.1.0@foo/stable:.* - Cache')
             self.assertRegex(str(self._client.out), r'foo/1.0.0@bar/testing:.* - Cache')
-            self.assertRegex(str(self._client.out), r'qux/1.0.0:.* - Cache')
+            self.assertRegex(str(self._client.out), r'qux/1.0.0@qux/stable:.* - Cache')
 
             self.assertRegex(str(self._client.out), r'foobar/2.0@user/testing:.* - Build')
 
             self.assertIn("Uploading packages for 'foobar/2.0@user/testing'", self._client.out)
             self.assertNotIn("Uploading packages for 'bar/0.1.0@foo/stable'", self._client.out)
             self.assertNotIn("Uploading packages for 'foo/1.0.0@bar/testing'", self._client.out)
-            self.assertNotIn("Uploading packages for 'qux/1.0.0@'", self._client.out)
+            self.assertNotIn("Uploading packages for 'qux/1.0.0@qux/stable'", self._client.out)
 
 
 
