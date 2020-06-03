@@ -106,11 +106,11 @@ class Pkg(ConanFile):
                                                       conanfile="conanfile.py")
             mulitpackager.add({}, {})
             mulitpackager.run()
-            self.assertRegex(str(self._client.out), r'bar/0.1.0@foo/stable:.* - Cache')
-            self.assertRegex(str(self._client.out), r'foo/1.0.0@bar/testing:.* - Cache')
-            self.assertRegex(str(self._client.out), r'qux/1.0.0@qux/stable:.* - Cache')
+            self.assertRegexpMatches(str(self._client.out), r'bar/0.1.0@foo/stable:.* - Cache')
+            self.assertRegexpMatches(str(self._client.out), r'foo/1.0.0@bar/testing:.* - Cache')
+            self.assertRegexpMatches(str(self._client.out), r'qux/1.0.0@qux/stable:.* - Cache')
 
-            self.assertRegex(str(self._client.out), r'foobar/2.0@user/testing:.* - Build')
+            self.assertRegexpMatches(str(self._client.out), r'foobar/2.0@user/testing:.* - Build')
 
             self.assertIn("Uploading packages for 'foobar/2.0@user/testing'", self._client.out)
             self.assertNotIn("Uploading packages for 'bar/0.1.0@foo/stable'", self._client.out)
