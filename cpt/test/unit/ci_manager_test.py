@@ -261,6 +261,17 @@ class CIManagerTest(unittest.TestCase):
             manager = CIManager(self.printer)
             self.assertEquals(manager.get_commit_build_policy(), ["missing"])
 
+        # multiple build policies
+        with tools.environment_append({"APPVEYOR": "1",
+                                       "APPVEYOR_PULL_REQUEST_NUMBER": "1",
+                                       "APPVEYOR_REPO_COMMIT_MESSAGE": "msg",
+                                       "APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED":
+                                           "more [build=missing] [build=pattern] ",
+                                       "APPVEYOR_REPO_BRANCH": "mybranch",
+                                       }):
+            manager = CIManager(self.printer)
+            self.assertEquals(manager.get_commit_build_policy(), ["missing", "pattern"])
+
     def test_bamboo_env_vars(self):
         self.assertIsNone(os.getenv('CONAN_LOGIN_USERNAME'))
 
