@@ -244,9 +244,10 @@ class ConanMultiPackager(object):
                         self.ci_manager.get_commit_build_policy() or
                         os.getenv("CONAN_BUILD_POLICY", None))
 
-        if build_policy:
-            if build_policy.lower() not in ("never", "outdated", "missing", "all"):
-                raise Exception("Invalid build policy, valid values: never, outdated, missing")
+        # ensure backward compatibility
+        # build_policy can be list or a string https://github.com/conan-io/conan-package-tools/issues/394
+        if build_policy and not isinstance(build_policy, list):
+            build_policy = [x.strip() for x in build_policy.split(',')]
 
         self.build_policy = build_policy
 

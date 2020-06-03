@@ -66,18 +66,17 @@ class CIManager(object):
             self.manager = GenericManager(printer)
 
     def get_commit_build_policy(self):
-        pattern = "^.*\[build=(\w*)\].*$"
-        prog = re.compile(pattern)
         msg = self.get_commit_msg()
         if not msg:
             return None
-        matches = prog.match(msg)
+        pattern = "\[build=(\w*)\]"
+        prog = re.compile(pattern)
+        matches = prog.findall(msg)
         if matches:
-            build_policy = matches.groups()[0]
-            if build_policy not in ("never", "outdated", "missing", "all"):
-                raise Exception("Invalid build policy, valid values: never, outdated, missing")
+            build_policy = matches
             return build_policy
         return None
+
 
     def skip_builds(self):
         if os.getenv("CONAN_IGNORE_SKIP_CI"):

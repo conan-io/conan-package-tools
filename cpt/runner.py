@@ -94,7 +94,7 @@ class CreateRunner(object):
                     name, version, user, channel, _ = self._reference
 
                 if self._build_policy:
-                    self._build_policy = [] if self._build_policy == "all" else [self._build_policy]
+                    self._build_policy = [] if self._build_policy == ["all"] else self._build_policy
                 # https://github.com/conan-io/conan-package-tools/issues/184
                 with tools.environment_append({"_CONAN_CREATE_COMMAND_": "1"}):
                     params = {"name": name, "version": version, "user": user,
@@ -335,7 +335,7 @@ class DockerCreateRunner(object):
         ret["CPT_UPLOAD_ENABLED"] = self._upload
         ret["CPT_UPLOAD_RETRY"] = self._upload_retry
         ret["CPT_UPLOAD_ONLY_RECIPE"] = self._upload_only_recipe
-        ret["CPT_BUILD_POLICY"] = escape_env(self._build_policy)
+        ret["CPT_BUILD_POLICY"] = escape_env(self._build_policy.join(",")) if self._build_policy else escape_env(self._build_policy)
         ret["CPT_TEST_FOLDER"] = escape_env(self._test_folder)
         ret["CPT_CONFIG_URL"] = escape_env(self._config_url)
         ret["CPT_CONFIG_ARGS"] = escape_env(self._config_args)

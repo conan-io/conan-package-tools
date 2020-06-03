@@ -667,7 +667,23 @@ class AppTest(unittest.TestCase):
         builder.run()
         self.assertEquals(["outdated"], self.conan_api.calls[-1].kwargs["build_modes"])
 
-        for build_policy, expected in [("missing", ["missing"]), ("all",[])]:
+    def test_multiple_build_policy(self):
+        builder = ConanMultiPackager(username="pepe", channel="testing",
+                                     reference="Hello/0.1", password="password",
+                                     visual_versions=[], gcc_versions=[],
+                                     apple_clang_versions=[],
+                                     runner=self.runner,
+                                     conan_api=self.conan_api,
+                                     remotes="otherurl",
+                                     platform_info=platform_mock_for("Darwin"),
+                                     build_policy=["Hello", "outdated"],
+                                     ci_manager=self.ci_manager)
+        builder.add_common_builds()
+        builder.run()
+        self.assertEquals(["Hello", "outdated"], self.conan_api.calls[-1].kwargs["build_modes"])
+
+
+        for build_policy, expected in [("missing", ["missing"]), ("all",[]), ("Hello,missing", ["Hello", "missing"])]:
             with tools.environment_append({"CONAN_BUILD_POLICY": build_policy}):
                 self.conan_api = MockConanAPI()
                 builder = ConanMultiPackager(username="pepe", channel="testing",

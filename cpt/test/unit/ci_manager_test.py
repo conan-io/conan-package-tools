@@ -231,7 +231,7 @@ class CIManagerTest(unittest.TestCase):
                                        "TRAVIS_COMMIT_MESSAGE":
                                            "This is a great commit [build=outdated] End."}):
             manager = CIManager(self.printer)
-            self.assertEquals(manager.get_commit_build_policy(), "outdated")
+            self.assertEquals(manager.get_commit_build_policy(), ["outdated"])
             self.assertEquals(manager.get_commit_msg(), "This is a great commit "
                                                         "[build=outdated] End.")
 
@@ -239,7 +239,7 @@ class CIManagerTest(unittest.TestCase):
                                        "TRAVIS_COMMIT_MESSAGE":
                                            "This is a great commit [build=all] End."}):
             manager = CIManager(self.printer)
-            self.assertEquals(manager.get_commit_build_policy(), "all")
+            self.assertEquals(manager.get_commit_build_policy(), ["all"])
             self.assertEquals(manager.get_commit_msg(), "This is a great commit "
                                                         "[build=all] End.")
         # Appveyor
@@ -251,18 +251,7 @@ class CIManagerTest(unittest.TestCase):
                                        "APPVEYOR_REPO_BRANCH": "mybranch",
                                        }):
             manager = CIManager(self.printer)
-            self.assertEquals(manager.get_commit_build_policy(), "missing")
-
-        # Raise invalid
-        with tools.environment_append({"APPVEYOR": "1",
-                                       "APPVEYOR_PULL_REQUEST_NUMBER": "1",
-                                       "APPVEYOR_REPO_COMMIT_MESSAGE": "msg",
-                                       "APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED":
-                                           "more [build=joujou] ",
-                                       "APPVEYOR_REPO_BRANCH": "mybranch",
-                                       }):
-            manager = CIManager(self.printer)
-            self.assertRaises(Exception, manager.get_commit_build_policy)
+            self.assertEquals(manager.get_commit_build_policy(), ["missing"])
 
         # Complex messages
         m = "double travis pages again due to timeout, travis taking longer " \
@@ -270,7 +259,18 @@ class CIManagerTest(unittest.TestCase):
         with tools.environment_append({"TRAVIS": "1",
                                        "TRAVIS_COMMIT_MESSAGE": m}):
             manager = CIManager(self.printer)
-            self.assertEquals(manager.get_commit_build_policy(), "missing")
+            self.assertEquals(manager.get_commit_build_policy(), ["missing"])
+
+        # multiple build policies
+        with tools.environment_append({"APPVEYOR": "1",
+                                       "APPVEYOR_PULL_REQUEST_NUMBER": "1",
+                                       "APPVEYOR_REPO_COMMIT_MESSAGE": "msg",
+                                       "APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED":
+                                           "more [build=missing] [build=pattern] ",
+                                       "APPVEYOR_REPO_BRANCH": "mybranch",
+                                       }):
+            manager = CIManager(self.printer)
+            self.assertEquals(manager.get_commit_build_policy(), ["missing", "pattern"])
 
     def test_bamboo_env_vars(self):
         self.assertIsNone(os.getenv('CONAN_LOGIN_USERNAME'))
