@@ -244,9 +244,10 @@ class ConanMultiPackager(object):
                         self.ci_manager.get_commit_build_policy() or
                         os.getenv("CONAN_BUILD_POLICY", None))
 
-        if build_policy:
-            if build_policy.lower() not in ("never", "outdated", "missing", "all"):
-                raise Exception("Invalid build policy, valid values: never, outdated, missing")
+        # ensure backward compatibility
+        # build_policy can be list or a string https://github.com/conan-io/conan-package-tools/issues/394
+        if build_policy and not isinstance(build_policy, list):
+            build_policy = [x.strip() for x in build_policy.split(',')]
 
         self.build_policy = build_policy
 
@@ -508,12 +509,13 @@ class ConanMultiPackager(object):
                     continue
                 elif key not in raw_options_for_building:
                     del cloned_options[key]
-            for key in cloned_options.keys():
+            cloned_options2 = {}
+            for key, value in cloned_options.items():
                 # add package reference to the option name
                 if not key.startswith("{}:".format(reference.name)):
-                    cloned_options["{}:{}".format(reference.name, key)] = cloned_options.pop(key)
+                    cloned_options2["{}:{}".format(reference.name, key)] = value
             # combine all options x values (cartesian product)
-            build_all_options_values = [dict(zip(cloned_options, v)) for v in product(*cloned_options.values())]
+            build_all_options_values = [dict(zip(cloned_options2, v)) for v in product(*cloned_options2.values())]
 
         builds = self.build_generator.get_builds(pure_c, shared_option_name,
                                                  dll_with_static_runtime, reference,

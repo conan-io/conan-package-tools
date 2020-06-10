@@ -1106,12 +1106,19 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
   already stored credentiales in the local cache. Default [False]
 - **allow_gcc_minors** Declare this variable if you want to allow gcc >=5 versions with the minor (5.1, 6.3 etc).
 - **exclude_vcvars_precommand** For Visual Studio builds, it exclude the vcvars call to set the environment.
-- **build_policy**: Default None.
-    - "never": No build from sources, only download packages.
-    - "missing": Build only missing packages.
+- **build_policy**:  Can be None, single value or a list. Default None.
+    -  None: Only Build current package. Equivalent to `--build current_package_ref`
+    - "never": No build from sources, only download packages. Equivalent to `--build never`
+    - "missing": Build only missing packages. Equivalent to `--build missing`
     - "outdated": Build only missing or if the available package is not built with the current recipe. Useful to upload new configurations, e.j packages for a new compiler without
-      rebuild all packages.
-    - "all": Build all requirements.
+      rebuild all packages. Equivalent to `--build outdated`
+    - "all": Build all requirements. Equivalent to `--build`
+    - "cascade": Build from code all the nodes with some dependency being built (for any reason). Equivalent to `--build cascade`
+    - "some_package" : Equivalent to `--build some_package`
+    - "pattern\*": will build only the packages with the reference starting with pattern\*. Equivalent to `--build pattern*`
+    - ["pattern\*", "another_pattern\*"]: will build only the packages with the reference matching these patterns. Equivalent to `--build pattern* --build another_pattern*`
+    - ["pattern\*", "outdated"]:  `--build pattern* --build outdated`
+Check [Conan Build policies](https://docs.conan.io/en/latest/mastering/policies.html) for more details.
 - **test_folder**: Custom test folder consumed by Conan create, e.j .conan/test_package
 - **lockfile**: Custom conan lockfile to be used, e.j. conan.lock. Default [None]
 - **conanfile**: Custom conanfile consumed by Conan create. e.j. conanfile.py
@@ -1150,6 +1157,7 @@ The current commit message can contain special messages:
 
 - **[skip ci]**: Will skip the building of any package (unless `CONAN_IGNORE_SKIP_CI` is set)
 - **[build=XXX]**: Being XXX a build policy (see build_policy parameter reference)
+- **[build=XXX] [build=YYY]**: Being XXX and YYY the two build policies to use (see build_policy parameter reference)
 
 
 ## Complete ConanMultiPackager methods reference:
@@ -1256,11 +1264,19 @@ This is especially useful for CI integration.
 - **CONAN_EXCLUDE_VCVARS_PRECOMMAND** For Visual Studio builds, it exclude the vcvars call to set the environment.
 - **CONAN_BUILD_REQUIRES** You can specify additional build requires for the generated profile with an environment variable following the same profile syntax and separated by ","
   i.e ``CONAN_BUILD_REQUIRES: mingw-installer/7.1@conan/stable, pattern: other/1.0@conan/stable``
-- **CONAN_BUILD_POLICY**:  Default None.
-    - "never": No build from sources, only download packages.
-    - "missing": Build only missing packages.
+- **CONAN_BUILD_POLICY**: Comma separated list of build policies. Default None.
+    -  None: Only Build current package. Equivalent to `--build current_package_ref`
+    - "never": No build from sources, only download packages. Equivalent to `--build never`
+    - "missing": Build only missing packages. Equivalent to `--build missing`
     - "outdated": Build only missing or if the available package is not built with the current recipe. Useful to upload new configurations, e.j packages for a new compiler without
-      rebuild all packages.
+      rebuild all packages. Equivalent to `--build outdated`
+    - "all": Build all requirements. Equivalent to `--build`
+    - "cascade": Build from code all the nodes with some dependency being built (for any reason). Equivalent to `--build cascade`
+    - "some_package" : Equivalent to `--build some_package`
+    - "pattern\*": will build only the packages with the reference starting with pattern\*. Equivalent to `--build pattern*`
+    - "pattern\*,another_pattern\*": will build only the packages with the reference matching these patterns. Equivalent to `--build pattern* --build another_pattern*`
+    - "pattern\*,outdated": Equivalent to `--build pattern* --build outdated`
+Check [Conan Build policies](https://docs.conan.io/en/latest/mastering/policies.html) for more details.
 - **CONAN_CONFIG_URL**: Conan config URL be installed before to build e.j https://github.com/bincrafters/conan-config.git
 - **CONAN_CONFIG_ARGS**: Conan config arguments used when installing conan config
 - **CONAN_BASE_PROFILE**: Apply options, settings, etc. to this profile instead of `default`.
