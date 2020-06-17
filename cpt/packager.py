@@ -240,16 +240,11 @@ class ConanMultiPackager(object):
                                               mingw_configurations, archs, allow_gcc_minors,
                                               build_types, options, cppstds)
 
-        build_policy = (build_policy or
+        self.build_policy = (build_policy or
                         self.ci_manager.get_commit_build_policy() or
-                        os.getenv("CONAN_BUILD_POLICY", None))
-
-        # ensure backward compatibility
-        # build_policy can be list or a string https://github.com/conan-io/conan-package-tools/issues/394
-        if build_policy and not isinstance(build_policy, list):
-            build_policy = [x.strip() for x in build_policy.split(',')]
-
-        self.build_policy = build_policy
+                        split_colon_env("CONAN_BUILD_POLICY"))
+        if isinstance(self.build_policy, list):
+            self.build_policy = ",".join(self.build_policy)
 
         self.sudo_docker_command = ""
         if "CONAN_DOCKER_USE_SUDO" in os.environ:
