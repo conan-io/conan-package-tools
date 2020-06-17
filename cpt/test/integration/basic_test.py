@@ -158,7 +158,7 @@ class Pkg(ConanFile):
         self.assertTrue(found_in_export_sources)
 
     def test_build_policy(self):
-        ci_manager = MockCIManager(build_policy="outdated")
+        ci_manager = MockCIManager()
         conanfile = """from conans import ConanFile
 import os
 
@@ -175,12 +175,24 @@ class Pkg(ConanFile):
                                                visual_versions=["12"],
                                                archs=["x86", "x86_64"],
                                                build_types=["Release"],
+                                               build_policy="outdated",
+                                               ci_manager=ci_manager)
+            self.packager.add_common_builds()
+            self.packager.run()
+
+        with tools.environment_append({"CONAN_USERNAME": "lasote",
+                                       "CONAN_BUILD_POLICY": "outdated"}):
+            self.packager = ConanMultiPackager(channel="mychannel",
+                                               gcc_versions=["6"],
+                                               visual_versions=["12"],
+                                               archs=["x86", "x86_64"],
+                                               build_types=["Release"],
                                                ci_manager=ci_manager)
             self.packager.add_common_builds()
             self.packager.run()
 
     def test_multiple_build_policy(self):
-        ci_manager = MockCIManager(build_policy=["lib", "outdated"])
+        ci_manager = MockCIManager()
         conanfile = """from conans import ConanFile
 import os
 
@@ -192,6 +204,18 @@ class Pkg(ConanFile):
 """
         self.save_conanfile(conanfile)
         with tools.environment_append({"CONAN_USERNAME": "lasote"}):
+            self.packager = ConanMultiPackager(channel="mychannel",
+                                               gcc_versions=["6"],
+                                               visual_versions=["12"],
+                                               archs=["x86", "x86_64"],
+                                               build_types=["Release"],
+                                               build_policy=["cascade", "outdated"],
+                                               ci_manager=ci_manager)
+            self.packager.add_common_builds()
+            self.packager.run()
+
+        with tools.environment_append({"CONAN_USERNAME": "lasote",
+                                       "CONAN_BUILD_POLICY": "outdated, lib"}):
             self.packager = ConanMultiPackager(channel="mychannel",
                                                gcc_versions=["6"],
                                                visual_versions=["12"],
