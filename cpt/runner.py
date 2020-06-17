@@ -335,7 +335,7 @@ class DockerCreateRunner(object):
         ret["CPT_UPLOAD_ENABLED"] = self._upload
         ret["CPT_UPLOAD_RETRY"] = self._upload_retry
         ret["CPT_UPLOAD_ONLY_RECIPE"] = self._upload_only_recipe
-        ret["CPT_BUILD_POLICY"] = escape_env(self._build_policy.join(",")) if self._build_policy else escape_env(self._build_policy)
+        ret["CPT_BUILD_POLICY"] = escape_env(",".join(self._build_policy)) if self._build_policy else escape_env(self._build_policy)
         ret["CPT_TEST_FOLDER"] = escape_env(self._test_folder)
         ret["CPT_CONFIG_URL"] = escape_env(self._config_url)
         ret["CPT_CONFIG_ARGS"] = escape_env(self._config_args)
