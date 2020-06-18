@@ -20,7 +20,7 @@ class CreateRunner(object):
                  cwd=None, printer=None, upload=False, upload_only_recipe=None,
                  test_folder=None, config_url=None, config_args=None,
                  upload_dependencies=None, conanfile=None, skip_recipe_export=False,
-                 update_dependencies=False, lockfile=None):
+                 update_dependencies=False, lockfile=None, version_alias=None):
 
         self.printer = printer or Printer()
         self._cwd = cwd or os.getcwd()
@@ -48,6 +48,7 @@ class CreateRunner(object):
         self.skip_recipe_export = skip_recipe_export
         self._update_dependencies = update_dependencies
         self._results = None
+        self._version_alias = version_alias
 
         patch_default_base_profile(conan_api, profile_abs_path)
         client_version = get_client_version()
@@ -154,6 +155,10 @@ class CreateRunner(object):
                                     else:
                                         self._uploader.upload_packages(reference,
                                                                     self._upload, package_id)
+                                    if self._version_alias:
+                                        reference_alias = reference.replace(installed["recipe"]["version"], self._version_alias)
+                                        self._conan_api.export_alias(reference_alias, reference)
+                                        self._uploader.upload_recipe(reference_alias, self._upload)
                                 else:
                                     self.printer.print_message("Skipping upload for %s, "
                                                                "it hasn't been built" % package_id)
@@ -182,7 +187,8 @@ class DockerCreateRunner(object):
                  force_selinux=None,
                  skip_recipe_export=False,
                  update_dependencies=False,
-                 lockfile=None):
+                 lockfile=None,
+                 version_alias=None):
 
         self.printer = printer or Printer()
         self._upload = upload
@@ -217,6 +223,7 @@ class DockerCreateRunner(object):
         self._force_selinux = force_selinux
         self._skip_recipe_export = skip_recipe_export
         self._update_dependencies = update_dependencies
+        self._version_alias = version_alias
 
     def _pip_update_conan_command(self):
         commands = []

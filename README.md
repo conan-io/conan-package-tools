@@ -1127,6 +1127,7 @@ Check [Conan Build policies](https://docs.conan.io/en/latest/mastering/policies.
 - **force_selinux**: Force docker to relabel file objects on the shared volumes
 - **skip_recipe_export**: If True, the package recipe will only be exported on the first build. Default [False]
 - **update_dependencies**: Update all dependencies before building e.g conan create -u
+- **version_alias**: Create a version alias for created packages. For example: if CPT_VERSION_ALIAS=latest, the package alias pkg_name/latest@user/channel will be created.
 
 Upload related parameters:
 
@@ -1287,7 +1288,7 @@ Check [Conan Build policies](https://docs.conan.io/en/latest/mastering/policies.
 - **CONAN_FORCE_SELINUX**: Force docker to relabel file objects on the shared volumes
 - **CONAN_SKIP_RECIPE_EXPORT**: If defined, the package recipe will only be exported on the first build.
 - **CPT_UPDATE_DEPENDENCIES**: Update all dependencies before building e.g conan create -u
-
+- **CPT_VERSION_ALIAS**: Create a version alias for created packages. For example: if CPT_VERSION_ALIAS=latest, the package alias pkg_name/latest@user/channel will be created.
 
 # Full example
 
