@@ -1,17 +1,8 @@
-sudo: false
 language: python
-dist: trusty
 
 jobs:
   fast_finish: true
   include:
-
-    - stage: Conan Latest - Linux
-      python: 2.7
-      env: TOXENV=py27-conan-latest
-    - python: 3.7
-      env: TOXENV=py37-conan-latest
-      dist: xenial
 
     - stage: Conan Latest - Macos
       language: generic
@@ -22,17 +13,6 @@ jobs:
       os: osx
       osx_image: xcode8.3
       env: PYVER=py37 TOXENV=py37-conan-latest
-
-    - stage: Conan Development - Linux
-      if: branch != master AND branch !~ /release*/
-      python: 2.7
-      env: TOXENV=py27-conan-dev
-    - python: 3.7
-      if: branch != master AND branch !~ /release*/
-      env: TOXENV=py37-conan-dev
-      dist: xenial
-
-
 
 install:
   - .ci/travis/install.sh
