@@ -30,10 +30,9 @@ class CreateRunner(object):
         self._profile_abs_path = profile_abs_path
         self._reference = reference
         self._exclude_vcvars_precommand = exclude_vcvars_precommand
-        self._build_policy =  build_policy.split(",") if \
-                              isinstance(build_policy, str) else \
-                              build_policy
-        self._build_policy = self._build_policy or []
+        self._build_policy = build_policy.split(",") if \
+                             isinstance(build_policy, str) else \
+                             build_policy
         self._runner = PrintRunner(runner or os.system, self.printer)
         self._test_folder = test_folder
         self._config_url = config_url
@@ -190,7 +189,7 @@ class DockerCreateRunner(object):
         self._upload_only_recipe = upload_only_recipe
         self._reference = reference
         self._conan_pip_package = conan_pip_package
-        self._build_policy = build_policy or []
+        self._build_policy = build_policy
         self._docker_image = docker_image
         self._always_update_conan_in_docker = always_update_conan_in_docker
         self._docker_image_skip_update = docker_image_skip_update
