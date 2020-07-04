@@ -772,8 +772,8 @@ This is very similar to Travis CI. With the same **build.py** script we have the
     build: false
 
     environment:
-        PYTHON_HOME: "C:\\Python27"
-        PYTHON_VERSION: "2.7.8"
+        PYTHON_HOME: "C:\\Python38"
+        PYTHON_VERSION: "3.8.0"
         PYTHON_ARCH: "32"
 
         CONAN_USERNAME: "lasote"
