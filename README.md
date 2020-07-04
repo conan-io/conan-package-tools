@@ -793,8 +793,8 @@ This is very similar to Travis CI. With the same **build.py** script we have the
 
 
     install:
-      - set PATH=%PATH%;%PYTHON%/Scripts/
-      - pip.exe install conan_package_tools --upgrade
+      - set PATH=%PYTHON%/Scripts/;%PATH%
+      - python -Wignore -m pip install conan_package_tools --upgrade
       - conan user # It creates the conan data directory
 
     test_script:
