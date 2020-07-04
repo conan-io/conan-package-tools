@@ -772,7 +772,7 @@ This is very similar to Travis CI. With the same **build.py** script we have the
     build: false
 
     environment:
-        PYTHON: "C:\\Python27"
+        PYTHON_HOME: "C:\\Python27"
         PYTHON_VERSION: "2.7.8"
         PYTHON_ARCH: "32"
 
@@ -793,7 +793,7 @@ This is very similar to Travis CI. With the same **build.py** script we have the
 
 
     install:
-      - set PATH=%PYTHON%/Scripts/;%PATH%
+      - set PATH=%PYTHON_HOME%;%PYTHON_HOME%/Scripts/;%PATH%
       - python -Wignore -m pip install conan_package_tools --upgrade
       - conan user # It creates the conan data directory
 
