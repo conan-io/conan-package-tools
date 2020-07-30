@@ -5,6 +5,7 @@ import json
 
 from conans import tools
 from conans.model.ref import ConanFileReference
+from conans.errors import ConanException
 
 from cpt.test.integration.base import BaseTest
 from cpt.packager import ConanMultiPackager
@@ -329,6 +330,24 @@ class Pkg(ConanFile):
             self.packager = ConanMultiPackager(out=self.output.write)
             self.packager.add_common_builds()
             self.packager.run()
+
+    def test_invalid_test_folder(self):
+        conanfile = """from conans import ConanFile
+
+class Pkg(ConanFile):
+    name = "lib"
+    version = "1.0"
+"""
+        self.save_conanfile(conanfile)
+        for test_folder in ["True", "foobar"]:
+            with tools.environment_append({"CPT_TEST_FOLDER": test_folder}):
+                self.packager = ConanMultiPackager(out=self.output.write)
+                self.packager.add_common_builds()
+                with self.assertRaises(ConanException) as raised:
+                    self.packager.run()
+                    self.assertIn("test folder '{}' not available, or it doesn't have a conanfile.py"
+                                  .format(test_folder),
+                                  str(raised.exception))
 
     def test_custom_name_version(self):
         conanfile = """from conans import ConanFile
