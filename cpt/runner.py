@@ -62,6 +62,9 @@ class CreateRunner(object):
 
         self._profile = load_profile(profile_abs_path, cache)
 
+        if isinstance(self._test_folder, str) and self._test_folder.lower() == "false":
+            self._test_folder = False
+
     @property
     def settings(self):
         return self._profile.settings
