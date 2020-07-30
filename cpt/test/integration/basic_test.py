@@ -310,6 +310,26 @@ class Pkg(ConanFile):
                 json_data = json.load(json_content)
                 self.assertFalse(json_data[0]["package"]["error"])
 
+    def test_disable_test_folder(self):
+        conanfile = """from conans import ConanFile
+
+class Pkg(ConanFile):
+    name = "lib"
+    version = "1.0"
+"""
+        self.save_conanfile(conanfile)
+        conanfile = """from conans import ConanFile
+
+class Pkg(ConanFile):
+    def test(self):
+        raise Exception("Should not run")
+"""
+        tools.save(os.path.join(self.tmp_folder, "test_package", "conanfile.py"), conanfile)
+        with tools.environment_append({"CPT_TEST_FOLDER": "False"}):
+            self.packager = ConanMultiPackager(out=self.output.write)
+            self.packager.add_common_builds()
+            self.packager.run()
+
     def test_custom_name_version(self):
         conanfile = """from conans import ConanFile
 from datetime import date
