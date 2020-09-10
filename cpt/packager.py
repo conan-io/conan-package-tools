@@ -498,6 +498,8 @@ class ConanMultiPackager(object):
                 raw_options_for_building.remove(raw_option)
         if raw_options_for_building and conanfile:
             # get option and its values
+            if conanfile.options is None:
+                conanfile.options = {}
             cloned_options = copy.copy(conanfile.options)
             for key, value in conanfile.options.items():
                 if key == "shared" and shared_option_name:
