@@ -30,7 +30,9 @@ class CreateRunner(object):
         self._profile_abs_path = profile_abs_path
         self._reference = reference
         self._exclude_vcvars_precommand = exclude_vcvars_precommand
-        self._build_policy = build_policy
+        self._build_policy = build_policy.split(",") if \
+                             isinstance(build_policy, str) else \
+                             build_policy
         self._runner = PrintRunner(runner or os.system, self.printer)
         self._test_folder = test_folder
         self._config_url = config_url
@@ -94,7 +96,7 @@ class CreateRunner(object):
                     name, version, user, channel, _ = self._reference
 
                 if self._build_policy:
-                    self._build_policy = [] if self._build_policy == "all" else [self._build_policy]
+                    self._build_policy = [] if self._build_policy == ["all"] else self._build_policy
                 # https://github.com/conan-io/conan-package-tools/issues/184
                 with tools.environment_append({"_CONAN_CREATE_COMMAND_": "1"}):
                     params = {"name": name, "version": version, "user": user,

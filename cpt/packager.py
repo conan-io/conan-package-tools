@@ -240,15 +240,11 @@ class ConanMultiPackager(object):
                                               mingw_configurations, archs, allow_gcc_minors,
                                               build_types, options, cppstds)
 
-        build_policy = (build_policy or
+        self.build_policy = (build_policy or
                         self.ci_manager.get_commit_build_policy() or
-                        os.getenv("CONAN_BUILD_POLICY", None))
-
-        if build_policy:
-            if build_policy.lower() not in ("never", "outdated", "missing", "all"):
-                raise Exception("Invalid build policy, valid values: never, outdated, missing")
-
-        self.build_policy = build_policy
+                        split_colon_env("CONAN_BUILD_POLICY"))
+        if isinstance(self.build_policy, list):
+            self.build_policy = ",".join(self.build_policy)
 
         self.sudo_docker_command = ""
         if "CONAN_DOCKER_USE_SUDO" in os.environ:

@@ -113,7 +113,7 @@ class MockCIManager(object):
 
     def __init__(self, current_branch=None, build_policy=None, skip_builds=False, is_pull_request=False, is_tag=False):
         self._current_branch = current_branch
-        self._build_policy = build_policy
+        self._build_policy = [build_policy] if build_policy != None and not isinstance(build_policy, list) else build_policy
         self._skip_builds = skip_builds
         self._is_pr = is_pull_request
         self._is_tag = is_tag
