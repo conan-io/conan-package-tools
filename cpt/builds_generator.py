@@ -121,6 +121,8 @@ won't be able to use them.
         if self._apple_clang_versions is None:
             self._apple_clang_versions = default_apple_clang_versions
 
+        self._android_api_levels = split_colon_env("CPT_ANDROID_API_LEVELS")
+
         self._mingw_configurations = mingw_configurations or get_mingw_config_from_env()
 
         _default_archs = ["x86_64"] if self._os_name == "Darwin" else default_archs
@@ -163,13 +165,19 @@ won't be able to use them.
                                             build_all_options_values))
             return builds
         elif self._os_name == "Linux":
-            builds = get_linux_gcc_builds(self._gcc_versions, self._archs, shared_option_name,
-                                          pure_c, self._build_types, self._cppstds, self._options, ref,
-                                          build_all_options_values)
-            builds.extend(get_linux_clang_builds(self._clang_versions, self._archs,
+            if self._android_api_levels is not None:
+                builds = get_android_clang_builds(self._clang_versions, self._archs, self._android_api_levels,
                                                  shared_option_name, pure_c, self._build_types,
                                                  self._cppstds, self._options, ref,
-                                                 build_all_options_values))
+                                                 build_all_options_values)
+            else:
+                builds = get_linux_gcc_builds(self._gcc_versions, self._archs, shared_option_name,
+                                            pure_c, self._build_types, self._cppstds, self._options, ref,
+                                            build_all_options_values)
+                builds.extend(get_linux_clang_builds(self._clang_versions, self._archs,
+                                                    shared_option_name, pure_c, self._build_types,
+                                                    self._cppstds, self._options, ref,
+                                                    build_all_options_values))
             return builds
         elif self._os_name == "Darwin":
             return get_osx_apple_clang_builds(self._apple_clang_versions, self._archs,
@@ -345,7 +353,7 @@ def get_visual_builds_for_version(visual_runtimes, visual_version, arch, shared_
 
 
 def get_build(compiler, the_arch, the_build_type, the_compiler_version,
-              the_compiler_cppstd, the_libcxx, options, reference):
+              the_compiler_cppstd, the_libcxx, options, reference, settings={}):
     setts = {"arch": the_arch,
              "build_type": the_build_type,
              "compiler": compiler,
@@ -354,6 +362,10 @@ def get_build(compiler, the_arch, the_build_type, the_compiler_version,
         setts["compiler.cppstd"] = the_compiler_cppstd
     if the_libcxx:
         setts["compiler.libcxx"] = the_libcxx
+
+    # add an override
+    for key in settings:
+        setts[key] = settings[key]
 
     return BuildConf(setts, copy.copy(options), {}, {}, reference)
 
@@ -499,4 +511,39 @@ def get_linux_clang_builds(clang_versions, archs, shared_option_name, pure_c, bu
                         else:
                             ret.append(get_build("clang", arch, build_type_it, clang_version,
                                                  None, None, options, reference))
+    return ret
+
+
+def get_android_clang_builds(clang_versions, archs, android_api_levels, shared_option_name, pure_c, build_types, cppstds,
+                           options, reference=None, build_all_options_values=None):
+    ret = []
+    settings = {"os": "Android"}
+    # Not specified compiler or compiler version, will use the auto detected
+    for clang_version in clang_versions:
+        for arch in archs:
+            for api_level in android_api_levels:
+                settings["os.api_level"] = api_level
+                for cppstd in cppstds:
+                    def append_build_types(opt):
+                        for build_type_it in build_types:
+                            if not pure_c:
+                                ret.append(get_build("clang", arch, build_type_it, clang_version,
+                                                        cppstd, "libc++", opt, reference, settings))
+                            else:
+                                ret.append(get_build("clang", arch, build_type_it, clang_version,
+                                                        None, None, opt, reference, settings))
+
+                    if shared_option_name and not build_all_options_values:
+                        for shared in [True, False]:
+                            opt = copy.copy(options)
+                            opt[shared_option_name] = shared
+                            append_build_types(opt)
+                    elif build_all_options_values:
+                        for option_values in build_all_options_values:
+                            opt = copy.copy(options)
+                            opt.update(option_values)
+                            append_build_types(opt)
+                    else:
+                        append_build_types(options)
+                    
     return ret
