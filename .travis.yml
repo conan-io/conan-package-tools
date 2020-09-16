@@ -16,11 +16,11 @@ jobs:
     - stage: Conan Latest - Macos
       language: generic
       os: osx
-      osx_image: xcode8.3
+      osx_image: xcode10.3
       env: PYVER=py27 TOXENV=py27-conan-latest
     - language: generic
       os: osx
-      osx_image: xcode8.3
+      osx_image: xcode10.3
       env: PYVER=py37 TOXENV=py37-conan-latest
 
     - stage: Conan Development - Linux

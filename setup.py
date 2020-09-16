@@ -47,8 +47,8 @@ setup(
     url='https://github.com/conan-io/conan-package-tools',
 
     # Author details
-    author='JFrog LTD. Luis Martinez de Bartolome',
-    author_email='luism@jfrog.com',
+    author='JFrog LTD',
+    author_email='info@conan.io',
 
     # Choose your license
     license='MIT',
