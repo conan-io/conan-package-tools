@@ -704,7 +704,8 @@ class ConanMultiPackager(object):
                                        lockfile=self.lockfile,
                                        force_selinux=self.force_selinux,
                                        skip_recipe_export=skip_recipe_export,
-                                       update_dependencies=self.update_dependencies)
+                                       update_dependencies=self.update_dependencies,
+                                       cwd=self.cwd)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
                       docker_entry_script=self.docker_entry_script)
