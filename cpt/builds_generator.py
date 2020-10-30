@@ -221,7 +221,7 @@ def get_mingw_builds(mingw_configurations, mingw_installer_reference,
         build_requires = {"*": [mingw_installer_reference]}
 
         if shared_option_name and not build_all_options_values:
-            for shared in [True, False]:
+            for shared in [False, True]:
                 opt = copy.copy(options)
                 opt[shared_option_name] = shared
                 builds += _make_mingw_builds(settings, opt, build_requires, build_types, cppstds, reference)
@@ -367,7 +367,7 @@ def get_osx_apple_clang_builds(apple_clang_versions, archs, shared_option_name,
         for arch in archs:
             for cppstd in cppstds:
                 if shared_option_name and not build_all_options_values:
-                    for shared in [True, False]:
+                    for shared in [False, True]:
                         opt = copy.copy(options)
                         opt[shared_option_name] = shared
                         for build_type_it in build_types:
@@ -414,7 +414,7 @@ def get_linux_gcc_builds(gcc_versions, archs, shared_option_name, pure_c, build_
         for arch in archs:
             for cppstd in cppstds:
                 if shared_option_name and not build_all_options_values:
-                    for shared in [True, False]:
+                    for shared in [False, True]:
                         opt = copy.copy(options)
                         opt[shared_option_name] = shared
                         for build_type_it in build_types:
@@ -464,7 +464,7 @@ def get_linux_clang_builds(clang_versions, archs, shared_option_name, pure_c, bu
         for arch in archs:
             for cppstd in cppstds:
                 if shared_option_name and not build_all_options_values:
-                    for shared in [True, False]:
+                    for shared in [False, True]:
                         opt = copy.copy(options)
                         opt[shared_option_name] = shared
                         for build_type_it in build_types:
