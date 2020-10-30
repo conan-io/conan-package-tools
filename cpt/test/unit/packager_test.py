@@ -1093,4 +1093,4 @@ class AppTest(unittest.TestCase):
 
         self._add_build(1, "gcc", "9")
         self.packager.run_builds(1, 1)
-        self.assertIn('docker run --rm -v "%s:/home/conan/project"' % cwd, self.runner.calls[4])
+        self.assertIn('docker run --rm -v "%s:%s/project"' % (cwd, self.packager.docker_conan_home), self.runner.calls[4])
