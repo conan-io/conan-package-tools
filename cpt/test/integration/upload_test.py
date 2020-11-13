@@ -1,6 +1,6 @@
 from conans.client import tools
 from conans.errors import ConanException
-from conans.test.utils.test_files import temp_folder
+from cpt.test.utils.test_files import temp_folder
 
 from cpt.test.integration.base import BaseTest
 from cpt.packager import ConanMultiPackager

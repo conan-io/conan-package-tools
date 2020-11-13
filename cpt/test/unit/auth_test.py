@@ -1,7 +1,7 @@
 import unittest
 
 from conans import tools
-from conans.test.utils.tools import TestBufferConanOutput
+from cpt.test.utils.tools import TestBufferConanOutput
 from cpt.auth import AuthManager
 from cpt.printer import Printer
 from cpt.test.unit.packager_test import MockConanAPI

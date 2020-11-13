@@ -5,7 +5,7 @@ from conans.util.files import mkdir_tmp
 
 from conans import tools
 from conans.client.conan_api import ConanAPIV1
-from conans.test.utils.tools import TestBufferConanOutput
+from cpt.test.utils.tools import TestBufferConanOutput
 
 CONAN_UPLOAD_URL = os.getenv("CONAN_UPLOAD_URL",
                              "https://conan.jfrog.io/conan/api/conan/conan-testsuite")
@@ -50,5 +50,3 @@ class BaseTest(unittest.TestCase):
             else:
                 dir_path = os.path.abspath(os.path.join(dir_path, os.pardir))
         raise Exception("Cannot find root project folder")
-
-

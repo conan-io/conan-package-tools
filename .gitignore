@@ -97,3 +97,11 @@ cacert.pem
 
 # tmp eclipse markdown viewer
 /.README*
+
+
+# Virtualenv
+env/
+venv/
+
+# Coverage
+.coveragerc
