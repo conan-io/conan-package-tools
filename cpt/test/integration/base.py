@@ -2,6 +2,7 @@ import os
 import unittest
 
 from conans.util.files import mkdir_tmp
+from conans import __version__ as client_version
 
 from conans import tools
 from conans.client.conan_api import ConanAPIV1
@@ -39,7 +40,10 @@ class BaseTest(unittest.TestCase):
 
     def create_project(self):
         with tools.chdir(self.tmp_folder):
-            self.api.new("hello/0.1.0", pure_c=True, exports_sources=True)
+            if tools.Version(client_version) >= "1.32.0":
+                self.api.new("hello/0.1.0", pure_c=True, exports_sources=True)
+            else:
+                self.api.new("hello/0.1.0")
 
     @property
     def root_project_folder(self):
