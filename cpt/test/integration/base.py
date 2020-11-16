@@ -39,7 +39,7 @@ class BaseTest(unittest.TestCase):
 
     def create_project(self):
         with tools.chdir(self.tmp_folder):
-            self.api.new("hello/0.1.0", pure_c=True)
+            self.api.new("hello/0.1.0", pure_c=True, exports_sources=True)
 
     @property
     def root_project_folder(self):
