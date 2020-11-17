@@ -8,7 +8,7 @@ from collections import defaultdict
 from cpt.builds_generator import BuildConf
 from cpt.packager import ConanMultiPackager
 from conans import tools
-from conans.test.utils.tools import TestBufferConanOutput
+from cpt.test.utils.tools import TestBufferConanOutput
 from conans.model.ref import ConanFileReference
 from cpt.test.unit.utils import MockConanAPI, MockRunner, MockCIManager
 

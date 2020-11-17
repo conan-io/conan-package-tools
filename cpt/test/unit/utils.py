@@ -5,7 +5,7 @@ import mock
 
 from conans import tools
 from conans.model.ref import ConanFileReference
-from conans.test.utils.test_files import temp_folder
+from cpt.test.utils.test_files import temp_folder
 from conans.util.files import save
 from conans.model.version import Version
 from cpt import get_client_version

@@ -1,7 +1,7 @@
 import unittest
 
 from conans.client.tools import environment_append
-from conans.test.utils.tools import TestClient, TestServer
+from cpt.test.utils.tools import TestClient, TestServer
 from cpt.test.unit.utils import MockCIManager
 from cpt.test.test_client.tools import get_patched_multipackager
 
