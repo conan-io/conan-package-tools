@@ -1078,3 +1078,19 @@ class AppTest(unittest.TestCase):
             builder.add_common_builds()
             builder.run()
             self.assertEquals("couse.lock", self.conan_api.calls[-1].kwargs["lockfile"])
+
+    def test_docker_cwd(self):
+        cwd = os.path.join(os.getcwd(), 'subdir')
+        self.packager = ConanMultiPackager(username="lasote",
+                                           channel="mychannel",
+                                           runner=self.runner,
+                                           conan_api=self.conan_api,
+                                           gcc_versions=["9"],
+                                           use_docker=True,
+                                           reference="zlib/1.2.11",
+                                           ci_manager=self.ci_manager,
+                                           cwd=cwd)
+
+        self._add_build(1, "gcc", "9")
+        self.packager.run_builds(1, 1)
+        self.assertIn('docker run --rm -v "%s:%s/project"' % (cwd, self.packager.docker_conan_home), self.runner.calls[4])
