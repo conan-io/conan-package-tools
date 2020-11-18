@@ -142,7 +142,8 @@ class ConanMultiPackager(object):
                  force_selinux=None,
                  skip_recipe_export=False,
                  update_dependencies=None,
-                 lockfile=None):
+                 lockfile=None,
+                 version_alias=None):
 
         conan_version = get_client_version()
 
@@ -205,6 +206,7 @@ class ConanMultiPackager(object):
         self.partial_reference = reference or os.getenv("CONAN_REFERENCE", None)
         self.channel = self._get_specified_channel(channel, reference)
         self.conanfile = conanfile or os.getenv("CONAN_CONANFILE", "conanfile.py")
+        self.version_alias = version_alias or os.getenv("CPT_VERSION_ALIAS", None)
 
         if self.partial_reference:
             if "@" in self.partial_reference:
@@ -669,7 +671,8 @@ class ConanMultiPackager(object):
                                  conanfile=self.conanfile,
                                  lockfile=self.lockfile,
                                  skip_recipe_export=skip_recipe_export,
-                                 update_dependencies=self.update_dependencies)
+                                 update_dependencies=self.update_dependencies,
+                                 version_alias = self.version_alias)
                 r.run()
                 self._packages_summary.append({"configuration":  build, "package" : r.results})
             else:
@@ -704,7 +707,8 @@ class ConanMultiPackager(object):
                                        lockfile=self.lockfile,
                                        force_selinux=self.force_selinux,
                                        skip_recipe_export=skip_recipe_export,
-                                       update_dependencies=self.update_dependencies)
+                                       update_dependencies=self.update_dependencies,
+                                       version_alias = self.version_alias)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
                       docker_entry_script=self.docker_entry_script)
