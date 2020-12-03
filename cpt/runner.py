@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+import re
 from collections import namedtuple
 
 from conans import tools
@@ -375,8 +376,12 @@ class PrintRunner(object):
         self.runner = runner
         self.printer = printer
 
-    def __call__(self, command):
-        self.printer.print_command(command)
+    def __call__(self, command, hide_sensitive=True):
+        cmd_str = command
+        if hide_sensitive:
+            cmd_str = re.sub(r'(CONAN_LOGIN_USERNAME[_\w+]*)=\"(\w+)\"', r'\1="xxxxxxxx"', cmd_str)
+            cmd_str = re.sub(r'(CONAN_PASSWORD[_\w+]*)=\"(\w+)\"', r'\1="xxxxxxxx"', cmd_str)
+        self.printer.print_command(cmd_str)
         sys.stderr.flush()
         sys.stdout.flush()
         return self.runner(command)
