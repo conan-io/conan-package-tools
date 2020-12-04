@@ -3,6 +3,10 @@ try {
         List pyVersions = ['2.7', '3.7']
         List conanVersions = ['conan-dev', 'conan-latest']
 
+        stage('Get sources') {
+            checkout scm
+        }
+
         stage('CPT Linux stage') {
             sh 'apt-get update'
             // To build some deps from sources it needs pythonXX-dev
