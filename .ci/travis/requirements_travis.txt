@@ -1,2 +1,0 @@
-tox-travis>=0.11
--r ../../cpt/requirements_test.txt

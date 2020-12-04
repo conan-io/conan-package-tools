@@ -1,0 +1,25 @@
+try {
+    node("Linux") {
+        List pyVersions = ['2.7', '3.7']
+        List conanVersions = ['conan-dev', 'conan-latest']
+
+        stage('CPT Linux stage') {
+            sh 'apt-get update'
+            // To build some deps from sources it needs pythonXX-dev
+            sh 'apt-get -y install python3-venv python3.7-venv'
+            sh 'pip install -r cpt/requirements_test.txt'
+
+            def envs = sh(returnStdout: true, script: "tox -l").trim().split('\n')
+            def cmds = envs.collectEntries({ tox_env ->
+                [tox_env, {
+                    sh "tox --parallel--safe-build -vve $tox_env"
+                }]
+            })
+            parallel(cmds)
+        }
+    }
+}
+catch(e){
+    echo "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"
+    throw e
+}
