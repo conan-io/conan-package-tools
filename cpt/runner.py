@@ -367,7 +367,7 @@ def unscape_env(text):
 def escape_env(text):
     if not text:
         return text
-    return text.replace("\n", "@@").replace('"', '||')
+    return text.replace("\r", "").replace("\n", "@@").replace('"', '||')
 
 
 class PrintRunner(object):
