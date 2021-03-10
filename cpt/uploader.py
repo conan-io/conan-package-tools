@@ -1,4 +1,5 @@
 from conans.model.version import Version
+from conans.client.cmd.uploader import UPLOAD_POLICY_FORCE
 
 from cpt import get_client_version
 
@@ -52,4 +53,5 @@ class Uploader(object):
                 self.conan_api.upload(str(reference),
                                       all_packages=all_packages,
                                       remote_name=remote_name,
+                                      policy=UPLOAD_POLICY_FORCE,
                                       retry=int(self._upload_retry))

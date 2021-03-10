@@ -1,8 +1,12 @@
 import unittest
 import os
 import zipfile
+import textwrap
 
 from conans.client.tools import environment_append
+from conans.model.manifest import FileTreeManifest
+from conans.model.ref import PackageReference
+
 from cpt.test.utils.tools import TestClient, TestServer
 from cpt.test.unit.utils import MockCIManager
 
@@ -222,6 +226,37 @@ class Pkg(ConanFile):
             self.assertIn("Uploading packages for 'lib/1.0@'", tc.out)
             self.assertIn("lib/1.0: WARN: HALLO", tc.out)
 
+    def test_forced_upload(self):
+        NO_SETTINGS_PACKAGE_ID = "5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9"
+        conanfile = textwrap.dedent("""
+                from conans import ConanFile
+                class Pkg(ConanFile):
+
+                    def configure(self):
+                        self.output.warn("Mens sana in corpore sano")
+        """)
+        ts = TestServer(users={"user": "password"})
+        tc = TestClient(servers={"default": ts}, users={"default": [("user", "password")]})
+
+        tc.save({"conanfile.py": conanfile})
+        tc.run("create . lib/1.0@user/stable")
+        tc.run("upload lib/1.0@user/stable --all -r default")
+        pref = PackageReference.loads("lib/1.0@user/stable#{}:{}".format(0, NO_SETTINGS_PACKAGE_ID))
+        path = os.path.join(ts.server_store.package_revisions_root(pref), "0")
+        manifest = FileTreeManifest.load(path)
+        manifest.time += 1000
+        manifest.save(path)
+
+        tc.save({"conanfile.py": conanfile.replace("warn", "info")})
+        tc.run("create . lib/1.0@user/stable")
+
+        with environment_append({"CONAN_UPLOAD": ts.fake_url, "CONAN_LOGIN_USERNAME": "user",
+                                 "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user"}):
+            mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True)
+            mulitpackager.add_common_builds(reference="lib/1.0@user/stable",
+                                            shared_option_name=False)
+            mulitpackager.run()
+            self.assertIn("Uploading packages for 'lib/1.0@user/stable'", tc.out)
 
 
 class UploadDependenciesTest(unittest.TestCase):
