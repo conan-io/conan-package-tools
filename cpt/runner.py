@@ -325,9 +325,14 @@ class DockerCreateRunner(object):
 
     def pull_image(self):
         with self.printer.foldable_output("docker pull"):
-            ret = self._runner("%s docker pull %s" % (self._sudo_docker_command, self._docker_image))
-            if ret != 0:
-                raise Exception("Error pulling the image: %s" % self._docker_image)
+            for retry in range(1, 4):
+                ret = self._runner("%s docker pull %s" % (self._sudo_docker_command, self._docker_image))
+                if ret == 0:
+                    break
+                elif retry == 3:
+                    raise Exception("Error pulling the image: %s" % self._docker_image)
+                self.printer.print_message("Could not pull docker image '{}'. Retry ({})"
+                                           .format(self._docker_image, retry))
 
     def get_env_vars(self):
         ret = {key: value for key, value in os.environ.items() if key.startswith("CONAN_") and
