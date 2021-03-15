@@ -267,3 +267,32 @@ class Pkg(ConanFile):
             self.packager.run()
             self.assertIn('-e CONAN_LOGIN_USERNAME="xxxxxxxx"', self.output)
             self.assertIn('-e CONAN_PASSWORD="xxxxxxxx"', self.output)
+
+    @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
+    def test_docker_underscore_user_channel(self):
+        conanfile = textwrap.dedent("""
+                from conans import ConanFile
+
+                class Pkg(ConanFile):
+                    def build(self):
+                        pass
+            """)
+
+        self.save_conanfile(conanfile)
+        with tools.environment_append({"CONAN_USERNAME": "_",
+                                       "CONAN_CHANNEL": "_",
+                                       "CONAN_DOCKER_IMAGE": "conanio/gcc8",
+                                       "CONAN_REFERENCE": "foo/0.0.1",
+                                       "CONAN_DOCKER_IMAGE_SKIP_UPDATE": "TRUE",
+                                       "CONAN_FORCE_SELINUX": "TRUE",
+                                       "CONAN_DOCKER_USE_SUDO": "FALSE",
+                                       "CONAN_DOCKER_SHELL": "/bin/bash -c",
+                                       }):
+            self.packager = ConanMultiPackager(gcc_versions=["8"],
+                                               archs=["x86_64"],
+                                               build_types=["Release"],
+                                               out=self.output.write)
+            self.packager.add({})
+            self.packager.run()
+            self.assertIn('e CONAN_USERNAME="_"', self.output)
+            self.assertIn('-e CONAN_CHANNEL="_"', self.output)
