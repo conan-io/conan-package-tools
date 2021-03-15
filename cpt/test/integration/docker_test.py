@@ -34,13 +34,13 @@ class DockerTest(BaseTest):
         client_version = get_client_version()
         ci_manager = MockCIManager()
         unique_ref = "zlib/%s" % str(time.time())
-        conanfile = """from conans import ConanFile
-import os
+        conanfile = textwrap.dedent("""
+                from conans import ConanFile
+                import os
 
-class Pkg(ConanFile):
-    settings = "os", "compiler", "build_type", "arch"
-
-"""
+                class Pkg(ConanFile):
+                    settings = "os", "compiler", "build_type", "arch"
+            """)
 
         self.save_conanfile(conanfile)
         with tools.environment_append({"CONAN_DOCKER_RUN_OPTIONS": "--network=host -v{}:/tmp/cpt".format(self.root_project_folder),
@@ -116,16 +116,17 @@ class Pkg(ConanFile):
 
     @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
     def test_docker_run_options(self):
-        conanfile = """from conans import ConanFile
-import os
+        conanfile = textwrap.dedent("""
+                from conans import ConanFile
+                import os
 
-class Pkg(ConanFile):
-    settings = "os", "compiler", "build_type", "arch"
-    requires = "zlib/1.2.11@conan/stable"
+                class Pkg(ConanFile):
+                    settings = "os", "compiler", "build_type", "arch"
+                    requires = "zlib/1.2.11@conan/stable"
 
-    def build(self):
-        pass
-"""
+                    def build(self):
+                        pass
+            """)
         self.save_conanfile(conanfile)
         # Validate by Environemnt Variable
         with tools.environment_append({"CONAN_DOCKER_ENTRY_SCRIPT": "pip install -U /tmp/cpt",
@@ -204,16 +205,17 @@ class Pkg(ConanFile):
 
     @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
     def test_docker_custom_pip_command(self):
-        conanfile = """from conans import ConanFile
-        import os
+        conanfile = textwrap.dedent("""
+                from conans import ConanFile
+                import os
 
-        class Pkg(ConanFile):
-            settings = "os", "compiler", "build_type", "arch"
-            requires = "zlib/1.2.11@conan/stable"
+                class Pkg(ConanFile):
+                    settings = "os", "compiler", "build_type", "arch"
+                    requires = "zlib/1.2.11@conan/stable"
 
-            def build(self):
-                pass
-        """
+                    def build(self):
+                        pass
+            """)
         self.save_conanfile(conanfile)
         with tools.environment_append({"CONAN_DOCKER_ENTRY_SCRIPT": "pip install -U /tmp/cpt",
                                        "CONAN_USERNAME": "bar",
