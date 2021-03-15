@@ -24,6 +24,7 @@ from cpt.runner import CreateRunner, DockerCreateRunner
 from cpt.tools import get_bool_from_env
 from cpt.tools import split_colon_env
 from cpt.uploader import Uploader
+from cpt.config import ConfigManager
 
 
 def load_cf_class(path, conan_api):
@@ -648,6 +649,8 @@ class ConanMultiPackager(object):
                 self.printer.print_message("Using specified default "
                                            "base profile: %s" % base_profile_name)
                 self.printer.print_message("**************************************************")
+                if self.config_url:
+                    ConfigManager(self.conan_api, self.printer).install(url=self.config_url, args=self.config_args)
 
             profile_text, base_profile_text = get_profiles(self.client_cache, build,
                                                            base_profile_name)
