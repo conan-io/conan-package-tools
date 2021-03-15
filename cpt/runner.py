@@ -2,6 +2,7 @@ import os
 import sys
 import subprocess
 import re
+import time
 from collections import namedtuple
 
 from conans import tools
@@ -333,6 +334,7 @@ class DockerCreateRunner(object):
                     raise Exception("Error pulling the image: %s" % self._docker_image)
                 self.printer.print_message("Could not pull docker image '{}'. Retry ({})"
                                            .format(self._docker_image, retry))
+                time.sleep(3)
 
     def get_env_vars(self):
         ret = {key: value for key, value in os.environ.items() if key.startswith("CONAN_") and
