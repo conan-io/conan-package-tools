@@ -53,7 +53,7 @@ class Pkg(ConanFile):
                                        "CONAN_PASSWORD": "demo"}):
 
             self.packager = ConanMultiPackager(channel="mychannel",
-                                               gcc_versions=["6"],
+                                               gcc_versions=["8"],
                                                archs=["x86", "x86_64"],
                                                build_types=["Release"],
                                                reference=unique_ref,
@@ -96,7 +96,7 @@ class Pkg(ConanFile):
                                        "CONAN_DOCKER_IMAGE_SKIP_UPDATE": "TRUE",
                                        "CONAN_UPLOAD_ONLY_WHEN_STABLE": "1"}):
             self.packager = ConanMultiPackager(channel="mychannel",
-                                               gcc_versions=["6"],
+                                               gcc_versions=["8"],
                                                archs=["x86", "x86_64"],
                                                build_types=["Release"],
                                                reference=unique_ref,
