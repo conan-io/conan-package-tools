@@ -6,6 +6,11 @@ def get_bool_from_env(var_name):
     return str(val).lower() not in ("0", "none", "false")
 
 
+def get_custom_bool_from_env(var_name, default=None):
+    val = os.getenv(var_name, default)
+    return str(val).lower() in ('true', 'on', 'ok', 'y', 'yes', '1')
+
+
 def split_colon_env(varname):
     if os.getenv(varname) is None:
         return None
