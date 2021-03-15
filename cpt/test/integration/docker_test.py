@@ -294,5 +294,5 @@ class Pkg(ConanFile):
                                                out=self.output.write)
             self.packager.add({})
             self.packager.run()
-            self.assertIn('e CONAN_USERNAME="_"', self.output)
+            self.assertIn('-e CONAN_USERNAME="_"', self.output)
             self.assertIn('-e CONAN_CHANNEL="_"', self.output)
