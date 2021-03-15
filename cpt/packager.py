@@ -668,6 +668,7 @@ class ConanMultiPackager(object):
                                  test_folder=self.test_folder,
                                  config_url=self.config_url,
                                  config_args=self.config_args,
+                                 upload_dependencies=self.upload_dependencies,
                                  conanfile=self.conanfile,
                                  lockfile=self.lockfile,
                                  skip_recipe_export=skip_recipe_export,
