@@ -2,6 +2,7 @@ import os
 import sys
 import subprocess
 import re
+import time
 from collections import namedtuple
 
 from conans import tools
@@ -327,9 +328,15 @@ class DockerCreateRunner(object):
 
     def pull_image(self):
         with self.printer.foldable_output("docker pull"):
-            ret = self._runner("%s docker pull %s" % (self._sudo_docker_command, self._docker_image))
-            if ret != 0:
-                raise Exception("Error pulling the image: %s" % self._docker_image)
+            for retry in range(1, 4):
+                ret = self._runner("%s docker pull %s" % (self._sudo_docker_command, self._docker_image))
+                if ret == 0:
+                    break
+                elif retry == 3:
+                    raise Exception("Error pulling the image: %s" % self._docker_image)
+                self.printer.print_message("Could not pull docker image '{}'. Retry ({})"
+                                           .format(self._docker_image, retry))
+                time.sleep(3)
 
     def get_env_vars(self):
         ret = {key: value for key, value in os.environ.items() if key.startswith("CONAN_") and
@@ -340,7 +347,7 @@ class DockerCreateRunner(object):
         ret["CPT_BASE_PROFILE"] = escape_env(self._base_profile_text)
         ret["CPT_BASE_PROFILE_NAME"] = escape_env(self._base_profile_name)
 
-        ret["CONAN_USERNAME"] = escape_env(self._reference.user)
+        ret["CONAN_USERNAME"] = escape_env(self._reference.user or ret.get("CONAN_USERNAME"))
         ret["CONAN_TEMP_TEST_FOLDER"] = "1"  # test package folder to a temp one
         ret["CPT_UPLOAD_ENABLED"] = self._upload
         ret["CPT_UPLOAD_RETRY"] = self._upload_retry
