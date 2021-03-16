@@ -21,7 +21,7 @@ from cpt.printer import Printer
 from cpt.profiles import get_profiles, save_profile_to_tmp
 from cpt.remotes import RemotesManager
 from cpt.runner import CreateRunner, DockerCreateRunner
-from cpt.tools import get_bool_from_env
+from cpt.tools import get_bool_from_env, get_custom_bool_from_env
 from cpt.tools import split_colon_env
 from cpt.uploader import Uploader
 
@@ -114,6 +114,7 @@ class ConanMultiPackager(object):
                  upload_only_when_stable=None,
                  upload_only_when_tag=None,
                  upload_only_recipe=None,
+                 upload_force=None,
                  build_types=None,
                  cppstds=None,
                  skip_check_credentials=False,
@@ -184,10 +185,12 @@ class ConanMultiPackager(object):
             self.upload_only_when_tag = get_bool_from_env("CONAN_UPLOAD_ONLY_WHEN_TAG")
 
         self.upload_only_recipe = upload_only_recipe or get_bool_from_env("CONAN_UPLOAD_ONLY_RECIPE")
+        self.upload_force = upload_force if upload_force is not None \
+                            else get_custom_bool_from_env("CONAN_UPLOAD_FORCE", True)
 
         self.remotes_manager.add_remotes_to_conan()
         self.uploader = Uploader(self.conan_api, self.remotes_manager, self.auth_manager,
-                                 self.printer, self.upload_retry)
+                                 self.printer, self.upload_retry, self.upload_force)
 
         self._builds = []
         self._named_builds = {}
@@ -687,6 +690,7 @@ class ConanMultiPackager(object):
                                        upload=self._upload_enabled(),
                                        upload_retry=self.upload_retry,
                                        upload_only_recipe=self.upload_only_recipe,
+                                       upload_force=self.upload_force,
                                        runner=self.runner,
                                        docker_shell=self.docker_shell,
                                        docker_conan_home=self.docker_conan_home,

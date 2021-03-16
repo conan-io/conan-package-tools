@@ -170,6 +170,7 @@ class DockerCreateRunner(object):
                  docker_image_skip_pull=False,
                  always_update_conan_in_docker=False,
                  upload=False, upload_retry=None, upload_only_recipe=None,
+                 upload_force=None,
                  runner=None,
                  docker_shell="", docker_conan_home="",
                  docker_platform_param="", docker_run_options="",
@@ -192,6 +193,7 @@ class DockerCreateRunner(object):
         self._upload = upload
         self._upload_retry = upload_retry
         self._upload_only_recipe = upload_only_recipe
+        self._upload_force = upload_force
         self._reference = reference
         self._conan_pip_package = conan_pip_package
         self._build_policy = build_policy
@@ -343,6 +345,7 @@ class DockerCreateRunner(object):
         ret["CPT_UPLOAD_ENABLED"] = self._upload
         ret["CPT_UPLOAD_RETRY"] = self._upload_retry
         ret["CPT_UPLOAD_ONLY_RECIPE"] = self._upload_only_recipe
+        ret["CPT_UPLOAD_FORCE"] = self._upload_force
         ret["CPT_BUILD_POLICY"] = escape_env(self._build_policy)
         ret["CPT_TEST_FOLDER"] = escape_env(self._test_folder)
         ret["CPT_CONFIG_URL"] = escape_env(self._config_url)

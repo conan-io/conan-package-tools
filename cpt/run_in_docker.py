@@ -24,7 +24,8 @@ def run():
 
     upload_retry = os.getenv("CPT_UPLOAD_RETRY")
     upload_only_recipe = os.getenv("CPT_UPLOAD_ONLY_RECIPE")
-    uploader = Uploader(conan_api, remotes_manager, auth_manager, printer, upload_retry)
+    upload_force = os.getenv("CPT_UPLOAD_FORCE")
+    uploader = Uploader(conan_api, remotes_manager, auth_manager, printer, upload_retry, upload_force)
     build_policy = unscape_env(os.getenv("CPT_BUILD_POLICY"))
     test_folder = unscape_env(os.getenv("CPT_TEST_FOLDER"))
     reference = ConanFileReference.loads(os.getenv("CONAN_REFERENCE"))
