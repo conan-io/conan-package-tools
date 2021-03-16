@@ -3,6 +3,7 @@ import unittest
 import time
 import textwrap
 
+
 from conans import tools
 from conans.model.ref import ConanFileReference
 from conans.model.version import Version
@@ -237,6 +238,38 @@ class DockerTest(BaseTest):
                 self.packager.run()
                 self.assertIn("Error updating the image", str(raised.exception))
                 self.assertIn("foobar install conan_package_tools", str(raised.exception))
+
+    @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
+    def test_docker_base_profile(self):
+        conanfile = textwrap.dedent("""
+                from conans import ConanFile
+
+                class Pkg(ConanFile):
+
+                    def build(self):
+                        pass
+            """)
+
+        self.save_conanfile(conanfile)
+        with tools.environment_append({"CONAN_DOCKER_RUN_OPTIONS": "--network=host -v{}:/tmp/cpt".format(self.root_project_folder),
+                                       "CONAN_DOCKER_ENTRY_SCRIPT": "pip install -U /tmp/cpt",
+                                       "CONAN_DOCKER_IMAGE": "conanio/gcc8",
+                                       "CONAN_USE_DOCKER": "1",
+                                       "CONAN_REFERENCE": "foo/0.0.1@bar/testing",
+                                       "CONAN_DOCKER_IMAGE_SKIP_UPDATE": "TRUE",
+                                       "CONAN_FORCE_SELINUX": "TRUE",
+                                       "CONAN_DOCKER_USE_SUDO": "FALSE",
+                                       "CONAN_DOCKER_SHELL": "/bin/bash -c",
+                                       }):
+            self.packager = ConanMultiPackager(gcc_versions=["8"],
+                                               archs=["x86_64"],
+                                               build_types=["Release"],
+                                               config_url="https://github.com/bincrafters/bincrafters-config.git",
+                                               out=self.output.write)
+            self.packager.add({})
+            self.packager.run(base_profile_name="linux-gcc8-amd64")
+            self.assertIn('Using specified default base profile: linux-gcc8-amd64', self.output)
+            self.assertIn('-e CPT_BASE_PROFILE_NAME="linux-gcc8-amd64"', self.output)
 
     @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
     def test_docker_hidden_password(self):
