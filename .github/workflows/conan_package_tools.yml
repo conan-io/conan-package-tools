@@ -16,16 +16,18 @@ jobs:
       with:
         python-version: ${{ matrix.config.python }}
     - name: Install dependencies
+      env:
+        PYVER: ${{ matrix.config.pyver }}
       run: |
-        chmod +x .ci/travis/install.sh
-        .ci/travis/install.sh
+        chmod +x .github/workflows/install.sh
+        .github/workflows/install.sh
     - name: ${{ matrix.config.name }}
       env:
         TOXENV: ${{ matrix.config.toxenv }}
         PYVER: ${{ matrix.config.pyver }}
       run: |
-        chmod +x .ci/travis/run.sh
-        .ci/travis/run.sh
+        chmod +x .github/workflows/run.sh
+        .github/workflows/run.sh
     - name: Codecov
       run: |
         bash <(curl -s https://codecov.io/bash)
@@ -46,18 +48,20 @@ jobs:
       with:
         python-version: ${{ matrix.config.python }}
     - name: Install dependencies
+      env:
+        PYVER: ${{ matrix.config.pyver }}
       run: |
         export
         env
-        chmod +x .ci/travis/install.sh
-        .ci/travis/install.sh
+        chmod +x .github/workflows/install.sh
+        .github/workflows/install.sh
     - name: ${{ matrix.config.name }}
       env:
         TOXENV: ${{ matrix.config.toxenv }}
         PYVER: ${{ matrix.config.pyver }}
       run: |
-        chmod +x .ci/travis/run.sh
-        .ci/travis/run.sh
+        chmod +x .github/workflows/run.sh
+        .github/workflows/run.sh
 
   conan_stable_osx:
     runs-on: macos-latest
@@ -74,20 +78,23 @@ jobs:
       with:
         python-version: ${{ matrix.config.python }}
     - name: Install dependencies
+      env:
+        PYVER: ${{ matrix.config.pyver }}
       run: |
-        chmod +x .ci/travis/install.sh
-        .ci/travis/install.sh
+        chmod +x .github/workflows/install.sh
+        .github/workflows/install.sh
     - name: ${{ matrix.config.name }}
       env:
         TOXENV: ${{ matrix.config.toxenv }}
         PYVER: ${{ matrix.config.pyver }}
       run: |
-        chmod +x .ci/travis/run.sh
-        .ci/travis/run.sh
+        chmod +x .github/workflows/run.sh
+        .github/workflows/run.sh
     - name: Codecov
       run: |
         bash <(curl -s https://codecov.io/bash)
-  conan_develop_osx:
+
+conan_develop_osx:
     if: github.ref != 'refs/head/master' && !startsWith(github.ref, 'refs/heads/release/')
     runs-on: macos-latest
     continue-on-error: True
@@ -104,15 +111,17 @@ jobs:
       with:
         python-version: ${{ matrix.config.python }}
     - name: Install dependencies
+      env:
+        PYVER: ${{ matrix.config.pyver }}
       run: |
         export
         env
-        chmod +x .ci/travis/install.sh
-        .ci/travis/install.sh
+        chmod +x .github/workflows/install.sh
+        .github/workflows/install.sh
     - name: ${{ matrix.config.name }}
       env:
         TOXENV: ${{ matrix.config.toxenv }}
         PYVER: ${{ matrix.config.pyver }}
       run: |
-        chmod +x .ci/travis/run.sh
-        .ci/travis/run.sh
+        chmod +x .github/workflows/run.sh
+        .github/workflows/run.sh
