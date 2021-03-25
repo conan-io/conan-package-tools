@@ -94,7 +94,7 @@ jobs:
       run: |
         bash <(curl -s https://codecov.io/bash)
 
-conan_develop_osx:
+  conan_develop_osx:
     if: github.ref != 'refs/head/master' && !startsWith(github.ref, 'refs/heads/release/')
     runs-on: macos-latest
     continue-on-error: True
