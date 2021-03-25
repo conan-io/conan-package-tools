@@ -1,6 +1,7 @@
 import subprocess
 import unittest
 import time
+import textwrap
 
 from conans import tools
 from conans.model.ref import ConanFileReference
@@ -234,3 +235,35 @@ class Pkg(ConanFile):
                 self.packager.run()
                 self.assertIn("Error updating the image", str(raised.exception))
                 self.assertIn("foobar install conan_package_tools", str(raised.exception))
+
+    @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
+    def test_docker_hidden_password(self):
+        conanfile = textwrap.dedent("""
+                from conans import ConanFile
+
+                class Pkg(ConanFile):
+                    settings = "os", "compiler", "build_type", "arch"
+
+                    def build(self):
+                        pass
+            """)
+
+        self.save_conanfile(conanfile)
+        with tools.environment_append({"CONAN_USERNAME": "bar",
+                                       "CONAN_LOGIN_USERNAME": "foobar",
+                                       "CONAN_PASSWORD": "foobazcouse",
+                                       "CONAN_DOCKER_IMAGE": "conanio/gcc8",
+                                       "CONAN_REFERENCE": "foo/0.0.1@bar/testing",
+                                       "CONAN_DOCKER_IMAGE_SKIP_UPDATE": "TRUE",
+                                       "CONAN_FORCE_SELINUX": "TRUE",
+                                       "CONAN_DOCKER_USE_SUDO": "FALSE",
+                                       "CONAN_DOCKER_SHELL": "/bin/bash -c",
+                                       }):
+            self.packager = ConanMultiPackager(gcc_versions=["8"],
+                                               archs=["x86_64"],
+                                               build_types=["Release"],
+                                               out=self.output.write)
+            self.packager.add({})
+            self.packager.run()
+            self.assertIn('-e CONAN_LOGIN_USERNAME="xxxxxxxx"', self.output)
+            self.assertIn('-e CONAN_PASSWORD="xxxxxxxx"', self.output)

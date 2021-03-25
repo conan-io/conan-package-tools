@@ -13,7 +13,7 @@ from conans.client.runner import ConanRunner
 from conans.model.ref import ConanFileReference
 from conans.model.version import Version
 
-from cpt import NEWEST_CONAN_SUPPORTED, get_client_version
+from cpt import get_client_version
 from cpt.auth import AuthManager
 from cpt.builds_generator import BuildConf, BuildGenerator
 from cpt.ci_manager import CIManager
@@ -346,18 +346,6 @@ class ConanMultiPackager(object):
                                      for var, value in self.__dict__.items()
                                      if valid_pair(var, value)})
 
-        self._newest_supported_conan_version = Version(NEWEST_CONAN_SUPPORTED).minor(fill=False)
-        self._client_conan_version = conan_version
-
-    def _check_conan_version(self):
-        tmp = self._newest_supported_conan_version
-        if Version(self._client_conan_version).minor(fill=False) > tmp:
-            msg = "Conan/CPT version mismatch. Conan version installed: " \
-                  "%s . This version of CPT supports only Conan < %s" \
-                  "" % (self._client_conan_version, str(tmp))
-            self.printer.print_message(msg)
-            raise Exception(msg)
-
     # For Docker on Windows, including Linux containers on Windows
     @property
     def is_lcow(self):
@@ -569,8 +557,6 @@ class ConanMultiPackager(object):
         self._builds = updated_builds
 
     def run(self, base_profile_name=None, summary_file=None):
-        self._check_conan_version()
-
         env_vars = self.auth_manager.env_vars()
         env_vars.update(self.remotes_manager.env_vars())
         with tools.environment_append(env_vars):
@@ -718,7 +704,8 @@ class ConanMultiPackager(object):
                                        lockfile=self.lockfile,
                                        force_selinux=self.force_selinux,
                                        skip_recipe_export=skip_recipe_export,
-                                       update_dependencies=self.update_dependencies)
+                                       update_dependencies=self.update_dependencies,
+                                       cwd=self.cwd)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
                       docker_entry_script=self.docker_entry_script)

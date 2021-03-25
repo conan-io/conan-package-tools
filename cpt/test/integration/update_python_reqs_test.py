@@ -1,6 +1,6 @@
 import unittest
 
-from conans.test.utils.tools import TestClient
+from cpt.test.utils.tools import TestClient
 from cpt.test.test_client.tools import get_patched_multipackager
 
 

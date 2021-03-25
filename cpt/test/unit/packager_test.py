@@ -8,7 +8,7 @@ from collections import defaultdict
 from cpt.builds_generator import BuildConf
 from cpt.packager import ConanMultiPackager
 from conans import tools
-from conans.test.utils.tools import TestBufferConanOutput
+from cpt.test.utils.tools import TestBufferConanOutput
 from conans.model.ref import ConanFileReference
 from cpt.test.unit.utils import MockConanAPI, MockRunner, MockCIManager
 
@@ -430,26 +430,26 @@ class AppTest(unittest.TestCase):
         expected = [({'compiler.exception': 'seh', 'compiler.libcxx': "libstdc++",
                       'compiler.threads': 'posix', 'compiler.version': '4.9', 'arch': 'x86_64',
                       'build_type': 'Release', 'compiler': 'gcc'},
-                     {'zlib:shared': True},
+                     {'zlib:shared': False},
                      {},
                      {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}),
                     ({'compiler.exception': 'seh', 'compiler.libcxx': "libstdc++", 'arch': 'x86_64',
                       'compiler.threads': 'posix', 'compiler.version': '4.9', 'build_type': 'Debug',
                       'compiler': 'gcc'},
-                     {'zlib:shared': True},
+                     {'zlib:shared': False},
                      {},
                      {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}),
 
                     ({'compiler.exception': 'seh', 'compiler.libcxx': "libstdc++",
                       'compiler.threads': 'posix', 'compiler.version': '4.9', 'arch': 'x86_64',
                       'build_type': 'Release', 'compiler': 'gcc'},
-                     {'zlib:shared': False},
+                     {'zlib:shared': True},
                      {},
                      {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}),
                     ({'compiler.exception': 'seh', 'compiler.libcxx': "libstdc++", 'arch': 'x86_64',
                       'compiler.threads': 'posix', 'compiler.version': '4.9', 'build_type': 'Debug',
                       'compiler': 'gcc'},
-                     {'zlib:shared': False},
+                     {'zlib:shared': True},
                      {},
                      {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]})]
 
@@ -1078,3 +1078,19 @@ class AppTest(unittest.TestCase):
             builder.add_common_builds()
             builder.run()
             self.assertEquals("couse.lock", self.conan_api.calls[-1].kwargs["lockfile"])
+
+    def test_docker_cwd(self):
+        cwd = os.path.join(os.getcwd(), 'subdir')
+        self.packager = ConanMultiPackager(username="lasote",
+                                           channel="mychannel",
+                                           runner=self.runner,
+                                           conan_api=self.conan_api,
+                                           gcc_versions=["9"],
+                                           use_docker=True,
+                                           reference="zlib/1.2.11",
+                                           ci_manager=self.ci_manager,
+                                           cwd=cwd)
+
+        self._add_build(1, "gcc", "9")
+        self.packager.run_builds(1, 1)
+        self.assertIn('docker run --rm -v "%s:%s/project"' % (cwd, self.packager.docker_conan_home), self.runner.calls[4])

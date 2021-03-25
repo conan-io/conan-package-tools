@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+import re
 from collections import namedtuple
 
 from conans import tools
@@ -61,6 +62,9 @@ class CreateRunner(object):
             cache = conan_api.app.cache
 
         self._profile = load_profile(profile_abs_path, cache)
+
+        if isinstance(self._test_folder, str) and self._test_folder.lower() == "false":
+            self._test_folder = False
 
     @property
     def settings(self):
@@ -181,7 +185,8 @@ class DockerCreateRunner(object):
                  force_selinux=None,
                  skip_recipe_export=False,
                  update_dependencies=False,
-                 lockfile=None):
+                 lockfile=None,
+                 cwd=None):
 
         self.printer = printer or Printer()
         self._upload = upload
@@ -216,6 +221,7 @@ class DockerCreateRunner(object):
         self._force_selinux = force_selinux
         self._skip_recipe_export = skip_recipe_export
         self._update_dependencies = update_dependencies
+        self._cwd = cwd or os.getcwd()
 
     def _pip_update_conan_command(self):
         commands = []
@@ -295,7 +301,7 @@ class DockerCreateRunner(object):
         command = ('%s docker run --rm -v "%s:%s/project%s" %s %s %s %s %s '
                    '"%s cd project && '
                    '%s run_create_in_docker "' % (self._sudo_docker_command,
-                                                  os.getcwd(),
+                                                  self._cwd,
                                                   self._docker_conan_home,
                                                   volume_options,
                                                   env_vars_text,
@@ -370,8 +376,12 @@ class PrintRunner(object):
         self.runner = runner
         self.printer = printer
 
-    def __call__(self, command):
-        self.printer.print_command(command)
+    def __call__(self, command, hide_sensitive=True):
+        cmd_str = command
+        if hide_sensitive:
+            cmd_str = re.sub(r'(CONAN_LOGIN_USERNAME[_\w+]*)=\"(\w+)\"', r'\1="xxxxxxxx"', cmd_str)
+            cmd_str = re.sub(r'(CONAN_PASSWORD[_\w+]*)=\"(\w+)\"', r'\1="xxxxxxxx"', cmd_str)
+        self.printer.print_command(cmd_str)
         sys.stderr.flush()
         sys.stdout.flush()
         return self.runner(command)
