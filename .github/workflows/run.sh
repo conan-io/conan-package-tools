@@ -12,4 +12,4 @@ fi
 
 conan user
 mkdir ~/.conan/data
-tox
+tox -v

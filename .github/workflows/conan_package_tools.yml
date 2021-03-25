@@ -31,6 +31,59 @@ jobs:
     - name: Codecov
       run: |
         bash <(curl -s https://codecov.io/bash)
+  conan_stable_osx:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { name: "Conan Stable - Python 2.7", python: 2.7, toxenv: "py27-conan-latest", pyver: "py27" }
+          - { name: "Conan Stable - Python 3.7", python: 3.7, toxenv: "py37-conan-latest", pyver: "py37" }
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.config.python }}
+    - name: Install dependencies
+      env:
+        PYVER: ${{ matrix.config.pyver }}
+      run: |
+        chmod +x .github/workflows/install.sh
+        .github/workflows/install.sh
+    - name: ${{ matrix.config.name }}
+      env:
+        TOXENV: ${{ matrix.config.toxenv }}
+        PYVER: ${{ matrix.config.pyver }}
+      run: |
+        chmod +x .github/workflows/run.sh
+        .github/workflows/run.sh
+  conan_stable_windows:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { name: "Conan Stable - Python 2.7", python: 2.7, toxenv: "py27-conan-latest", pyver: "py27" }
+          - { name: "Conan Stable - Python 3.7", python: 3.7, toxenv: "py37-conan-latest", pyver: "py37" }
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.config.python }}
+    - name: Install dependencies
+      env:
+        PYVER: ${{ matrix.config.pyver }}
+      run: |
+        .github/workflows/install.bat
+    - name: ${{ matrix.config.name }}
+      env:
+        TOXENV: ${{ matrix.config.toxenv }}
+        PYVER: ${{ matrix.config.pyver }}
+      run: |
+        .github/workflows/run.bat
+
   conan_develop_linux:
     if: github.ref != 'refs/head/master' && !startsWith(github.ref, 'refs/heads/release/')
     runs-on: ubuntu-latest
@@ -62,37 +115,6 @@ jobs:
       run: |
         chmod +x .github/workflows/run.sh
         .github/workflows/run.sh
-
-  conan_stable_osx:
-    runs-on: macos-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        config:
-          - { name: "Conan Stable - Python 2.7", python: 2.7, toxenv: "py27-conan-latest", pyver: "py27" }
-          - { name: "Conan Stable - Python 3.7", python: 3.7, toxenv: "py37-conan-latest", pyver: "py37" }
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.config.python }}
-    - name: Install dependencies
-      env:
-        PYVER: ${{ matrix.config.pyver }}
-      run: |
-        chmod +x .github/workflows/install.sh
-        .github/workflows/install.sh
-    - name: ${{ matrix.config.name }}
-      env:
-        TOXENV: ${{ matrix.config.toxenv }}
-        PYVER: ${{ matrix.config.pyver }}
-      run: |
-        chmod +x .github/workflows/run.sh
-        .github/workflows/run.sh
-    - name: Codecov
-      run: |
-        bash <(curl -s https://codecov.io/bash)
 
   conan_develop_osx:
     if: github.ref != 'refs/head/master' && !startsWith(github.ref, 'refs/heads/release/')
