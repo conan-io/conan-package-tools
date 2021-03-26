@@ -556,7 +556,7 @@ class ConanMultiPackager(object):
             updated_builds.append(build)
         self._builds = updated_builds
 
-    def run(self, base_profile_name=None, summary_file=None):
+    def run(self, base_profile_name=None, summary_file=None, base_profile_build_name=None):
         env_vars = self.auth_manager.env_vars()
         env_vars.update(self.remotes_manager.env_vars())
         with tools.environment_append(env_vars):
@@ -577,7 +577,7 @@ class ConanMultiPackager(object):
                         self.runner('%s %s install -q %s' % (self.sudo_pip_command,
                                                           self.pip_command, packages))
 
-            self.run_builds(base_profile_name=base_profile_name)
+            self.run_builds(base_profile_name=base_profile_name, base_profile_build_name=base_profile_build_name)
 
         summary_file = summary_file or os.getenv("CPT_SUMMARY_FILE", None)
         if summary_file:
@@ -615,7 +615,7 @@ class ConanMultiPackager(object):
 
         return True
 
-    def run_builds(self, curpage=None, total_pages=None, base_profile_name=None):
+    def run_builds(self, curpage=None, total_pages=None, base_profile_name=None, base_profile_build_name=None):
         if len(self.named_builds) > 0 and len(self.items) > 0:
             raise Exception("Both bulk and named builds are set. Only one is allowed.")
 
@@ -639,6 +639,13 @@ class ConanMultiPackager(object):
         pulled_docker_images = defaultdict(lambda: False)
         skip_recipe_export = False
 
+        base_profile_build_name = base_profile_build_name or os.getenv("CONAN_BASE_PROFILE_BUILD")
+        if base_profile_build_name is not None:
+            self.printer.print_message("**************************************************")
+            self.printer.print_message("Using specified  "
+                                        "build profile: %s" % base_profile_build_name)
+            self.printer.print_message("**************************************************")
+
         # FIXME: Remove in Conan 1.3, https://github.com/conan-io/conan/issues/2787
         for index, build in enumerate(self.builds_in_current_page):
             self.printer.print_message("Build: %s/%s" % (index+1, len(self.builds_in_current_page)))
@@ -651,8 +658,14 @@ class ConanMultiPackager(object):
 
             profile_text, base_profile_text = get_profiles(self.client_cache, build,
                                                            base_profile_name)
+            _, base_profile_build_text = get_profiles(self.client_cache, build,
+                                                      base_profile_build_name)
             if not self.use_docker:
                 profile_abs_path = save_profile_to_tmp(profile_text)
+                if base_profile_build_text:
+                    profile_build_abs_path = save_profile_to_tmp(base_profile_build_text)
+                else:
+                    profile_build_abs_path = None
                 r = CreateRunner(profile_abs_path, build.reference, self.conan_api,
                                  self.uploader,
                                  exclude_vcvars_precommand=self.exclude_vcvars_precommand,
@@ -669,7 +682,8 @@ class ConanMultiPackager(object):
                                  conanfile=self.conanfile,
                                  lockfile=self.lockfile,
                                  skip_recipe_export=skip_recipe_export,
-                                 update_dependencies=self.update_dependencies)
+                                 update_dependencies=self.update_dependencies,
+                                 profile_build_abs_path=profile_build_abs_path)
                 r.run()
                 self._packages_summary.append({"configuration":  build, "package" : r.results})
             else:
@@ -705,6 +719,7 @@ class ConanMultiPackager(object):
                                        force_selinux=self.force_selinux,
                                        skip_recipe_export=skip_recipe_export,
                                        update_dependencies=self.update_dependencies,
+                                       profile_build_text=base_profile_build_text,
                                        cwd=self.cwd)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
