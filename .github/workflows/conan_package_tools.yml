@@ -91,7 +91,7 @@ jobs:
         .github/workflows/run.sh
 
   conan_develop_linux:
-    if: github.ref != 'refs/head/master' && !startsWith(github.ref, 'refs/heads/release/')
+    if: github.ref != 'refs/head/master' && !startsWith(github.ref, 'refs/heads/release/') && !startsWith(github.ref, 'refs/tags') 
     runs-on: ubuntu-latest
     continue-on-error: True
     strategy:
@@ -123,7 +123,7 @@ jobs:
         .github/workflows/run.sh
 
   conan_develop_osx:
-    if: github.ref != 'refs/head/master' && !startsWith(github.ref, 'refs/heads/release/')
+    if: github.ref != 'refs/head/master' && !startsWith(github.ref, 'refs/heads/release/') && !startsWith(github.ref, 'refs/tags') 
     runs-on: macos-latest
     continue-on-error: True
     strategy:
@@ -153,3 +153,23 @@ jobs:
       run: |
         chmod +x .github/workflows/run.sh
         .github/workflows/run.sh
+
+  deploy_release:
+    if: startsWith(github.ref, 'refs/tags')
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+    - name: Install dependencies
+      run: pip install pygithub
+    - name: Generate changelog
+      run: python .github/deploy/release_changelog.py
+    - name: Generate Dist/
+      run: python setup.py sdist
+    - uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}
