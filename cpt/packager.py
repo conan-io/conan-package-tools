@@ -577,7 +577,8 @@ class ConanMultiPackager(object):
                         self.runner('%s %s install -q %s' % (self.sudo_pip_command,
                                                           self.pip_command, packages))
 
-            self.run_builds(base_profile_name=base_profile_name, base_profile_build_name=base_profile_build_name)
+            self.run_builds(base_profile_name=base_profile_name,
+                            base_profile_build_name=base_profile_build_name)
 
         summary_file = summary_file or os.getenv("CPT_SUMMARY_FILE", None)
         if summary_file:
@@ -615,7 +616,8 @@ class ConanMultiPackager(object):
 
         return True
 
-    def run_builds(self, curpage=None, total_pages=None, base_profile_name=None, base_profile_build_name=None):
+    def run_builds(self, curpage=None, total_pages=None, base_profile_name=None,
+                   base_profile_build_name=None):
         if len(self.named_builds) > 0 and len(self.items) > 0:
             raise Exception("Both bulk and named builds are set. Only one is allowed.")
 
