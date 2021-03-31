@@ -759,7 +759,7 @@ class ConanMultiPackager(object):
         if self.stable_branch_pattern:
             stable_patterns = [self.stable_branch_pattern]
         else:
-            stable_patterns = ["master$", "release*", "stable*"]
+            stable_patterns = ["master$", "release.*", "stable.*"]
 
         branch = self.ci_manager.get_branch()
         self.printer.print_message("Branch detected", branch)
