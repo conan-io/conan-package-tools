@@ -32,10 +32,10 @@ class AppTest(unittest.TestCase):
                                            conan_api=self.conan_api,
                                            reference="lib/1.0",
                                            ci_manager=self.ci_manager)
-        if "APPVEYOR" in os.environ:
-            del os.environ["APPVEYOR"]
-        if "TRAVIS" in os.environ:
-            del os.environ["TRAVIS"]
+
+        for provider in ["APPVEYOR", "TRAVIS", "GITHUB_ACTIONS"]:
+            if provider in os.environ:
+                del os.environ[provider]
 
     def _add_build(self, number, compiler=None, version=None):
         self.packager.add({"os": "os%d" % number, "compiler": compiler or "compiler%d" % number,
@@ -938,7 +938,7 @@ class AppTest(unittest.TestCase):
         output = TestBufferConanOutput()
         packager = ConanMultiPackager(username="lasote",
                                       channel="mychannel",
-                                      visual_versions=["12"],
+                                      visual_versions=["16"],
                                       archs=["x86", "x86_64"],
                                       build_types=["Release"],
                                       reference="zlib/1.2.11",
@@ -954,7 +954,7 @@ class AppTest(unittest.TestCase):
             self.conan_api.reset()
             packager = ConanMultiPackager(username="lasote",
                                       channel="mychannel",
-                                      visual_versions=["12"],
+                                      visual_versions=["16"],
                                       archs=["x86", "x86_64"],
                                       build_types=["Release"],
                                       reference="zlib/1.2.11",
@@ -970,7 +970,7 @@ class AppTest(unittest.TestCase):
         self.conan_api.reset()
         packager = ConanMultiPackager(username="lasote",
                                       channel="mychannel",
-                                      visual_versions=["12"],
+                                      visual_versions=["16"],
                                       archs=["x86", "x86_64"],
                                       build_types=["Release"],
                                       reference="zlib/1.2.11",
