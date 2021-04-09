@@ -163,6 +163,10 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.7
+    - name: Install dependencies
+      run: pip install pygithub
+    - name: Generate changelog
+      run: python .github/deploy/release_changelog.py
     - name: Generate Dist/
       run: python setup.py sdist
     - uses: pypa/gh-action-pypi-publish@release/v1
