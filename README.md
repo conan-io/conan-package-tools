@@ -1099,6 +1099,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **upload_only_when_tag**: Will try to upload only if the branch is a tag. Default [False]
 - **upload_only_recipe**: If defined, will try to upload **only** the recipes. The built packages will **not** be uploaded. Default [False]
 - **upload_dependencies**: Will try to upload dependencies to your remote. Default [False]
+- **upload_force**: Will try to force uploaded all packages. Default [True]
 - **build_types**: List containing specific build types. Default ["Release", "Debug"]
 - **cppstds**: List containing specific cpp standards. Default None
 - **skip_check_credentials**: Conan will skip checking the user credentials before building the packages. And if no user/remote is specified, will try to upload with the
@@ -1219,6 +1220,7 @@ This is especially useful for CI integration.
 - **CONAN_UPLOAD_ONLY_WHEN_TAG**: If defined, will try to upload the packages only when the current branch is a tag.
 - **CONAN_UPLOAD_ONLY_RECIPE**: If defined, will try to upload **only** the recipes. The built packages will **not** be uploaded.
 - **CONAN_UPLOAD_DEPENDENCIES**: If defined, will try to upload the listed package dependencies to your remote.
+- **CONAN_UPLOAD_FORCE**: If defined, will try to force upload all packages. Default is `True`.
 
 - **CONAN_SKIP_CHECK_CREDENTIALS**: Conan will skip checking the user credentials before building the packages. And if no user/remote is specified, will try to upload with the
   already stored credentiales in the local cache. Default [False]

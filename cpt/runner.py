@@ -2,6 +2,7 @@ import os
 import sys
 import subprocess
 import re
+import time
 from collections import namedtuple
 
 from conans import tools
@@ -170,6 +171,7 @@ class DockerCreateRunner(object):
                  docker_image_skip_pull=False,
                  always_update_conan_in_docker=False,
                  upload=False, upload_retry=None, upload_only_recipe=None,
+                 upload_force=None,
                  runner=None,
                  docker_shell="", docker_conan_home="",
                  docker_platform_param="", docker_run_options="",
@@ -192,6 +194,7 @@ class DockerCreateRunner(object):
         self._upload = upload
         self._upload_retry = upload_retry
         self._upload_only_recipe = upload_only_recipe
+        self._upload_force = upload_force
         self._reference = reference
         self._conan_pip_package = conan_pip_package
         self._build_policy = build_policy
@@ -325,9 +328,15 @@ class DockerCreateRunner(object):
 
     def pull_image(self):
         with self.printer.foldable_output("docker pull"):
-            ret = self._runner("%s docker pull %s" % (self._sudo_docker_command, self._docker_image))
-            if ret != 0:
-                raise Exception("Error pulling the image: %s" % self._docker_image)
+            for retry in range(1, 4):
+                ret = self._runner("%s docker pull %s" % (self._sudo_docker_command, self._docker_image))
+                if ret == 0:
+                    break
+                elif retry == 3:
+                    raise Exception("Error pulling the image: %s" % self._docker_image)
+                self.printer.print_message("Could not pull docker image '{}'. Retry ({})"
+                                           .format(self._docker_image, retry))
+                time.sleep(3)
 
     def get_env_vars(self):
         ret = {key: value for key, value in os.environ.items() if key.startswith("CONAN_") and
@@ -338,11 +347,12 @@ class DockerCreateRunner(object):
         ret["CPT_BASE_PROFILE"] = escape_env(self._base_profile_text)
         ret["CPT_BASE_PROFILE_NAME"] = escape_env(self._base_profile_name)
 
-        ret["CONAN_USERNAME"] = escape_env(self._reference.user)
+        ret["CONAN_USERNAME"] = escape_env(self._reference.user or ret.get("CONAN_USERNAME"))
         ret["CONAN_TEMP_TEST_FOLDER"] = "1"  # test package folder to a temp one
         ret["CPT_UPLOAD_ENABLED"] = self._upload
         ret["CPT_UPLOAD_RETRY"] = self._upload_retry
         ret["CPT_UPLOAD_ONLY_RECIPE"] = self._upload_only_recipe
+        ret["CPT_UPLOAD_FORCE"] = self._upload_force
         ret["CPT_BUILD_POLICY"] = escape_env(self._build_policy)
         ret["CPT_TEST_FOLDER"] = escape_env(self._test_folder)
         ret["CPT_CONFIG_URL"] = escape_env(self._config_url)
@@ -367,7 +377,7 @@ def unscape_env(text):
 def escape_env(text):
     if not text:
         return text
-    return text.replace("\n", "@@").replace('"', '||')
+    return text.replace("\r", "").replace("\n", "@@").replace('"', '||')
 
 
 class PrintRunner(object):

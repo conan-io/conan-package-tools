@@ -1,16 +1,18 @@
 from conans.model.version import Version
+from conans.client.cmd.uploader import UPLOAD_POLICY_FORCE
 
 from cpt import get_client_version
 
 
 class Uploader(object):
 
-    def __init__(self, conan_api, remote_manager, auth_manager, printer, upload_retry):
+    def __init__(self, conan_api, remote_manager, auth_manager, printer, upload_retry, force):
         self.conan_api = conan_api
         self.remote_manager = remote_manager
         self.auth_manager = auth_manager
         self.printer = printer
         self._upload_retry = upload_retry
+        self._force = force
         if not self._upload_retry:
             self._upload_retry = 0
 
@@ -39,17 +41,19 @@ class Uploader(object):
                 self.conan_api.upload(str(reference),
                                       package=package_id,
                                       remote=remote_name,
-                                      force=True,
+                                      force=self._force,
                                       retry=int(self._upload_retry))
             elif client_version < Version("1.8.0"):
                 self.conan_api.upload(str(reference),
                                       package=package_id,
                                       remote_name=remote_name,
-                                      force=True,
+                                      force=self._force,
                                       retry=int(self._upload_retry))
             else:
                 all_packages = package_id != None
+                policy = UPLOAD_POLICY_FORCE if self._force else None
                 self.conan_api.upload(str(reference),
                                       all_packages=all_packages,
                                       remote_name=remote_name,
+                                      policy=policy,
                                       retry=int(self._upload_retry))

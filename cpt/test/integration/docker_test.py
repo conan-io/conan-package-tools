@@ -3,6 +3,7 @@ import unittest
 import time
 import textwrap
 
+
 from conans import tools
 from conans.model.ref import ConanFileReference
 from conans.model.version import Version
@@ -34,13 +35,13 @@ class DockerTest(BaseTest):
         client_version = get_client_version()
         ci_manager = MockCIManager()
         unique_ref = "zlib/%s" % str(time.time())
-        conanfile = """from conans import ConanFile
-import os
+        conanfile = textwrap.dedent("""
+                from conans import ConanFile
+                import os
 
-class Pkg(ConanFile):
-    settings = "os", "compiler", "build_type", "arch"
-
-"""
+                class Pkg(ConanFile):
+                    settings = "os", "compiler", "build_type", "arch"
+            """)
 
         self.save_conanfile(conanfile)
         with tools.environment_append({"CONAN_DOCKER_RUN_OPTIONS": "--network=host -v{}:/tmp/cpt".format(self.root_project_folder),
@@ -53,7 +54,7 @@ class Pkg(ConanFile):
                                        "CONAN_PASSWORD": "demo"}):
 
             self.packager = ConanMultiPackager(channel="mychannel",
-                                               gcc_versions=["6"],
+                                               gcc_versions=["8"],
                                                archs=["x86", "x86_64"],
                                                build_types=["Release"],
                                                reference=unique_ref,
@@ -96,7 +97,7 @@ class Pkg(ConanFile):
                                        "CONAN_DOCKER_IMAGE_SKIP_UPDATE": "TRUE",
                                        "CONAN_UPLOAD_ONLY_WHEN_STABLE": "1"}):
             self.packager = ConanMultiPackager(channel="mychannel",
-                                               gcc_versions=["6"],
+                                               gcc_versions=["8"],
                                                archs=["x86", "x86_64"],
                                                build_types=["Release"],
                                                reference=unique_ref,
@@ -116,16 +117,17 @@ class Pkg(ConanFile):
 
     @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
     def test_docker_run_options(self):
-        conanfile = """from conans import ConanFile
-import os
+        conanfile = textwrap.dedent("""
+                from conans import ConanFile
+                import os
 
-class Pkg(ConanFile):
-    settings = "os", "compiler", "build_type", "arch"
-    requires = "zlib/1.2.11@conan/stable"
+                class Pkg(ConanFile):
+                    settings = "os", "compiler", "build_type", "arch"
+                    requires = "zlib/1.2.11@conan/stable"
 
-    def build(self):
-        pass
-"""
+                    def build(self):
+                        pass
+            """)
         self.save_conanfile(conanfile)
         # Validate by Environemnt Variable
         with tools.environment_append({"CONAN_DOCKER_ENTRY_SCRIPT": "pip install -U /tmp/cpt",
@@ -204,16 +206,17 @@ class Pkg(ConanFile):
 
     @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
     def test_docker_custom_pip_command(self):
-        conanfile = """from conans import ConanFile
-        import os
+        conanfile = textwrap.dedent("""
+                from conans import ConanFile
+                import os
 
-        class Pkg(ConanFile):
-            settings = "os", "compiler", "build_type", "arch"
-            requires = "zlib/1.2.11@conan/stable"
+                class Pkg(ConanFile):
+                    settings = "os", "compiler", "build_type", "arch"
+                    requires = "zlib/1.2.11@conan/stable"
 
-            def build(self):
-                pass
-        """
+                    def build(self):
+                        pass
+            """)
         self.save_conanfile(conanfile)
         with tools.environment_append({"CONAN_DOCKER_ENTRY_SCRIPT": "pip install -U /tmp/cpt",
                                        "CONAN_USERNAME": "bar",
@@ -235,6 +238,38 @@ class Pkg(ConanFile):
                 self.packager.run()
                 self.assertIn("Error updating the image", str(raised.exception))
                 self.assertIn("foobar install conan_package_tools", str(raised.exception))
+
+    @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
+    def test_docker_base_profile(self):
+        conanfile = textwrap.dedent("""
+                from conans import ConanFile
+
+                class Pkg(ConanFile):
+
+                    def build(self):
+                        pass
+            """)
+
+        self.save_conanfile(conanfile)
+        with tools.environment_append({"CONAN_DOCKER_RUN_OPTIONS": "--network=host -v{}:/tmp/cpt".format(self.root_project_folder),
+                                       "CONAN_DOCKER_ENTRY_SCRIPT": "pip install -U /tmp/cpt",
+                                       "CONAN_DOCKER_IMAGE": "conanio/gcc8",
+                                       "CONAN_USE_DOCKER": "1",
+                                       "CONAN_REFERENCE": "foo/0.0.1@bar/testing",
+                                       "CONAN_DOCKER_IMAGE_SKIP_UPDATE": "TRUE",
+                                       "CONAN_FORCE_SELINUX": "TRUE",
+                                       "CONAN_DOCKER_USE_SUDO": "FALSE",
+                                       "CONAN_DOCKER_SHELL": "/bin/bash -c",
+                                       }):
+            self.packager = ConanMultiPackager(gcc_versions=["8"],
+                                               archs=["x86_64"],
+                                               build_types=["Release"],
+                                               config_url="https://github.com/bincrafters/bincrafters-config.git",
+                                               out=self.output.write)
+            self.packager.add({})
+            self.packager.run(base_profile_name="linux-gcc8-amd64")
+            self.assertIn('Using specified default base profile: linux-gcc8-amd64', self.output)
+            self.assertIn('-e CPT_BASE_PROFILE_NAME="linux-gcc8-amd64"', self.output)
 
     @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
     def test_docker_hidden_password(self):
@@ -267,3 +302,32 @@ class Pkg(ConanFile):
             self.packager.run()
             self.assertIn('-e CONAN_LOGIN_USERNAME="xxxxxxxx"', self.output)
             self.assertIn('-e CONAN_PASSWORD="xxxxxxxx"', self.output)
+
+    @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
+    def test_docker_underscore_user_channel(self):
+        conanfile = textwrap.dedent("""
+                from conans import ConanFile
+
+                class Pkg(ConanFile):
+                    def build(self):
+                        pass
+            """)
+
+        self.save_conanfile(conanfile)
+        with tools.environment_append({"CONAN_USERNAME": "_",
+                                       "CONAN_CHANNEL": "_",
+                                       "CONAN_DOCKER_IMAGE": "conanio/gcc8",
+                                       "CONAN_REFERENCE": "foo/0.0.1",
+                                       "CONAN_DOCKER_IMAGE_SKIP_UPDATE": "TRUE",
+                                       "CONAN_FORCE_SELINUX": "TRUE",
+                                       "CONAN_DOCKER_USE_SUDO": "FALSE",
+                                       "CONAN_DOCKER_SHELL": "/bin/bash -c",
+                                       }):
+            self.packager = ConanMultiPackager(gcc_versions=["8"],
+                                               archs=["x86_64"],
+                                               build_types=["Release"],
+                                               out=self.output.write)
+            self.packager.add({})
+            self.packager.run()
+            self.assertIn('-e CONAN_USERNAME="_"', self.output)
+            self.assertIn('-e CONAN_CHANNEL="_"', self.output)

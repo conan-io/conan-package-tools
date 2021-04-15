@@ -21,9 +21,10 @@ from cpt.printer import Printer
 from cpt.profiles import get_profiles, save_profile_to_tmp
 from cpt.remotes import RemotesManager
 from cpt.runner import CreateRunner, DockerCreateRunner
-from cpt.tools import get_bool_from_env
+from cpt.tools import get_bool_from_env, get_custom_bool_from_env
 from cpt.tools import split_colon_env
 from cpt.uploader import Uploader
+from cpt.config import ConfigManager
 
 
 def load_cf_class(path, conan_api):
@@ -52,12 +53,12 @@ def load_cf_class(path, conan_api):
             conan_api.create_app()
         remotes = conan_api.app.cache.registry.load_remotes()
         conan_api.app.python_requires.enable_remotes(remotes=remotes)
-        conan_api.app.pyreq_loader.enable_remotes(remotes=remotes)
         if client_version < Version("1.20.0"):
             return conan_api.app.loader.load_class(path)
         elif client_version < Version("1.21.0"):
             return conan_api.app.loader.load_basic(path)
         else:
+            conan_api.app.pyreq_loader.enable_remotes(remotes=remotes)
             return conan_api.app.loader.load_named(path, None, None, None, None)
 
 
@@ -114,6 +115,7 @@ class ConanMultiPackager(object):
                  upload_only_when_stable=None,
                  upload_only_when_tag=None,
                  upload_only_recipe=None,
+                 upload_force=None,
                  build_types=None,
                  cppstds=None,
                  skip_check_credentials=False,
@@ -184,10 +186,12 @@ class ConanMultiPackager(object):
             self.upload_only_when_tag = get_bool_from_env("CONAN_UPLOAD_ONLY_WHEN_TAG")
 
         self.upload_only_recipe = upload_only_recipe or get_bool_from_env("CONAN_UPLOAD_ONLY_RECIPE")
+        self.upload_force = upload_force if upload_force is not None \
+                            else get_custom_bool_from_env("CONAN_UPLOAD_FORCE", True)
 
         self.remotes_manager.add_remotes_to_conan()
         self.uploader = Uploader(self.conan_api, self.remotes_manager, self.auth_manager,
-                                 self.printer, self.upload_retry)
+                                 self.printer, self.upload_retry, self.upload_force)
 
         self._builds = []
         self._named_builds = {}
@@ -648,6 +652,8 @@ class ConanMultiPackager(object):
                 self.printer.print_message("Using specified default "
                                            "base profile: %s" % base_profile_name)
                 self.printer.print_message("**************************************************")
+                if self.config_url:
+                    ConfigManager(self.conan_api, self.printer).install(url=self.config_url, args=self.config_args)
 
             profile_text, base_profile_text = get_profiles(self.client_cache, build,
                                                            base_profile_name)
@@ -687,6 +693,7 @@ class ConanMultiPackager(object):
                                        upload=self._upload_enabled(),
                                        upload_retry=self.upload_retry,
                                        upload_only_recipe=self.upload_only_recipe,
+                                       upload_force=self.upload_force,
                                        runner=self.runner,
                                        docker_shell=self.docker_shell,
                                        docker_conan_home=self.docker_conan_home,
