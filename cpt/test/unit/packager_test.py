@@ -784,11 +784,18 @@ class AppTest(unittest.TestCase):
 
         for branch, expected_channel in [("testing", "a_channel"),
                                          ("dummy", "a_channel"),
+                                         ("stabl", "a_channel"),
+                                         ("stabl/something", "a_channel"),
                                          ("stable", "stable"),
                                          ("stable/something", "stable"),
+                                         ("releas", "a_channel"),
+                                         ("releas/something", "a_channel"),
                                          ("release", "stable"),
                                          ("release/something", "stable"),
+                                         ("maste", "a_channel"),
+                                         ("maste/something", "a_channel"),
                                          ("master", "stable"),
+                                         ("masterSomething", "a_channel"),
                                          ("master/something", "a_channel")]:
             builder = ConanMultiPackager(username="pepe",
                                          channel="a_channel",
