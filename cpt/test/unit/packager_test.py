@@ -804,6 +804,25 @@ class AppTest(unittest.TestCase):
 
             self.assertEquals(builder.channel, expected_channel, "Not match for branch %s" % branch)
 
+    def channel_detector_test_custom_branch_patterns(self):
+
+        for branch, expected_channel in [("trunk", "stable"),
+                                         ("trunk/something", "a_channel"),
+                                         ("tags/something", "stable"),
+                                         ("tagsSomething", "a_channel"),
+                                         ("stable", "a_channel"),
+                                         ("stable/something", "a_channel"),
+                                         ("release", "a_channel"),
+                                         ("release/something", "a_channel"),
+                                         ("master", "a_channel")]:
+            with tools.environment_append({"CONAN_STABLE_BRANCH_PATTERN": "trunk$ tags/.*"}):
+                builder = ConanMultiPackager(username="pepe",
+                                             channel="a_channel",
+                                             reference="lib/1.0",
+                                             ci_manager=MockCIManager(current_branch=branch))
+
+                self.assertEquals(builder.channel, expected_channel, "Not match for branch %s" % branch)
+
     def test_pip_conanio_image(self):
         self.packager = ConanMultiPackager(username="lasote",
                                             channel="mychannel",
