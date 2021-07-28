@@ -231,7 +231,7 @@ class ConanMultiPackager(object):
         self._docker_image = docker_image or os.getenv("CONAN_DOCKER_IMAGE", None)
 
         # If CONAN_DOCKER_IMAGE is specified, then use docker is True
-        self.use_docker = (use_docker or os.getenv("CONAN_USE_DOCKER", False) or
+        self.use_docker = (use_docker or get_bool_from_env("CONAN_USE_DOCKER") or
                            self._docker_image is not None)
 
         self.docker_conan_home = docker_conan_home or os.getenv("CONAN_DOCKER_HOME", None)
