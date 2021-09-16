@@ -67,7 +67,7 @@ class AppTest(unittest.TestCase):
         self.packager.add({"os": "Linux"})
 
         self.packager.update_build_if(lambda build: build.settings["os"] == "Windows",
-                                      new_build_requires={"*": ["7zip_installer/0.1.0@conan/stable"]})
+                                      new_build_requires={"*": ["7zip/19.00"]})
 
         packager_expected = ConanMultiPackager("lasote", "mychannel",
                                                runner=self.runner,
@@ -75,7 +75,7 @@ class AppTest(unittest.TestCase):
                                                reference="lib/1.0",
                                                ci_manager=self.ci_manager)
 
-        packager_expected.add({"os": "Windows"}, {}, {}, {"*": ["7zip_installer/0.1.0@conan/stable"]})
+        packager_expected.add({"os": "Windows"}, {}, {}, {"*": ["7zip/19.00"]})
         packager_expected.add({"os": "Linux"})
 
         self.assertEqual([tuple(a) for a in self.packager.items], packager_expected.items)
