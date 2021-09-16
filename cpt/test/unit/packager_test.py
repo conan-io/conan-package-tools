@@ -432,26 +432,26 @@ class AppTest(unittest.TestCase):
                       'build_type': 'Release', 'compiler': 'gcc'},
                      {'zlib:shared': False},
                      {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}),
                     ({'compiler.exception': 'seh', 'compiler.libcxx': "libstdc++", 'arch': 'x86_64',
                       'compiler.threads': 'posix', 'compiler.version': '4.9', 'build_type': 'Debug',
                       'compiler': 'gcc'},
                      {'zlib:shared': False},
                      {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}),
 
                     ({'compiler.exception': 'seh', 'compiler.libcxx': "libstdc++",
                       'compiler.threads': 'posix', 'compiler.version': '4.9', 'arch': 'x86_64',
                       'build_type': 'Release', 'compiler': 'gcc'},
                      {'zlib:shared': True},
                      {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}),
                     ({'compiler.exception': 'seh', 'compiler.libcxx': "libstdc++", 'arch': 'x86_64',
                       'compiler.threads': 'posix', 'compiler.version': '4.9', 'build_type': 'Debug',
                       'compiler': 'gcc'},
                      {'zlib:shared': True},
                      {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]})]
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]})]
 
         self.assertEquals([tuple(a) for a in builder.builds], expected)
 
