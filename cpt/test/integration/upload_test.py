@@ -71,8 +71,10 @@ class Pkg(ConanFile):
             mp = ConanMultiPackager(username="lasote", out=self.output.write,
                                     ci_manager=self.ci_manager,
                                     upload="https://uilianr.jfrog.io/artifactory/api/conan/public-conan")
-            with self.assertRaisesRegexp(ConanException, "Wrong user or password"):
+            with self.assertRaises(ConanException) as context:
                 mp.run()
+                self.assertTrue(any("Wrong user or password" in context.exception,
+                                    "blocked due to recurrent login failures"  in context.exception))
 
     def test_no_credentials_only_url_skip_check(self):
         self.save_conanfile(self.conanfile)
@@ -105,8 +107,10 @@ class Pkg(ConanFile):
                                     upload=["https://uilianr.jfrog.io/artifactory/api/conan/public-conan",
                                             False, "othername"])
             mp.add({}, {}, {})
-            with self.assertRaisesRegexp(ConanException, "Wrong user or password"):
+            with self.assertRaises(ConanException) as context:
                 mp.run()
+                self.assertTrue(any("Wrong user or password" in context.exception,
+                                    "blocked due to recurrent login failures"  in context.exception))
             # The upload repo is kept because there is already an url
             # FIXME: Probaby we should rename if name is different (Conan 1.3)
             self.assertIn("Remote for URL 'https://uilianr.jfrog.io/artifactory/api/conan/public-conan' "
@@ -122,8 +126,10 @@ class Pkg(ConanFile):
             mp = ConanMultiPackager(username="lasote", out=self.output.write,
                                     ci_manager=self.ci_manager)
             mp.add({}, {}, {})
-            with self.assertRaisesRegexp(ConanException, "Wrong user or password"):
+            with self.assertRaises(ConanException) as context:
                 mp.run()
+                self.assertTrue(any("Wrong user or password" in context.exception,
+                                    "blocked due to recurrent login failures"  in context.exception))
             self.assertNotIn("already exist, keeping the current remote and its name", self.output)
             repo = self.api.get_remote_by_name("upload_repo")
             self.assertEquals(repo.url, "https://uilianr.jfrog.io/artifactory/api/conan/public-conan")
