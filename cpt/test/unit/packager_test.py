@@ -67,7 +67,7 @@ class AppTest(unittest.TestCase):
         self.packager.add({"os": "Linux"})
 
         self.packager.update_build_if(lambda build: build.settings["os"] == "Windows",
-                                      new_build_requires={"*": ["7zip_installer/0.1.0@conan/stable"]})
+                                      new_build_requires={"*": ["7zip/19.00"]})
 
         packager_expected = ConanMultiPackager("lasote", "mychannel",
                                                runner=self.runner,
@@ -75,7 +75,7 @@ class AppTest(unittest.TestCase):
                                                reference="lib/1.0",
                                                ci_manager=self.ci_manager)
 
-        packager_expected.add({"os": "Windows"}, {}, {}, {"*": ["7zip_installer/0.1.0@conan/stable"]})
+        packager_expected.add({"os": "Windows"}, {}, {}, {"*": ["7zip/19.00"]})
         packager_expected.add({"os": "Linux"})
 
         self.assertEqual([tuple(a) for a in self.packager.items], packager_expected.items)
@@ -432,26 +432,26 @@ class AppTest(unittest.TestCase):
                       'build_type': 'Release', 'compiler': 'gcc'},
                      {'zlib:shared': False},
                      {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}),
                     ({'compiler.exception': 'seh', 'compiler.libcxx': "libstdc++", 'arch': 'x86_64',
                       'compiler.threads': 'posix', 'compiler.version': '4.9', 'build_type': 'Debug',
                       'compiler': 'gcc'},
                      {'zlib:shared': False},
                      {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}),
 
                     ({'compiler.exception': 'seh', 'compiler.libcxx': "libstdc++",
                       'compiler.threads': 'posix', 'compiler.version': '4.9', 'arch': 'x86_64',
                       'build_type': 'Release', 'compiler': 'gcc'},
                      {'zlib:shared': True},
                      {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}),
                     ({'compiler.exception': 'seh', 'compiler.libcxx': "libstdc++", 'arch': 'x86_64',
                       'compiler.threads': 'posix', 'compiler.version': '4.9', 'build_type': 'Debug',
                       'compiler': 'gcc'},
                      {'zlib:shared': True},
                      {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]})]
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]})]
 
         self.assertEquals([tuple(a) for a in builder.builds], expected)
 
@@ -795,6 +795,7 @@ class AppTest(unittest.TestCase):
                                          ("maste", "a_channel"),
                                          ("maste/something", "a_channel"),
                                          ("master", "stable"),
+                                         ("main", "stable"),
                                          ("masterSomething", "a_channel"),
                                          ("master/something", "a_channel")]:
             builder = ConanMultiPackager(username="pepe",

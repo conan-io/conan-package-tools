@@ -59,7 +59,7 @@ class RemotesManager(object):
                 raise Exception("WARNING! 'upload' argument has changed. Use 'upload' argument or "
                                 "CONAN_UPLOAD environment variable to specify a remote URL to "
                                 "upload your packages. e.j: "
-                                "upload='https://api.bintray.com/conan/myuser/myconanrepo'")
+                                "upload='https://<myuser>.jfrog.io/artifactory/api/conan/<myremote>'")
             if tmp:
                 self._upload = self._get_remote_from_str(tmp, "CONAN_UPLOAD", "upload_repo")
 

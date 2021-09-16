@@ -123,7 +123,7 @@ class DockerTest(BaseTest):
 
                 class Pkg(ConanFile):
                     settings = "os", "compiler", "build_type", "arch"
-                    requires = "zlib/1.2.11@conan/stable"
+                    requires = "zlib/1.2.11"
 
                     def build(self):
                         pass
@@ -212,7 +212,7 @@ class DockerTest(BaseTest):
 
                 class Pkg(ConanFile):
                     settings = "os", "compiler", "build_type", "arch"
-                    requires = "zlib/1.2.11@conan/stable"
+                    requires = "zlib/1.2.11"
 
                     def build(self):
                         pass
