@@ -203,7 +203,7 @@ class ConanMultiPackager(object):
 
         self.stable_branch_pattern = stable_branch_pattern or \
                                      os.getenv("CONAN_STABLE_BRANCH_PATTERN",
-                                               "master$ release.* stable.*").split(" ")
+                                               "master$ main$ release.* stable.*").split(" ")
 
         self.stable_channel = stable_channel or os.getenv("CONAN_STABLE_CHANNEL", "stable")
         self.stable_channel = self.stable_channel.rstrip()

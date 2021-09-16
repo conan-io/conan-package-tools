@@ -795,6 +795,7 @@ class AppTest(unittest.TestCase):
                                          ("maste", "a_channel"),
                                          ("maste/something", "a_channel"),
                                          ("master", "stable"),
+                                         ("main", "stable"),
                                          ("masterSomething", "a_channel"),
                                          ("master/something", "a_channel")]:
             builder = ConanMultiPackager(username="pepe",
