@@ -203,7 +203,7 @@ class ConanMultiPackager(object):
 
         self.stable_branch_pattern = stable_branch_pattern or \
                                      os.getenv("CONAN_STABLE_BRANCH_PATTERN",
-                                               "master$ main$ release.* stable.*").split(" ")
+                                               "master$ main$ release.* stable.*")
 
         self.stable_channel = stable_channel or os.getenv("CONAN_STABLE_CHANNEL", "stable")
         self.stable_channel = self.stable_channel.rstrip()
@@ -760,7 +760,7 @@ class ConanMultiPackager(object):
         branch = self.ci_manager.get_branch()
         self.printer.print_message("Branch detected", branch)
 
-        for pattern in self.stable_branch_pattern:
+        for pattern in self.stable_branch_pattern.split(" "):
             prog = re.compile(pattern)
 
             if branch and prog.match(branch):
