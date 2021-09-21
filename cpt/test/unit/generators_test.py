@@ -13,7 +13,7 @@ class GeneratorsTest(unittest.TestCase):
         mingw_configurations = [("4.9", "x86", "dwarf2", "posix")]
         ref = ConanFileReference.loads("lib/1.0@conan/stable")
         builds = get_mingw_builds(mingw_configurations,
-                                  ConanFileReference.loads("mingw_installer/1.0@conan/stable"),
+                                  ConanFileReference.loads("mingw-w64/8.1"),
                                   ["x86"], "pack:shared", ["Release", "Debug"], [None], options={},
                                   reference=ref)
         expected = [
@@ -22,66 +22,66 @@ class GeneratorsTest(unittest.TestCase):
               'compiler.threads': 'posix'},
              {'pack:shared': False},
              {},
-             {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+             {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref),
             ({'compiler.version': '4.9', 'compiler': 'gcc', 'compiler.libcxx': "libstdc++",
               'build_type': 'Debug', 'compiler.exception': 'dwarf2', 'compiler.threads': 'posix',
               'arch': 'x86'},             {'pack:shared': False},
              {},
-             {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+             {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref),
 
             ({'build_type': 'Release', 'compiler.version': '4.9', 'compiler.libcxx': "libstdc++",
               'compiler': 'gcc', 'arch': 'x86', 'compiler.exception': 'dwarf2',
               'compiler.threads': 'posix'},
              {'pack:shared': True},
                 {},
-                {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+                {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref),
             ({'compiler.version': '4.9', 'compiler': 'gcc', 'compiler.libcxx': "libstdc++",
               'build_type': 'Debug', 'compiler.exception': 'dwarf2', 'compiler.threads': 'posix',
               'arch': 'x86'},
              {'pack:shared': True},
              {},
-             {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref)]
+             {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_mingw_builds(mingw_configurations, ConanFileReference.loads(
-            "mingw_installer/1.0@conan/stable"), ["x86"], "pack:shared", ["Release"], ["20"], options={})
+            "mingw-w64/8.1"), ["x86"], "pack:shared", ["Release"], ["20"], options={})
         expected = [
             ({'build_type': 'Release', 'compiler.version': '4.9', 'compiler.libcxx': "libstdc++",
               'compiler': 'gcc', 'arch': 'x86', 'compiler.exception': 'dwarf2',
               'compiler.threads': 'posix', 'compiler.cppstd': '20'},
              {'pack:shared': False},
              {},
-             {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, None),
+             {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, None),
             ({'build_type': 'Release', 'compiler.version': '4.9', 'compiler.libcxx': "libstdc++",
               'compiler': 'gcc', 'arch': 'x86', 'compiler.exception': 'dwarf2',
               'compiler.threads': 'posix', 'compiler.cppstd': '20'},
              {'pack:shared': True},
              {},
-             {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, None)]
+             {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_mingw_builds(mingw_configurations, ConanFileReference.loads(
-            "mingw_installer/1.0@conan/stable"), ["x86"], "pack:shared", ["Debug"], ["14"], options={})
+            "mingw-w64/8.1"), ["x86"], "pack:shared", ["Debug"], ["14"], options={})
         expected = [
             ({'compiler.version': '4.9', 'compiler': 'gcc', 'compiler.libcxx': "libstdc++",
               'build_type': 'Debug', 'compiler.exception': 'dwarf2', 'compiler.threads': 'posix',
               'arch': 'x86', 'compiler.cppstd': '14'},
              {'pack:shared': False},
              {},
-             {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, None),
+             {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, None),
             ({'compiler.version': '4.9', 'compiler': 'gcc', 'compiler.libcxx': "libstdc++",
               'build_type': 'Debug', 'compiler.exception': 'dwarf2', 'compiler.threads': 'posix',
               'arch': 'x86', 'compiler.cppstd': '14'},
              {'pack:shared': True},
              {},
-             {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, None)]
+             {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_mingw_builds(mingw_configurations,
-                                  ConanFileReference.loads("mingw_installer/1.0@conan/stable"),
+                                  ConanFileReference.loads("mingw-w64/8.1"),
                                   ["x86"], "pack:shared", ["Release", "Debug"], [None],
                                   options={"pack:foobar": True, "foobar:qux": "data"},
                                   reference=ref)
@@ -91,31 +91,31 @@ class GeneratorsTest(unittest.TestCase):
               'compiler.threads': 'posix'},
              {'pack:shared': False, "pack:foobar": True, "foobar:qux": "data"},
              {},
-             {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+             {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref),
             ({'compiler.version': '4.9', 'compiler': 'gcc', 'compiler.libcxx': "libstdc++",
               'build_type': 'Debug', 'compiler.exception': 'dwarf2', 'compiler.threads': 'posix',
               'arch': 'x86'},
              {'pack:shared': False, "pack:foobar": True, "foobar:qux": "data"},
              {},
-             {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+             {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref),
 
             ({'build_type': 'Release', 'compiler.version': '4.9', 'compiler.libcxx': "libstdc++",
               'compiler': 'gcc', 'arch': 'x86', 'compiler.exception': 'dwarf2',
               'compiler.threads': 'posix'},
              {'pack:shared': True, "pack:foobar": True, "foobar:qux": "data"},
              {},
-             {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+             {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref),
             ({'compiler.version': '4.9', 'compiler': 'gcc', 'compiler.libcxx': "libstdc++",
               'build_type': 'Debug', 'compiler.exception': 'dwarf2', 'compiler.threads': 'posix',
               'arch': 'x86'},
              {'pack:shared': True, "pack:foobar": True, "foobar:qux": "data"},
              {},
-             {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref)]
+             {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
         builds = get_mingw_builds(mingw_configurations,
-                                  ConanFileReference.loads("mingw_installer/1.0@conan/stable"),
+                                  ConanFileReference.loads("mingw-w64/8.1"),
                                   ["x86"], None, ["Release", "Debug"], [None],
                                   options={"pack:foobar": True, "foobar:qux": "data"},
                                   reference=ref)
@@ -125,20 +125,20 @@ class GeneratorsTest(unittest.TestCase):
               'compiler.threads': 'posix'},
              {"pack:foobar": True, "foobar:qux": "data"},
              {},
-             {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+             {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref),
             ({'compiler.version': '4.9', 'compiler': 'gcc', 'compiler.libcxx': "libstdc++",
               'build_type': 'Debug', 'compiler.exception': 'dwarf2', 'compiler.threads': 'posix',
               'arch': 'x86'},
              {"pack:foobar": True, "foobar:qux": "data"},
              {},
-             {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref)]
+             {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
         mingw_configurations = [("4.9", "x86", "dwarf2", "posix")]
         ref = ConanFileReference.loads("lib/1.0@conan/stable")
         builds = get_mingw_builds(mingw_configurations,
-                                  ConanFileReference.loads("mingw_installer/1.0@conan/stable"),
+                                  ConanFileReference.loads("mingw-w64/8.1"),
                                   ["x86"], "pack:shared", ["Release", "Debug"], [None], options={},
                                   reference=ref,
                                   build_all_options_values=[
@@ -154,97 +154,97 @@ class GeneratorsTest(unittest.TestCase):
                       'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
                       'build_type': 'Release', 'compiler.libcxx': 'libstdc++'},
                      {'pack:shared': True, 'pack:foo': True, 'pack:bar': True}, {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref),
 
                     ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
                       'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
                       'build_type': 'Debug', 'compiler.libcxx': 'libstdc++'},
                      {'pack:shared': True, 'pack:foo': True, 'pack:bar': True}, {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref),
 
                     ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
                       'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
                       'build_type': 'Release', 'compiler.libcxx': 'libstdc++'},
                      {'pack:shared': True, 'pack:foo': False, 'pack:bar': True}, {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref),
 
                     ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
                       'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
                       'build_type': 'Debug', 'compiler.libcxx': 'libstdc++'},
                      {'pack:shared': True, 'pack:foo': False, 'pack:bar': True}, {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref),
 
                     ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
                       'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
                       'build_type': 'Release', 'compiler.libcxx': 'libstdc++'},
                      {'pack:shared': True, 'pack:foo': True, 'pack:bar': False}, {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref),
 
                     ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
                       'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
                       'build_type': 'Debug', 'compiler.libcxx': 'libstdc++'},
                      {'pack:shared': True, 'pack:foo': True, 'pack:bar': False}, {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref),
 
                     ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
                       'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
                       'build_type': 'Release', 'compiler.libcxx': 'libstdc++'},
                      {'pack:shared': True, 'pack:foo': False, 'pack:bar': False}, {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref),
 
                     ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
                       'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
                       'build_type': 'Debug', 'compiler.libcxx': 'libstdc++'},
                      {'pack:shared': True, 'pack:foo': False, 'pack:bar': False}, {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref),
 
                     ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
                       'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
                       'build_type': 'Release', 'compiler.libcxx': 'libstdc++'},
                      {'pack:shared': False, 'pack:foo': True, 'pack:bar': True}, {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref),
 
                     ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
                       'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
                       'build_type': 'Debug', 'compiler.libcxx': 'libstdc++'},
                      {'pack:shared': False, 'pack:foo': True, 'pack:bar': True}, {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref),
 
                     ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
                       'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
                       'build_type': 'Release', 'compiler.libcxx': 'libstdc++'},
                      {'pack:shared': False, 'pack:foo': False, 'pack:bar': True}, {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref),
 
                     ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
                       'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
                       'build_type': 'Debug', 'compiler.libcxx': 'libstdc++'},
                      {'pack:shared': False, 'pack:foo': False, 'pack:bar': True}, {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref),
 
                     ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
                       'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
                       'build_type': 'Release', 'compiler.libcxx': 'libstdc++'},
                      {'pack:shared': False, 'pack:foo': True, 'pack:bar': False}, {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref),
 
                     ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
                       'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
                       'build_type': 'Debug', 'compiler.libcxx': 'libstdc++'},
                      {'pack:shared': False, 'pack:foo': True, 'pack:bar': False}, {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref),
 
                     ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
                       'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
                       'build_type': 'Release', 'compiler.libcxx': 'libstdc++'},
                      {'pack:shared': False, 'pack:foo': False, 'pack:bar': False}, {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref),
 
                     ({'arch': 'x86', 'compiler': 'gcc', 'compiler.version': '4.9',
                       'compiler.threads': 'posix', 'compiler.exception': 'dwarf2',
                       'build_type': 'Debug', 'compiler.libcxx': 'libstdc++'},
                      {'pack:shared': False, 'pack:foo': False, 'pack:bar': False}, {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}, ref)]
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}, ref)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
@@ -1361,8 +1361,8 @@ class GeneratorsTest(unittest.TestCase):
 
     def test_visual_toolsets(self):
 
-        builds = get_visual_builds(visual_versions=["15"], archs=["x86"],
-                                   visual_runtimes=["MDd"], visual_toolsets={"15": ["v140",
+        builds = get_visual_builds(visual_versions=["16"], archs=["x86"],
+                                   visual_runtimes=["MDd"], visual_toolsets={"16": ["v140",
                                                                                     "v140_xp"]},
                                    shared_option_name=None,
                                    dll_with_static_runtime=True,
@@ -1372,17 +1372,17 @@ class GeneratorsTest(unittest.TestCase):
                                    options={})
         expected = [
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.version': '15', 'compiler.cppstd': '17', 'compiler.toolset': 'v140'},
+              'compiler.version': '16', 'compiler.cppstd': '17', 'compiler.toolset': 'v140'},
              {}, {}, {}, None),
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.version': '15', 'compiler.cppstd': '17', 'compiler.toolset': 'v140_xp'},
+              'compiler.version': '16', 'compiler.cppstd': '17', 'compiler.toolset': 'v140_xp'},
              {}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
         # Same with environment passing None in the parameter
-        with tools.environment_append({"CONAN_VISUAL_TOOLSETS": "15=v140;v140_xp,11=v140;v140_xp"}):
-            builds = get_visual_builds(visual_versions=["15"], archs=["x86"],
+        with tools.environment_append({"CONAN_VISUAL_TOOLSETS": "16=v140;v140_xp,11=v140;v140_xp"}):
+            builds = get_visual_builds(visual_versions=["16"], archs=["x86"],
                                        visual_runtimes=["MDd"], visual_toolsets=None,
                                        shared_option_name=None,
                                        dll_with_static_runtime=True,
@@ -1392,8 +1392,8 @@ class GeneratorsTest(unittest.TestCase):
                                        options={})
             self.assertEquals([tuple(a) for a in builds], expected)
 
-        # Invalid mapping generates builds without toolsets (visual 10 != visual 15)
-        builds = get_visual_builds(visual_versions=["15"], archs=["x86"],
+        # Invalid mapping generates builds without toolsets (visual 10 != visual 16)
+        builds = get_visual_builds(visual_versions=["16"], archs=["x86"],
                                    visual_runtimes=["MDd"], visual_toolsets={"10": ["v140",
                                                                                     "v140_xp"]},
                                    shared_option_name=None,
@@ -1404,10 +1404,10 @@ class GeneratorsTest(unittest.TestCase):
                                    options={})
         expected = [
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.cppstd': '14', 'compiler.version': '15'},
+              'compiler.cppstd': '14', 'compiler.version': '16'},
              {}, {}, {}, None),
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.cppstd': '17', 'compiler.version': '15'},
+              'compiler.cppstd': '17', 'compiler.version': '16'},
              {}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)

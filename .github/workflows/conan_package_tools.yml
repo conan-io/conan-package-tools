@@ -1,0 +1,175 @@
+on: [push, pull_request]
+
+jobs:
+  conan_stable_windows:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { name: "Conan Stable - Python 2.7", python: 2.7, toxenv: "py27-conan-latest", pyver: "py27" }
+          - { name: "Conan Stable - Python 3.7", python: 3.7, toxenv: "py37-conan-latest", pyver: "py37" }
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.config.python }}
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1.0.2
+      with:
+        vs-version: 16.9
+    - name: Install dependencies
+      env:
+        PYVER: ${{ matrix.config.pyver }}
+      run: |
+        .github/workflows/install.bat
+    - name: ${{ matrix.config.name }}
+      env:
+        CONAN_VISUAL_VERSIONS: 16
+        PYVER: ${{ matrix.config.pyver }}
+      run: |
+        .github/workflows/run.bat
+
+  conan_stable_linux:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { name: "Conan Stable - Python 2.7", python: 2.7, toxenv: "py27-conan-latest", pyver: "py27" }
+          - { name: "Conan Stable - Python 3.7", python: 3.7, toxenv: "py37-conan-latest", pyver: "py37" }
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.config.python }}
+    - name: Install dependencies
+      env:
+        PYVER: ${{ matrix.config.pyver }}
+      run: |
+        chmod +x .github/workflows/install.sh
+        .github/workflows/install.sh
+    - name: ${{ matrix.config.name }}
+      env:
+        TOXENV: ${{ matrix.config.toxenv }}
+        PYVER: ${{ matrix.config.pyver }}
+      run: |
+        chmod +x .github/workflows/run.sh
+        .github/workflows/run.sh
+    - name: Codecov
+      run: |
+        bash <(curl -s https://codecov.io/bash)
+
+  conan_stable_osx:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { name: "Conan Stable - Python 2.7", python: 2.7, toxenv: "py27-conan-latest", pyver: "py27" }
+          - { name: "Conan Stable - Python 3.7", python: 3.7, toxenv: "py37-conan-latest", pyver: "py37" }
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.config.python }}
+    - name: Install dependencies
+      env:
+        PYVER: ${{ matrix.config.pyver }}
+      run: |
+        chmod +x .github/workflows/install.sh
+        .github/workflows/install.sh
+    - name: ${{ matrix.config.name }}
+      env:
+        TOXENV: ${{ matrix.config.toxenv }}
+        PYVER: ${{ matrix.config.pyver }}
+      run: |
+        chmod +x .github/workflows/run.sh
+        .github/workflows/run.sh
+
+  conan_develop_linux:
+    if: github.ref != 'refs/head/master' && !startsWith(github.ref, 'refs/heads/release/') && !startsWith(github.ref, 'refs/tags') 
+    runs-on: ubuntu-latest
+    continue-on-error: True
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { name: "Conan Develop - Python 2.7", python: 2.7, toxenv: "py27-conan-dev", pyver: "py27" }
+          - { name: "Conan Develop - Python 3.7", python: 3.7, toxenv: "py37-conan-dev", pyver: "py37" }
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.config.python }}
+    - name: Install dependencies
+      env:
+        PYVER: ${{ matrix.config.pyver }}
+      run: |
+        export
+        env
+        chmod +x .github/workflows/install.sh
+        .github/workflows/install.sh
+    - name: ${{ matrix.config.name }}
+      env:
+        TOXENV: ${{ matrix.config.toxenv }}
+        PYVER: ${{ matrix.config.pyver }}
+      run: |
+        chmod +x .github/workflows/run.sh
+        .github/workflows/run.sh
+
+  conan_develop_osx:
+    if: github.ref != 'refs/head/master' && !startsWith(github.ref, 'refs/heads/release/') && !startsWith(github.ref, 'refs/tags') 
+    runs-on: macos-latest
+    continue-on-error: True
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { name: "Conan Develop - Python 2.7", python: 2.7, toxenv: "py27-conan-dev", pyver: "py27" }
+          - { name: "Conan Develop - Python 3.7", python: 3.7, toxenv: "py37-conan-dev", pyver: "py37" }
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.config.python }}
+    - name: Install dependencies
+      env:
+        PYVER: ${{ matrix.config.pyver }}
+      run: |
+        export
+        env
+        chmod +x .github/workflows/install.sh
+        .github/workflows/install.sh
+    - name: ${{ matrix.config.name }}
+      env:
+        TOXENV: ${{ matrix.config.toxenv }}
+        PYVER: ${{ matrix.config.pyver }}
+      run: |
+        chmod +x .github/workflows/run.sh
+        .github/workflows/run.sh
+
+  deploy_release:
+    if: startsWith(github.ref, 'refs/tags')
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+    - name: Install dependencies
+      run: pip install pygithub
+    - name: Generate changelog
+      run: python .github/deploy/release_changelog.py
+    - name: Generate Dist/
+      run: python setup.py sdist
+    - uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}

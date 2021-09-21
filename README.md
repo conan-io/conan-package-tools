@@ -1,9 +1,48 @@
-[![Build Status Travis](https://travis-ci.org/conan-io/conan-package-tools.svg?branch=master)](https://travis-ci.org/conan-io/conan-package-tools)
-[![Build status Appveyor](https://ci.appveyor.com/api/projects/status/github/conan-io/conan-package-tools?svg=true)](https://ci.appveyor.com/project/ConanCIintegration/conan-package-tools)
+[![.github/workflows/conan_package_tools.yml](https://github.com/conan-io/conan-package-tools/actions/workflows/conan_package_tools.yml/badge.svg)](https://github.com/conan-io/conan-package-tools/actions/workflows/conan_package_tools.yml)
 [![codecov](https://codecov.io/gh/conan-io/conan-package-tools/branch/master/graph/badge.svg)](https://codecov.io/gh/conan-io/conan-package-tools)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/conan-package-tools.svg?style=plastic)
 
 # Conan Package Tools
+
+- [Conan Package Tools](#conan-package-tools)
+  - [Introduction](#introduction)
+  - [Installation](#installation)
+  - [How it works](#how-it-works)
+    - [Basic, but not very practical, example](#basic-but-not-very-practical-example)
+  - [Generating the build configurations automatically](#generating-the-build-configurations-automatically)
+  - [Filtering or modifying the configurations](#filtering-or-modifying-the-configurations)
+  - [Package Version based on Commit Checksum](#package-version-based-on-commit-checksum)
+  - [Save created packages summary](#save-created-packages-summary)
+  - [Using all values for custom options](#using-all-values-for-custom-options)
+  - [Using Docker](#using-docker)
+    - [Running scripts and executing commands before to build on Docker](#running-scripts-and-executing-commands-before-to-build-on-docker)
+    - [Using with your own Docker images](#using-with-your-own-docker-images)
+    - [Installing extra python packages before to build](#installing-extra-python-packages-before-to-build)
+    - [Passing additional Docker parameters during build](#passing-additional-docker-parameters-during-build)
+    - [Installing custom Conan config](#installing-custom-conan-config)
+  - [Specifying a different base profile](#specifying-a-different-base-profile)
+- [The CI integration](#the-ci-integration)
+  - [Travis integration](#travis-integration)
+  - [Appveyor integration](#appveyor-integration)
+  - [Bamboo CI integration](#bamboo-ci-integration)
+  - [Jenkins CI integration](#jenkins-ci-integration)
+  - [GitLab CI integration](#gitlab-ci-integration)
+  - [Upload packages](#upload-packages)
+  - [Upload dependencies (#237)](#upload-dependencies-237)
+  - [Pagination](#pagination)
+    - [Sequencial distribution](#sequencial-distribution)
+    - [Named pages](#named-pages)
+    - [Generating multiple references for the same recipe](#generating-multiple-references-for-the-same-recipe)
+  - [Working with Bintray: Configuring repositories](#working-with-bintray-configuring-repositories)
+  - [Visual Studio auto-configuration](#visual-studio-auto-configuration)
+  - [MinGW builds](#mingw-builds)
+  - [Clang builds](#clang-builds)
+- [FULL REFERENCE](#full-reference)
+  - [ConanMultiPackager parameters reference](#conanmultipackager-parameters-reference)
+  - [Commit messages reference](#commit-messages-reference)
+  - [Complete ConanMultiPackager methods reference:](#complete-conanmultipackager-methods-reference)
+  - [Environment configuration](#environment-configuration)
+- [Full example](#full-example)
 
 
 ## Introduction
@@ -1125,6 +1164,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
 - **upload_only_when_tag**: Will try to upload only if the branch is a tag. Default [False]
 - **upload_only_recipe**: If defined, will try to upload **only** the recipes. The built packages will **not** be uploaded. Default [False]
 - **upload_dependencies**: Will try to upload dependencies to your remote. Default [False]
+- **upload_force**: Will try to force uploaded all packages. Default [True]
 - **build_types**: List containing specific build types. Default ["Release", "Debug"]
 - **cppstds**: List containing specific cpp standards. Default None
 - **skip_check_credentials**: Conan will skip checking the user credentials before building the packages. And if no user/remote is specified, will try to upload with the
@@ -1245,6 +1285,7 @@ This is especially useful for CI integration.
 - **CONAN_UPLOAD_ONLY_WHEN_TAG**: If defined, will try to upload the packages only when the current branch is a tag.
 - **CONAN_UPLOAD_ONLY_RECIPE**: If defined, will try to upload **only** the recipes. The built packages will **not** be uploaded.
 - **CONAN_UPLOAD_DEPENDENCIES**: If defined, will try to upload the listed package dependencies to your remote.
+- **CONAN_UPLOAD_FORCE**: If defined, will try to force upload all packages. Default is `True`.
 
 - **CONAN_SKIP_CHECK_CREDENTIALS**: Conan will skip checking the user credentials before building the packages. And if no user/remote is specified, will try to upload with the
   already stored credentiales in the local cache. Default [False]
