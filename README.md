@@ -524,6 +524,31 @@ Alternatively you can use the `CONAN_BASE_PROFILE` environment variable to choos
 
     CONAN_BASE_PROFILE=myclang
 
+## Specifying build context for cross building
+
+Since Conan 1.24, you can pass an additional profile for build context, so that, you can pass both profiles by
+environment variables:
+
+
+```python
+from cpt.packager import ConanMultiPackager
+
+if __name__ == "__main__":
+    builder = ConanMultiPackager(gcc_versions=["10", "11"])
+    builder.add_common_builds()
+    builder.run(base_profile_name="raspberrypi", base_profile_build_name="default")
+```
+
+The `base_profile_name` is equivalent to profile host, where my libraries and executables will run, and the 
+`base_profile_build_name` is the profile related where the artifacts are built.
+
+Also, you can use environment variables instead:
+
+    CONAN_BASE_PROFILE=default
+    CONAN_BASE_PROFILE_BUILD=raspberrypi
+
+Read more build context [here](https://docs.conan.io/en/latest/systems_cross_building/cross_building.html#conan-v1-24-and-newer)
+
 # The CI integration
 
 If you are going to use a CI server to generate different binary packages for your recipe, the best approach is to control
@@ -1280,6 +1305,7 @@ Check [Conan Build policies](https://docs.conan.io/en/latest/mastering/policies.
 - **CONAN_CONFIG_URL**: Conan config URL be installed before to build e.j https://github.com/bincrafters/conan-config.git
 - **CONAN_CONFIG_ARGS**: Conan config arguments used when installing conan config
 - **CONAN_BASE_PROFILE**: Apply options, settings, etc. to this profile instead of `default`.
+- **CONAN_BUILD_PROFILE**: Apply the specified profile to the build machine. Default is None 
 - **CONAN_IGNORE_SKIP_CI**: Ignore `[skip ci]` in commit message.
 - **CONAN_CONANFILE**: Custom conanfile consumed by Conan create. e.j. conanfile.py
 - **CONAN_LOCKFILE**: Custom conan lockfile to be used, e.j. conan.lock.
