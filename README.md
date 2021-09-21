@@ -21,6 +21,7 @@
     - [Passing additional Docker parameters during build](#passing-additional-docker-parameters-during-build)
     - [Installing custom Conan config](#installing-custom-conan-config)
   - [Specifying a different base profile](#specifying-a-different-base-profile)
+  - [Specifying build context for cross building](#specifying-build-context-for-cross-building)
 - [The CI integration](#the-ci-integration)
   - [Travis integration](#travis-integration)
   - [Appveyor integration](#appveyor-integration)
