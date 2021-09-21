@@ -25,7 +25,7 @@ To contribute follow the next steps:
 3. Fork the [CPT main repository](https://github.com/conan-io/conan-package-tools) and create a `feature/xxx` branch from the `develop` branch and develop
    your fix/feature as discussed in previous step.
 4. Try to keep your branch updated with the `develop` branch to avoid conflicts.
-5. Open a pull request, and select `develop` as the base branch. Never open a pull request to ``master`` or ``release/xxx`` branches.
+5. Open a pull request, and select `develop` as the base branch. Never open a pull request to ``master``, ``main`` or ``release/xxx`` branches.
 6. Add the text (besides other comments): "fixes #IssueNumber" in the body of the PR, referring to the issue of step 1.
 
 The ``conan-io`` organization maintainers will review and help with the coding of tests. Finally it will be assigned to milestone.

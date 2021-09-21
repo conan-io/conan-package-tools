@@ -6,9 +6,9 @@ from conans.model.ref import ConanFileReference
 from conans.model.version import Version
 from cpt.tools import split_colon_env, transform_list_options_to_dict
 
-default_gcc_versions = ["4.9", "5", "6", "7", "8", "9", "10"]
-default_clang_versions = ["3.8", "3.9", "4.0", "5.0", "6.0", "7.0", "8", "9", "10", "11"]
-default_visual_versions = ["14", "15", "16"]
+default_gcc_versions = ["4.9", "5", "6", "7", "8", "9", "10", "11"]
+default_clang_versions = ["3.8", "3.9", "4.0", "5.0", "6.0", "7.0", "8", "9", "10", "11", "12"]
+default_visual_versions = ["14", "15", "16", "17"]
 default_visual_runtimes = ["MT", "MD", "MTd", "MDd"]
 default_apple_clang_versions = ["9.0", "9.1", "10.0", "11.0", "12.0"]
 default_archs = ["x86", "x86_64"]
@@ -18,7 +18,7 @@ default_cppstds = [None]
 
 def get_mingw_package_reference():
     env_ref = os.getenv("CONAN_MINGW_INSTALLER_REFERENCE")
-    return ConanFileReference.loads(env_ref or"mingw_installer/1.0@conan/stable")
+    return ConanFileReference.loads(env_ref or "mingw-w64/8.1")
 
 
 def get_mingw_config_from_env():
