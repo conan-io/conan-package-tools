@@ -34,11 +34,7 @@ class ProfileTest(BaseTest):
 
         host_profile = textwrap.dedent("""
                         [settings]
-                        os=Linux
                         arch=armv7hf
-                        compiler=gcc
-                        compiler.version=9
-                        compiler.libcxx=libstdc++
                         build_type=Release
                         [options]
                         [build_requires]
