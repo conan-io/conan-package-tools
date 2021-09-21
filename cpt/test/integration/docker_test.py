@@ -304,7 +304,7 @@ class DockerTest(BaseTest):
             self.assertIn('Using specified default base profile: orangepi', self.output)
             self.assertIn('Using specified build profile: linux-gcc8-amd64', self.output)
             self.assertIn('-e CPT_BASE_PROFILE_NAME="orangepi"', self.output)
-            self.assertIn('-e CPT_PROFILE_BUILD="linux-gcc8-amd64"', self.output)
+            self.assertNotIn('-e CPT_PROFILE_BUILD="linux-gcc8-amd64"', self.output)
 
 
     @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
