@@ -133,8 +133,12 @@ class CreateRunner(object):
                                                         update=self._update_dependencies)
                             else:
                                 if self._profile_build_abs_path is not None:
-                                    profile_build = ProfileData([self._profile_build_abs_path],
-                                                                None, None, None)
+                                    if client_version < Version("1.38.0"):
+                                        profile_build = ProfileData(profiles=[self._profile_build_abs_path], settings=None,
+                                                                    options=None, env=None)
+                                    else:
+                                        profile_build = ProfileData(profiles=[self._profile_build_abs_path], settings=None,
+                                                                    options=None, env=None, conf=None)
                                 else:
                                     profile_build = None
 
@@ -158,8 +162,8 @@ class CreateRunner(object):
                             if client_version >= Version("1.10.0"):
                                 reference = ConanFileReference.loads(reference)
                                 reference = str(reference.copy_clear_rev())
-                            if ((reference == str(self._reference)) or \
-                               (reference in self._upload_dependencies) or \
+                            if ((reference == str(self._reference)) or
+                               (reference in self._upload_dependencies) or
                                ("all" in self._upload_dependencies)) and \
                                installed['packages']:
                                 package_id = installed['packages'][0]['id']

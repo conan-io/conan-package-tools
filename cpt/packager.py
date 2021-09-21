@@ -648,8 +648,10 @@ class ConanMultiPackager(object):
 
         base_profile_build_name = base_profile_build_name or os.getenv("CONAN_BASE_PROFILE_BUILD")
         if base_profile_build_name is not None:
+            if get_client_version() < Version("1.24.0"):
+                raise Exception("Conan Profile Build requires >= 1.24")
             self.printer.print_message("**************************************************")
-            self.printer.print_message("Using specified  "
+            self.printer.print_message("Using specified "
                                         "build profile: %s" % base_profile_build_name)
             self.printer.print_message("**************************************************")
 
