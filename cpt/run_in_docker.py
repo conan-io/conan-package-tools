@@ -41,6 +41,7 @@ def run():
     profile_text = unscape_env(os.getenv("CPT_PROFILE"))
     abs_profile_path = save_profile_to_tmp(profile_text)
     base_profile_text = unscape_env(os.getenv("CPT_BASE_PROFILE"))
+    profile_build_text = unscape_env(os.getenv("CPT_PROFILE_BUILD"))
     config_url = unscape_env(os.getenv("CPT_CONFIG_URL"))
     config_args = unscape_env(os.getenv("CPT_CONFIG_ARGS"))
     upload_dependencies = unscape_env(os.getenv("CPT_UPLOAD_DEPENDENCIES"))
@@ -52,6 +53,10 @@ def run():
         base_profile_name = unscape_env(os.getenv("CPT_BASE_PROFILE_NAME"))
         tools.save(os.path.join(client_cache.profiles_path, base_profile_name),
                    base_profile_text)
+    if profile_build_text:
+        abs_profile_build_path = save_profile_to_tmp(profile_build_text)
+    else:
+        abs_profile_build_path = None
 
     upload = os.getenv("CPT_UPLOAD_ENABLED")
     runner = CreateRunner(abs_profile_path, reference, conan_api, uploader,
@@ -61,7 +66,8 @@ def run():
                           upload_dependencies=upload_dependencies, conanfile=conanfile,
                           skip_recipe_export=skip_recipe_export,
                           update_dependencies=update_dependencies,
-                          lockfile=lockfile)
+                          lockfile=lockfile,
+                          profile_build_abs_path=abs_profile_build_path)
     runner.run()
 
 
