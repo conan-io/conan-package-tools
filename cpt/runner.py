@@ -206,7 +206,7 @@ class DockerCreateRunner(object):
                  update_dependencies=False,
                  lockfile=None,
                  profile_build_text=None,
-                 base_profile_build_text=None
+                 base_profile_build_text=None,
                  cwd=None):
 
         self.printer = printer or Printer()
