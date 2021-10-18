@@ -669,12 +669,12 @@ class ConanMultiPackager(object):
 
             profile_text, base_profile_text = get_profiles(self.client_cache, build,
                                                            base_profile_name)
-            _, base_profile_build_text = get_profiles(self.client_cache, build,
-                                                      base_profile_build_name)
+            profile_build_text, base_profile_build_text = get_profiles(self.client_cache, build,
+                                                      base_profile_build_name, True)
             if not self.use_docker:
                 profile_abs_path = save_profile_to_tmp(profile_text)
                 if base_profile_build_text:
-                    profile_build_abs_path = save_profile_to_tmp(base_profile_build_text)
+                    profile_build_abs_path = save_profile_to_tmp(profile_build_text)
                 else:
                     profile_build_abs_path = None
                 r = CreateRunner(profile_abs_path, build.reference, self.conan_api,
@@ -731,7 +731,8 @@ class ConanMultiPackager(object):
                                        force_selinux=self.force_selinux,
                                        skip_recipe_export=skip_recipe_export,
                                        update_dependencies=self.update_dependencies,
-                                       profile_build_text=base_profile_build_text,
+                                       profile_build_text=profile_build_text,
+                                       base_profile_build_text=base_profile_build_text,
                                        cwd=self.cwd)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],

@@ -206,6 +206,7 @@ class DockerCreateRunner(object):
                  update_dependencies=False,
                  lockfile=None,
                  profile_build_text=None,
+                 base_profile_build_text=None
                  cwd=None):
 
         self.printer = printer or Printer()
@@ -243,6 +244,7 @@ class DockerCreateRunner(object):
         self._skip_recipe_export = skip_recipe_export
         self._update_dependencies = update_dependencies
         self._profile_build_text = profile_build_text
+        self._base_profile_build_text = base_profile_build_text
         self._cwd = cwd or os.getcwd()
 
     def _pip_update_conan_command(self):
@@ -366,6 +368,7 @@ class DockerCreateRunner(object):
         ret["CPT_BASE_PROFILE"] = escape_env(self._base_profile_text)
         ret["CPT_BASE_PROFILE_NAME"] = escape_env(self._base_profile_name)
         ret["CPT_PROFILE_BUILD"] = escape_env(self._profile_build_text)
+        ret["CPT_BASE_PROFILE_BUILD"] = escape_env(self._base_profile_build_text)
 
         ret["CONAN_USERNAME"] = escape_env(self._reference.user or ret.get("CONAN_USERNAME"))
         ret["CONAN_TEMP_TEST_FOLDER"] = "1"  # test package folder to a temp one
