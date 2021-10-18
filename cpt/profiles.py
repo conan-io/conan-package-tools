@@ -8,7 +8,7 @@ from conans.util.files import save
 from cpt import get_client_version
 
 
-def get_profiles(client_cache, build_config, base_profile_name=None):
+def get_profiles(client_cache, build_config, base_profile_name=None, is_build_profile=False):
 
     base_profile_text = ""
     if base_profile_name:
@@ -30,9 +30,12 @@ include(%s)
 
     def pairs_lines(items):
         return "\n".join(["%s=%s" % (k, v) for k, v in items])
-
-    settings = pairs_lines(sorted(build_config.settings.items()))
-    options = pairs_lines(build_config.options.items())
+    if is_build_profile:
+        settings=""
+        options=""
+    else:
+        settings = pairs_lines(sorted(build_config.settings.items()))
+        options = pairs_lines(build_config.options.items())
     env_vars = pairs_lines(build_config.env_vars.items())
     br_lines = ""
     for pattern, build_requires in build_config.build_requires.items():
