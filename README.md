@@ -579,7 +579,7 @@ if __name__ == "__main__":
     builder.run(base_profile_name="raspberrypi", base_profile_build_name="default")
 ```
 
-The `base_profile_name` is equivalent to profile host, where my libraries and executables will run, and the 
+The `base_profile_name` is equivalent to profile host, where my libraries and executables will run, and the
 `base_profile_build_name` is the profile related where the artifacts are built.
 
 Also, you can use environment variables instead:
@@ -1274,9 +1274,9 @@ This is especially useful for CI integration.
 - **CONAN_UPLOAD**: URL of the repository where we want to use to upload the packages.
   The value can containing the URL, the SSL validation flag and remote name (last two optionals) separated by "@". e.j:
 
-  - `CONAN_UPLOAD=https://api.bintray.com/conan/conan-community/conan`
-  - `CONAN_UPLOAD=https://api.bintray.com/conan/conan-community/conan@True`
-  - `CONAN_UPLOAD=https://api.bintray.com/conan/conan-community/conan@True@other_repo_name`
+  - `CONAN_UPLOAD=https://yourcompany.jfrog.io/artifactory/api/conan/local`
+  - `CONAN_UPLOAD=https://yourcompany.jfrog.io/artifactory/api/conan/local@True`
+  - `CONAN_UPLOAD=https://yourcompany.jfrog.io/artifactory/api/conan/local@True@other_repo_name`
 
   If a remote name is not specified, `upload_repo` will be used as a remote name.
   If the SSL validation configuration is not specified, it will use `True` by default.
@@ -1347,7 +1347,7 @@ Check [Conan Build policies](https://docs.conan.io/en/latest/mastering/policies.
 - **CONAN_CONFIG_URL**: Conan config URL be installed before to build e.j https://github.com/bincrafters/conan-config.git
 - **CONAN_CONFIG_ARGS**: Conan config arguments used when installing conan config
 - **CONAN_BASE_PROFILE**: Apply options, settings, etc. to this profile instead of `default`.
-- **CONAN_BUILD_PROFILE**: Apply the specified profile to the build machine. Default is None 
+- **CONAN_BASE_PROFILE_BUILD**: Apply the specified profile to the build machine. Default is None
 - **CONAN_IGNORE_SKIP_CI**: Ignore `[skip ci]` in commit message.
 - **CONAN_CONANFILE**: Custom conanfile consumed by Conan create. e.j. conanfile.py
 - **CONAN_LOCKFILE**: Custom conan lockfile to be used, e.j. conan.lock.
