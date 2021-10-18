@@ -368,7 +368,6 @@ class DockerCreateRunner(object):
         ret["CPT_BASE_PROFILE"] = escape_env(self._base_profile_text)
         ret["CPT_BASE_PROFILE_NAME"] = escape_env(self._base_profile_name)
         ret["CPT_PROFILE_BUILD"] = escape_env(self._profile_build_text)
-        ret["CPT_BASE_PROFILE_BUILD"] = escape_env(self._base_profile_build_text)
 
         ret["CONAN_USERNAME"] = escape_env(self._reference.user or ret.get("CONAN_USERNAME"))
         ret["CONAN_TEMP_TEST_FOLDER"] = "1"  # test package folder to a temp one
