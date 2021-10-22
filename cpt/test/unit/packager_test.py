@@ -547,6 +547,30 @@ class AppTest(unittest.TestCase):
                 self.assertEquals(settings["compiler"], "gcc")
                 self.assertEquals(settings["compiler.version"], "4.9")
 
+    def test_msvc_defaults(self):
+
+        with tools.environment_append({"CONAN_MSVC_VERSIONS": "19.30"}):
+            builder = ConanMultiPackager(username="Pepe",
+                                         platform_info=platform_mock_for("Windows"),
+                                         reference="lib/1.0@lasote/mychannel",
+                                         ci_manager=self.ci_manager)
+            builder.add_common_builds()
+            for settings, _, _, _, _ in builder.items:
+                self.assertEquals(settings["compiler"], "msvc")
+                self.assertEquals(settings["compiler.version"], "19.30")
+
+        with tools.environment_append({"CONAN_MSVC_VERSIONS": "19.30",
+                                       "MINGW_CONFIGURATIONS": "4.9@x86_64@seh@posix"}):
+
+            builder = ConanMultiPackager(username="Pepe",
+                                         platform_info=platform_mock_for("Windows"),
+                                         reference="lib/1.0@lasote/mychannel",
+                                         ci_manager=self.ci_manager)
+            builder.add_common_builds()
+            for settings, _, _, _, _ in builder.items:
+                self.assertEquals(settings["compiler"], "gcc")
+                self.assertEquals(settings["compiler.version"], "4.9")
+
     def test_multiple_references(self):
         with tools.environment_append({"CONAN_REFERENCE": "zlib/1.2.8"}):
             builder = ConanMultiPackager(username="Pepe", ci_manager=self.ci_manager)

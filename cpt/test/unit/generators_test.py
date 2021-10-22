@@ -2,7 +2,7 @@ import unittest
 
 from conans import tools
 
-from cpt.builds_generator import get_visual_builds, get_mingw_builds, get_osx_apple_clang_builds, get_linux_gcc_builds, get_linux_clang_builds
+from cpt.builds_generator import get_visual_builds, get_mingw_builds, get_osx_apple_clang_builds, get_linux_gcc_builds, get_linux_clang_builds, get_msvc_builds
 from conans.model.ref import ConanFileReference
 
 
@@ -1530,5 +1530,525 @@ class GeneratorsTest(unittest.TestCase):
                     {'compiler': 'Visual Studio', 'compiler.version': '14', 'arch': 'x86',
                      'build_type': 'Debug', 'compiler.runtime': 'MTd'},
                     {'pack:shared': False, 'pack:foo': False, 'pack:bar': False}, {}, {}, ref)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+    def test_msvc_build_generator(self):
+        ref = ConanFileReference.loads("lib/1.0@conan/stable")
+        builds = get_msvc_builds(msvc_versions=["19.10", "19.30"],
+                                 archs=["x86"], msvc_runtimes=["static", "dynamic"],
+                                 msvc_runtime_types=["Debug"],
+                                 shared_option_name=None,
+                                 dll_with_static_runtime=False,
+                                 build_types=["Debug", "Release", "RelWithDebInfo", "MinSizeRel"],
+                                 cppstds=[None],
+                                 options={},
+                                 reference=ref)
+
+        expected = [
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc', 'compiler.version': '19.10', 'compiler.runtime': 'static', 'compiler.runtime_type': 'Debug'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc', 'compiler.version': '19.10', 'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Debug'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc', 'compiler.version': '19.30', 'compiler.runtime': 'static', 'compiler.runtime_type': 'Debug'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc', 'compiler.version': '19.30', 'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Debug'}, {}, {}, {}, ref)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_msvc_builds(msvc_versions=["19.2"], archs=["x86", "x86_64"],
+                                 msvc_runtimes=["dynamic"],
+                                 msvc_runtime_types=["Debug"],
+                                 shared_option_name="libpng:shared",
+                                 dll_with_static_runtime=True,
+                                 build_types=["Debug", "Release", "RelWithDebInfo", "MinSizeRel"],
+                                 cppstds=[None],
+                                 options={})
+
+        expected = [
+            ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc', 'compiler.version': '19.2', 'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Debug'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc', 'compiler.version': '19.2', 'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Debug'},
+             {'libpng:shared': True}, {}, {}, None),
+            ({'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'msvc', 'compiler.version': '19.2', 'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Debug'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'msvc', 'compiler.version': '19.2', 'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Debug'},
+             {'libpng:shared': True}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_msvc_builds(msvc_versions=["19.0"], archs=["x86"],
+                                 msvc_runtimes=["dynamic"],
+                                 msvc_runtime_types=["Debug"],
+                                 shared_option_name="libpng:shared",
+                                 dll_with_static_runtime=True,
+                                 build_types=["Debug"],
+                                 cppstds=['17'],
+                                 options={})
+        expected = [
+            ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc', 'compiler.version': '19.0', 'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Debug', 'compiler.cppstd': '17'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc', 'compiler.version': '19.0', 'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Debug', 'compiler.cppstd': '17'},
+             {'libpng:shared': True}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_msvc_builds(msvc_versions=["19.30"], archs=["x86"],
+                                 msvc_runtimes=["static"],
+                                 msvc_runtime_types=["Debug"],
+                                 shared_option_name="libpng:shared",
+                                 dll_with_static_runtime=False,
+                                 build_types=["Debug"],
+                                 cppstds=['14'],
+                                 options={})
+        expected = [
+            ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc', 'compiler.version': '19.30', 'compiler.runtime': 'static', 'compiler.runtime_type': 'Debug', 'compiler.cppstd': '14'},
+             {'libpng:shared': False}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_msvc_builds(msvc_versions=["19.20", "19.30"], archs=["x86"],
+                                 msvc_runtimes=["dynamic", "static"],
+                                 msvc_runtime_types=["Debug"],
+                                 shared_option_name=None,
+                                 dll_with_static_runtime=False,
+                                 build_types=["Debug"],
+                                 cppstds=['14'],
+                                 options={})
+
+        expected = [
+            ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc', 'compiler.version': '19.20',
+              'compiler.cppstd': '14', 'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Debug'}, {}, {}, {}, None),
+            ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc', 'compiler.version': '19.20',
+              'compiler.cppstd': '14', 'compiler.runtime': 'static', 'compiler.runtime_type': 'Debug'}, {}, {}, {}, None),
+            ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc', 'compiler.version': '19.30',
+              'compiler.cppstd': '14', 'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Debug'}, {}, {}, {}, None),
+            ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc', 'compiler.version': '19.30',
+              'compiler.cppstd': '14', 'compiler.runtime': 'static', 'compiler.runtime_type': 'Debug'}, {}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_msvc_builds(msvc_versions=["19.30"], archs=["x86", "x86_64"],
+                                 msvc_runtimes=["dynamic"],
+                                 msvc_runtime_types=["Debug"],
+                                 shared_option_name="libpng:shared",
+                                 dll_with_static_runtime=True,
+                                 build_types=["Debug"],
+                                 cppstds=[None],
+                                 options={})
+
+        expected = [
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc',
+              'compiler.version': '19.30', 'compiler.runtime_type': 'Debug'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc',
+              'compiler.version': '19.30', 'compiler.runtime_type': 'Debug'},
+             {'libpng:shared': True}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'msvc',
+              'compiler.version': '19.30', 'compiler.runtime_type': 'Debug'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'msvc',
+              'compiler.version': '19.30', 'compiler.runtime_type': 'Debug'},
+             {'libpng:shared': True}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_msvc_builds(msvc_versions=["19.30"], archs=["x86", "x86_64"],
+                                 msvc_runtimes=["dynamic"],
+                                 msvc_runtime_types=["Debug"],
+                                 shared_option_name="libpng:shared",
+                                 dll_with_static_runtime=True,
+                                 build_types=["Debug"],
+                                 cppstds=['20'],
+                                 options={})
+        expected = [
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc',
+              'compiler.cppstd': '20', 'compiler.version': '19.30', 'compiler.runtime_type': 'Debug'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc',
+              'compiler.cppstd': '20', 'compiler.version': '19.30', 'compiler.runtime_type': 'Debug'},
+             {'libpng:shared': True}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'msvc',
+              'compiler.cppstd': '20', 'compiler.version': '19.30', 'compiler.runtime_type': 'Debug'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'msvc',
+              'compiler.cppstd': '20', 'compiler.version': '19.30', 'compiler.runtime_type': 'Debug'},
+             {'libpng:shared': True}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_msvc_builds(msvc_versions=["19.30"], archs=["x86", "x86_64"],
+                                 msvc_runtimes=["static"],
+                                 msvc_runtime_types=["Debug"],
+                                 shared_option_name="libpng:shared",
+                                 dll_with_static_runtime=False,
+                                 build_types=["Debug"],
+                                 cppstds=['20'],
+                                 options={})
+        expected = [
+            ({'compiler': 'msvc', 'compiler.runtime': 'static', 'compiler.version': '19.30', 'arch': 'x86',
+              'compiler.cppstd': '20', 'build_type': 'Debug', 'compiler.runtime_type': 'Debug'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler': 'msvc', 'compiler.runtime': 'static', 'compiler.version': '19.30', 'arch': 'x86_64',
+              'compiler.cppstd': '20', 'build_type': 'Debug', 'compiler.runtime_type': 'Debug'},
+             {'libpng:shared': False}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        #############
+
+        builds = get_msvc_builds(msvc_versions=["19.10", "19.30"], archs=["x86_64"],
+                                 msvc_runtimes=["dynamic", "static"],
+                                 msvc_runtime_types=["Release"],
+                                 shared_option_name=None,
+                                 dll_with_static_runtime=False,
+                                 build_types=["Release"],
+                                 cppstds=['14'],
+                                 options={})
+
+        expected = [
+            ({'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'msvc', 'compiler.version': '19.10',
+              'compiler.cppstd': '14', 'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Release'}, {}, {}, {}, None),
+            ({'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'msvc', 'compiler.version': '19.10',
+              'compiler.cppstd': '14', 'compiler.runtime': 'static', 'compiler.runtime_type': 'Release'}, {}, {}, {}, None),
+            ({'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'msvc', 'compiler.version': '19.30',
+              'compiler.cppstd': '14', 'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Release'}, {}, {}, {}, None),
+            ({'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'msvc', 'compiler.version': '19.30',
+              'compiler.cppstd': '14', 'compiler.runtime': 'static', 'compiler.runtime_type': 'Release'}, {}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_msvc_builds(msvc_versions=["19.30"], archs=["x86", "x86_64"],
+                                 msvc_runtimes=["dynamic"],
+                                 msvc_runtime_types=["Release"],
+                                 shared_option_name="libpng:shared",
+                                 dll_with_static_runtime=True,
+                                 build_types=["Release"],
+                                 cppstds=[None],
+                                 options={})
+
+        expected = [
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86', 'build_type': 'Release', 'compiler': 'msvc',
+              'compiler.version': '19.30', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86', 'build_type': 'Release', 'compiler': 'msvc',
+              'compiler.version': '19.30', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': True}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'msvc',
+              'compiler.version': '19.30', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'msvc',
+              'compiler.version': '19.30', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': True}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_msvc_builds(msvc_versions=["19.30"], archs=["x86", "x86_64"],
+                                 msvc_runtimes=["dynamic"],
+                                 msvc_runtime_types=["Release"],
+                                 shared_option_name="libpng:shared",
+                                 dll_with_static_runtime=True,
+                                 build_types=["Release"],
+                                 cppstds=['17'],
+                                 options={})
+        expected = [
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86', 'build_type': 'Release', 'compiler': 'msvc',
+              'compiler.cppstd': '17', 'compiler.version': '19.30', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86', 'build_type': 'Release', 'compiler': 'msvc',
+              'compiler.cppstd': '17', 'compiler.version': '19.30', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': True}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'msvc',
+              'compiler.cppstd': '17', 'compiler.version': '19.30', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86_64', 'build_type': 'Release', 'compiler': 'msvc',
+              'compiler.cppstd': '17', 'compiler.version': '19.30', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': True}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_msvc_builds(msvc_versions=["19.30"], archs=["x86", "x86_64"],
+                                 msvc_runtimes=["static"],
+                                 msvc_runtime_types=["Release"],
+                                 shared_option_name="libpng:shared",
+                                 dll_with_static_runtime=False,
+                                 build_types=["Release"],
+                                 cppstds=['17'],
+                                 options={})
+        expected = [
+            ({'compiler': 'msvc', 'compiler.runtime': 'static',
+              'compiler.cppstd': '17', 'compiler.version': '19.30', 'arch': 'x86',
+              'build_type': 'Release', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler': 'msvc', 'compiler.runtime': 'static',
+              'compiler.cppstd': '17', 'compiler.version': '19.30', 'arch': 'x86_64',
+              'build_type': 'Release', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': False}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        #############
+
+        builds = get_msvc_builds(msvc_versions=["19.10", "19.30"], archs=["x86_64"],
+                                 msvc_runtimes=["dynamic", "static"],
+                                 msvc_runtime_types=["Release"],
+                                 shared_option_name=None,
+                                 dll_with_static_runtime=False,
+                                 build_types=["RelWithDebInfo"],
+                                 cppstds=[None],
+                                 options={})
+
+        expected = [
+            ({'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'msvc', 'compiler.version': '19.10',
+              'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Release'}, {}, {}, {}, None),
+            ({'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'msvc', 'compiler.version': '19.10',
+              'compiler.runtime': 'static', 'compiler.runtime_type': 'Release'}, {}, {}, {}, None),
+            ({'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'msvc', 'compiler.version': '19.30',
+              'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Release'}, {}, {}, {}, None),
+            ({'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'msvc', 'compiler.version': '19.30',
+              'compiler.runtime': 'static', 'compiler.runtime_type': 'Release'}, {}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_msvc_builds(msvc_versions=["19.10"], archs=["x86", "x86_64"],
+                                 msvc_runtimes=["dynamic"],
+                                 msvc_runtime_types=["Release"],
+                                 shared_option_name="libpng:shared",
+                                 dll_with_static_runtime=True,
+                                 build_types=["RelWithDebInfo"],
+                                 cppstds=['14'],
+                                 options={})
+
+        expected = [
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86', 'build_type': 'RelWithDebInfo', 'compiler': 'msvc',
+              'compiler.cppstd': '14', 'compiler.version': '19.10', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86', 'build_type': 'RelWithDebInfo', 'compiler': 'msvc',
+              'compiler.cppstd': '14', 'compiler.version': '19.10', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': True}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'msvc',
+              'compiler.cppstd': '14', 'compiler.version': '19.10', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'msvc',
+              'compiler.cppstd': '14', 'compiler.version': '19.10', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': True}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_msvc_builds(msvc_versions=["19.10"], archs=["x86", "x86_64"],
+                                 msvc_runtimes=["dynamic"],
+                                 msvc_runtime_types=["Release"],
+                                 shared_option_name="libpng:shared",
+                                 dll_with_static_runtime=True,
+                                 build_types=["RelWithDebInfo"],
+                                 cppstds=['14'],
+                                 options={})
+        expected = [
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86', 'build_type': 'RelWithDebInfo', 'compiler': 'msvc',
+              'compiler.cppstd': '14', 'compiler.version': '19.10', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86', 'build_type': 'RelWithDebInfo', 'compiler': 'msvc',
+              'compiler.cppstd': '14', 'compiler.version': '19.10', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': True}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'msvc',
+              'compiler.cppstd': '14', 'compiler.version': '19.10', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86_64', 'build_type': 'RelWithDebInfo', 'compiler': 'msvc',
+              'compiler.cppstd': '14', 'compiler.version': '19.10', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': True}, {}, {}, None)
+        ]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_msvc_builds(msvc_versions=["19.10"], archs=["x86", "x86_64"],
+                                 msvc_runtimes=["static"], msvc_runtime_types=["Release"],
+                                 shared_option_name="libpng:shared",
+                                 dll_with_static_runtime=False,
+                                 build_types=["RelWithDebInfo"],
+                                 cppstds=[None],
+                                 options={})
+        expected = [
+            ({'compiler': 'msvc', 'compiler.runtime': 'static', 'compiler.version': '19.10', 'arch': 'x86',
+              'build_type': 'RelWithDebInfo', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler': 'msvc', 'compiler.runtime': 'static', 'compiler.version': '19.10', 'arch': 'x86_64',
+              'build_type': 'RelWithDebInfo', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': False}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        #############
+
+        builds = get_msvc_builds(msvc_versions=["19.10", "19.30"], archs=["x86_64"],
+                                 msvc_runtimes=["dynamic", "static"], msvc_runtime_types=["Release"],
+                                 shared_option_name=None,
+                                 dll_with_static_runtime=False,
+                                 build_types=["MinSizeRel"],
+                                 cppstds=['20'],
+                                 options={})
+
+        expected = [
+            ({'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'msvc', 'compiler.version': '19.10',
+              'compiler.cppstd': '20', 'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Release'}, {}, {}, {}, None),
+            ({'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'msvc', 'compiler.version': '19.10',
+              'compiler.cppstd': '20', 'compiler.runtime': 'static', 'compiler.runtime_type': 'Release'}, {}, {}, {}, None),
+            ({'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'msvc', 'compiler.version': '19.30',
+              'compiler.cppstd': '20', 'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Release'}, {}, {}, {}, None),
+            ({'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'msvc', 'compiler.version': '19.30',
+              'compiler.cppstd': '20', 'compiler.runtime': 'static', 'compiler.runtime_type': 'Release'}, {}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_msvc_builds(msvc_versions=["19.10"], archs=["x86", "x86_64"],
+                                 msvc_runtimes=["dynamic"], msvc_runtime_types=["Release"],
+                                 shared_option_name="libpng:shared",
+                                 dll_with_static_runtime=True,
+                                 build_types=["MinSizeRel"],
+                                 cppstds=[None],
+                                 options={})
+
+        expected = [
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86', 'build_type': 'MinSizeRel', 'compiler': 'msvc',
+              'compiler.version': '19.10', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86', 'build_type': 'MinSizeRel', 'compiler': 'msvc',
+              'compiler.version': '19.10', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': True}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'msvc',
+              'compiler.version': '19.10', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'msvc',
+              'compiler.version': '19.10', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': True}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_msvc_builds(msvc_versions=["19.10"], archs=["x86", "x86_64"],
+                                 msvc_runtimes=["dynamic"], msvc_runtime_types=["Release"],
+                                 shared_option_name="libpng:shared",
+                                 dll_with_static_runtime=True,
+                                 build_types=["MinSizeRel"],
+                                 cppstds=['14'],
+                                 options={})
+        expected = [
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86', 'build_type': 'MinSizeRel', 'compiler': 'msvc',
+              'compiler.cppstd': '14', 'compiler.version': '19.10', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86', 'build_type': 'MinSizeRel', 'compiler': 'msvc',
+              'compiler.cppstd': '14', 'compiler.version': '19.10', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': True}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'msvc',
+              'compiler.cppstd': '14', 'compiler.version': '19.10', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86_64', 'build_type': 'MinSizeRel', 'compiler': 'msvc',
+              'compiler.cppstd': '14', 'compiler.version': '19.10', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': True}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_msvc_builds(msvc_versions=["19.10"], archs=["x86", "x86_64"],
+                                 msvc_runtimes=["static"], msvc_runtime_types=["Release"],
+                                 shared_option_name="libpng:shared",
+                                 dll_with_static_runtime=False,
+                                 build_types=["MinSizeRel"],
+                                 cppstds=[None],
+                                 options={})
+        expected = [
+            ({'compiler': 'msvc', 'compiler.runtime': 'static', 'compiler.version': '19.10', 'arch': 'x86',
+              'build_type': 'MinSizeRel', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': False}, {}, {}, None),
+            ({'compiler': 'msvc', 'compiler.runtime': 'static', 'compiler.version': '19.10', 'arch': 'x86_64',
+              'build_type': 'MinSizeRel', 'compiler.runtime_type': 'Release'},
+             {'libpng:shared': False}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        #############
+
+        builds = get_msvc_builds(msvc_versions=["19.10", "19.30"], archs=["x86"],
+                                 msvc_runtimes=["dynamic"], msvc_runtime_types=["Release", "Debug"],
+                                 shared_option_name=None,
+                                 dll_with_static_runtime=False,
+                                 build_types=["Debug", "Release", "RelWithDebInfo", "MinSizeRel"],
+                                 cppstds=['14'],
+                                 options={},
+                                 reference=ref)
+
+        expected = [
+        ({'arch': 'x86', 'build_type': 'MinSizeRel', 'compiler': 'msvc', 'compiler.version': '19.10', 'compiler.cppstd': '14', 'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Release'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'RelWithDebInfo', 'compiler': 'msvc', 'compiler.version': '19.10', 'compiler.cppstd': '14', 'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Release'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Release', 'compiler': 'msvc', 'compiler.version': '19.10', 'compiler.cppstd': '14', 'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Release'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc', 'compiler.version': '19.10', 'compiler.cppstd': '14', 'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Debug'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'MinSizeRel', 'compiler': 'msvc', 'compiler.version': '19.30', 'compiler.cppstd': '14', 'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Release'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'RelWithDebInfo', 'compiler': 'msvc', 'compiler.version': '19.30', 'compiler.cppstd': '14', 'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Release'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Release', 'compiler': 'msvc', 'compiler.version': '19.30', 'compiler.cppstd': '14', 'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Release'}, {}, {}, {}, ref),
+        ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc', 'compiler.version': '19.30', 'compiler.cppstd': '14', 'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Debug'}, {}, {}, {}, ref)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        #############
+
+        builds = get_msvc_builds(msvc_versions=["19.10", "19.30"], archs=["x86"],
+                                 msvc_runtimes=["dynamic", "static"], msvc_runtime_types=["Debug"],
+                                 shared_option_name=None,
+                                 dll_with_static_runtime=False,
+                                 build_types=["Debug", "Release", "RelWithDebInfo", "MinSizeRel"],
+                                 cppstds=[None],
+                                 options={"msvc:sdk": 10, "pkg:shared": True},
+                                 reference=ref)
+
+        expected = [
+            ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc', 'compiler.version': '19.10',
+              'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Debug'}, {"msvc:sdk": 10, "pkg:shared": True}, {}, {}, ref),
+            ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc', 'compiler.version': '19.10',
+              'compiler.runtime': 'static', 'compiler.runtime_type': 'Debug'}, {"msvc:sdk": 10, "pkg:shared": True}, {}, {}, ref),
+            ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc', 'compiler.version': '19.30',
+              'compiler.runtime': 'dynamic', 'compiler.runtime_type': 'Debug'}, {"msvc:sdk": 10, "pkg:shared": True}, {}, {}, ref),
+            ({'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc', 'compiler.version': '19.30',
+              'compiler.runtime': 'static', 'compiler.runtime_type': 'Debug'}, {"msvc:sdk": 10, "pkg:shared": True}, {}, {}, ref)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_msvc_builds(msvc_versions=["19.10"], archs=["x86", "x86_64"],
+                                 msvc_runtimes=["dynamic"], msvc_runtime_types=["Debug"],
+                                 shared_option_name="libpng:shared",
+                                 dll_with_static_runtime=True,
+                                 build_types=["Debug", "Release", "RelWithDebInfo", "MinSizeRel"],
+                                 cppstds=['17'],
+                                 options={"pkg:shared": False, "pkg:foo": "bar"})
+
+        expected = [
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc',
+              'compiler.version': '19.10', 'compiler.cppstd': '17', 'compiler.runtime_type': 'Debug'},
+             {'libpng:shared': False, "pkg:shared": False, "pkg:foo": "bar"}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc',
+              'compiler.version': '19.10', 'compiler.cppstd': '17', 'compiler.runtime_type': 'Debug'},
+             {'libpng:shared': True, "pkg:shared": False, "pkg:foo": "bar"}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'msvc',
+              'compiler.version': '19.10', 'compiler.cppstd': '17', 'compiler.runtime_type': 'Debug'},
+             {'libpng:shared': False, "pkg:shared": False, "pkg:foo": "bar"}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'msvc',
+              'compiler.version': '19.10', 'compiler.cppstd': '17', 'compiler.runtime_type': 'Debug'},
+             {'libpng:shared': True, "pkg:shared": False, "pkg:foo": "bar"}, {}, {}, None)]
+
+        self.assertEquals([tuple(a) for a in builds], expected)
+
+        builds = get_msvc_builds(msvc_versions=["19.10"], archs=["x86", "x86_64"],
+                                 msvc_runtimes=["dynamic"], msvc_runtime_types=["Debug"],
+                                 shared_option_name="libpng:shared",
+                                 dll_with_static_runtime=True,
+                                 build_types=["Debug", "Release", "RelWithDebInfo", "MinSizeRel"],
+                                 cppstds=['14'],
+                                 options={"pkg:shared": False, "pkg:fPIC": False})
+        expected = [
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc',
+              'compiler.version': '19.10', 'compiler.cppstd': '14', 'compiler.runtime_type': 'Debug'},
+             {'libpng:shared': False, "pkg:shared": False, "pkg:fPIC": False}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'msvc',
+              'compiler.version': '19.10', 'compiler.cppstd': '14', 'compiler.runtime_type': 'Debug'},
+             {'libpng:shared': True, "pkg:shared": False, "pkg:fPIC": False}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'msvc',
+              'compiler.version': '19.10', 'compiler.cppstd': '14', 'compiler.runtime_type': 'Debug'},
+             {'libpng:shared': False, "pkg:shared": False, "pkg:fPIC": False}, {}, {}, None),
+            ({'compiler.runtime': 'dynamic', 'arch': 'x86_64', 'build_type': 'Debug', 'compiler': 'msvc',
+              'compiler.version': '19.10', 'compiler.cppstd': '14', 'compiler.runtime_type': 'Debug'},
+             {'libpng:shared': True, "pkg:shared": False, "pkg:fPIC": False}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)

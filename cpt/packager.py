@@ -100,7 +100,9 @@ class ConanMultiPackager(object):
     def __init__(self, username=None, channel=None, runner=None,
                  gcc_versions=None, visual_versions=None, visual_runtimes=None,
                  visual_toolsets=None,
-                 apple_clang_versions=None, archs=None, options=None,
+                 apple_clang_versions=None,
+                 msvc_versions=None, msvc_runtimes=None, msvc_runtime_types=None,
+                 archs=None, options=None,
                  use_docker=None, curpage=None, total_pages=None,
                  docker_image=None, reference=None, password=None,
                  remotes=None,
@@ -242,6 +244,7 @@ class ConanMultiPackager(object):
                                               apple_clang_versions, clang_versions,
                                               visual_versions, visual_runtimes, visual_toolsets,
                                               vs10_x86_64_enabled,
+                                              msvc_versions, msvc_runtimes, msvc_runtime_types,
                                               mingw_configurations, archs, allow_gcc_minors,
                                               build_types, options, cppstds)
 
