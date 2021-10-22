@@ -88,7 +88,7 @@ class Pkg(ConanFile):
                                            msvc_versions=["19.30"],
                                            archs=["x86_64"],
                                            build_types=["Release"],
-                                           msvc_runtimes=["shared"],
+                                           msvc_runtimes=["dynamic"],
                                            reference="zlib/1.2.2")
         self.packager.add_common_builds()
         self.packager.run_builds(1, 1)
