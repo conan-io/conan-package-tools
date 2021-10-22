@@ -32,5 +32,6 @@ else
     sudo apt-get install -y --no-install-recommends gcc-multilib g++-multilib selinux-basics
 fi
 
+pip install -U pip
 pip install -r cpt/requirements.txt
 pip install -r cpt/requirements_test.txt

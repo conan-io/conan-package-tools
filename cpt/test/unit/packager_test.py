@@ -549,7 +549,8 @@ class AppTest(unittest.TestCase):
 
     def test_msvc_defaults(self):
 
-        with tools.environment_append({"CONAN_MSVC_VERSIONS": "19.30"}):
+        with tools.environment_append({"CONAN_MSVC_VERSIONS": "19.30",
+                                       "CONAN_VISUAL_VERSIONS": ""}):
             builder = ConanMultiPackager(username="Pepe",
                                          platform_info=platform_mock_for("Windows"),
                                          reference="lib/1.0@lasote/mychannel",
@@ -560,6 +561,7 @@ class AppTest(unittest.TestCase):
                 self.assertEquals(settings["compiler.version"], "19.30")
 
         with tools.environment_append({"CONAN_MSVC_VERSIONS": "19.30",
+                                       "CONAN_VISUAL_VERSIONS": "",
                                        "MINGW_CONFIGURATIONS": "4.9@x86_64@seh@posix"}):
 
             builder = ConanMultiPackager(username="Pepe",
