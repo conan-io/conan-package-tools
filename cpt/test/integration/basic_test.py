@@ -79,7 +79,7 @@ class Pkg(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
 
     def build(self):
-        assert("WindowsLibPath" in os.environ)
+        assert("LOCALAPPDATA" in os.environ)
 
 """
         self.save_conanfile(conanfile)
