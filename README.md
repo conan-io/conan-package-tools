@@ -262,6 +262,9 @@ You can adjust other constructor parameters to control the build configurations 
 - **visual_versions**: Generate only build configurations for the specified Visual Studio versions (Ignore if the current machine is not Windows)
 - **visual_runtimes**: Generate only build configurations for the specified runtimes. (only for Visual Studio)
 - **visual_toolsets**: Specify the toolsets per each specified Visual Studio version. (only for Visual Studio)
+- **msvc_versions**: Generate only build configurations for the specified msvc versions (Ignore if the current machine is not Windows)
+- **msvc_runtimes**: Generate only build configurations for the specified runtimes. (only for msvc)
+- **msvc_runtime_types**: Specify the runtime types per each specified msvc version. (only for msvc)
 - **apple_clang_versions**: Generate only build configurations for the specified apple clang versions (Ignored if the current machine is not OSX)
 - **archs**: Generate build configurations for the specified architectures, by default, ["x86", "x86_64"].
 - **build_types**: Generate build configurations for the specified build_types, by default ["Debug", "Release"].
@@ -272,6 +275,9 @@ Or you can adjust environment variables:
 - **CONAN_VISUAL_VERSIONS**
 - **CONAN_VISUAL_RUNTIMES**
 - **CONAN_VISUAL_TOOLSETS**
+- **CONAN_MSVC_VERSIONS**
+- **CONAN_MSVC_RUNTIMES**
+- **CONAN_MSVC_RUNTIME_TYPES**
 - **CONAN_APPLE_CLANG_VERSIONS**
 - **CONAN_CLANG_VERSIONS**
 - **CONAN_ARCHS**
@@ -948,7 +954,7 @@ You can split the different build configurations in different "pages". So, you c
 
 There are two approaches:
 
-### Sequencial distribution
+### Sequential distribution
 
 By simply passing two pagination parameters, **curpage** and **total_pages** or the corresponding environment variables:
 
@@ -1304,6 +1310,9 @@ This is especially useful for CI integration.
 - **CONAN_VISUAL_VERSIONS**: Visual versions, comma separated, e.g. "12,14"
 - **CONAN_VISUAL_RUNTIMES**: Visual runtimes, comma separated, e.g. "MT,MD"
 - **CONAN_VISUAL_TOOLSETS**: Map Visual versions to toolsets, e.g. `14=v140;v140_xp,12=v120_xp`
+- **CONAN_MSVC_VERSIONS**: msvc versions, comma separated, e.g. "19.29,19.30"
+- **CONAN_MSVC_RUNTIMES**: msvc runtimes, comma separated, e.g. "static,dynamic"
+- **CONAN_MSVC_RUNTIME_TYPES**: msvc runtime types, comma separated, e.g. "Debug,Release"
 - **CONAN_USE_DOCKER**: If defined will use docker
 - **CONAN_CURRENT_PAGE**:  Current page of packages to create
 - **CONAN_TOTAL_PAGES**: Total number of pages

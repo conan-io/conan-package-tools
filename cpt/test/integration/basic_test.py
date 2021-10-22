@@ -25,7 +25,7 @@ class Pkg(ConanFile):
             mp.add_common_builds()
 
     @unittest.skipUnless(sys.platform.startswith("win"), "Requires Windows")
-    def test_msvc(self):
+    def test_visual(self):
         conanfile = """from conans import ConanFile
 import os
 
@@ -47,7 +47,7 @@ class Pkg(ConanFile):
         self.packager.add_common_builds()
         self.packager.run_builds(1, 1)
 
-    def test_msvc_exclude_precommand(self):
+    def test_visual_exclude_precommand(self):
         conanfile = """from conans import ConanFile
 import os
 
@@ -69,6 +69,31 @@ class Pkg(ConanFile):
                                            reference="zlib/1.2.2")
         self.packager.add_common_builds()
         self.packager.run_builds(1, 1)
+
+    @unittest.skipUnless(sys.platform.startswith("win"), "Requires Windows")
+    def test_msvc(self):
+        conanfile = """from conans import ConanFile
+import os
+
+class Pkg(ConanFile):
+    settings = "os", "compiler", "build_type", "arch"
+
+    def build(self):
+        assert("LOCALAPPDATA" in os.environ)
+
+"""
+        self.save_conanfile(conanfile)
+        self.packager = ConanMultiPackager(username="user",
+                                           channel="mychannel",
+                                           msvc_versions=["19.30"],
+                                           archs=["x86_64"],
+                                           build_types=["Release"],
+                                           cppstds=["14"],
+                                           msvc_runtimes=["dynamic"],
+                                           reference="zlib/1.2.2")
+        self.packager.add_common_builds()
+        self.packager.run_builds(1, 1)
+
 
     def test_shared_option_auto_managed(self):
         conanfile = """from conans import ConanFile
