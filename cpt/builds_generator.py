@@ -114,7 +114,7 @@ won't be able to use them.
                 self._msvc_versions = default_msvc_versions
             else:
                 self._msvc_versions = []
-        elif mingw_configurations or get_mingw_config_from_env() or self._visual_versions:
+        elif mingw_configurations or get_mingw_config_from_env():
             self._msvc_versions = []
 
         if self._msvc_versions is not None:
@@ -131,7 +131,7 @@ won't be able to use them.
                 self._visual_versions = default_visual_versions
             else:
                 self._visual_versions = []
-        elif mingw_configurations or get_mingw_config_from_env() or self._msvc_versions:
+        elif mingw_configurations or get_mingw_config_from_env():
             self._visual_versions = []
 
         if self._visual_versions is not None:
