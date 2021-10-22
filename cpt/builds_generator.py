@@ -110,18 +110,6 @@ won't be able to use them.
         self._visual_versions = visual_versions or split_colon_env("CONAN_VISUAL_VERSIONS")
 
         if self._msvc_versions is None:
-            if not self._visual_versions:
-                self._msvc_versions = default_msvc_versions
-            else:
-                self._msvc_versions = []
-
-        if self._visual_versions is None:
-            if self._msvc_versions == default_msvc_versions:
-                self._visual_versions = default_visual_versions
-            else:
-                self._visual_versions = []
-
-        if self._msvc_versions is None:
             if not mingw_configurations and not get_mingw_config_from_env() and not self._visual_versions:
                 self._msvc_versions = default_msvc_versions
             else:
