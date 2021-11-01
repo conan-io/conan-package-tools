@@ -1166,6 +1166,17 @@ class AppTest(unittest.TestCase):
         self.assertEquals([tuple(a) for a in builder.builds], expected)
 
         builder.builds = []
+        with tools.environment_append({"CONAN_PURE_C": "True"}):
+            builder.add_common_builds()
+        expected = [({'arch': 'x86_64', 'build_type': 'Release',
+                      'compiler': 'gcc',
+                      'compiler.version': '8'},
+                     {},
+                     {},
+                     {})]
+        self.assertEquals([tuple(a) for a in builder.builds], expected)
+
+        builder.builds = []
         with tools.environment_append({"CONAN_PURE_C": "False"}):
             builder.add_common_builds()
         expected = [({'arch': 'x86_64', 'build_type': 'Release',
@@ -1179,17 +1190,6 @@ class AppTest(unittest.TestCase):
                       'compiler': 'gcc',
                       'compiler.version': '8',
                       'compiler.libcxx': "libstdc++11"},
-                     {},
-                     {},
-                     {})]
-        self.assertEquals([tuple(a) for a in builder.builds], expected)
-
-        builder.builds = []
-        with tools.environment_append({"CONAN_PURE_C": "True"}):
-            builder.add_common_builds()
-        expected = [({'arch': 'x86_64', 'build_type': 'Release',
-                      'compiler': 'gcc',
-                      'compiler.version': '8'},
                      {},
                      {},
                      {})]
