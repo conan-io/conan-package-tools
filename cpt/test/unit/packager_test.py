@@ -1141,6 +1141,52 @@ class AppTest(unittest.TestCase):
             builder.run()
             self.assertEquals("couse.lock", self.conan_api.calls[-1].kwargs["lockfile"])
 
+    def test_pure_c_env_var(self):
+
+        builder = ConanMultiPackager(gcc_versions=["8"], archs=["x86_64"], build_types=["Release"],
+                                     username="Pepe", channel="testing",
+                                     reference="Hello/0.1",
+                                     platform_info=platform_mock_for("Linux"),
+                                     ci_manager=self.ci_manager)
+        builder.add_common_builds()
+        expected = [({'arch': 'x86_64', 'build_type': 'Release',
+                      'compiler': 'gcc',
+                      'compiler.version': '8'},
+                     {},
+                     {},
+                     {})]
+        self.assertEquals([tuple(a) for a in builder.builds], expected)
+
+        builder.builds = []
+        with tools.environment_append({"CONAN_PURE_C": "True"}):
+            builder.add_common_builds()
+        expected = [({'arch': 'x86_64', 'build_type': 'Release',
+                      'compiler': 'gcc',
+                      'compiler.version': '8'},
+                     {},
+                     {},
+                     {})]
+        self.assertEquals([tuple(a) for a in builder.builds], expected)
+
+        builder.builds = []
+        with tools.environment_append({"CONAN_PURE_C": "False"}):
+            builder.add_common_builds()
+        expected = [({'arch': 'x86_64', 'build_type': 'Release',
+                      'compiler': 'gcc',
+                      'compiler.version': '8',
+                      'compiler.libcxx': "libstdc++"},
+                     {},
+                     {},
+                     {}),
+                    ({'arch': 'x86_64', 'build_type': 'Release',
+                      'compiler': 'gcc',
+                      'compiler.version': '8',
+                      'compiler.libcxx': "libstdc++11"},
+                     {},
+                     {},
+                     {})]
+        self.assertEquals([tuple(a) for a in builder.builds], expected)
+
     def test_docker_cwd(self):
         cwd = os.path.join(os.getcwd(), 'subdir')
         self.packager = ConanMultiPackager(username="lasote",

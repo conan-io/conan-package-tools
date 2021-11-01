@@ -1364,6 +1364,7 @@ Check [Conan Build policies](https://docs.conan.io/en/latest/mastering/policies.
 - **CONAN_FORCE_SELINUX**: Force docker to relabel file objects on the shared volumes
 - **CONAN_SKIP_RECIPE_EXPORT**: If defined, the package recipe will only be exported on the first build.
 - **CPT_UPDATE_DEPENDENCIES**: Update all dependencies before building e.g conan create -u
+- **CONAN_PURE_C**: Set `pure_c` by environment variable, default `True`
 
 
 # Full example
