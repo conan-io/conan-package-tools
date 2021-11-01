@@ -469,7 +469,7 @@ class ConanMultiPackager(object):
             shared_option_name = env_shared_option_name if str(env_shared_option_name).lower() != "false" else False
 
         if pure_c is None:
-            pure_c = get_bool_from_env("CONAN_PURE_C")
+            pure_c = get_custom_bool_from_env("CONAN_PURE_C", True)
 
         build_all_options_values = build_all_options_values or split_colon_env("CONAN_BUILD_ALL_OPTIONS_VALUES") or []
         if not isinstance(build_all_options_values, list):
