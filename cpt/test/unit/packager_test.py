@@ -8,7 +8,7 @@ from collections import defaultdict
 from cpt.builds_generator import BuildConf
 from cpt.packager import ConanMultiPackager
 from conans import tools
-from conans.test.utils.tools import TestBufferConanOutput
+from cpt.test.utils.tools import TestBufferConanOutput
 from conans.model.ref import ConanFileReference
 from cpt.test.unit.utils import MockConanAPI, MockRunner, MockCIManager
 
@@ -32,10 +32,10 @@ class AppTest(unittest.TestCase):
                                            conan_api=self.conan_api,
                                            reference="lib/1.0",
                                            ci_manager=self.ci_manager)
-        if "APPVEYOR" in os.environ:
-            del os.environ["APPVEYOR"]
-        if "TRAVIS" in os.environ:
-            del os.environ["TRAVIS"]
+
+        for provider in ["APPVEYOR", "TRAVIS", "GITHUB_ACTIONS"]:
+            if provider in os.environ:
+                del os.environ[provider]
 
     def _add_build(self, number, compiler=None, version=None):
         self.packager.add({"os": "os%d" % number, "compiler": compiler or "compiler%d" % number,
@@ -67,7 +67,7 @@ class AppTest(unittest.TestCase):
         self.packager.add({"os": "Linux"})
 
         self.packager.update_build_if(lambda build: build.settings["os"] == "Windows",
-                                      new_build_requires={"*": ["7zip_installer/0.1.0@conan/stable"]})
+                                      new_build_requires={"*": ["7zip/19.00"]})
 
         packager_expected = ConanMultiPackager("lasote", "mychannel",
                                                runner=self.runner,
@@ -75,7 +75,7 @@ class AppTest(unittest.TestCase):
                                                reference="lib/1.0",
                                                ci_manager=self.ci_manager)
 
-        packager_expected.add({"os": "Windows"}, {}, {}, {"*": ["7zip_installer/0.1.0@conan/stable"]})
+        packager_expected.add({"os": "Windows"}, {}, {}, {"*": ["7zip/19.00"]})
         packager_expected.add({"os": "Linux"})
 
         self.assertEqual([tuple(a) for a in self.packager.items], packager_expected.items)
@@ -430,28 +430,28 @@ class AppTest(unittest.TestCase):
         expected = [({'compiler.exception': 'seh', 'compiler.libcxx': "libstdc++",
                       'compiler.threads': 'posix', 'compiler.version': '4.9', 'arch': 'x86_64',
                       'build_type': 'Release', 'compiler': 'gcc'},
-                     {'zlib:shared': True},
+                     {'zlib:shared': False},
                      {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}),
                     ({'compiler.exception': 'seh', 'compiler.libcxx': "libstdc++", 'arch': 'x86_64',
                       'compiler.threads': 'posix', 'compiler.version': '4.9', 'build_type': 'Debug',
                       'compiler': 'gcc'},
-                     {'zlib:shared': True},
+                     {'zlib:shared': False},
                      {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}),
 
                     ({'compiler.exception': 'seh', 'compiler.libcxx': "libstdc++",
                       'compiler.threads': 'posix', 'compiler.version': '4.9', 'arch': 'x86_64',
                       'build_type': 'Release', 'compiler': 'gcc'},
-                     {'zlib:shared': False},
+                     {'zlib:shared': True},
                      {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]}),
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]}),
                     ({'compiler.exception': 'seh', 'compiler.libcxx': "libstdc++", 'arch': 'x86_64',
                       'compiler.threads': 'posix', 'compiler.version': '4.9', 'build_type': 'Debug',
                       'compiler': 'gcc'},
-                     {'zlib:shared': False},
+                     {'zlib:shared': True},
                      {},
-                     {'*': [ConanFileReference.loads("mingw_installer/1.0@conan/stable")]})]
+                     {'*': [ConanFileReference.loads("mingw-w64/8.1")]})]
 
         self.assertEquals([tuple(a) for a in builder.builds], expected)
 
@@ -536,6 +536,32 @@ class AppTest(unittest.TestCase):
                 self.assertEquals(settings["compiler.version"], "10")
 
         with tools.environment_append({"CONAN_VISUAL_VERSIONS": "10",
+                                       "MINGW_CONFIGURATIONS": "4.9@x86_64@seh@posix"}):
+
+            builder = ConanMultiPackager(username="Pepe",
+                                         platform_info=platform_mock_for("Windows"),
+                                         reference="lib/1.0@lasote/mychannel",
+                                         ci_manager=self.ci_manager)
+            builder.add_common_builds()
+            for settings, _, _, _, _ in builder.items:
+                self.assertEquals(settings["compiler"], "gcc")
+                self.assertEquals(settings["compiler.version"], "4.9")
+
+    def test_msvc_defaults(self):
+
+        with tools.environment_append({"CONAN_MSVC_VERSIONS": "19.30",
+                                       "CONAN_VISUAL_VERSIONS": ""}):
+            builder = ConanMultiPackager(username="Pepe",
+                                         platform_info=platform_mock_for("Windows"),
+                                         reference="lib/1.0@lasote/mychannel",
+                                         ci_manager=self.ci_manager)
+            builder.add_common_builds()
+            for settings, _, _, _, _ in builder.items:
+                self.assertEquals(settings["compiler"], "msvc")
+                self.assertEquals(settings["compiler.version"], "19.30")
+
+        with tools.environment_append({"CONAN_MSVC_VERSIONS": "19.30",
+                                       "CONAN_VISUAL_VERSIONS": "",
                                        "MINGW_CONFIGURATIONS": "4.9@x86_64@seh@posix"}):
 
             builder = ConanMultiPackager(username="Pepe",
@@ -784,15 +810,51 @@ class AppTest(unittest.TestCase):
 
         for branch, expected_channel in [("testing", "a_channel"),
                                          ("dummy", "a_channel"),
+                                         ("stabl", "a_channel"),
+                                         ("stabl/something", "a_channel"),
                                          ("stable", "stable"),
                                          ("stable/something", "stable"),
+                                         ("releas", "a_channel"),
+                                         ("releas/something", "a_channel"),
                                          ("release", "stable"),
                                          ("release/something", "stable"),
+                                         ("maste", "a_channel"),
+                                         ("maste/something", "a_channel"),
                                          ("master", "stable"),
+                                         ("main", "stable"),
+                                         ("masterSomething", "a_channel"),
                                          ("master/something", "a_channel")]:
             builder = ConanMultiPackager(username="pepe",
                                          channel="a_channel",
                                          reference="lib/1.0",
+                                         ci_manager=MockCIManager(current_branch=branch))
+
+            self.assertEquals(builder.channel, expected_channel, "Not match for branch %s" % branch)
+
+    def channel_detector_test_custom_branch_patterns(self):
+
+        for branch, expected_channel in [("trunk", "stable"),
+                                         ("trunk/something", "a_channel"),
+                                         ("tags/something", "stable"),
+                                         ("tagsSomething", "a_channel"),
+                                         ("stable", "a_channel"),
+                                         ("stable/something", "a_channel"),
+                                         ("release", "a_channel"),
+                                         ("release/something", "a_channel"),
+                                         ("master", "a_channel")]:
+            # test env var
+            with tools.environment_append({"CONAN_STABLE_BRANCH_PATTERN": "trunk$ tags/.*"}):
+                builder = ConanMultiPackager(username="pepe",
+                                             channel="a_channel",
+                                             reference="lib/1.0",
+                                             ci_manager=MockCIManager(current_branch=branch))
+
+                self.assertEquals(builder.channel, expected_channel, "Not match for branch %s" % branch)
+            # test passing as argument
+            builder = ConanMultiPackager(username="pepe",
+                                         channel="a_channel",
+                                         reference="lib/1.0",
+                                         stable_branch_pattern="trunk$ tags/.*",
                                          ci_manager=MockCIManager(current_branch=branch))
 
             self.assertEquals(builder.channel, expected_channel, "Not match for branch %s" % branch)
@@ -938,7 +1000,7 @@ class AppTest(unittest.TestCase):
         output = TestBufferConanOutput()
         packager = ConanMultiPackager(username="lasote",
                                       channel="mychannel",
-                                      visual_versions=["12"],
+                                      visual_versions=["16"],
                                       archs=["x86", "x86_64"],
                                       build_types=["Release"],
                                       reference="zlib/1.2.11",
@@ -954,7 +1016,7 @@ class AppTest(unittest.TestCase):
             self.conan_api.reset()
             packager = ConanMultiPackager(username="lasote",
                                       channel="mychannel",
-                                      visual_versions=["12"],
+                                      visual_versions=["16"],
                                       archs=["x86", "x86_64"],
                                       build_types=["Release"],
                                       reference="zlib/1.2.11",
@@ -970,7 +1032,7 @@ class AppTest(unittest.TestCase):
         self.conan_api.reset()
         packager = ConanMultiPackager(username="lasote",
                                       channel="mychannel",
-                                      visual_versions=["12"],
+                                      visual_versions=["16"],
                                       archs=["x86", "x86_64"],
                                       build_types=["Release"],
                                       reference="zlib/1.2.11",
@@ -1125,3 +1187,19 @@ class AppTest(unittest.TestCase):
                      {},
                      {})]
         self.assertEquals([tuple(a) for a in builder.builds], expected)
+
+    def test_docker_cwd(self):
+        cwd = os.path.join(os.getcwd(), 'subdir')
+        self.packager = ConanMultiPackager(username="lasote",
+                                           channel="mychannel",
+                                           runner=self.runner,
+                                           conan_api=self.conan_api,
+                                           gcc_versions=["9"],
+                                           use_docker=True,
+                                           reference="zlib/1.2.11",
+                                           ci_manager=self.ci_manager,
+                                           cwd=cwd)
+
+        self._add_build(1, "gcc", "9")
+        self.packager.run_builds(1, 1)
+        self.assertIn('docker run --rm -v "%s:%s/project"' % (cwd, self.packager.docker_conan_home), self.runner.calls[4])

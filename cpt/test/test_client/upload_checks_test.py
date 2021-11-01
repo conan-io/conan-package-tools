@@ -1,9 +1,13 @@
 import unittest
 import os
 import zipfile
+import textwrap
 
 from conans.client.tools import environment_append
-from conans.test.utils.tools import TestClient, TestServer
+from conans.model.manifest import FileTreeManifest
+from conans.model.ref import PackageReference
+
+from cpt.test.utils.tools import TestClient, TestServer
 from cpt.test.unit.utils import MockCIManager
 
 from cpt.test.test_client.tools import get_patched_multipackager
@@ -144,7 +148,7 @@ class Pkg(ConanFile):
 
             self.assertIn(" Uploading packages for 'lib/1.0@user/mychannel'", tc.out)
             self.assertIn("Uploading lib/1.0@user/mychannel to remote", tc.out)
-            self.assertIn("Recipe is up to date, upload skipped", tc.out)
+            self.assertNotIn("Recipe is up to date, upload skipped", tc.out)
             self.assertIn("Uploading package 1/2", tc.out)
             self.assertIn("Uploading package 2/2", tc.out)
 
@@ -183,7 +187,7 @@ class Pkg(ConanFile):
 
             self.assertIn(" Uploading packages for 'lib/1.0@user/mychannel'", tc.out)
             self.assertIn("Uploading lib/1.0@user/mychannel to remote", tc.out)
-            self.assertIn("Recipe is up to date, upload skipped", tc.out)
+            self.assertNotIn("Recipe is up to date, upload skipped", tc.out)
             self.assertIn("Uploading package 1/2", tc.out)
             self.assertIn("Uploading package 2/2", tc.out)
 
@@ -222,6 +226,66 @@ class Pkg(ConanFile):
             self.assertIn("Uploading packages for 'lib/1.0@'", tc.out)
             self.assertIn("lib/1.0: WARN: HALLO", tc.out)
 
+    def test_forced_upload(self):
+        NO_SETTINGS_PACKAGE_ID = "5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9"
+        conanfile = textwrap.dedent("""
+                from conans import ConanFile
+                class Pkg(ConanFile):
+
+                    def configure(self):
+                        self.output.warn("Mens sana in corpore sano")
+        """)
+        ts = TestServer(users={"foo": "password"})
+        tc = TestClient(servers={"foo_server": ts}, users={"foo_server": [("foo", "password")]})
+
+        tc.save({"conanfile.py": conanfile})
+        tc.run("create . lib/1.0@foo/stable")
+        tc.run("upload lib/1.0@foo/stable --all -r foo_server")
+        pref = PackageReference.loads("lib/1.0@foo/stable#{}:{}".format(0, NO_SETTINGS_PACKAGE_ID))
+        path = os.path.join(ts.server_store.package_revisions_root(pref), "0")
+        manifest = FileTreeManifest.load(path)
+        manifest.time += 1000
+        manifest.save(path)
+
+        tc.save({"conanfile.py": conanfile.replace("warn", "info")})
+        tc.run("create . lib/1.0@foo/stable")
+
+        # Force is True, package must be uploaded all times
+        with environment_append({"CONAN_UPLOAD": ts.fake_url, "CONAN_LOGIN_USERNAME": "foo",
+                                "CONAN_PASSWORD": "password", "CONAN_USERNAME": "foo",
+                                "CONAN_UPLOAD_FORCE": "True"}):
+            mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True)
+            mulitpackager.add_common_builds(reference="lib/1.0@foo/stable",
+                                            shared_option_name=False)
+            mulitpackager.run()
+            self.assertIn("Uploading packages for 'lib/1.0@foo/stable'", tc.out)
+            self.assertNotIn("Recipe is up to date, upload skipped", tc.out)
+            self.assertNotIn("Package is up to date, upload skipped", tc.out)
+
+        with environment_append({"CONAN_UPLOAD": ts.fake_url, "CONAN_LOGIN_USERNAME": "foo",
+                                "CONAN_PASSWORD": "password", "CONAN_USERNAME": "foo",
+                                "CONAN_UPLOAD_FORCE": "FALSE"}):
+            mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True,
+                                                      upload_force=True)
+            mulitpackager.add_common_builds(reference="lib/1.0@foo/stable",
+                                            shared_option_name=False)
+            mulitpackager.run()
+            self.assertIn("Uploading packages for 'lib/1.0@foo/stable'", tc.out)
+            self.assertNotIn("Package is up to date, upload skipped", tc.out)
+            self.assertNotIn("Recipe is up to date, upload skipped", tc.out)
+
+        # Force is False. Must not upload any package
+        with environment_append({"CONAN_UPLOAD": ts.fake_url, "CONAN_LOGIN_USERNAME": "foo",
+                                "CONAN_PASSWORD": "password", "CONAN_USERNAME": "foo",
+                                "CONAN_UPLOAD_FORCE": "FALSE"}):
+            mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True,
+                                                      upload_force=False)
+            mulitpackager.add_common_builds(reference="lib/1.0@foo/stable",
+                                            shared_option_name=False)
+            mulitpackager.run()
+            self.assertIn("Uploading packages for 'lib/1.0@foo/stable'", tc.out)
+            self.assertIn("Recipe is up to date, upload skipped", tc.out)
+            self.assertIn("Package is up to date, upload skipped", tc.out)
 
 
 class UploadDependenciesTest(unittest.TestCase):

@@ -19,7 +19,7 @@ class RemotesTest(unittest.TestCase):
 
     def test_valid_config_with_args(self):
         manager = ConfigManager(self.conan_api, Printer())
-        manager.install('https://github.com/bincrafters/bincrafters-config.git', '-b master')
+        manager.install('https://github.com/bincrafters/bincrafters-config.git', '-b main')
 
 
 class RemotesTestRealApi(BaseTest):
@@ -30,7 +30,7 @@ class RemotesTestRealApi(BaseTest):
         profiles = self.api.profile_list()
         self.assertEquals(len(profiles), 0)
 
-        manager.install("https://github.com/bincrafters/bincrafters-config.git", "-b master")
+        manager.install("https://github.com/bincrafters/bincrafters-config.git", "-b main")
 
         profiles = self.api.profile_list()
         self.assertGreater(len(profiles), 3)

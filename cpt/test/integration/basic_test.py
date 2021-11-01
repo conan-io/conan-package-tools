@@ -5,6 +5,7 @@ import json
 
 from conans import tools
 from conans.model.ref import ConanFileReference
+from conans.errors import ConanException
 
 from cpt.test.integration.base import BaseTest
 from cpt.packager import ConanMultiPackager
@@ -24,7 +25,7 @@ class Pkg(ConanFile):
             mp.add_common_builds()
 
     @unittest.skipUnless(sys.platform.startswith("win"), "Requires Windows")
-    def test_msvc(self):
+    def test_visual(self):
         conanfile = """from conans import ConanFile
 import os
 
@@ -38,7 +39,7 @@ class Pkg(ConanFile):
         self.save_conanfile(conanfile)
         self.packager = ConanMultiPackager(username="lasote",
                                            channel="mychannel",
-                                           visual_versions=[15],
+                                           visual_versions=["16"],
                                            archs=["x86"],
                                            build_types=["Release"],
                                            visual_runtimes=["MD"],
@@ -46,7 +47,7 @@ class Pkg(ConanFile):
         self.packager.add_common_builds()
         self.packager.run_builds(1, 1)
 
-    def test_msvc_exclude_precommand(self):
+    def test_visual_exclude_precommand(self):
         conanfile = """from conans import ConanFile
 import os
 
@@ -60,7 +61,7 @@ class Pkg(ConanFile):
         self.save_conanfile(conanfile)
         self.packager = ConanMultiPackager(username="lasote",
                                            channel="mychannel",
-                                           visual_versions=[15],
+                                           visual_versions=["16"],
                                            archs=["x86"],
                                            build_types=["Release"],
                                            visual_runtimes=["MD"],
@@ -68,6 +69,31 @@ class Pkg(ConanFile):
                                            reference="zlib/1.2.2")
         self.packager.add_common_builds()
         self.packager.run_builds(1, 1)
+
+    @unittest.skipUnless(sys.platform.startswith("win"), "Requires Windows")
+    def test_msvc(self):
+        conanfile = """from conans import ConanFile
+import os
+
+class Pkg(ConanFile):
+    settings = "os", "compiler", "build_type", "arch"
+
+    def build(self):
+        assert("LOCALAPPDATA" in os.environ)
+
+"""
+        self.save_conanfile(conanfile)
+        self.packager = ConanMultiPackager(username="user",
+                                           channel="mychannel",
+                                           msvc_versions=["19.30"],
+                                           archs=["x86_64"],
+                                           build_types=["Release"],
+                                           cppstds=["14"],
+                                           msvc_runtimes=["dynamic"],
+                                           reference="zlib/1.2.2")
+        self.packager.add_common_builds()
+        self.packager.run_builds(1, 1)
+
 
     def test_shared_option_auto_managed(self):
         conanfile = """from conans import ConanFile
@@ -172,7 +198,7 @@ class Pkg(ConanFile):
         with tools.environment_append({"CONAN_USERNAME": "lasote"}):
             self.packager = ConanMultiPackager(channel="mychannel",
                                                gcc_versions=["6"],
-                                               visual_versions=["12"],
+                                               visual_versions=["16"],
                                                archs=["x86", "x86_64"],
                                                build_types=["Release"],
                                                build_policy="outdated",
@@ -184,7 +210,7 @@ class Pkg(ConanFile):
                                        "CONAN_BUILD_POLICY": "outdated"}):
             self.packager = ConanMultiPackager(channel="mychannel",
                                                gcc_versions=["6"],
-                                               visual_versions=["12"],
+                                               visual_versions=["16"],
                                                archs=["x86", "x86_64"],
                                                build_types=["Release"],
                                                ci_manager=ci_manager)
@@ -206,7 +232,7 @@ class Pkg(ConanFile):
         with tools.environment_append({"CONAN_USERNAME": "lasote"}):
             self.packager = ConanMultiPackager(channel="mychannel",
                                                gcc_versions=["6"],
-                                               visual_versions=["12"],
+                                               visual_versions=["16"],
                                                archs=["x86", "x86_64"],
                                                build_types=["Release"],
                                                build_policy=["cascade", "outdated"],
@@ -218,7 +244,7 @@ class Pkg(ConanFile):
                                        "CONAN_BUILD_POLICY": "outdated, lib"}):
             self.packager = ConanMultiPackager(channel="mychannel",
                                                gcc_versions=["6"],
-                                               visual_versions=["12"],
+                                               visual_versions=["16"],
                                                archs=["x86", "x86_64"],
                                                build_types=["Release"],
                                                ci_manager=ci_manager)
@@ -309,6 +335,44 @@ class Pkg(ConanFile):
             with open(json_file) as json_content:
                 json_data = json.load(json_content)
                 self.assertFalse(json_data[0]["package"]["error"])
+
+    def test_disable_test_folder(self):
+        conanfile = """from conans import ConanFile
+
+class Pkg(ConanFile):
+    name = "lib"
+    version = "1.0"
+"""
+        self.save_conanfile(conanfile)
+        conanfile = """from conans import ConanFile
+
+class Pkg(ConanFile):
+    def test(self):
+        raise Exception("Should not run")
+"""
+        tools.save(os.path.join(self.tmp_folder, "test_package", "conanfile.py"), conanfile)
+        with tools.environment_append({"CPT_TEST_FOLDER": "False"}):
+            self.packager = ConanMultiPackager(out=self.output.write)
+            self.packager.add_common_builds()
+            self.packager.run()
+
+    def test_invalid_test_folder(self):
+        conanfile = """from conans import ConanFile
+
+class Pkg(ConanFile):
+    name = "lib"
+    version = "1.0"
+"""
+        self.save_conanfile(conanfile)
+        for test_folder in ["True", "foobar"]:
+            with tools.environment_append({"CPT_TEST_FOLDER": test_folder}):
+                self.packager = ConanMultiPackager(out=self.output.write)
+                self.packager.add_common_builds()
+                with self.assertRaises(ConanException) as raised:
+                    self.packager.run()
+                    self.assertIn("test folder '{}' not available, or it doesn't have a conanfile.py"
+                                  .format(test_folder),
+                                  str(raised.exception))
 
     def test_custom_name_version(self):
         conanfile = """from conans import ConanFile

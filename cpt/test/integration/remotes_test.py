@@ -7,7 +7,7 @@ class RemotesTest(BaseTest):
 
     def test_duplicated_remotes_with_different_url(self):
 
-        self.api.remote_remove("conan-center")
+        self.api.remote_remove("conancenter")
         self.api.remote_add("upload_repo", "url_different", True)
 
         manager = RemotesManager(self.api, Printer(), remotes_input="url1@True@upload_repo",
@@ -26,7 +26,7 @@ class RemotesTest(BaseTest):
 
     def test_duplicated_remotes_with_same_url(self):
 
-        self.api.remote_remove("conan-center")
+        self.api.remote_remove("conancenter")
         self.api.remote_add("upload_repo", "url1", True)
 
         manager = RemotesManager(self.api, Printer(), remotes_input="url1@True@upload_repo",

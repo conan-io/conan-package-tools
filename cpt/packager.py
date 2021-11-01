@@ -13,7 +13,7 @@ from conans.client.runner import ConanRunner
 from conans.model.ref import ConanFileReference
 from conans.model.version import Version
 
-from cpt import NEWEST_CONAN_SUPPORTED, get_client_version
+from cpt import get_client_version
 from cpt.auth import AuthManager
 from cpt.builds_generator import BuildConf, BuildGenerator
 from cpt.ci_manager import CIManager
@@ -21,9 +21,10 @@ from cpt.printer import Printer
 from cpt.profiles import get_profiles, save_profile_to_tmp
 from cpt.remotes import RemotesManager
 from cpt.runner import CreateRunner, DockerCreateRunner
-from cpt.tools import get_bool_from_env
+from cpt.tools import get_bool_from_env, get_custom_bool_from_env
 from cpt.tools import split_colon_env
 from cpt.uploader import Uploader
+from cpt.config import ConfigManager
 
 
 def load_cf_class(path, conan_api):
@@ -52,12 +53,12 @@ def load_cf_class(path, conan_api):
             conan_api.create_app()
         remotes = conan_api.app.cache.registry.load_remotes()
         conan_api.app.python_requires.enable_remotes(remotes=remotes)
-        conan_api.app.pyreq_loader.enable_remotes(remotes=remotes)
         if client_version < Version("1.20.0"):
             return conan_api.app.loader.load_class(path)
         elif client_version < Version("1.21.0"):
             return conan_api.app.loader.load_basic(path)
         else:
+            conan_api.app.pyreq_loader.enable_remotes(remotes=remotes)
             return conan_api.app.loader.load_named(path, None, None, None, None)
 
 
@@ -99,7 +100,9 @@ class ConanMultiPackager(object):
     def __init__(self, username=None, channel=None, runner=None,
                  gcc_versions=None, visual_versions=None, visual_runtimes=None,
                  visual_toolsets=None,
-                 apple_clang_versions=None, archs=None, options=None,
+                 apple_clang_versions=None,
+                 msvc_versions=None, msvc_runtimes=None, msvc_runtime_types=None,
+                 archs=None, options=None,
                  use_docker=None, curpage=None, total_pages=None,
                  docker_image=None, reference=None, password=None,
                  remotes=None,
@@ -114,6 +117,7 @@ class ConanMultiPackager(object):
                  upload_only_when_stable=None,
                  upload_only_when_tag=None,
                  upload_only_recipe=None,
+                 upload_force=None,
                  build_types=None,
                  cppstds=None,
                  skip_check_credentials=False,
@@ -184,10 +188,12 @@ class ConanMultiPackager(object):
             self.upload_only_when_tag = get_bool_from_env("CONAN_UPLOAD_ONLY_WHEN_TAG")
 
         self.upload_only_recipe = upload_only_recipe or get_bool_from_env("CONAN_UPLOAD_ONLY_RECIPE")
+        self.upload_force = upload_force if upload_force is not None \
+                            else get_custom_bool_from_env("CONAN_UPLOAD_FORCE", True)
 
         self.remotes_manager.add_remotes_to_conan()
         self.uploader = Uploader(self.conan_api, self.remotes_manager, self.auth_manager,
-                                 self.printer, self.upload_retry)
+                                 self.printer, self.upload_retry, self.upload_force)
 
         self._builds = []
         self._named_builds = {}
@@ -198,7 +204,8 @@ class ConanMultiPackager(object):
         self._platform_info = platform_info or PlatformInfo()
 
         self.stable_branch_pattern = stable_branch_pattern or \
-                                     os.getenv("CONAN_STABLE_BRANCH_PATTERN", None)
+                                     os.getenv("CONAN_STABLE_BRANCH_PATTERN",
+                                               "master$ main$ release.* stable.*")
 
         self.stable_channel = stable_channel or os.getenv("CONAN_STABLE_CHANNEL", "stable")
         self.stable_channel = self.stable_channel.rstrip()
@@ -227,7 +234,7 @@ class ConanMultiPackager(object):
         self._docker_image = docker_image or os.getenv("CONAN_DOCKER_IMAGE", None)
 
         # If CONAN_DOCKER_IMAGE is specified, then use docker is True
-        self.use_docker = (use_docker or os.getenv("CONAN_USE_DOCKER", False) or
+        self.use_docker = (use_docker or get_bool_from_env("CONAN_USE_DOCKER") or
                            self._docker_image is not None)
 
         self.docker_conan_home = docker_conan_home or os.getenv("CONAN_DOCKER_HOME", None)
@@ -237,6 +244,7 @@ class ConanMultiPackager(object):
                                               apple_clang_versions, clang_versions,
                                               visual_versions, visual_runtimes, visual_toolsets,
                                               vs10_x86_64_enabled,
+                                              msvc_versions, msvc_runtimes, msvc_runtime_types,
                                               mingw_configurations, archs, allow_gcc_minors,
                                               build_types, options, cppstds)
 
@@ -345,18 +353,6 @@ class ConanMultiPackager(object):
             self.printer.print_dict({var: value
                                      for var, value in self.__dict__.items()
                                      if valid_pair(var, value)})
-
-        self._newest_supported_conan_version = Version(NEWEST_CONAN_SUPPORTED).minor(fill=False)
-        self._client_conan_version = conan_version
-
-    def _check_conan_version(self):
-        tmp = self._newest_supported_conan_version
-        if Version(self._client_conan_version).minor(fill=False) > tmp:
-            msg = "Conan/CPT version mismatch. Conan version installed: " \
-                  "%s . This version of CPT supports only Conan < %s" \
-                  "" % (self._client_conan_version, str(tmp))
-            self.printer.print_message(msg)
-            raise Exception(msg)
 
     # For Docker on Windows, including Linux containers on Windows
     @property
@@ -572,9 +568,7 @@ class ConanMultiPackager(object):
             updated_builds.append(build)
         self._builds = updated_builds
 
-    def run(self, base_profile_name=None, summary_file=None):
-        self._check_conan_version()
-
+    def run(self, base_profile_name=None, summary_file=None, base_profile_build_name=None):
         env_vars = self.auth_manager.env_vars()
         env_vars.update(self.remotes_manager.env_vars())
         with tools.environment_append(env_vars):
@@ -595,7 +589,8 @@ class ConanMultiPackager(object):
                         self.runner('%s %s install -q %s' % (self.sudo_pip_command,
                                                           self.pip_command, packages))
 
-            self.run_builds(base_profile_name=base_profile_name)
+            self.run_builds(base_profile_name=base_profile_name,
+                            base_profile_build_name=base_profile_build_name)
 
         summary_file = summary_file or os.getenv("CPT_SUMMARY_FILE", None)
         if summary_file:
@@ -633,7 +628,8 @@ class ConanMultiPackager(object):
 
         return True
 
-    def run_builds(self, curpage=None, total_pages=None, base_profile_name=None):
+    def run_builds(self, curpage=None, total_pages=None, base_profile_name=None,
+                   base_profile_build_name=None):
         if len(self.named_builds) > 0 and len(self.items) > 0:
             raise Exception("Both bulk and named builds are set. Only one is allowed.")
 
@@ -657,6 +653,15 @@ class ConanMultiPackager(object):
         pulled_docker_images = defaultdict(lambda: False)
         skip_recipe_export = False
 
+        base_profile_build_name = base_profile_build_name or os.getenv("CONAN_BASE_PROFILE_BUILD")
+        if base_profile_build_name is not None:
+            if get_client_version() < Version("1.24.0"):
+                raise Exception("Conan Profile Build requires >= 1.24")
+            self.printer.print_message("**************************************************")
+            self.printer.print_message("Using specified "
+                                        "build profile: %s" % base_profile_build_name)
+            self.printer.print_message("**************************************************")
+
         # FIXME: Remove in Conan 1.3, https://github.com/conan-io/conan/issues/2787
         for index, build in enumerate(self.builds_in_current_page):
             self.printer.print_message("Build: %s/%s" % (index+1, len(self.builds_in_current_page)))
@@ -666,11 +671,19 @@ class ConanMultiPackager(object):
                 self.printer.print_message("Using specified default "
                                            "base profile: %s" % base_profile_name)
                 self.printer.print_message("**************************************************")
+                if self.config_url:
+                    ConfigManager(self.conan_api, self.printer).install(url=self.config_url, args=self.config_args)
 
             profile_text, base_profile_text = get_profiles(self.client_cache, build,
                                                            base_profile_name)
+            profile_build_text, base_profile_build_text = get_profiles(self.client_cache, build,
+                                                      base_profile_build_name, True)
             if not self.use_docker:
                 profile_abs_path = save_profile_to_tmp(profile_text)
+                if base_profile_build_text:
+                    profile_build_abs_path = save_profile_to_tmp(profile_build_text)
+                else:
+                    profile_build_abs_path = None
                 r = CreateRunner(profile_abs_path, build.reference, self.conan_api,
                                  self.uploader,
                                  exclude_vcvars_precommand=self.exclude_vcvars_precommand,
@@ -687,7 +700,8 @@ class ConanMultiPackager(object):
                                  conanfile=self.conanfile,
                                  lockfile=self.lockfile,
                                  skip_recipe_export=skip_recipe_export,
-                                 update_dependencies=self.update_dependencies)
+                                 update_dependencies=self.update_dependencies,
+                                 profile_build_abs_path=profile_build_abs_path)
                 r.run()
                 self._packages_summary.append({"configuration":  build, "package" : r.results})
             else:
@@ -705,6 +719,7 @@ class ConanMultiPackager(object):
                                        upload=self._upload_enabled(),
                                        upload_retry=self.upload_retry,
                                        upload_only_recipe=self.upload_only_recipe,
+                                       upload_force=self.upload_force,
                                        runner=self.runner,
                                        docker_shell=self.docker_shell,
                                        docker_conan_home=self.docker_conan_home,
@@ -722,7 +737,10 @@ class ConanMultiPackager(object):
                                        lockfile=self.lockfile,
                                        force_selinux=self.force_selinux,
                                        skip_recipe_export=skip_recipe_export,
-                                       update_dependencies=self.update_dependencies)
+                                       update_dependencies=self.update_dependencies,
+                                       profile_build_text=profile_build_text,
+                                       base_profile_build_text=base_profile_build_text,
+                                       cwd=self.cwd)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
                       docker_entry_script=self.docker_entry_script)
@@ -766,15 +784,10 @@ class ConanMultiPackager(object):
         if not specified_channel:
             return
 
-        if self.stable_branch_pattern:
-            stable_patterns = [self.stable_branch_pattern]
-        else:
-            stable_patterns = ["master$", "release*", "stable*"]
-
         branch = self.ci_manager.get_branch()
         self.printer.print_message("Branch detected", branch)
 
-        for pattern in stable_patterns:
+        for pattern in self.stable_branch_pattern.split(" "):
             prog = re.compile(pattern)
 
             if branch and prog.match(branch):

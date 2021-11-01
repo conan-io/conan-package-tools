@@ -2,7 +2,7 @@ import platform
 import unittest
 
 from conans.client.tools import environment_append
-from conans.test.utils.tools import TestClient, TestServer
+from cpt.test.utils.tools import TestClient, TestServer
 
 from cpt.test.test_client.tools import get_patched_multipackager
 
@@ -26,7 +26,7 @@ class Pkg(ConanFile):
         tc.save({"conanfile.py": self.conanfile})
         with environment_append({"CONAN_UPLOAD": ts.fake_url, "CONAN_LOGIN_USERNAME": "user",
                                  "CONAN_PASSWORD": "password", "CONAN_USERNAME": "user",
-                                 "CONAN_VISUAL_TOOLSETS": "15=v140;v140_xp,11=v140;v140_xp"}):
+                                 "CONAN_VISUAL_TOOLSETS": "16=v140;v140_xp,11=v140;v140_xp"}):
             mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True)
             mulitpackager.add_common_builds(reference="lib/1.0@user/stable",
                                             shared_option_name=False)
@@ -41,4 +41,3 @@ class Pkg(ConanFile):
             else:
                 self.assertIn("Uploading package 1/2", tc.out)
                 self.assertIn("Uploading package 2/2", tc.out)
-
