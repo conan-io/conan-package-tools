@@ -1151,15 +1151,7 @@ class AppTest(unittest.TestCase):
         builder.add_common_builds()
         expected = [({'arch': 'x86_64', 'build_type': 'Release',
                       'compiler': 'gcc',
-                      'compiler.version': '8',
-                      'compiler.libcxx': "libstdc++"},
-                     {},
-                     {},
-                     {}),
-                    ({'arch': 'x86_64', 'build_type': 'Release',
-                      'compiler': 'gcc',
-                      'compiler.version': '8',
-                      'compiler.libcxx': "libstdc++11"},
+                      'compiler.version': '8'},
                      {},
                      {},
                      {})]
