@@ -452,17 +452,8 @@ class ConanMultiPackager(object):
     def add_common_builds(self, shared_option_name=None, pure_c=None,
                           dll_with_static_runtime=False, reference=None, header_only=True,
                           build_all_options_values=None):
-        if reference:
-            if "@" in reference:
-                reference = ConanFileReference.loads(reference)
-            else:
-                name, version = reference.split("/")
-                reference = ConanFileReference(name, version, self.username, self.channel)
-        else:
-            reference = self.reference
 
-        if not reference:
-            raise Exception("Specify a CONAN_REFERENCE or name and version fields in the recipe")
+        reference = self._parse_reference(reference)
 
         if shared_option_name is None:
             env_shared_option_name = os.getenv("CONAN_SHARED_OPTION_NAME", None)
@@ -535,10 +526,7 @@ class ConanMultiPackager(object):
         options = options or {}
         env_vars = env_vars or {}
         build_requires = build_requires or {}
-        if reference:
-            reference = ConanFileReference.loads("%s@%s/%s" % (reference,
-                                                               self.username, self.channel))
-        reference = reference or self.reference
+        reference = self._parse_reference(reference)
         self._builds.append(BuildConf(settings, options, env_vars, build_requires, reference))
 
     def remove_build_if(self, predicate):
@@ -594,6 +582,19 @@ class ConanMultiPackager(object):
         summary_file = summary_file or os.getenv("CPT_SUMMARY_FILE", None)
         if summary_file:
             self.save_packages_summary(summary_file)
+
+    def _parse_reference(self, reference):
+        if reference:
+            if "@" in reference:
+                reference = ConanFileReference.loads(reference)
+            else:
+                name, version = reference.split("/")
+                reference = ConanFileReference(name, version, self.username, self.channel)
+        else:
+            reference = self.reference
+        if not reference:
+            raise Exception("Specify a CONAN_REFERENCE or name and version fields in the recipe")
+        return reference
 
     def _upload_enabled(self):
         if not self.remotes_manager.upload_remote_name:
