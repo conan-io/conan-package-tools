@@ -367,22 +367,3 @@ class DockerTest(BaseTest):
             self.packager.run()
             self.assertIn('-e CONAN_USERNAME="_"', self.output)
             self.assertIn('-e CONAN_CHANNEL="_"', self.output)
-
-    @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
-    def test_docker_no_reference(self):
-        conanfile = textwrap.dedent("""
-                        from conans import ConanFile
-
-                        class Pkg(ConanFile):
-                            def build(self):
-                                pass
-                    """)
-
-        self.save_conanfile(conanfile)
-        with tools.environment_append({"CONAN_DOCKER_IMAGE": "conanio/gcc8",
-                                       "CONAN_DOCKER_USE_SUDO": "FALSE",
-                                       "CONAN_DOCKER_SHELL": "/bin/bash -c",
-                                       }):
-            self.packager = ConanMultiPackager(out=self.output.write)
-            with self.assertRaisesRegexp(Exception, "Specify a CONAN_REFERENCE or name and version fields in the recipe"):
-                self.packager.add(settings={"build_type": "Release"})

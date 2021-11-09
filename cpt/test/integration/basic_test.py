@@ -2,6 +2,7 @@ import os
 import unittest
 import sys
 import json
+import textwrap
 
 from conans import tools
 from conans.model.ref import ConanFileReference
@@ -451,3 +452,15 @@ class Pkg(ConanFile):
         self.packager = ConanMultiPackager(out=self.output.write)
         self.packager.add_common_builds(pure_c=False, build_all_options_values=["qux:foo", "qux:bar", "qux:blah"])
         self.packager.run()
+
+    def test_no_reference(self):
+        conanfile = textwrap.dedent("""
+                            from conans import ConanFile
+                            class Pkg(ConanFile):
+                                def build(self):
+                                    pass
+                        """)
+        self.save_conanfile(conanfile)
+        self.packager = ConanMultiPackager(out=self.output.write)
+        with self.assertRaisesRegexp(Exception, "Specify a CONAN_REFERENCE or name and version fields in the recipe"):
+            self.packager.add(settings={"build_type": "Release"})
