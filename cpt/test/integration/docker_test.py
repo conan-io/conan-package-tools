@@ -371,6 +371,6 @@ class DockerTest(BaseTest):
     @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
     def test_docker_support(self):
         output = subprocess.check_output(["docker", "--version"])
-        print(f"DOCKER VERSION: {output}")
+        print("DOCKER VERSION: {}".format(output))
         output = subprocess.check_output(["docker", "--rm", "conanio/gcc8", "gcc", "--version"])
-        print(f"GCC VERSION: {output}")
+        print("GCC VERSION: {}".format(output))

@@ -8,7 +8,6 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { name: "Conan Stable - Python 2.7", python: 2.7, toxenv: "py27-conan-latest", pyver: "py27" }
           - { name: "Conan Stable - Python 3.7", python: 3.7, toxenv: "py37-conan-latest", pyver: "py37" }
     steps:
     - uses: actions/checkout@v2
@@ -42,7 +41,6 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { name: "Conan Develop - Python 2.7", python: 2.7, toxenv: "py27-conan-dev", pyver: "py27" }
           - { name: "Conan Develop - Python 3.7", python: 3.7, toxenv: "py37-conan-dev", pyver: "py37" }
     steps:
     - uses: actions/checkout@v2
