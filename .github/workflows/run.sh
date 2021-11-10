@@ -12,4 +12,4 @@ fi
 
 conan user
 mkdir ~/.conan/data
-tox -v
+tox -v cpt/test/integration/docker_test.py

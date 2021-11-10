@@ -372,5 +372,5 @@ class DockerTest(BaseTest):
     def test_docker_support(self):
         output = subprocess.check_output(["docker", "--version"])
         print("DOCKER VERSION: {}".format(output))
-        output = subprocess.check_output(["docker", "--rm", "conanio/gcc8", "gcc", "--version"])
+        output = subprocess.check_output(["docker", "--rm", "run", "conanio/gcc8", "gcc", "--version"])
         print("GCC VERSION: {}".format(output))
