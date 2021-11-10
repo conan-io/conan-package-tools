@@ -368,9 +368,9 @@ class DockerTest(BaseTest):
             self.assertIn('-e CONAN_USERNAME="_"', self.output)
             self.assertIn('-e CONAN_CHANNEL="_"', self.output)
 
-    @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
-    def test_docker_support(self):
-        output = subprocess.check_output(["docker", "--version"])
-        print("DOCKER VERSION: {}".format(output))
-        output = subprocess.check_output(["docker", "run", "--rm", "conanio/gcc8", "gcc", "--version"])
-        print("GCC VERSION: {}".format(output))
+    #@unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
+    #def test_docker_support(self):
+    #    output = subprocess.check_output(["docker", "--version"])
+    #    print("DOCKER VERSION: {}".format(output))
+    #    output = subprocess.check_output(["docker", "run", "--rm", "conanio/gcc8", "gcc", #"--version"])
+    #    print("GCC VERSION: {}".format(output))
