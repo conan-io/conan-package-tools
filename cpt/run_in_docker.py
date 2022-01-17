@@ -39,9 +39,10 @@ def run():
     reference = ConanFileReference.loads(os.getenv("CONAN_REFERENCE"))
 
     profile_text = unscape_env(os.getenv("CPT_PROFILE"))
-    abs_profile_path = save_profile_to_tmp(profile_text)
+    abs_profile_path = save_profile_to_tmp(profile_text, profile_name='profile')
     base_profile_text = unscape_env(os.getenv("CPT_BASE_PROFILE"))
     profile_build_text = unscape_env(os.getenv("CPT_PROFILE_BUILD"))
+    base_profile_build_text = unscape_env(os.getenv("CPT_BASE_PROFILE_BUILD"))
     config_url = unscape_env(os.getenv("CPT_CONFIG_URL"))
     config_args = unscape_env(os.getenv("CPT_CONFIG_ARGS"))
     upload_dependencies = unscape_env(os.getenv("CPT_UPLOAD_DEPENDENCIES"))
@@ -54,7 +55,12 @@ def run():
         tools.save(os.path.join(client_cache.profiles_path, base_profile_name),
                    base_profile_text)
     if profile_build_text:
-        abs_profile_build_path = save_profile_to_tmp(profile_build_text)
+        abs_profile_build_path = save_profile_to_tmp(profile_build_text,
+                                                     profile_name='build_profile')
+        if base_profile_build_text:
+            base_profile_build_name = unscape_env(os.getenv("CPT_BASE_PROFILE_BUILD_NAME"))
+            tools.save(os.path.join(client_cache.profiles_path, base_profile_build_name),
+                       base_profile_build_text)
     else:
         abs_profile_build_path = None
 

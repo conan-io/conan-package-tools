@@ -77,9 +77,10 @@ def patch_default_base_profile(conan_api, profile_abs_path):
             tools.save(profile_abs_path, text)
 
 
-def save_profile_to_tmp(profile_text):
+def save_profile_to_tmp(profile_text, profile_name='profile'):
     # Save the profile in a tmp file
-    tmp = os.path.join(tempfile.mkdtemp(suffix='conan_package_tools_profiles'), "profile")
+    tmp = os.path.join(tempfile.mkdtemp(suffix='conan_package_tools_profiles'),
+                       profile_name)
     abs_profile_path = os.path.abspath(tmp)
     save(abs_profile_path, profile_text)
     return abs_profile_path

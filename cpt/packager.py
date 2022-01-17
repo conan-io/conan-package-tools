@@ -739,6 +739,7 @@ class ConanMultiPackager(object):
                                        update_dependencies=self.update_dependencies,
                                        profile_build_text=profile_build_text,
                                        base_profile_build_text=base_profile_build_text,
+                                       base_profile_build_name=base_profile_build_name,
                                        cwd=self.cwd)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
