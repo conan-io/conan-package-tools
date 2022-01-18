@@ -329,6 +329,8 @@ class ConanMultiPackager(object):
         self.total_pages = total_pages or os.getenv("CONAN_TOTAL_PAGES", 1)
 
         self.conan_pip_package = os.getenv("CONAN_PIP_PACKAGE", "conan==%s" % conan_version)
+        # TODO: TEMP OVERRIDE
+        self.conan_pip_package = "git+https://github.com/jmarrec/conan-package-tools.git@CONAN_BASE_PROFILE_BUILD"
         if self.conan_pip_package in ("0", "False"):
             self.conan_pip_package = ""
         self.vs10_x86_64_enabled = vs10_x86_64_enabled
