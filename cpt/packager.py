@@ -678,9 +678,10 @@ class ConanMultiPackager(object):
             profile_build_text, base_profile_build_text = get_profiles(self.client_cache, build,
                                                       base_profile_build_name, True)
             if not self.use_docker:
-                profile_abs_path = save_profile_to_tmp(profile_text)
+                profile_abs_path = save_profile_to_tmp(profile_text,
+                                                       profile_name='profile')
                 if base_profile_build_text:
-                    profile_build_abs_path = save_profile_to_tmp(profile_build_text)
+                    profile_build_abs_path = save_profile_to_tmp(profile_build_text, profile_name='build_profile')
                 else:
                     profile_build_abs_path = None
                 r = CreateRunner(profile_abs_path, build.reference, self.conan_api,

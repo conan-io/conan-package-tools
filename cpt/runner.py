@@ -53,6 +53,8 @@ class CreateRunner(object):
         self._profile_build_abs_path = profile_build_abs_path
 
         patch_default_base_profile(conan_api, profile_abs_path)
+        patch_default_base_profile(conan_api, profile_build_abs_path)
+
         client_version = get_client_version()
 
         if client_version < Version("1.12.0"):
