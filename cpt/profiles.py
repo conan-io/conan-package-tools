@@ -73,16 +73,20 @@ def patch_default_base_profile(conan_api, profile_abs_path, printer=None):
             printer.print_message(f"DEBUG: patch_default_base_profile, {profile_abs_path=}, {default_profile_name=}")
         if not os.path.exists(cache.default_profile_path):
             print("DEBUG: create default profile")
+            if printer:
+                printer.print_message("DEBUG: create default profile")
             conan_api.create_profile(default_profile_name, detect=True)
 
         if default_profile_name != "default":  # User have a different default profile name
             # https://github.com/conan-io/conan-package-tools/issues/121
             text = text.replace("include(default)", "include(%s)" % default_profile_name)
             print(f"DEBUG: default profile name isn't default, replacing with {default_profile_name=}, saving {profile_build_abs_path=}\n{text=}")
+            if printer:
+                printer.print_message(f"DEBUG: default profile name isn't default, replacing with {default_profile_name=}, saving {profile_build_abs_path=}\n{text=}")
             tools.save(profile_abs_path, text)
 
 
-def save_profile_to_tmp(profile_text, profile_name='profile'):
+def save_profile_to_tmp(profile_text, profile_name='profile', printer=None):
     # Save the profile in a tmp file
     tmp = os.path.join(tempfile.mkdtemp(suffix='conan_package_tools_profiles'),
                        profile_name)

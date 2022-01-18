@@ -52,6 +52,8 @@ class CreateRunner(object):
         self._results = None
         print(f"DEBUG: CreateRunner: {profile_build_abs_path=}")
         self.printer.print_message(f"DEBUG: CreateRunner: {profile_build_abs_path=}")
+        sys.stderr.flush()
+        sys.stdout.flush()
         self._profile_build_abs_path = profile_build_abs_path
 
         patch_default_base_profile(conan_api, profile_abs_path,
@@ -104,7 +106,8 @@ class CreateRunner(object):
             if self._profile_build_abs_path is not None:
                 print(f"DEBUG: CreateRunner::run: {self._profile_build_abs_path=}")
                 self.printer.print_message(f"DEBUG: CreateRunner::run: {self._profile_build_abs_path=}")
-                self.printer.print_profile(tools.load(self._profile_build_abs_path))
+                self.printer.print_profile(tools.load(self._profile_build_abs_path),
+                                           name="Build")
 
             with self.printer.foldable_output("conan_create"):
                 if client_version < Version("1.10.0"):

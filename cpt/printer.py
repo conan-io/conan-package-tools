@@ -70,8 +70,8 @@ class Printer(object):
         if body:
             self.printer("   >> %s\n" % body)
 
-    def print_profile(self, text):
-        self.printer(tabulate([[text, ]], headers=["Profile"], tablefmt='psql'))
+    def print_profile(self, text, name=None):
+        self.printer(tabulate([[text, ]], headers=["Profile" + (f" {name}" if name is not None else "")], tablefmt='psql'))
         self.printer("\n")
 
     def print_rule(self, char="*"):

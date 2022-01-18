@@ -39,7 +39,7 @@ def run():
     reference = ConanFileReference.loads(os.getenv("CONAN_REFERENCE"))
 
     profile_text = unscape_env(os.getenv("CPT_PROFILE"))
-    abs_profile_path = save_profile_to_tmp(profile_text, profile_name='profile')
+    abs_profile_path = save_profile_to_tmp(profile_text, profile_name='profile', printer=printer)
     base_profile_text = unscape_env(os.getenv("CPT_BASE_PROFILE"))
 
     print(f"DEBUG: run_in_docker, run: {profile_text=}\n{abs_profile_path=}\n{base_profile_text=}")
@@ -66,7 +66,7 @@ def run():
 
     if profile_build_text:
         abs_profile_build_path = save_profile_to_tmp(profile_build_text,
-                                                     profile_name='build_profile')
+                                                     profile_name='build_profile', printer=printer)
         print(f"DEBUG: run_in_docker, run: profile_build_text is present, saving at {abs_profile_build_path=}")
         printer.print_message(f"DEBUG: run_in_docker, run: profile_build_text is present, saving at {abs_profile_build_path=}")
 
