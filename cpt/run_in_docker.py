@@ -43,10 +43,12 @@ def run():
     base_profile_text = unscape_env(os.getenv("CPT_BASE_PROFILE"))
 
     print(f"DEBUG: run_in_docker, run: {profile_text=}\n{abs_profile_path=}\n{base_profile_text=}")
+    printer.print_message(f"DEBUG: run_in_docker, run: {profile_text=}\n{abs_profile_path=}\n{base_profile_text=}")
 
     profile_build_text = unscape_env(os.getenv("CPT_PROFILE_BUILD"))
     base_profile_build_text = unscape_env(os.getenv("CPT_BASE_PROFILE_BUILD"))
     print(f"DEBUG: run_in_docker, run: {profile_build_text=}\n{base_profile_build_text=}")
+    printer.print_message(f"DEBUG: run_in_docker, run: {profile_build_text=}\n{base_profile_build_text=}")
 
     config_url = unscape_env(os.getenv("CPT_CONFIG_URL"))
     config_args = unscape_env(os.getenv("CPT_CONFIG_ARGS"))
@@ -60,17 +62,20 @@ def run():
         tools.save(os.path.join(client_cache.profiles_path, base_profile_name),
                    base_profile_text)
         print(f"DEBUG: run_in_docker, run: base_profile_text is present, saving at path={os.path.join(client_cache.profiles_path, base_profile_name)}")
+        printer.print_message(f"DEBUG: run_in_docker, run: base_profile_text is present, saving at path={os.path.join(client_cache.profiles_path, base_profile_name)}")
 
     if profile_build_text:
         abs_profile_build_path = save_profile_to_tmp(profile_build_text,
                                                      profile_name='build_profile')
         print(f"DEBUG: run_in_docker, run: profile_build_text is present, saving at {abs_profile_build_path=}")
+        printer.print_message(f"DEBUG: run_in_docker, run: profile_build_text is present, saving at {abs_profile_build_path=}")
 
         if base_profile_build_text:
             base_profile_build_name = unscape_env(os.getenv("CPT_BASE_PROFILE_BUILD_NAME"))
             tools.save(os.path.join(client_cache.profiles_path, base_profile_build_name),
                        base_profile_build_text)
             print(f"DEBUG: run_in_docker, run: base_profile_build_text is present, saving at path={os.path.join(client_cache.profiles_path, base_profile_build_name)}")
+            printer.print_message(f"DEBUG: run_in_docker, run: base_profile_build_text is present, saving at path={os.path.join(client_cache.profiles_path, base_profile_build_name)}")
 
     else:
         abs_profile_build_path = None

@@ -51,6 +51,7 @@ class CreateRunner(object):
         self._update_dependencies = update_dependencies
         self._results = None
         print(f"DEBUG: CreateRunner: {profile_build_abs_path=}")
+        self.printer.print_message(f"DEBUG: CreateRunner: {profile_build_abs_path=}")
         self._profile_build_abs_path = profile_build_abs_path
 
         patch_default_base_profile(conan_api, profile_abs_path)
@@ -101,6 +102,7 @@ class CreateRunner(object):
 
             if self._profile_build_abs_path is not None:
                 print(f"DEBUG: CreateRunner::run: {self._profile_build_abs_path=}")
+                self.printer.print_message(f"DEBUG: CreateRunner::run: {self._profile_build_abs_path=}")
                 self.printer.print_profile(tools.load(self._profile_build_abs_path))
 
             with self.printer.foldable_output("conan_create"):
