@@ -52,7 +52,7 @@ include(%s)
     return profile_text, base_profile_text
 
 
-def patch_default_base_profile(conan_api, profile_abs_path):
+def patch_default_base_profile(conan_api, profile_abs_path, printer=None):
     """If we have a profile including default, but the users default in config is that the default
     is other, we have to change the include"""
     text = tools.load(profile_abs_path)
@@ -69,6 +69,8 @@ def patch_default_base_profile(conan_api, profile_abs_path):
 
         default_profile_name = os.path.basename(cache.default_profile_path)
         print(f"DEBUG: patch_default_base_profile, {profile_abs_path=}, {default_profile_name=}")
+        if printer:
+            printer.print_message(f"DEBUG: patch_default_base_profile, {profile_abs_path=}, {default_profile_name=}")
         if not os.path.exists(cache.default_profile_path):
             print("DEBUG: create default profile")
             conan_api.create_profile(default_profile_name, detect=True)

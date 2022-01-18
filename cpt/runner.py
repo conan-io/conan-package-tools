@@ -54,8 +54,9 @@ class CreateRunner(object):
         self.printer.print_message(f"DEBUG: CreateRunner: {profile_build_abs_path=}")
         self._profile_build_abs_path = profile_build_abs_path
 
-        patch_default_base_profile(conan_api, profile_abs_path)
-        patch_default_base_profile(conan_api, profile_build_abs_path)
+        patch_default_base_profile(conan_api, profile_abs_path,
+                                   printer=self.printer)
+        # patch_default_base_profile(conan_api, profile_build_abs_path)
 
         client_version = get_client_version()
 
