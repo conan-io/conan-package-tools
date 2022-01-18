@@ -570,6 +570,7 @@ class ConanMultiPackager(object):
         self._builds = updated_builds
 
     def run(self, base_profile_name=None, summary_file=None, base_profile_build_name=None):
+        print(f"DEBUG: ConanMultiPackager::run, {base_profile_build_name=}")
         env_vars = self.auth_manager.env_vars()
         env_vars.update(self.remotes_manager.env_vars())
         with tools.environment_append(env_vars):
@@ -654,7 +655,9 @@ class ConanMultiPackager(object):
         pulled_docker_images = defaultdict(lambda: False)
         skip_recipe_export = False
 
+        print(f"DEBUG: ConanMultiPackager::run_builds, {base_profile_build_name=}")
         base_profile_build_name = base_profile_build_name or os.getenv("CONAN_BASE_PROFILE_BUILD")
+        print(f"DEBUG: ConanMultiPackager::run_builds, {base_profile_build_name=}")
         if base_profile_build_name is not None:
             if get_client_version() < Version("1.24.0"):
                 raise Exception("Conan Profile Build requires >= 1.24")
@@ -679,7 +682,9 @@ class ConanMultiPackager(object):
                                                            base_profile_name)
             profile_build_text, base_profile_build_text = get_profiles(self.client_cache, build,
                                                       base_profile_build_name, True)
+            print(f"DEBUG: ConanMultiPackager::run_builds, {profile_build_text=}, {base_profile_build_text=}")
             if not self.use_docker:
+                print("DEBUG: NOT USING DOCKER")
                 profile_abs_path = save_profile_to_tmp(profile_text,
                                                        profile_name='profile')
                 if base_profile_build_text:
@@ -707,6 +712,7 @@ class ConanMultiPackager(object):
                 r.run()
                 self._packages_summary.append({"configuration":  build, "package" : r.results})
             else:
+                print("DEBUG: USING DOCKER")
                 docker_image = self._get_docker_image(build)
                 r = DockerCreateRunner(profile_text, base_profile_text, base_profile_name,
                                        build.reference,

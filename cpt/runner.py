@@ -50,6 +50,7 @@ class CreateRunner(object):
         self.skip_recipe_export = skip_recipe_export
         self._update_dependencies = update_dependencies
         self._results = None
+        print(f"DEBUG: CreateRunner: {profile_build_abs_path=}")
         self._profile_build_abs_path = profile_build_abs_path
 
         patch_default_base_profile(conan_api, profile_abs_path)
@@ -99,6 +100,7 @@ class CreateRunner(object):
             self.printer.print_profile(tools.load(self._profile_abs_path))
 
             if self._profile_build_abs_path is not None:
+                print(f"DEBUG: CreateRunner::run: {self._profile_build_abs_path=}")
                 self.printer.print_profile(tools.load(self._profile_build_abs_path))
 
             with self.printer.foldable_output("conan_create"):
@@ -246,10 +248,20 @@ class DockerCreateRunner(object):
         self._force_selinux = force_selinux
         self._skip_recipe_export = skip_recipe_export
         self._update_dependencies = update_dependencies
+
         self._profile_build_text = profile_build_text
         self._base_profile_build_text = base_profile_build_text
         self._base_profile_build_name = base_profile_build_name
+
+        print(f"DEBUG: DockerCreateRunner: {profile_text=}")
+        print(f"DEBUG: DockerCreateRunner: {base_profile_text=}")
+        print(f"DEBUG: DockerCreateRunner: {base_profile_name=}")
+        print(f"DEBUG: DockerCreateRunner: {profile_build_text=}")
+        print(f"DEBUG: DockerCreateRunner: {base_profile_build_text=}")
+        print(f"DEBUG: DockerCreateRunner: {base_profile_build_name=}")
+
         self._cwd = cwd or os.getcwd()
+        print(f"DEBUG: DockerCreateRunner: {cwd=}, {self._cwd=}")
 
     def _pip_update_conan_command(self):
         commands = []
@@ -392,6 +404,8 @@ class DockerCreateRunner(object):
         ret["CPT_UPDATE_DEPENDENCIES"] = self._update_dependencies
 
         ret.update({key: value for key, value in os.environ.items() if key.startswith("PIP_")})
+
+        print(f"DEBUG: DockerCreateRunner::get_env_vars: {ret=}")
 
         return ret
 
