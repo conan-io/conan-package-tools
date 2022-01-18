@@ -200,6 +200,9 @@ class ConanMultiPackager(object):
         self._packages_summary = []
 
         self._update_conan_in_docker = always_update_conan_in_docker or get_bool_from_env("CONAN_ALWAYS_UPDATE_CONAN_DOCKER")
+        # TODO: Temp
+        print("DEBUG: ConanMultiPackager: forcing always_update_conan_in_docker to True")
+        self._update_conan_in_docker = True
 
         self._platform_info = platform_info or PlatformInfo()
 
