@@ -39,7 +39,7 @@ class Pkg(ConanFile):
         self.save_conanfile(conanfile)
         self.packager = ConanMultiPackager(username="lasote",
                                            channel="mychannel",
-                                           visual_versions=["16"],
+                                           visual_versions=["17"],
                                            archs=["x86"],
                                            build_types=["Release"],
                                            visual_runtimes=["MD"],
@@ -61,7 +61,7 @@ class Pkg(ConanFile):
         self.save_conanfile(conanfile)
         self.packager = ConanMultiPackager(username="lasote",
                                            channel="mychannel",
-                                           visual_versions=["16"],
+                                           visual_versions=["17"],
                                            archs=["x86"],
                                            build_types=["Release"],
                                            visual_runtimes=["MD"],
@@ -198,7 +198,7 @@ class Pkg(ConanFile):
         with tools.environment_append({"CONAN_USERNAME": "lasote"}):
             self.packager = ConanMultiPackager(channel="mychannel",
                                                gcc_versions=["6"],
-                                               visual_versions=["16"],
+                                               visual_versions=["17"],
                                                archs=["x86", "x86_64"],
                                                build_types=["Release"],
                                                build_policy="outdated",
@@ -210,7 +210,7 @@ class Pkg(ConanFile):
                                        "CONAN_BUILD_POLICY": "outdated"}):
             self.packager = ConanMultiPackager(channel="mychannel",
                                                gcc_versions=["6"],
-                                               visual_versions=["16"],
+                                               visual_versions=["17"],
                                                archs=["x86", "x86_64"],
                                                build_types=["Release"],
                                                ci_manager=ci_manager)
@@ -232,7 +232,7 @@ class Pkg(ConanFile):
         with tools.environment_append({"CONAN_USERNAME": "lasote"}):
             self.packager = ConanMultiPackager(channel="mychannel",
                                                gcc_versions=["6"],
-                                               visual_versions=["16"],
+                                               visual_versions=["17"],
                                                archs=["x86", "x86_64"],
                                                build_types=["Release"],
                                                build_policy=["cascade", "outdated"],
@@ -244,7 +244,7 @@ class Pkg(ConanFile):
                                        "CONAN_BUILD_POLICY": "outdated, lib"}):
             self.packager = ConanMultiPackager(channel="mychannel",
                                                gcc_versions=["6"],
-                                               visual_versions=["16"],
+                                               visual_versions=["17"],
                                                archs=["x86", "x86_64"],
                                                build_types=["Release"],
                                                ci_manager=ci_manager)

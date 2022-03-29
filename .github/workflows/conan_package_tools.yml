@@ -25,7 +25,7 @@ jobs:
         .github/workflows/install.bat
     - name: ${{ matrix.config.name }}
       env:
-        CONAN_VISUAL_VERSIONS: 16
+        CONAN_VISUAL_VERSIONS: 17
         PYVER: ${{ matrix.config.pyver }}
       run: |
         .github/workflows/run.bat

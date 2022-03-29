@@ -1000,7 +1000,7 @@ class AppTest(unittest.TestCase):
         output = TestBufferConanOutput()
         packager = ConanMultiPackager(username="lasote",
                                       channel="mychannel",
-                                      visual_versions=["16"],
+                                      visual_versions=["17"],
                                       archs=["x86", "x86_64"],
                                       build_types=["Release"],
                                       reference="zlib/1.2.11",
@@ -1016,7 +1016,7 @@ class AppTest(unittest.TestCase):
             self.conan_api.reset()
             packager = ConanMultiPackager(username="lasote",
                                       channel="mychannel",
-                                      visual_versions=["16"],
+                                      visual_versions=["17"],
                                       archs=["x86", "x86_64"],
                                       build_types=["Release"],
                                       reference="zlib/1.2.11",
@@ -1032,7 +1032,7 @@ class AppTest(unittest.TestCase):
         self.conan_api.reset()
         packager = ConanMultiPackager(username="lasote",
                                       channel="mychannel",
-                                      visual_versions=["16"],
+                                      visual_versions=["17"],
                                       archs=["x86", "x86_64"],
                                       build_types=["Release"],
                                       reference="zlib/1.2.11",

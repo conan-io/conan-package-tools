@@ -1361,8 +1361,8 @@ class GeneratorsTest(unittest.TestCase):
 
     def test_visual_toolsets(self):
 
-        builds = get_visual_builds(visual_versions=["16"], archs=["x86"],
-                                   visual_runtimes=["MDd"], visual_toolsets={"16": ["v140",
+        builds = get_visual_builds(visual_versions=["17"], archs=["x86"],
+                                   visual_runtimes=["MDd"], visual_toolsets={"17": ["v140",
                                                                                     "v140_xp"]},
                                    shared_option_name=None,
                                    dll_with_static_runtime=True,
@@ -1372,17 +1372,17 @@ class GeneratorsTest(unittest.TestCase):
                                    options={})
         expected = [
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.version': '16', 'compiler.cppstd': '17', 'compiler.toolset': 'v140'},
+              'compiler.version': '17', 'compiler.cppstd': '17', 'compiler.toolset': 'v140'},
              {}, {}, {}, None),
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.version': '16', 'compiler.cppstd': '17', 'compiler.toolset': 'v140_xp'},
+              'compiler.version': '17', 'compiler.cppstd': '17', 'compiler.toolset': 'v140_xp'},
              {}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
 
         # Same with environment passing None in the parameter
-        with tools.environment_append({"CONAN_VISUAL_TOOLSETS": "16=v140;v140_xp,11=v140;v140_xp"}):
-            builds = get_visual_builds(visual_versions=["16"], archs=["x86"],
+        with tools.environment_append({"CONAN_VISUAL_TOOLSETS": "17=v140;v140_xp,11=v140;v140_xp"}):
+            builds = get_visual_builds(visual_versions=["17"], archs=["x86"],
                                        visual_runtimes=["MDd"], visual_toolsets=None,
                                        shared_option_name=None,
                                        dll_with_static_runtime=True,
@@ -1392,8 +1392,8 @@ class GeneratorsTest(unittest.TestCase):
                                        options={})
             self.assertEquals([tuple(a) for a in builds], expected)
 
-        # Invalid mapping generates builds without toolsets (visual 10 != visual 16)
-        builds = get_visual_builds(visual_versions=["16"], archs=["x86"],
+        # Invalid mapping generates builds without toolsets (visual 10 != visual 17)
+        builds = get_visual_builds(visual_versions=["17"], archs=["x86"],
                                    visual_runtimes=["MDd"], visual_toolsets={"10": ["v140",
                                                                                     "v140_xp"]},
                                    shared_option_name=None,
@@ -1404,10 +1404,10 @@ class GeneratorsTest(unittest.TestCase):
                                    options={})
         expected = [
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.cppstd': '14', 'compiler.version': '16'},
+              'compiler.cppstd': '14', 'compiler.version': '17'},
              {}, {}, {}, None),
             ({'compiler.runtime': 'MDd', 'arch': 'x86', 'build_type': 'Debug', 'compiler': 'Visual Studio',
-              'compiler.cppstd': '17', 'compiler.version': '16'},
+              'compiler.cppstd': '17', 'compiler.version': '17'},
              {}, {}, {}, None)]
 
         self.assertEquals([tuple(a) for a in builds], expected)
