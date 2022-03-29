@@ -132,6 +132,7 @@ class ConanMultiPackager(object):
                  docker_shell=None,
                  pip_install=None,
                  build_policy=None,
+                 require_overrides=None,
                  always_update_conan_in_docker=False,
                  conan_api=None,
                  client_cache=None,
@@ -253,6 +254,8 @@ class ConanMultiPackager(object):
                         split_colon_env("CONAN_BUILD_POLICY"))
         if isinstance(self.build_policy, list):
             self.build_policy = ",".join(self.build_policy)
+
+        self.require_overrides = require_overrides or split_colon_env("CONAN_REQUIRE_OVERRIDES") or None
 
         self.sudo_docker_command = ""
         if "CONAN_DOCKER_USE_SUDO" in os.environ:
@@ -687,6 +690,7 @@ class ConanMultiPackager(object):
                                  self.uploader,
                                  exclude_vcvars_precommand=self.exclude_vcvars_precommand,
                                  build_policy=self.build_policy,
+                                 require_overrides=self.require_overrides,
                                  runner=self.runner,
                                  cwd=self.cwd,
                                  printer=self.printer,
@@ -700,7 +704,8 @@ class ConanMultiPackager(object):
                                  lockfile=self.lockfile,
                                  skip_recipe_export=skip_recipe_export,
                                  update_dependencies=self.update_dependencies,
-                                 profile_build_abs_path=profile_build_abs_path)
+                                 profile_build_abs_path=profile_build_abs_path,
+                                 )
                 r.run()
                 self._packages_summary.append({"configuration":  build, "package" : r.results})
             else:
@@ -714,6 +719,7 @@ class ConanMultiPackager(object):
                                        docker_image_skip_update=self._docker_image_skip_update,
                                        docker_image_skip_pull=self._docker_image_skip_pull,
                                        build_policy=self.build_policy,
+                                       require_overrides=self.require_overrides,
                                        always_update_conan_in_docker=self._update_conan_in_docker,
                                        upload=self._upload_enabled(),
                                        upload_retry=self.upload_retry,

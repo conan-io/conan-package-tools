@@ -1191,6 +1191,7 @@ Using **CONAN_CLANG_VERSIONS** env variable in Travis ci or Appveyor:
     - ["pattern\*", "another_pattern\*"]: will build only the packages with the reference matching these patterns. Equivalent to `--build pattern* --build another_pattern*`
     - ["pattern\*", "outdated"]:  `--build pattern* --build outdated`
 Check [Conan Build policies](https://docs.conan.io/en/latest/mastering/policies.html) for more details.
+- **require_overrides** List containing overrides requirement to the consumer conanfile. e.j ["foo/0.1@user/channel", "bar/1.2@bar/channel"]
 - **test_folder**: Custom test folder consumed by Conan create, e.j .conan/test_package
 - **lockfile**: Custom conan lockfile to be used, e.j. conan.lock. Default [None]
 - **conanfile**: Custom conanfile consumed by Conan create. e.j. conanfile.py
@@ -1353,6 +1354,7 @@ This is especially useful for CI integration.
     - "pattern\*,another_pattern\*": will build only the packages with the reference matching these patterns. Equivalent to `--build pattern* --build another_pattern*`
     - "pattern\*,outdated": Equivalent to `--build pattern* --build outdated`
 Check [Conan Build policies](https://docs.conan.io/en/latest/mastering/policies.html) for more details.
+- **CONAN_REQUIRE_OVERRIDES**: Comma separated list of requirement overrides.
 - **CONAN_CONFIG_URL**: Conan config URL be installed before to build e.j https://github.com/bincrafters/conan-config.git
 - **CONAN_CONFIG_ARGS**: Conan config arguments used when installing conan config
 - **CONAN_BASE_PROFILE**: Apply options, settings, etc. to this profile instead of `default`.
