@@ -1,4 +1,4 @@
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   conan_stable_windows:
@@ -7,7 +7,6 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { name: "Conan Stable - Python 2.7", python: 2.7, toxenv: "py27-conan-latest", pyver: "py27" }
           - { name: "Conan Stable - Python 3.7", python: 3.7, toxenv: "py37-conan-latest", pyver: "py37" }
     steps:
     - uses: actions/checkout@v2
@@ -16,9 +15,9 @@ jobs:
       with:
         python-version: ${{ matrix.config.python }}
     - name: Setup MSBuild.exe
-      uses: microsoft/setup-msbuild@v1.0.2
+      uses: microsoft/setup-msbuild@v1.1
       with:
-        vs-version: 16.9
+        vs-version: 16.11
     - name: Install dependencies
       env:
         PYVER: ${{ matrix.config.pyver }}
@@ -26,7 +25,7 @@ jobs:
         .github/workflows/install.bat
     - name: ${{ matrix.config.name }}
       env:
-        CONAN_VISUAL_VERSIONS: 16
+        CONAN_VISUAL_VERSIONS: 17
         PYVER: ${{ matrix.config.pyver }}
       run: |
         .github/workflows/run.bat
@@ -37,7 +36,6 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { name: "Conan Stable - Python 2.7", python: 2.7, toxenv: "py27-conan-latest", pyver: "py27" }
           - { name: "Conan Stable - Python 3.7", python: 3.7, toxenv: "py37-conan-latest", pyver: "py37" }
     steps:
     - uses: actions/checkout@v2
@@ -68,7 +66,6 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { name: "Conan Stable - Python 2.7", python: 2.7, toxenv: "py27-conan-latest", pyver: "py27" }
           - { name: "Conan Stable - Python 3.7", python: 3.7, toxenv: "py37-conan-latest", pyver: "py37" }
     steps:
     - uses: actions/checkout@v2
@@ -98,7 +95,6 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { name: "Conan Develop - Python 2.7", python: 2.7, toxenv: "py27-conan-dev", pyver: "py27" }
           - { name: "Conan Develop - Python 3.7", python: 3.7, toxenv: "py37-conan-dev", pyver: "py37" }
     steps:
     - uses: actions/checkout@v2
@@ -130,7 +126,6 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { name: "Conan Develop - Python 2.7", python: 2.7, toxenv: "py27-conan-dev", pyver: "py27" }
           - { name: "Conan Develop - Python 3.7", python: 3.7, toxenv: "py37-conan-dev", pyver: "py37" }
     steps:
     - uses: actions/checkout@v2

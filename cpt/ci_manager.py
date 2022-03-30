@@ -36,7 +36,7 @@ def is_shippable():
 
 
 def is_github_actions():
-    return os.getenv("GITHUB_ACTIONS", False)
+    return os.getenv("GITHUB_ACTIONS", False) == "true"
 
 
 class CIManager(object):
