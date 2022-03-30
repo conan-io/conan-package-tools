@@ -11,14 +11,11 @@ from cpt import get_client_version
 from cpt.packager import ConanMultiPackager
 from cpt.test.integration.base import BaseTest, CONAN_UPLOAD_PASSWORD, CONAN_LOGIN_UPLOAD
 from cpt.test.unit.utils import MockCIManager
+from cpt.ci_manager import is_github_actions
 
 
 def is_linux_and_have_docker():
     return tools.os_info.is_linux and tools.which("docker")
-
-
-def is_github_actions():
-    return tools.get_env("GITHUB_ACTIONS", False)
 
 
 class DockerTest(BaseTest):
