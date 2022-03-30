@@ -1309,7 +1309,7 @@ This is especially useful for CI integration.
 - **CONAN_VISUAL_VERSIONS**: Visual versions, comma separated, e.g. "12,14"
 - **CONAN_VISUAL_RUNTIMES**: Visual runtimes, comma separated, e.g. "MT,MD"
 - **CONAN_VISUAL_TOOLSETS**: Map Visual versions to toolsets, e.g. `14=v140;v140_xp,12=v120_xp`
-- **CONAN_MSVC_VERSIONS**: msvc versions, comma separated, e.g. "19.29,19.30"
+- **CONAN_MSVC_VERSIONS**: msvc versions, comma separated, e.g. "19.29,193"
 - **CONAN_MSVC_RUNTIMES**: msvc runtimes, comma separated, e.g. "static,dynamic"
 - **CONAN_MSVC_RUNTIME_TYPES**: msvc runtime types, comma separated, e.g. "Debug,Release"
 - **CONAN_USE_DOCKER**: If defined will use docker

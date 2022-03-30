@@ -85,7 +85,7 @@ class Pkg(ConanFile):
         self.save_conanfile(conanfile)
         self.packager = ConanMultiPackager(username="user",
                                            channel="mychannel",
-                                           msvc_versions=["19.30"],
+                                           msvc_versions=["193"],
                                            archs=["x86_64"],
                                            build_types=["Release"],
                                            cppstds=["14"],
