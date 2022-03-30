@@ -18,6 +18,10 @@ def is_linux_and_have_docker():
     return tools.os_info.is_linux and tools.which("docker")
 
 
+def should_skip():
+    return not is_linux_and_have_docker() or is_github_actions()
+
+
 class DockerTest(BaseTest):
 
     CONAN_SERVER_ADDRESS = "http://0.0.0.0:9300"
@@ -31,8 +35,7 @@ class DockerTest(BaseTest):
         self.server_process.kill()
         super(DockerTest, self).tearDown()
 
-    @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
-    @unittest.skipIf(is_github_actions(), "FIXME: It fails on Github Actions")
+    @unittest.skipIf(should_skip())
     def test_docker(self):
         client_version = get_client_version()
         ci_manager = MockCIManager()
@@ -117,8 +120,7 @@ class DockerTest(BaseTest):
             self.assertEquals(len(results), 0)
             self.api.remove(search_pattern, remote_name="upload_repo", force=True)
 
-    @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
-    @unittest.skipIf(is_github_actions(), "FIXME: It fails on Github Actions")
+    @unittest.skipIf(should_skip())
     def test_docker_run_options(self):
         conanfile = textwrap.dedent("""
                 from conans import ConanFile
@@ -174,8 +176,7 @@ class DockerTest(BaseTest):
             self.assertIn("/bin/bash -c", self.output)
             self.assertIn("/home/conan/project:z", self.output)
 
-    @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
-    @unittest.skipIf(is_github_actions(), "FIXME: It fails on Github Actions")
+    @unittest.skipIf(should_skip())
     def test_docker_run_android(self):
         self.create_project()
         command = ('docker run --rm -v "{}:/home/conan/project" ',
@@ -243,8 +244,7 @@ class DockerTest(BaseTest):
                 self.assertIn("Error updating the image", str(raised.exception))
                 self.assertIn("foobar install conan_package_tools", str(raised.exception))
 
-    @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
-    @unittest.skipIf(is_github_actions(), "FIXME: It fails on Github Actions")
+    @unittest.skipIf(should_skip())
     def test_docker_base_profile(self):
         conanfile = textwrap.dedent("""
                 from conans import ConanFile
@@ -276,8 +276,7 @@ class DockerTest(BaseTest):
             self.assertIn('Using specified default base profile: linux-gcc8-amd64', self.output)
             self.assertIn('-e CPT_BASE_PROFILE_NAME="linux-gcc8-amd64"', self.output)
 
-    @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
-    @unittest.skipIf(is_github_actions(), "FIXME: It fails on Github Actions")
+    @unittest.skipIf(should_skip())
     def test_docker_base_build_profile(self):
         conanfile = textwrap.dedent("""
                     from conans import ConanFile
