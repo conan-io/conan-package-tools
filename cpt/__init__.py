@@ -1,5 +1,5 @@
 
-__version__ = '0.37.0'
+__version__ = '0.39.0-dev'
 
 
 def get_client_version():
