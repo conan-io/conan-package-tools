@@ -796,21 +796,20 @@ You can also use multiples "pages" to split the builds in different jobs (Check 
             eval "$(pyenv init -)"
         fi
 
-        pyenv install 2.7.10
-        pyenv virtualenv 2.7.10 conan
+        pyenv install 3.7.11
+        pyenv virtualenv 3.7.11 conan
         pyenv rehash
         pyenv activate conan
     fi
 
     pip install conan --upgrade
-    pip install conan_package_tools==0.3.7dev12
-
+    pip install conan_package_tools
     conan user
 
 
 If you want to "pin" a **conan_package_tools** version use:
 
-    pip install conan_package_tools==0.3.2
+    pip install conan_package_tools==0.37.0
 
 That version will be used also in the docker images.
 
@@ -843,8 +842,8 @@ This is very similar to Travis CI. With the same **build.py** script we have the
     build: false
 
     environment:
-        PYTHON: "C:\\Python27"
-        PYTHON_VERSION: "2.7.8"
+        PYTHON: "C:\\Python37"
+        PYTHON_VERSION: "3.7.9"
         PYTHON_ARCH: "32"
 
         CONAN_USERNAME: "lasote"
@@ -1310,7 +1309,7 @@ This is especially useful for CI integration.
 - **CONAN_VISUAL_VERSIONS**: Visual versions, comma separated, e.g. "12,14"
 - **CONAN_VISUAL_RUNTIMES**: Visual runtimes, comma separated, e.g. "MT,MD"
 - **CONAN_VISUAL_TOOLSETS**: Map Visual versions to toolsets, e.g. `14=v140;v140_xp,12=v120_xp`
-- **CONAN_MSVC_VERSIONS**: msvc versions, comma separated, e.g. "19.29,19.30"
+- **CONAN_MSVC_VERSIONS**: msvc versions, comma separated, e.g. "19.29,193"
 - **CONAN_MSVC_RUNTIMES**: msvc runtimes, comma separated, e.g. "static,dynamic"
 - **CONAN_MSVC_RUNTIME_TYPES**: msvc runtime types, comma separated, e.g. "Debug,Release"
 - **CONAN_USE_DOCKER**: If defined will use docker
