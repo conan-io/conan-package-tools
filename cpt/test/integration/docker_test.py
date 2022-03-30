@@ -44,7 +44,7 @@ class DockerTest(BaseTest):
             """)
 
         self.save_conanfile(conanfile)
-        with tools.environment_append({"CONAN_DOCKER_RUN_OPTIONS": "--network=host -v{}:/tmp/cpt".format(self.root_project_folder),
+        with tools.environment_append({"CONAN_DOCKER_RUN_OPTIONS": "--network=host --add-host=host.docker.internal:host-gateway -v{}:/tmp/cpt".format(self.root_project_folder),
                                        "CONAN_DOCKER_ENTRY_SCRIPT": "pip install -U /tmp/cpt",
                                        "CONAN_USE_DOCKER": "1",
                                        "CONAN_DOCKER_IMAGE_SKIP_UPDATE": "TRUE",
@@ -222,7 +222,7 @@ class DockerTest(BaseTest):
                                        "CONAN_USERNAME": "bar",
                                        "CONAN_DOCKER_IMAGE": "conanio/gcc8",
                                        "CONAN_REFERENCE": "foo/0.0.1@bar/testing",
-                                       "CONAN_DOCKER_RUN_OPTIONS": "--network=host, --add-host=google.com:8.8.8.8 -v{}:/tmp/cpt".format(
+                                       "CONAN_DOCKER_RUN_OPTIONS": "--network=host, --add-host=host.docker.internal:host-gateway,--add-host=google.com:8.8.8.8 -v{}:/tmp/cpt".format(
                                            self.root_project_folder),
                                        "CONAN_DOCKER_IMAGE_SKIP_UPDATE": "TRUE",
                                        "CONAN_FORCE_SELINUX": "TRUE",
