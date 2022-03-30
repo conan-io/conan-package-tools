@@ -35,6 +35,7 @@ def run():
     upload_force = os.getenv("CPT_UPLOAD_FORCE")
     uploader = Uploader(conan_api, remotes_manager, auth_manager, printer, upload_retry, upload_force)
     build_policy = unscape_env(os.getenv("CPT_BUILD_POLICY"))
+    require_overrides = unscape_env(os.getenv("CPT_REQUIRE_OVERRIDES"))
     test_folder = unscape_env(os.getenv("CPT_TEST_FOLDER"))
     reference = ConanFileReference.loads(os.getenv("CONAN_REFERENCE"))
 
@@ -60,7 +61,7 @@ def run():
 
     upload = os.getenv("CPT_UPLOAD_ENABLED")
     runner = CreateRunner(abs_profile_path, reference, conan_api, uploader,
-                          build_policy=build_policy, printer=printer, upload=upload,
+                          build_policy=build_policy, require_overrides=require_overrides, printer=printer, upload=upload,
                           upload_only_recipe=upload_only_recipe,
                           test_folder=test_folder, config_url=config_url, config_args=config_args,
                           upload_dependencies=upload_dependencies, conanfile=conanfile,

@@ -19,7 +19,7 @@ from conans.client.conan_api import ProfileData
 class CreateRunner(object):
 
     def __init__(self, profile_abs_path, reference, conan_api, uploader,
-                 exclude_vcvars_precommand=False, build_policy=None, runner=None,
+                 exclude_vcvars_precommand=False, build_policy=None, require_overrides=None, runner=None,
                  cwd=None, printer=None, upload=False, upload_only_recipe=None,
                  test_folder=None, config_url=None, config_args=None,
                  upload_dependencies=None, conanfile=None, skip_recipe_export=False,
@@ -36,6 +36,9 @@ class CreateRunner(object):
         self._build_policy = build_policy.split(",") if \
                              isinstance(build_policy, str) else \
                              build_policy
+        self._require_overrides = require_overrides.split(",") if \
+                             isinstance(require_overrides, str) else \
+                             require_overrides
         self._runner = PrintRunner(runner or os.system, self.printer)
         self._test_folder = test_folder
         self._config_url = config_url
@@ -111,6 +114,7 @@ class CreateRunner(object):
                 with tools.environment_append({"_CONAN_CREATE_COMMAND_": "1"}):
                     params = {"name": name, "version": version, "user": user,
                               "channel": channel, "build_modes": self._build_policy,
+                              "require_overrides": self._require_overrides,
                               "profile_name": self._profile_abs_path,
                               "profile_build_name": self._profile_build_abs_path}
                     self.printer.print_message("Calling 'conan create'")
@@ -127,6 +131,7 @@ class CreateRunner(object):
                                 self._results = self._conan_api.create(self._conanfile, name=name, version=version,
                                                         user=user, channel=channel,
                                                         build_modes=self._build_policy,
+                                                        require_overrides=self._require_overrides,
                                                         profile_name=self._profile_abs_path,
                                                         test_folder=self._test_folder,
                                                         not_export=self.skip_recipe_export,
@@ -145,6 +150,7 @@ class CreateRunner(object):
                                 self._results = self._conan_api.create(self._conanfile, name=name, version=version,
                                                         user=user, channel=channel,
                                                         build_modes=self._build_policy,
+                                                        require_overrides=self._require_overrides,
                                                         profile_names=[self._profile_abs_path],
                                                         test_folder=self._test_folder,
                                                         not_export=self.skip_recipe_export,
@@ -184,7 +190,7 @@ class DockerCreateRunner(object):
     def __init__(self, profile_text, base_profile_text, base_profile_name, reference,
                  conan_pip_package=None, docker_image=None, sudo_docker_command=None,
                  sudo_pip_command=False,
-                 docker_image_skip_update=False, build_policy=None,
+                 docker_image_skip_update=False, build_policy=None, require_overrides=None,
                  docker_image_skip_pull=False,
                  always_update_conan_in_docker=False,
                  upload=False, upload_retry=None, upload_only_recipe=None,
@@ -217,6 +223,7 @@ class DockerCreateRunner(object):
         self._reference = reference
         self._conan_pip_package = conan_pip_package
         self._build_policy = build_policy
+        self._require_overrides = require_overrides
         self._docker_image = docker_image
         self._always_update_conan_in_docker = always_update_conan_in_docker
         self._docker_image_skip_update = docker_image_skip_update
@@ -376,6 +383,7 @@ class DockerCreateRunner(object):
         ret["CPT_UPLOAD_ONLY_RECIPE"] = self._upload_only_recipe
         ret["CPT_UPLOAD_FORCE"] = self._upload_force
         ret["CPT_BUILD_POLICY"] = escape_env(self._build_policy)
+        ret["CPT_REQUIRE_OVERRIDES"] = escape_env(self._require_overrides)
         ret["CPT_TEST_FOLDER"] = escape_env(self._test_folder)
         ret["CPT_CONFIG_URL"] = escape_env(self._config_url)
         ret["CPT_CONFIG_ARGS"] = escape_env(self._config_args)
