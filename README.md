@@ -809,7 +809,7 @@ You can also use multiples "pages" to split the builds in different jobs (Check 
 
 If you want to "pin" a **conan_package_tools** version use:
 
-    pip install conan_package_tools
+    pip install conan_package_tools==0.37.0
 
 That version will be used also in the docker images.
 
@@ -842,8 +842,8 @@ This is very similar to Travis CI. With the same **build.py** script we have the
     build: false
 
     environment:
-        PYTHON: "C:\\Python27"
-        PYTHON_VERSION: "3.78"
+        PYTHON: "C:\\Python37"
+        PYTHON_VERSION: "3.7.9"
         PYTHON_ARCH: "32"
 
         CONAN_USERNAME: "lasote"
