@@ -167,7 +167,18 @@ class ConanMultiPackager(object):
 
         self.ci_manager = ci_manager or CIManager(self.printer)
         self.remotes_manager = RemotesManager(self.conan_api, self.printer, remotes, upload)
+
+        #fix: load conan file early
+        self.conanfile = conanfile or os.getenv("CONAN_CONANFILE", "conanfile.py")
+        conanfile = load_cf_class(os.path.join(self.cwd, self.conanfile), self.conan_api)
+        user, channel = conanfile.user, conanfile.channel
+
         self.username = username or os.getenv("CONAN_USERNAME", None)
+
+        #fix: set username
+        if self.username is None:
+            if user:
+                self.username = user
 
         self.skip_check_credentials = skip_check_credentials or get_bool_from_env("CONAN_SKIP_CHECK_CREDENTIALS")
 
@@ -212,7 +223,11 @@ class ConanMultiPackager(object):
         self.stable_channel = self.stable_channel.rstrip()
         self.partial_reference = reference or os.getenv("CONAN_REFERENCE", None)
         self.channel = self._get_specified_channel(channel, reference)
-        self.conanfile = conanfile or os.getenv("CONAN_CONANFILE", "conanfile.py")
+
+        #fix: set channel
+        if self.channel is None:
+            if channel:
+                self.channel = channel
 
         if self.partial_reference:
             if "@" in self.partial_reference:
