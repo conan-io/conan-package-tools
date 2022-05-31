@@ -171,14 +171,15 @@ class ConanMultiPackager(object):
         #fix: load conan file early
         self.conanfile = conanfile or os.getenv("CONAN_CONANFILE", "conanfile.py")
         conanfile = load_cf_class(os.path.join(self.cwd, self.conanfile), self.conan_api)
-        user, channel = conanfile.user, conanfile.channel
+
+        recipe_user = conanfile.user if hasattr(conanfile, "user") else None
+        recipe_channel = conanfile.channel if hasattr(conanfile, "channel") else None
 
         self.username = username or os.getenv("CONAN_USERNAME", None)
 
         #fix: set username
-        if self.username is None:
-            if user:
-                self.username = user
+        if self.username is None and recipe_user:
+            self.username = recipe_user
 
         self.skip_check_credentials = skip_check_credentials or get_bool_from_env("CONAN_SKIP_CHECK_CREDENTIALS")
 
@@ -225,9 +226,8 @@ class ConanMultiPackager(object):
         self.channel = self._get_specified_channel(channel, reference)
 
         #fix: set channel
-        if self.channel is None:
-            if channel:
-                self.channel = channel
+        if self.channel is None and recipe_channel:
+            self.channel = recipe_channel
 
         if self.partial_reference:
             if "@" in self.partial_reference:
