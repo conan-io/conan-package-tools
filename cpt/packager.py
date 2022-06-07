@@ -12,6 +12,7 @@ from conans.client.conan_api import Conan
 from conans.client.runner import ConanRunner
 from conans.model.ref import ConanFileReference
 from conans.model.version import Version
+from conans.errors import ConanException
 
 from cpt import get_client_version
 from cpt.auth import AuthManager
@@ -172,8 +173,15 @@ class ConanMultiPackager(object):
         self.conanfile = conanfile or os.getenv("CONAN_CONANFILE", "conanfile.py")
         conanfile = load_cf_class(os.path.join(self.cwd, self.conanfile), self.conan_api)
 
-        recipe_user = conanfile.user if hasattr(conanfile, "user") else None
-        recipe_channel = conanfile.channel if hasattr(conanfile, "channel") else None
+        try:
+            recipe_user = conanfile.user
+        except ConanException:
+            recipe_user = None
+
+        try:
+            recipe_channel = conanfile.channel
+        except ConanException:
+            recipe_channel = None
 
         self.username = username or os.getenv("CONAN_USERNAME", None)
 
