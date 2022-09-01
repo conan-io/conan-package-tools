@@ -709,6 +709,8 @@ class ConanMultiPackager(object):
                 r.run()
                 self._packages_summary.append({"configuration":  build, "package" : r.results})
             else:
+                if not base_profile_build_text:
+                    profile_build_text = None
                 docker_image = self._get_docker_image(build)
                 r = DockerCreateRunner(profile_text, base_profile_text, base_profile_name,
                                        build.reference,

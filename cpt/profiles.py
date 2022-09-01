@@ -15,7 +15,11 @@ def get_profiles(client_cache, build_config, base_profile_name=None, is_build_pr
         base_profile_path = os.path.join(client_cache.profiles_path, base_profile_name)
         base_profile_text = tools.load(base_profile_path)
     base_profile_name = base_profile_name or "default"
-    tmp = """
+
+    if is_build_profile:
+        profile_text = "include(%s)" % (base_profile_name)
+    else:
+        tmp = """
 include(%s)
 
 [settings]
@@ -28,27 +32,25 @@ include(%s)
 %s
 """
 
-    def pairs_lines(items):
-        return "\n".join(["%s=%s" % (k, v) for k, v in items])
-    if is_build_profile:
-        settings=""
-        options=""
-    else:
+        def pairs_lines(items):
+            return "\n".join(["%s=%s" % (k, v) for k, v in items])
+
         settings = pairs_lines(sorted(build_config.settings.items()))
         options = pairs_lines(build_config.options.items())
-    env_vars = pairs_lines(build_config.env_vars.items())
-    br_lines = ""
-    for pattern, build_requires in build_config.build_requires.items():
-        br_lines += "\n".join(["%s:%s" % (pattern, br) for br in build_requires])
+        env_vars = pairs_lines(build_config.env_vars.items())
+        br_lines = ""
+        for pattern, build_requires in build_config.build_requires.items():
+            br_lines += "\n".join(["%s:%s" % (pattern, br) for br in build_requires])
 
-    if os.getenv("CONAN_BUILD_REQUIRES"):
-        brs = os.getenv("CONAN_BUILD_REQUIRES").split(",")
-        brs = ['*:%s' % br.strip() if ":" not in br else br for br in brs]
-        if br_lines:
-            br_lines += "\n"
-        br_lines += "\n".join(brs)
+        if os.getenv("CONAN_BUILD_REQUIRES"):
+            brs = os.getenv("CONAN_BUILD_REQUIRES").split(",")
+            brs = ['*:%s' % br.strip() if ":" not in br else br for br in brs]
+            if br_lines:
+                br_lines += "\n"
+            br_lines += "\n".join(brs)
 
-    profile_text = tmp % (base_profile_name, settings, options, env_vars, br_lines)
+        profile_text = tmp % (base_profile_name, settings, options, env_vars, br_lines)
+
     return profile_text, base_profile_text
 
 
