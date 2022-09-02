@@ -4,7 +4,7 @@
 
 ## Conan 2.0 support :warning:
 
-The project Conan Package Tools does not support Conan 2.x and there is no current planned support.
+**The project Conan Package Tools does not support Conan 2.x and there is no current planned support.**
 
 In case you need such support, please, open an issue explaining your current case with more details.
 
