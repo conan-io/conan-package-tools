@@ -1373,7 +1373,7 @@ Check [Conan Build policies](https://docs.conan.io/en/latest/mastering/policies.
 - **CONAN_SKIP_RECIPE_EXPORT**: If defined, the package recipe will only be exported on the first build.
 - **CPT_UPDATE_DEPENDENCIES**: Update all dependencies before building e.g conan create -u
 - **CONAN_PURE_C**: Set `pure_c` by environment variable, default `True`
-- **CPT_GLOBAL_CONF**: Add `global.conf` file with listed values e.g '*:tools.cmake.cmaketoolchain:generator=Ninja,tools.system.package_manager:mode=install'
+- **CONAN_GLOBAL_CONF**: Add `global.conf` file with listed values e.g '*:tools.cmake.cmaketoolchain:generator=Ninja,tools.system.package_manager:mode=install'
 
 
 # Full example

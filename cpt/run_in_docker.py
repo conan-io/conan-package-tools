@@ -37,6 +37,7 @@ def run():
     build_policy = unscape_env(os.getenv("CPT_BUILD_POLICY"))
     require_overrides = unscape_env(os.getenv("CPT_REQUIRE_OVERRIDES"))
     test_folder = unscape_env(os.getenv("CPT_TEST_FOLDER"))
+    global_conf = unscape_env(os.getenv("CPT_GLOBAL_CONF"))
     reference = ConanFileReference.loads(os.getenv("CONAN_REFERENCE"))
 
     profile_text = unscape_env(os.getenv("CPT_PROFILE"))
@@ -68,7 +69,8 @@ def run():
                           skip_recipe_export=skip_recipe_export,
                           update_dependencies=update_dependencies,
                           lockfile=lockfile,
-                          profile_build_abs_path=abs_profile_build_path)
+                          profile_build_abs_path=abs_profile_build_path,
+                          global_conf=global_conf)
     runner.run()
 
 
