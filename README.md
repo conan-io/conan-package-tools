@@ -1205,6 +1205,7 @@ Check [Conan Build policies](https://docs.conan.io/en/latest/mastering/policies.
 - **force_selinux**: Force docker to relabel file objects on the shared volumes
 - **skip_recipe_export**: If True, the package recipe will only be exported on the first build. Default [False]
 - **update_dependencies**: Update all dependencies before building e.g conan create -u
+- **global_conf**: A list with values to be added to `global.conf` file
 
 Upload related parameters:
 
@@ -1372,6 +1373,7 @@ Check [Conan Build policies](https://docs.conan.io/en/latest/mastering/policies.
 - **CONAN_SKIP_RECIPE_EXPORT**: If defined, the package recipe will only be exported on the first build.
 - **CPT_UPDATE_DEPENDENCIES**: Update all dependencies before building e.g conan create -u
 - **CONAN_PURE_C**: Set `pure_c` by environment variable, default `True`
+- **CPT_GLOBAL_CONF**: Add `global.conf` file with listed values e.g '*:tools.cmake.cmaketoolchain:generator=Ninja,tools.system.package_manager:mode=install'
 
 
 # Full example
