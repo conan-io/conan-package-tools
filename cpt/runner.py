@@ -89,7 +89,7 @@ class CreateRunner(object):
 
         if self._global_conf:
             global_conf = GlobalConf(self._conan_api, self.printer)
-            global_conf.printer(self._global_conf)
+            global_conf.populate(self._global_conf)
 
         context = tools.no_op()
         compiler = self.settings.get("compiler", None)

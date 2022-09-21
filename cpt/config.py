@@ -29,5 +29,7 @@ class GlobalConf(object):
             content = tools.load(global_conf)
             content += "\n" + values.join("\n")
             tools.save(global_conf, content)
+            self.printer.print_message("Append new values to global.conf")
         else:
             tools.save(global_conf, values.join("\n"))
+            self.printer.print_message("Create new global.conf")
