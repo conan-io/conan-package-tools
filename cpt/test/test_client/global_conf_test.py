@@ -1,9 +1,8 @@
-import os
 import unittest
 import textwrap
 
-from conans.client.tools import environment_append
-from cpt.test.utils.tools import TestClient, TestServer
+from conans.client.tools import environment_append, load
+from cpt.test.utils.tools import TestClient
 
 from cpt.test.test_client.tools import get_patched_multipackager
 
@@ -25,4 +24,6 @@ class GlobalConfTest(unittest.TestCase):
             mulitpackager = get_patched_multipackager(tc, exclude_vcvars_precommand=True)
             mulitpackager.add_common_builds(reference="lib/1.0@user/stable", shared_option_name=False)
             mulitpackager.run()
-            # print(f"**** CACHE FOLDER: {tc.api.cache_folder}")
+            assert textwrap.dedent("""tools.system.package_manager:mode=install
+            tools.system.package_manager:sudo=True
+            """.replace(" ", "")) == load(tc.cache.new_config_path)
