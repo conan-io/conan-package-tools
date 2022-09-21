@@ -29,8 +29,11 @@ class MockConanCache(object):
 
     def __init__(self, *args, **kwargs):
         _base_dir = temp_folder()
-        self.default_profile_path = os.path.join(_base_dir, "default")
-        self.profiles_path = _base_dir
+        self.default_profile_path = os.path.join(_base_dir, "profiles", "default")
+        self.profiles_path = os.path.join(_base_dir, "profiles")
+        self.new_config_path = os.path.join(_base_dir, "global.conf")
+        if not os.path.exists(self.profiles_path):
+            os.mkdir(self.profiles_path)
 
 Action = namedtuple("Action", "name args kwargs")
 
