@@ -27,9 +27,9 @@ class GlobalConf(object):
             values = values.split(",")
         if os.path.exists(global_conf) and os.path.isfile(global_conf):
             content = tools.load(global_conf)
-            content += "\n" + values.join("\n")
+            content += "\n" + "\n".join(values)
             tools.save(global_conf, content)
             self.printer.print_message("Append new values to global.conf")
         else:
-            tools.save(global_conf, values.join("\n"))
+            tools.save(global_conf, "\n".join(values))
             self.printer.print_message("Create new global.conf")
