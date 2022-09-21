@@ -373,3 +373,39 @@ class DockerTest(BaseTest):
             self.packager.run()
             self.assertIn('-e CONAN_USERNAME="_"', self.output)
             self.assertIn('-e CONAN_CHANNEL="_"', self.output)
+
+    def test_docker_global_conf(self):
+        ci_manager = MockCIManager()
+        unique_ref = "package/%s" % str(time.time())
+        conanfile = textwrap.dedent("""
+                from conans import ConanFile
+                class Pkg(ConanFile):
+                    settings = "os", "compiler", "build_type", "arch"
+
+                    def configure(self):
+                        sudo = self.conf.get("tools.system.package_manager:sudo")
+                        assert "True" == str(sudo)
+                        tool = self.conf.get("tools.system.package_manager:tool")
+                        assert "apt-get" == str(tool)
+                        mode = self.conf.get("tools.system.package_manager:mode")
+                        assert "install" == str(mode)
+            """)
+
+        self.save_conanfile(conanfile)
+        with tools.environment_append({"CONAN_DOCKER_RUN_OPTIONS": "--network=host -v{}:/tmp/cpt".format(self.root_project_folder),
+                                       "CONAN_DOCKER_ENTRY_SCRIPT": "pip install -U /tmp/cpt",
+                                       "CONAN_DOCKER_IMAGE": "conanio/gcc8",
+                                       "CONAN_USE_DOCKER": "1",
+                                       "CONAN_DOCKER_IMAGE_SKIP_UPDATE": "TRUE",
+                                       "CONAN_DOCKER_USE_SUDO": "FALSE",
+                                       "CONAN_GLOBAL_CONF": "tools.system.package_manager:sudo=True,tools.system.package_manager:tool=apt-get,tools.system.package_manager:mode=install",
+                                       "CONAN_USERNAME": "demo"}):
+
+            self.packager = ConanMultiPackager(channel="mychannel",
+                                               gcc_versions=["8"],
+                                               archs=["x86_64"],
+                                               build_types=["Release"],
+                                               reference=unique_ref,
+                                               ci_manager=ci_manager)
+            self.packager.add_common_builds()
+            self.packager.run()
