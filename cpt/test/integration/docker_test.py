@@ -374,6 +374,7 @@ class DockerTest(BaseTest):
             self.assertIn('-e CONAN_USERNAME="_"', self.output)
             self.assertIn('-e CONAN_CHANNEL="_"', self.output)
 
+    @unittest.skipUnless(is_linux_and_have_docker(), "Requires Linux and Docker")
     def test_docker_global_conf(self):
         ci_manager = MockCIManager()
         unique_ref = "package/%s" % str(time.time())
