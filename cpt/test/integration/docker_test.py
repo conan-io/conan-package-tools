@@ -381,8 +381,6 @@ class DockerTest(BaseTest):
         conanfile = textwrap.dedent("""
                 from conans import ConanFile
                 class Pkg(ConanFile):
-                    settings = "os", "compiler", "build_type", "arch"
-
                     def configure(self):
                         sudo = self.conf.get("tools.system.package_manager:sudo")
                         assert "True" == str(sudo)
@@ -396,17 +394,16 @@ class DockerTest(BaseTest):
         with tools.environment_append({"CONAN_DOCKER_RUN_OPTIONS": "--network=host -v{}:/tmp/cpt".format(self.root_project_folder),
                                        "CONAN_DOCKER_ENTRY_SCRIPT": "pip install -U /tmp/cpt",
                                        "CONAN_DOCKER_IMAGE": "conanio/gcc8",
+                                       "CONAN_REFERENCE": "foo/0.0.1@bar/testing",
                                        "CONAN_USE_DOCKER": "1",
                                        "CONAN_DOCKER_IMAGE_SKIP_UPDATE": "TRUE",
                                        "CONAN_DOCKER_USE_SUDO": "FALSE",
+                                       "CONAN_FORCE_SELINUX": "TRUE",
                                        "CONAN_GLOBAL_CONF": "tools.system.package_manager:sudo=True,tools.system.package_manager:tool=apt-get,tools.system.package_manager:mode=install",
-                                       "CONAN_USERNAME": "demo"}):
+                                       "CONAN_DOCKER_SHELL": "/bin/bash -c"}):
 
-            self.packager = ConanMultiPackager(channel="mychannel",
-                                               gcc_versions=["8"],
+            self.packager = ConanMultiPackager(gcc_versions=["8"],
                                                archs=["x86_64"],
-                                               build_types=["Release"],
-                                               reference=unique_ref,
-                                               ci_manager=ci_manager)
+                                               build_types=["Release"])
             self.packager.add_common_builds()
             self.packager.run()
