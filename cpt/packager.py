@@ -147,7 +147,8 @@ class ConanMultiPackager(object):
                  force_selinux=None,
                  skip_recipe_export=False,
                  update_dependencies=None,
-                 lockfile=None):
+                 lockfile=None,
+                 global_conf=None):
 
         conan_version = get_client_version()
 
@@ -337,6 +338,8 @@ class ConanMultiPackager(object):
         self.vs10_x86_64_enabled = vs10_x86_64_enabled
 
         self.builds_in_current_page = []
+
+        self.global_conf = global_conf or os.getenv("CONAN_GLOBAL_CONF")
 
         self.test_folder = test_folder or os.getenv("CPT_TEST_FOLDER")
 
@@ -705,6 +708,7 @@ class ConanMultiPackager(object):
                                  skip_recipe_export=skip_recipe_export,
                                  update_dependencies=self.update_dependencies,
                                  profile_build_abs_path=profile_build_abs_path,
+                                 global_conf=self.global_conf,
                                  )
                 r.run()
                 self._packages_summary.append({"configuration":  build, "package" : r.results})
@@ -747,6 +751,7 @@ class ConanMultiPackager(object):
                                        update_dependencies=self.update_dependencies,
                                        profile_build_text=profile_build_text,
                                        base_profile_build_text=base_profile_build_text,
+                                       global_conf=self.global_conf,
                                        cwd=self.cwd)
 
                 r.run(pull_image=not pulled_docker_images[docker_image],
