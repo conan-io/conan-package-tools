@@ -76,9 +76,9 @@ class RemotesManager(object):
         for r in self._remotes:
             if self._upload and r.url == self._upload.url:
                 name = self._add_remote(self._upload.url, self._upload.use_ssl,
-                                        self._upload.name, insert=-1)
+                                        self._upload.name, insert=None)
             else:
-                name = self._add_remote(r.url, r.use_ssl, r.name, insert=-1)
+                name = self._add_remote(r.url, r.use_ssl, r.name, insert=None)
 
             if name != r.name:    # Already existing url, keep it
                 _added_remotes.append(Remote(r.url, r.use_ssl, name))
@@ -87,7 +87,7 @@ class RemotesManager(object):
 
         if self._upload and not self.upload_remote_in_remote_list():
             name = self._add_remote(self._upload.url, self._upload.use_ssl,
-                                    self._upload.name, insert=-1)
+                                    self._upload.name, insert=None)
             if name != self._upload.name:  # Already existing url, keep it
                 self._upload = Remote(self._upload.url, self._upload.use_ssl, name)
 
